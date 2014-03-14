@@ -19,13 +19,28 @@
  */
 package org.jboss.fabric8.test;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.jboss.fabric8.internal.scr.InvalidComponentException;
 import org.jboss.fabric8.services.Container;
 import org.jboss.fabric8.services.Container.State;
 import org.jboss.fabric8.services.FabricService;
 import org.jboss.fabric8.services.ServiceLocator;
 import org.jboss.fabric8.test.support.AbstractEmbeddedTest;
+import org.jboss.gravia.runtime.Module;
+import org.jboss.gravia.runtime.ModuleContext;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.Assert;
 import org.junit.Test;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.cm.ConfigurationEvent;
+import org.osgi.service.cm.ConfigurationListener;
 
 /**
  * Test basic runtime functionality.
@@ -36,10 +51,57 @@ import org.junit.Test;
 public class FabricServiceTest extends AbstractEmbeddedTest {
 
     @Test
-    public void testBasicContainerLifecycle() throws Exception {
+    public void testModifyService() throws Exception {
 
+        // Aquire the {@link FabricService} instance
         FabricService service = ServiceLocator.getRequiredService(FabricService.class);
+
+        final CountDownLatch updateLatch = new CountDownLatch(1);
+        ConfigurationListener listener = new ConfigurationListener() {
+            @Override
+            public void configurationEvent(ConfigurationEvent event) {
+                String pid = event.getPid();
+                int type = event.getType();
+                if (FabricService.PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
+                    updateLatch.countDown();
+                }
+            }
+        };
+
+        // Modify the service configuration
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        ModuleContext syscontext = runtime.getModuleContext();
+        ServiceRegistration<ConfigurationListener> sreg = syscontext.registerService(ConfigurationListener.class, listener, null);
+        try {
+            Module module = runtime.getModules("fabric8-core", null).iterator().next();
+            ModuleContext moduleContext = module.getModuleContext();
+
+            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
+            Configuration config = configAdmin.getConfiguration(FabricService.PID);
+            Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Container.KEY_NAME_PREFIX, "foo");
+            config.update(props);
+
+            Assert.assertTrue("Configuration updated", updateLatch.await(2, TimeUnit.SECONDS));
+
+        } finally {
+            sreg.unregister();
+        }
+
+        // Wait a little longer for the component to get updated
+        Thread.sleep(100);
+
+        try {
+            service.createContainer("cntA");
+            Assert.fail("InvalidComponentException expected");
+        } catch (InvalidComponentException ex) {
+            // expected
+        }
+
+        service = ServiceLocator.getRequiredService(FabricService.class);
+
         Container cntA = service.createContainer("cntA");
+        Assert.assertEquals("foo.cntA", cntA.getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
         service.startContainer(cntA);

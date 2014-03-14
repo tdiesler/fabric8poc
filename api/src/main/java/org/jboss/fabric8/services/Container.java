@@ -22,6 +22,8 @@ package org.jboss.fabric8.services;
 
 public interface Container {
 
+    String KEY_NAME_PREFIX = "container.prefix";
+
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }

@@ -22,7 +22,6 @@ package org.jboss.fabric8.internal.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.fabric8.internal.scr.AbstractComponent;
 import org.jboss.fabric8.services.Container;
@@ -30,24 +29,23 @@ import org.jboss.fabric8.services.FabricService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 
-@Component(service = { FabricService.class }, immediate = true)
+@Component(service = { FabricService.class }, configurationPid = FabricService.PID, immediate = true)
 public final class FabricServiceImpl extends AbstractComponent implements FabricService {
 
     private static AtomicInteger INSTANCE_COUNT = new AtomicInteger();
     private final String name = getClass().getSimpleName() + "#" + INSTANCE_COUNT.incrementAndGet();
 
     private final Map<String, Container> containers = new HashMap<String, Container>();
+    private String prefix;
 
     @Activate
     void activate(Map<String, ?> config) {
+        prefix = (String) config.get(Container.KEY_NAME_PREFIX);
         activateComponent();
     }
 
-    @Modified
-    void modify(Map<String, ?> config) {
-    }
+    // @Modified not implemented - we get a new compoennt with every config change
 
     @Deactivate
     void deactivate() {
@@ -55,19 +53,21 @@ public final class FabricServiceImpl extends AbstractComponent implements Fabric
     }
 
     @Override
-    public String toString() {
-        return name;
+    public String getContainerPrefix() {
+        assertValid();
+        return prefix;
     }
 
     @Override
     public Container createContainer(String name) {
         assertValid();
         synchronized (containers) {
-            MutableContainer container;
             if (containers.containsKey(name))
                 throw new IllegalStateException("Container already exists: " + name);
 
-            containers.put(name, container = new MutableContainer(name));
+            String prefixedName = prefix != null ? prefix + "." + name : name;
+            MutableContainer container = new MutableContainer(prefixedName);
+            containers.put(container.getName(), container);
             return container;
         }
     }
@@ -75,7 +75,9 @@ public final class FabricServiceImpl extends AbstractComponent implements Fabric
     @Override
     public Container getContainerByName(String name) {
         assertValid();
-        return getContainerInternal(name);
+        synchronized (containers) {
+            return containers.get(name);
+        }
     }
 
     @Override
@@ -93,78 +95,21 @@ public final class FabricServiceImpl extends AbstractComponent implements Fabric
     @Override
     public void destroyContainer(Container container) {
         assertValid();
-        assertContainerExists(container.getName()).destroy();
-    }
-
-    private MutableContainer getContainerInternal(String name) {
         synchronized (containers) {
-            Container container = containers.get(name);
-            return container != null ? MutableContainer.assertMutableContainer(container) : null;
+            Container removed = containers.remove(container.getName());
+            MutableContainer.assertMutableContainer(removed).destroy();
         }
     }
 
     private MutableContainer assertContainerExists(String name) {
-        MutableContainer container = getContainerInternal(name);
-        if (container == null)
-            throw new IllegalStateException("Container does not exist: " + name);
-        return container;
+        synchronized (containers) {
+            Container container = containers.get(name);
+            return MutableContainer.assertMutableContainer(container);
+        }
     }
 
-    static final class MutableContainer implements Container {
-
-        private final String name;
-        private final AtomicReference<State> state = new AtomicReference<Container.State>();
-
-        MutableContainer(String name) {
-            this.name = name;
-            this.state.set(State.CREATED);
-        }
-
-        static MutableContainer assertMutableContainer(Container container) {
-            if (!(container instanceof MutableContainer))
-                throw new IllegalArgumentException("Not a mutable container: " + container);
-            return (MutableContainer) container;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public State getState() {
-            return state.get();
-        }
-
-        void start() {
-            synchronized (state) {
-                assertNotDestroyed();
-                state.set(State.STARTED);
-            }
-        }
-
-        void stop() {
-            synchronized (state) {
-                assertNotDestroyed();
-                state.set(State.STOPPED);
-            }
-        }
-
-        void destroy() {
-            synchronized (state) {
-                assertNotDestroyed();
-                state.set(State.DESTROYED);
-            }
-        }
-
-        private void assertNotDestroyed() {
-            if (state.get() == State.DESTROYED)
-                throw new IllegalStateException("Container already destroyed: " + this);
-        }
-
-        @Override
-        public String toString() {
-            return "Container[name=" + name + ",state=" + state.get() + "]";
-        }
+    @Override
+    public String toString() {
+        return name;
     }
 }

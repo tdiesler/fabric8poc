@@ -28,11 +28,7 @@ package org.jboss.fabric8.internal.scr;
  */
 public final class ValidationSupport implements Validatable {
 
-    /* This uses volatile to make sure that every thread sees the last written value
-     *
-     * - The use of AtomicBoolean would be wrong because it does not guarantee that
-     *   prior written state is also seen by other threads
-     */
+    // Use volatile to make sure that every thread sees the last written value
     private volatile boolean valid;
 
     public void setValid() {
@@ -51,8 +47,7 @@ public final class ValidationSupport implements Validatable {
     @Override
     public void assertValid() {
         if (!valid) {
-            RuntimeException rte = new InvalidComponentException();
-            throw rte;
+            throw new InvalidComponentException();
         }
     }
 }

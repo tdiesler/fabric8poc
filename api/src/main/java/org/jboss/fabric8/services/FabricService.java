@@ -23,6 +23,10 @@ package org.jboss.fabric8.services;
 
 public interface FabricService {
 
+    String PID = "fabric.service.pid";
+
+    String getContainerPrefix();
+
     Container createContainer(String name);
 
     Container getContainerByName(String name);

@@ -30,19 +30,17 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractComponent implements Validatable {
 
-    private static final transient Logger LOG = LoggerFactory.getLogger(AbstractComponent.class);
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(AbstractComponent.class);
 
-    /* This uses volatile to make sure that every thread sees the last written value
-     */
     private ValidationSupport active = new ValidationSupport();
 
     public void activateComponent() {
         active.setValid();
-        LOG.info("activateComponent: " + this);
+        LOGGER.info("activateComponent: " + this);
     }
 
     public void deactivateComponent() {
-        LOG.info("deactivateComponent: " + this);
+        LOGGER.info("deactivateComponent: " + this);
         active.setInvalid();
     }
 
