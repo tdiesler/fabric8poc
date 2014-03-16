@@ -47,31 +47,31 @@ public final class StateManager extends AbstractComponent implements StateServic
     }
 
     @Override
-    public void activate(State state) {
+    public <T> void activate(State<T> state, T instance) {
         assertValid();
-        delegate.activate(state);
+        delegate.activate(state, instance);
     }
 
     @Override
-    public void deactivate(State state) {
+    public void deactivate(State<?> state) {
         assertValid();
         delegate.deactivate(state);
     }
 
     @Override
-    public void deactivate(State state, long timeout, TimeUnit unit) throws StateTimeoutException {
+    public void deactivate(State<?> state, long timeout, TimeUnit unit) throws StateTimeoutException {
         assertValid();
         delegate.deactivate(state, timeout, unit);
     }
 
     @Override
-    public Permit aquirePermit(State state, boolean exclusive) {
+    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive) {
         assertValid();
         return delegate.aquirePermit(state, exclusive);
     }
 
     @Override
-    public Permit aquirePermit(State state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException {
+    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException {
         assertValid();
         return delegate.aquirePermit(state, exclusive, timeout, unit);
     }

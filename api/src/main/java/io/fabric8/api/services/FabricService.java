@@ -21,11 +21,10 @@ package io.fabric8.api.services;
 
 import io.fabric8.api.state.State;
 
-
-
 public interface FabricService {
 
-    State  PERMIT_NAME = new State(FabricService.class);
+    State<FabricService> PROTECTED_STATE = new State<FabricService>(FabricService.class);
+
     String PID = "fabric.service.pid";
 
     String getContainerPrefix();

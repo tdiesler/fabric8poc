@@ -34,8 +34,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = { FabricService.class }, configurationPid = FabricService.PID, immediate = true)
-public final class FabricServiceImpl extends AbstractProtectedComponent implements FabricService {
-
+public final class FabricServiceImpl extends AbstractProtectedComponent<FabricService> implements FabricService {
 
     private static AtomicInteger INSTANCE_COUNT = new AtomicInteger();
     private final String name = getClass().getSimpleName() + "#" + INSTANCE_COUNT.incrementAndGet();
@@ -46,16 +45,14 @@ public final class FabricServiceImpl extends AbstractProtectedComponent implemen
     @Activate
     void activate(Map<String, ?> config) {
         prefix = (String) config.get(Container.KEY_NAME_PREFIX);
-        activateComponent();
-        activateComponentState(PERMIT_NAME);
+        activateComponent(PROTECTED_STATE, this);
     }
 
     // @Modified not implemented - we get a new compoennt with every config change
 
     @Deactivate
     void deactivate() {
-        deactivateComponentState(PERMIT_NAME);
-        deactivateComponent();
+        deactivateComponent(PROTECTED_STATE);
     }
 
     @Override
@@ -121,11 +118,11 @@ public final class FabricServiceImpl extends AbstractProtectedComponent implemen
         this.containerRegistry.unbind(registry);
     }
     @Reference
-    void bindStateService(StateService stateService) {
-        bindReference(stateService);
+    protected void bindStateService(StateService stateService) {
+        super.bindStateService(stateService);
     }
-    void unbindStateService(StateService stateService) {
-        unbindReference(stateService);
+    protected void unbindStateService(StateService stateService) {
+        super.unbindStateService(stateService);
     }
 
     @Override

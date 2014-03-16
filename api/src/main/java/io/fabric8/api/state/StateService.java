@@ -37,7 +37,7 @@ public interface StateService {
     /**
      * Activate the given state
      */
-    void activate(State state);
+    <T> void activate(State<T> state, T instance);
 
     /**
      * Deactivate the given state.
@@ -45,7 +45,7 @@ public interface StateService {
      * This method blocks until all permits for the given state are returned.
      * No new permits can be aquired while the given state is in transition.
      */
-    void deactivate(State state);
+    void deactivate(State<?> state);
 
     /**
      * Deactivate the given state.
@@ -55,14 +55,14 @@ public interface StateService {
      *
      * @throws StateTimeoutException if the given timeout was reached before all permits were returned
      */
-    void deactivate(State state, long timeout, TimeUnit unit) throws StateTimeoutException;
+    void deactivate(State<?> state, long timeout, TimeUnit unit) throws StateTimeoutException;
 
     /**
      * Aquire an exclusive permit for the given state.
      *
      * This method blocks until a permit on the given state is available.
      */
-    Permit aquirePermit(State state, boolean exclusive);
+    <T> Permit<T> aquirePermit(State<T> state, boolean exclusive);
 
     /**
      * Aquire a permit for the given state.
@@ -71,14 +71,19 @@ public interface StateService {
      *
      * @throws StateTimeoutException if the given timeout was reached before a permit became available
      */
-    Permit aquirePermit(State state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException;
+    <T> Permit<T> aquirePermit(State<T> state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException;
 
-    interface Permit {
+    interface Permit<T> {
 
         /**
          * Get the state associated with this permit
          */
-        State getState();
+        State<T> getState();
+
+        /**
+         * Get the instance associated with this permit
+         */
+        T getInstance();
 
         /**
          * Releaes this permit

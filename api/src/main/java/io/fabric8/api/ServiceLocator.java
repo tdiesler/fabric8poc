@@ -70,6 +70,11 @@ public final class ServiceLocator {
         return awaitService(moduleContext, type, filterspec, DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 
+    public static <T> T awaitService(Class<T> type, long timeout, TimeUnit unit) {
+        ModuleContext moduleContext = RuntimeLocator.getRequiredRuntime().getModuleContext();
+        return awaitService(moduleContext, type, null, timeout, unit);
+    }
+
     public static <T> T awaitService(Class<T> type, String filterspec, long timeout, TimeUnit unit) {
         ModuleContext moduleContext = RuntimeLocator.getRequiredRuntime().getModuleContext();
         return awaitService(moduleContext, type, filterspec, timeout, unit);

@@ -29,25 +29,32 @@ import org.jboss.gravia.utils.NotNullException;
  *
  * @Immutable
  */
-public final class State {
+public final class State<T> {
 
     public static final int DEFAULT_MAXIMUM_PERMITS = Integer.MAX_VALUE;
 
+    private final Class<T> type;
     private final String name;
     private final int maxpermits;
 
-    public State(Class<?> type) {
-        this(type.getName(), DEFAULT_MAXIMUM_PERMITS);
+    public State(Class<T> type) {
+        this(type, type.getName(), DEFAULT_MAXIMUM_PERMITS);
     }
 
-    public State(String name) {
-        this(name, DEFAULT_MAXIMUM_PERMITS);
+    public State(Class<T> type, String name) {
+        this(null, name, DEFAULT_MAXIMUM_PERMITS);
     }
 
-    public State(String name, int maxpermits) {
+    public State(Class<T> type, String name, int maxpermits) {
+        NotNullException.assertValue(type, "type");
         NotNullException.assertValue(name, "name");
         this.maxpermits = maxpermits;
+        this.type = type;
         this.name = name;
+    }
+
+    public Class<T> getType() {
+        return type;
     }
 
     public String getName() {
@@ -69,7 +76,7 @@ public final class State {
             return true;
         if (!(obj instanceof State))
             return false;
-        State other = (State) obj;
+        State<?> other = (State<?>) obj;
         return name.equals(other.name);
     }
 

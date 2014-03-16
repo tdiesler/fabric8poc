@@ -34,12 +34,12 @@ public abstract class AbstractComponent implements Validatable {
 
     private final ValidationSupport active = new ValidationSupport();
 
-    public void activateComponent() {
+    protected void activateComponent() {
         active.setValid();
         LOGGER.info("activateComponent: " + this);
     }
 
-    public void deactivateComponent() {
+    protected void deactivateComponent() {
         LOGGER.info("deactivateComponent: " + this);
         active.setInvalid();
     }

@@ -22,26 +22,28 @@ package io.fabric8.internal.scr;
 import io.fabric8.api.state.State;
 import io.fabric8.api.state.StateService;
 
-public abstract class AbstractProtectedComponent extends AbstractComponent {
+public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
     private final ValidatingReference<StateService> stateService = new ValidatingReference<StateService>();
 
-    protected void activateComponentState(State state) {
-        getStateService().activate(state);
+    protected void activateComponent(State<T> state, T instance) {
+        super.activateComponent();
+        stateService.get().activate(state, instance);
     }
 
-    protected void deactivateComponentState(State state) {
-        getStateService().deactivate(state);
+    protected void deactivateComponent(State<T> state) {
+        stateService.get().deactivate(state);
+        super.deactivateComponent();
     }
 
-    protected StateService getStateService() {
-        return stateService.get();
+    protected final void deactivateComponent() {
+        throw new UnsupportedOperationException();
     }
 
-    protected void bindReference(StateService stateService) {
+    protected void bindStateService(StateService stateService) {
         this.stateService.bind(stateService);
     }
-    protected void unbindReference(StateService stateService) {
+    protected void unbindStateService(StateService stateService) {
         this.stateService.unbind(stateService);
     }
 }

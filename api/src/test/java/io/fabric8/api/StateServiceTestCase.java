@@ -48,16 +48,16 @@ public class StateServiceTestCase {
 
     @Test
     public void testBasicLifecycle() throws Exception {
-        State stateA = new State("A", 1);
+        State<StateA> stateA = new State<StateA>(StateA.class, "A", 1);
 
         // No permit on inactive state
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
 
         // Activate the state
-        stateService.activate(stateA);
+        stateService.activate(stateA, new StateA());
 
         // Aquire max permits
-        Permit permit = stateService.aquirePermit(stateA, false);
+        Permit<StateA> permit = stateService.aquirePermit(stateA, false);
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
 
         // Cannot deactivate while permits in use
@@ -74,11 +74,11 @@ public class StateServiceTestCase {
     @Test
     public void testReleaseFromOtherThread() throws Exception {
 
-        final State stateA = new State("A", 1);
+        State<StateA> stateA = new State<StateA>(StateA.class, "A", 1);
 
-        stateService.activate(stateA);
+        stateService.activate(stateA, new StateA());
 
-        final Permit permit = stateService.aquirePermit(stateA, false);
+        final Permit<StateA> permit = stateService.aquirePermit(stateA, false);
 
         new Thread(new Runnable() {
             @Override
@@ -98,12 +98,12 @@ public class StateServiceTestCase {
     @Test
     public void testAquireExclusive() throws Exception {
 
-        State stateA = new State("A", 2);
+        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
 
-        stateService.activate(stateA);
+        stateService.activate(stateA, new StateA());
 
         // Aquire exclusive permit
-        Permit permit = stateService.aquirePermit(stateA, true);
+        Permit<StateA> permit = stateService.aquirePermit(stateA, true);
 
         // Assert that no other permit can be obtained
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
@@ -116,17 +116,19 @@ public class StateServiceTestCase {
     @Test
     public void testDeactivateWithExclusivePermit() throws Exception {
 
-        State stateA = new State("A", 2);
+        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
 
-        stateService.activate(stateA);
+        StateA instanceA1 = new StateA();
+        stateService.activate(stateA, instanceA1);
 
         // Aquire all permits
-        Permit permit = stateService.aquirePermit(stateA, true);
+        Permit<StateA> permit = stateService.aquirePermit(stateA, true);
 
         // Deactivate while holding an exclusive permit
         stateService.deactivate(stateA, 100, TimeUnit.MILLISECONDS);
 
-        stateService.activate(stateA);
+        StateA instanceA2 = new StateA();
+        stateService.activate(stateA, instanceA2);
 
         // Assert that no other permit can be obtained
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
@@ -138,13 +140,13 @@ public class StateServiceTestCase {
     @Test
     public void testMaxPermits() throws Exception {
 
-        State stateA = new State("A", 2);
+        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
 
-        stateService.activate(stateA);
+        stateService.activate(stateA, new StateA());
 
         // Aquire all permits
         stateService.aquirePermit(stateA, false);
-        Permit permit = stateService.aquirePermit(stateA, false);
+        Permit<StateA> permit = stateService.aquirePermit(stateA, false);
 
         // Assert that no other permit can be obtained
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
@@ -153,7 +155,7 @@ public class StateServiceTestCase {
         stateService.aquirePermit(stateA, false);
     }
 
-    private void assertPermitTimeout(State state, boolean exclusive, long timeout, TimeUnit unit) {
+    private void assertPermitTimeout(State<?> state, boolean exclusive, long timeout, TimeUnit unit) {
         try {
             stateService.aquirePermit(state, exclusive, timeout, unit);
             Assert.fail("TimeoutException expected");
@@ -162,12 +164,15 @@ public class StateServiceTestCase {
         }
     }
 
-    private void assertDeactivateTimeout(State state, long timeout, TimeUnit unit) {
+    private void assertDeactivateTimeout(State<?> state, long timeout, TimeUnit unit) {
         try {
             stateService.deactivate(state, timeout, unit);
             Assert.fail("TimeoutException expected");
         } catch (StateTimeoutException ex) {
             // expected
         }
+    }
+
+    static class StateA {
     }
 }

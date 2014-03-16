@@ -21,8 +21,8 @@ package io.fabric8.test;
 
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.services.Container;
-import io.fabric8.api.services.FabricService;
 import io.fabric8.api.services.Container.State;
+import io.fabric8.api.services.FabricService;
 import io.fabric8.api.state.StateService;
 import io.fabric8.api.state.StateService.Permit;
 import io.fabric8.test.support.AbstractEmbeddedTest;
@@ -43,6 +43,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test basic runtime functionality.
@@ -52,7 +54,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
-    ExecutorService executor = Executors.newFixedThreadPool(2);
+    private static Logger LOGGER = LoggerFactory.getLogger(ConcurrentClientsTest.class);
+
+    private ExecutorService executor = Executors.newFixedThreadPool(2);
+    private volatile Exception lastException;
 
     @After
     public void setUp() throws Exception {
@@ -76,7 +81,7 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         public Boolean call() throws Exception {
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
             ModuleContext syscontext = runtime.getModuleContext();
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; lastException == null && i < 20; i++) {
                 ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
                 Configuration config = configAdmin.getConfiguration(FabricService.PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -94,20 +99,26 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         @Override
         public Boolean call() throws Exception {
             StateService stateService = ServiceLocator.getRequiredService(StateService.class);
-            for (int i = 0; i < 25; i++) {
-                Container container = createAndStart(stateService, i);
-                Thread.sleep(10);
-                stopAndDestroy(stateService, container);
-                Thread.sleep(10);
+            for (int i = 0; lastException == null && i < 25; i++) {
+                try {
+                    Container container = createAndStart(stateService, i);
+                    Thread.sleep(10);
+                    stopAndDestroy(stateService, container);
+                    Thread.sleep(10);
+                } catch (Exception ex) {
+                    lastException = ex;
+                    LOGGER.error(ex.getMessage(), ex);
+                    throw ex;
+                }
             }
             return true;
         }
 
         private Container createAndStart(StateService stateService, int i) throws InterruptedException {
             Container container;
-            Permit permit = stateService.aquirePermit(FabricService.PERMIT_NAME, false);
+            Permit<FabricService> permit = stateService.aquirePermit(FabricService.PROTECTED_STATE, false);
             try {
-                FabricService service = ServiceLocator.getRequiredService(FabricService.class);
+                FabricService service = permit.getInstance();
                 container = service.createContainer("cnt#" + i);
                 Assert.assertSame(State.CREATED, container.getState());
                 Thread.sleep(10);
@@ -122,9 +133,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
 
         private void stopAndDestroy(StateService stateService, Container container) throws InterruptedException {
-            Permit permit = stateService.aquirePermit(FabricService.PERMIT_NAME, false);
+            Permit<FabricService> permit = stateService.aquirePermit(FabricService.PROTECTED_STATE, false);
             try {
-                FabricService service = ServiceLocator.getRequiredService(FabricService.class);
+                FabricService service = permit.getInstance();
                 service.stopContainer(container);
                 Assert.assertSame(State.STOPPED, container.getState());
                 Thread.sleep(10);
