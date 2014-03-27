@@ -19,11 +19,10 @@
  */
 package io.fabric8.internal.service;
 
-import io.fabric8.api.state.State;
-import io.fabric8.api.state.StateService;
-import io.fabric8.api.state.StateTimeoutException;
+import io.fabric8.internal.api.PermitManager;
+import io.fabric8.internal.api.State;
+import io.fabric8.internal.api.StateTimeoutException;
 import io.fabric8.internal.scr.AbstractComponent;
-import io.fabric8.spi.DefaultStateService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,10 +30,10 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
-@Component(service = { StateService.class }, immediate = true)
-public final class StateManager extends AbstractComponent implements StateService {
+@Component(service = { PermitManager.class }, immediate = true)
+public final class StateManager extends AbstractComponent implements PermitManager {
 
-    private final StateService delegate = new DefaultStateService();
+    private final PermitManager delegate = new DefaultPermitManager();
 
     @Activate
     void activate() {

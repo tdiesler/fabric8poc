@@ -1,32 +1,24 @@
 package io.fabric8.internal.service;
 
-import io.fabric8.api.services.Container;
+import io.fabric8.api.Container.State;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-final class MutableContainer implements Container {
+final class ContainerState {
 
     private final String name;
-    private final AtomicReference<State> state = new AtomicReference<Container.State>();
+    private final AtomicReference<State> state = new AtomicReference<State>();
 
-    MutableContainer(String name) {
+    ContainerState(String name) {
         this.name = name;
         this.state.set(State.CREATED);
     }
 
-    static MutableContainer assertMutableContainer(Container container) {
-        if (!(container instanceof MutableContainer))
-            throw new IllegalArgumentException("Not a mutable container: " + container);
-        return (MutableContainer) container;
-    }
-
-    @Override
-    public String getName() {
+    String getName() {
         return name;
     }
 
-    @Override
-    public State getState() {
+    State getState() {
         return state.get();
     }
 

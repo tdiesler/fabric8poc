@@ -53,6 +53,18 @@
             <artifactId>org.osgi.enterprise</artifactId>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     
     <build>
@@ -80,6 +92,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>

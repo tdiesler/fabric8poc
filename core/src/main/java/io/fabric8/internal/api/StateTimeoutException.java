@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.state;
+package io.fabric8.internal.api;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,18 +32,18 @@ public final class StateTimeoutException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private final State state;
+    private final State<?> state;
     private final long timeout;
     private final TimeUnit unit;
 
-    public StateTimeoutException(String message, State state, long timeout, TimeUnit unit) {
+    public StateTimeoutException(String message, State<?> state, long timeout, TimeUnit unit) {
         super(message);
         this.state = state;
         this.timeout = timeout;
         this.unit = unit;
     }
 
-    public State getState() {
+    public State<?> getState() {
         return state;
     }
 

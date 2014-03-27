@@ -19,7 +19,6 @@
  */
 package io.fabric8.internal.service;
 
-import io.fabric8.api.services.Container;
 import io.fabric8.internal.scr.AbstractComponent;
 
 import java.util.Map;
@@ -32,7 +31,7 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
-    private final Map<String, Container> containers = new ConcurrentHashMap<String, Container>();
+    private final Map<String, ContainerState> containers = new ConcurrentHashMap<String, ContainerState>();
 
     @Activate
     void activate() {
@@ -44,17 +43,19 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container getContainer(String name) {
+    ContainerState getContainer(String name) {
         assertValid();
         return containers.get(name);
     }
 
-    void addContainer(Container container) {
+    ContainerState addContainer(String name) {
         assertValid();
-        containers.put(container.getName(), container);
+        ContainerState containerState = new ContainerState(name);
+        containers.put(name, containerState);
+        return containerState;
     }
 
-    Container removeContainer(String name) {
+    ContainerState removeContainer(String name) {
         assertValid();
         return containers.remove(name);
     }

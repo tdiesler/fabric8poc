@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.state;
+package io.fabric8.internal.api;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 * @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
 */
-public interface StateService {
+public interface PermitManager {
 
     /**
      * Activate the given state

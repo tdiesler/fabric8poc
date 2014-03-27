@@ -19,12 +19,11 @@
  */
 package io.fabric8.test;
 
+import io.fabric8.api.Constants;
+import io.fabric8.api.Container;
+import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.services.Container;
-import io.fabric8.api.services.Container.State;
-import io.fabric8.api.services.FabricService;
-import io.fabric8.api.state.StateService;
-import io.fabric8.api.state.StateService.Permit;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -83,9 +82,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             ModuleContext syscontext = runtime.getModuleContext();
             for (int i = 0; lastException == null && i < 20; i++) {
                 ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
-                Configuration config = configAdmin.getConfiguration(FabricService.PID, null);
+                Configuration config = configAdmin.getConfiguration(Constants.PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(Container.KEY_NAME_PREFIX, "config#" + i);
+                props.put(Constants.KEY_NAME_PREFIX, "config#" + i);
                 config.update(props);
 
                 Thread.sleep(50);
@@ -98,12 +97,12 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
         @Override
         public Boolean call() throws Exception {
-            StateService stateService = ServiceLocator.getRequiredService(StateService.class);
+            ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    Container container = createAndStart(stateService, i);
+                    Container container = createAndStart(service, i);
                     Thread.sleep(10);
-                    stopAndDestroy(stateService, container);
+                    stopAndDestroy(service, container);
                     Thread.sleep(10);
                 } catch (Exception ex) {
                     lastException = ex;
@@ -114,37 +113,24 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             return true;
         }
 
-        private Container createAndStart(StateService stateService, int i) throws InterruptedException {
-            Container container;
-            Permit<FabricService> permit = stateService.aquirePermit(FabricService.PROTECTED_STATE, false);
-            try {
-                FabricService service = permit.getInstance();
-                container = service.createContainer("cnt#" + i);
-                Assert.assertSame(State.CREATED, container.getState());
-                Thread.sleep(10);
+        private Container createAndStart(ContainerManager service, int i) throws InterruptedException {
+            Container container = service.createContainer("cnt#" + i);
+            Assert.assertSame(State.CREATED, container.getState());
+            Thread.sleep(10);
 
-                service.startContainer(container);
-                Assert.assertSame(State.STARTED, container.getState());
-            } finally {
-                permit.release();
-            }
+            container = service.startContainer(container.getName());
+            Assert.assertSame(State.STARTED, container.getState());
             return container;
         }
 
 
-        private void stopAndDestroy(StateService stateService, Container container) throws InterruptedException {
-            Permit<FabricService> permit = stateService.aquirePermit(FabricService.PROTECTED_STATE, false);
-            try {
-                FabricService service = permit.getInstance();
-                service.stopContainer(container);
-                Assert.assertSame(State.STOPPED, container.getState());
-                Thread.sleep(10);
+        private void stopAndDestroy(ContainerManager service, Container container) throws InterruptedException {
+            container = service.stopContainer(container.getName());
+            Assert.assertSame(State.STOPPED, container.getState());
+            Thread.sleep(10);
 
-                service.destroyContainer(container);
-                Assert.assertSame(State.DESTROYED, container.getState());
-            } finally {
-                permit.release();
-            }
+            container = service.destroyContainer(container.getName());
+            Assert.assertSame(State.DESTROYED, container.getState());
         }
     }
 }

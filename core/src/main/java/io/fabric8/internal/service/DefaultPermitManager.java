@@ -17,11 +17,11 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.internal.service;
 
-import io.fabric8.api.state.State;
-import io.fabric8.api.state.StateService;
-import io.fabric8.api.state.StateTimeoutException;
+import io.fabric8.internal.api.PermitManager;
+import io.fabric8.internal.api.State;
+import io.fabric8.internal.api.StateTimeoutException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,14 +40,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-* The default implementation of a {@link StateService}
+* The default implementation of a {@link PermitManager}
 *
 * @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
 */
-public final class DefaultStateService implements StateService {
+public final class DefaultPermitManager implements PermitManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStateService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPermitManager.class);
     private final Map<State<?>, StatePermit<?>> permitmapping = new HashMap<State<?>, StatePermit<?>>();
 
     @Override

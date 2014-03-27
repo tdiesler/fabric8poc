@@ -19,10 +19,10 @@
  */
 package io.fabric8.test;
 
+import io.fabric8.api.Container;
+import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.services.Container;
-import io.fabric8.api.services.FabricService;
-import io.fabric8.api.services.Container.State;
+import io.fabric8.api.Container.State;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import org.junit.Assert;
@@ -39,18 +39,18 @@ public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
     @Test
     public void testContainerLifecycle() throws Exception {
 
-        FabricService service = ServiceLocator.getRequiredService(FabricService.class);
+        ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cntA = service.createContainer("cntA");
         Assert.assertEquals("cntA", cntA.getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        service.startContainer(cntA);
+        cntA = service.startContainer(cntA.getName());
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        service.stopContainer(cntA);
+        cntA = service.stopContainer(cntA.getName());
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        service.destroyContainer(cntA);
+        cntA = service.destroyContainer(cntA.getName());
         Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }

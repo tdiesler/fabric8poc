@@ -19,11 +19,11 @@
  */
 package io.fabric8.test;
 
+import io.fabric8.api.Constants;
+import io.fabric8.api.Container;
+import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.services.Container;
-import io.fabric8.api.services.FabricService;
-import io.fabric8.api.services.Container.State;
-import io.fabric8.internal.scr.InvalidComponentException;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -54,8 +54,8 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
     @Test
     public void testModifyService() throws Exception {
 
-        // Aquire the {@link FabricService} instance
-        FabricService service = ServiceLocator.getRequiredService(FabricService.class);
+        // Aquire the {@link ContainerManager} instance
+        ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
 
         final CountDownLatch updateLatch = new CountDownLatch(1);
         ConfigurationListener listener = new ConfigurationListener() {
@@ -63,7 +63,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
                 int type = event.getType();
-                if (FabricService.PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
+                if (Constants.PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
                     updateLatch.countDown();
                 }
             }
@@ -78,9 +78,9 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             ModuleContext moduleContext = module.getModuleContext();
 
             ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(FabricService.PID);
+            Configuration config = configAdmin.getConfiguration(Constants.PID);
             Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(Container.KEY_NAME_PREFIX, "foo");
+            props.put(Constants.KEY_NAME_PREFIX, "foo");
             config.update(props);
 
             Assert.assertTrue("Config updated", updateLatch.await(2, TimeUnit.SECONDS));
@@ -91,26 +91,17 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Wait a little for the component to get updated
         Thread.sleep(100);
 
-        try {
-            service.createContainer("dummy");
-            Assert.fail("InvalidComponentException expected");
-        } catch (InvalidComponentException ex) {
-            // expected
-        }
-
-        service = ServiceLocator.getRequiredService(FabricService.class);
-
         Container cntA = service.createContainer("cntA");
         Assert.assertEquals("foo.cntA", cntA.getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        service.startContainer(cntA);
+        cntA = service.startContainer(cntA.getName());
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        service.stopContainer(cntA);
+        cntA = service.stopContainer(cntA.getName());
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        service.destroyContainer(cntA);
+        cntA = service.destroyContainer(cntA.getName());
         Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }

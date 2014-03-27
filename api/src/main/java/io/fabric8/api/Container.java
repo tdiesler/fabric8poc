@@ -17,12 +17,10 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.services;
+package io.fabric8.api;
 
 
 public interface Container {
-
-    String KEY_NAME_PREFIX = "container.prefix";
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED

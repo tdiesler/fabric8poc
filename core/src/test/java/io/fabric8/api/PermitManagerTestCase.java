@@ -19,11 +19,11 @@
  */
 package io.fabric8.api;
 
-import io.fabric8.api.state.State;
-import io.fabric8.api.state.StateService;
-import io.fabric8.api.state.StateService.Permit;
-import io.fabric8.api.state.StateTimeoutException;
-import io.fabric8.spi.DefaultStateService;
+import io.fabric8.internal.api.PermitManager;
+import io.fabric8.internal.api.State;
+import io.fabric8.internal.api.StateTimeoutException;
+import io.fabric8.internal.api.PermitManager.Permit;
+import io.fabric8.internal.service.DefaultPermitManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,18 +32,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Test the {@link StateService}.
+ * Test the {@link PermitManager}.
  *
  * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  */
-public class StateServiceTestCase {
+public class PermitManagerTestCase {
 
-    StateService stateService;
+    PermitManager stateService;
 
     @Before
     public void setUp() {
-        stateService = new DefaultStateService();
+        stateService = new DefaultPermitManager();
     }
 
     @Test

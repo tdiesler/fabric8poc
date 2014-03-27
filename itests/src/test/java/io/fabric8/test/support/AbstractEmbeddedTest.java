@@ -21,7 +21,7 @@
  */
 package io.fabric8.test.support;
 
-import io.fabric8.api.services.FabricService;
+import io.fabric8.internal.api.FabricService;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

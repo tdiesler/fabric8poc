@@ -1,8 +1,8 @@
 /*
  * #%L
- * Gravia :: Runtime :: API
+ * Gravia :: Integration Tests :: Common
  * %%
- * Copyright (C) 2013 - 2014 JBoss by Red Hat
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,24 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.state;
+package io.fabric8.internal.api;
+
+import io.fabric8.api.Container;
 
 
-/**
-* The base of all condition services
-*
-* @author thomas.diesler@jboss.com
-* @since 05-Mar-2014
-*/
-public interface Condition {
+public interface FabricService {
 
+    State<FabricService> PROTECTED_STATE = new State<FabricService>(FabricService.class);
+
+    String getContainerPrefix();
+
+    Container createContainer(String name);
+
+    Container getContainerByName(String name);
+
+    Container startContainer(String name);
+
+    Container stopContainer(String name);
+
+    Container destroyContainer(String name);
 }

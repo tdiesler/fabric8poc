@@ -19,9 +19,10 @@
  */
 package io.fabric8.internal.service;
 
-import io.fabric8.api.services.Container;
-import io.fabric8.api.services.FabricService;
-import io.fabric8.api.state.StateService;
+import io.fabric8.api.Constants;
+import io.fabric8.api.Container;
+import io.fabric8.internal.api.FabricService;
+import io.fabric8.internal.api.PermitManager;
 import io.fabric8.internal.scr.AbstractProtectedComponent;
 import io.fabric8.internal.scr.ValidatingReference;
 
@@ -33,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { FabricService.class }, configurationPid = FabricService.PID, immediate = true)
+@Component(service = { FabricService.class }, configurationPid = Constants.PID, immediate = true)
 public final class FabricServiceImpl extends AbstractProtectedComponent<FabricService> implements FabricService {
 
     private static AtomicInteger INSTANCE_COUNT = new AtomicInteger();
@@ -44,7 +45,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
 
     @Activate
     void activate(Map<String, ?> config) {
-        prefix = (String) config.get(Container.KEY_NAME_PREFIX);
+        prefix = (String) config.get(Constants.KEY_NAME_PREFIX);
         activateComponent(PROTECTED_STATE, this);
     }
 
@@ -65,48 +66,57 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     public Container createContainer(String name) {
         assertValid();
         synchronized (containerRegistry) {
-            Container container = containerRegistry.get().getContainer(name);
-            if (container != null)
+            ContainerState containerState = containerRegistry.get().getContainer(name);
+            if (containerState != null)
                 throw new IllegalStateException("Container already exists: " + name);
 
             String prefixedName = prefix != null ? prefix + "." + name : name;
-            container = new MutableContainer(prefixedName);
-            containerRegistry.get().addContainer(container);
-            return container;
+            containerState = containerRegistry.get().addContainer(prefixedName);
+            return new ImmutableContainer(containerState);
         }
     }
 
     @Override
     public Container getContainerByName(String name) {
         assertValid();
-        return containerRegistry.get().getContainer(name);
+        ContainerState containerState = containerRegistry.get().getContainer(name);
+        return containerState != null ? new ImmutableContainer(containerState) : null;
     }
 
     @Override
-    public void startContainer(Container container) {
+    public Container startContainer(String name) {
         assertValid();
-        assertContainerExists(container.getName()).start();
+        ContainerState containerState = assertContainerExists(name);
+        containerState.start();
+        return new ImmutableContainer(containerState);
     }
 
     @Override
-    public void stopContainer(Container container) {
+    public Container stopContainer(String name) {
         assertValid();
-        assertContainerExists(container.getName()).stop();
+        ContainerState containerState = assertContainerExists(name);
+        containerState.stop();
+        return new ImmutableContainer(containerState);
     }
 
     @Override
-    public void destroyContainer(Container container) {
+    public Container destroyContainer(String name) {
         assertValid();
         synchronized (containerRegistry) {
-            Container removed = containerRegistry.get().removeContainer(container.getName());
-            MutableContainer.assertMutableContainer(removed).destroy();
+            ContainerState containerState = containerRegistry.get().removeContainer(name);
+            if (containerState == null)
+                throw new IllegalStateException("Container does not exist: " + name);
+            containerState.destroy();
+            return new ImmutableContainer(containerState);
         }
     }
 
-    private MutableContainer assertContainerExists(String name) {
+    private ContainerState assertContainerExists(String name) {
         synchronized (containerRegistry) {
-            Container container = containerRegistry.get().getContainer(name);
-            return MutableContainer.assertMutableContainer(container);
+            ContainerState container = containerRegistry.get().getContainer(name);
+            if (container == null)
+                throw new IllegalStateException("Container does not exist: " + name);
+            return container;
         }
     }
 
@@ -118,10 +128,10 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
         this.containerRegistry.unbind(registry);
     }
     @Reference
-    protected void bindStateService(StateService stateService) {
+    protected void bindStateService(PermitManager stateService) {
         super.bindStateService(stateService);
     }
-    protected void unbindStateService(StateService stateService) {
+    protected void unbindStateService(PermitManager stateService) {
         super.unbindStateService(stateService);
     }
 

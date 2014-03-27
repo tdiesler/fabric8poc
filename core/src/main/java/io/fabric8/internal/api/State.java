@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.state;
+package io.fabric8.internal.api;
 
 import org.jboss.gravia.utils.NotNullException;
 
