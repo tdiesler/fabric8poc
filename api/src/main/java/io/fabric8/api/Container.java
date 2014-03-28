@@ -29,4 +29,10 @@ public interface Container {
     String getName();
 
     State getState();
+
+    void start();
+
+    void stop();
+
+    void destroy();
 }

@@ -21,7 +21,7 @@
  */
 package io.fabric8.test.support;
 
-import io.fabric8.internal.api.FabricService;
+import io.fabric8.api.FabricManager;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +48,7 @@ public abstract class AbstractEmbeddedTest {
     public static void beforeClass() throws Exception {
         ModuleContext syscontext = EmbeddedUtils.getEmbeddedRuntime().getModuleContext();
 
-        // Start listening on the {@link FabricService} service
+        // Start listening on the {@link ContainerManager} service
         final CountDownLatch latch = new CountDownLatch(1);
         ServiceListener listener = new ServiceListener() {
             @Override
@@ -57,7 +57,7 @@ public abstract class AbstractEmbeddedTest {
                     latch.countDown();
             }
         };
-        syscontext.addServiceListener(listener, "(objectClass=" + FabricService.class.getName() + ")");
+        syscontext.addServiceListener(listener, "(objectClass=" + FabricManager.class.getName() + ")");
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
@@ -65,7 +65,7 @@ public abstract class AbstractEmbeddedTest {
             EmbeddedUtils.installAndStartModule(classLoader, name);
         }
 
-        Assert.assertTrue("FabricService registered", latch.await(20, TimeUnit.SECONDS));
+        Assert.assertTrue("ContainerManager registered", latch.await(20, TimeUnit.SECONDS));
     }
 
     @AfterClass

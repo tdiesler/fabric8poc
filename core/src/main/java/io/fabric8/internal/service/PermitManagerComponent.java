@@ -20,8 +20,8 @@
 package io.fabric8.internal.service;
 
 import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.State;
-import io.fabric8.internal.api.StateTimeoutException;
+import io.fabric8.internal.api.PermitState;
+import io.fabric8.internal.api.PermitStateTimeoutException;
 import io.fabric8.internal.scr.AbstractComponent;
 
 import java.util.concurrent.TimeUnit;
@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
 @Component(service = { PermitManager.class }, immediate = true)
-public final class StateManager extends AbstractComponent implements PermitManager {
+public final class PermitManagerComponent extends AbstractComponent implements PermitManager {
 
     private final PermitManager delegate = new DefaultPermitManager();
 
@@ -46,31 +46,31 @@ public final class StateManager extends AbstractComponent implements PermitManag
     }
 
     @Override
-    public <T> void activate(State<T> state, T instance) {
+    public <T> void activate(PermitState<T> state, T instance) {
         assertValid();
         delegate.activate(state, instance);
     }
 
     @Override
-    public void deactivate(State<?> state) {
+    public void deactivate(PermitState<?> state) {
         assertValid();
         delegate.deactivate(state);
     }
 
     @Override
-    public void deactivate(State<?> state, long timeout, TimeUnit unit) throws StateTimeoutException {
+    public void deactivate(PermitState<?> state, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
         assertValid();
         delegate.deactivate(state, timeout, unit);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive) {
+    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive) {
         assertValid();
         return delegate.aquirePermit(state, exclusive);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException {
+    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
         assertValid();
         return delegate.aquirePermit(state, exclusive, timeout, unit);
     }

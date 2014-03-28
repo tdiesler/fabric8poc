@@ -20,8 +20,8 @@
 package io.fabric8.internal.service;
 
 import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.State;
-import io.fabric8.internal.api.StateTimeoutException;
+import io.fabric8.internal.api.PermitState;
+import io.fabric8.internal.api.PermitStateTimeoutException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,43 +48,43 @@ import org.slf4j.LoggerFactory;
 public final class DefaultPermitManager implements PermitManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPermitManager.class);
-    private final Map<State<?>, StatePermit<?>> permitmapping = new HashMap<State<?>, StatePermit<?>>();
+    private final Map<PermitState<?>, StatePermit<?>> permitmapping = new HashMap<PermitState<?>, StatePermit<?>>();
 
     @Override
-    public <T> void activate(State<T> state, T instance) {
+    public <T> void activate(PermitState<T> state, T instance) {
         getStatePermit(state).activate(instance);
     }
 
     @Override
-    public void deactivate(State<?> state) {
+    public void deactivate(PermitState<?> state) {
         getStatePermit(state).deactivate(-1, null);
     }
 
     @Override
-    public void deactivate(State<?> state, long timeout, TimeUnit unit) {
+    public void deactivate(PermitState<?> state, long timeout, TimeUnit unit) {
         if (!getStatePermit(state).deactivate(timeout, unit)) {
-            throw new StateTimeoutException("Cannot deactivate state [" + state.getName() + "] in time", state, timeout, unit);
+            throw new PermitStateTimeoutException("Cannot deactivate state [" + state.getName() + "] in time", state, timeout, unit);
         }
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive) {
+    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive) {
         StatePermit<T> statePermit = getStatePermit(state);
         statePermit.acquire(exclusive, -1, null);
         return statePermit;
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(State<T> state, boolean exclusive, long timeout, TimeUnit unit) {
+    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) {
         StatePermit<T> statePermit = getStatePermit(state);
         if (!statePermit.acquire(exclusive, timeout, unit)) {
-            throw new StateTimeoutException("Cannot aquire permit for state [" + state.getName() + "] in time", state, timeout, unit);
+            throw new PermitStateTimeoutException("Cannot aquire permit for state [" + state.getName() + "] in time", state, timeout, unit);
         }
         return statePermit;
     }
 
     @SuppressWarnings("unchecked")
-    private <T> StatePermit<T> getStatePermit(State<T> state) {
+    private <T> StatePermit<T> getStatePermit(PermitState<T> state) {
         NotNullException.assertValue(state, "state");
         synchronized (permitmapping) {
             StatePermit<?> statePermit = permitmapping.get(state);
@@ -101,14 +101,14 @@ public final class DefaultPermitManager implements PermitManager {
         private final Semaphore clientPermits = new Semaphore(0);
         private final AtomicBoolean active = new AtomicBoolean();
         private final ExecutorService executor;
-        private final State<T> state;
+        private final PermitState<T> state;
 
         private CountDownLatch deactivationLatch;
         private boolean exclusiveLock;
         private int usageCount;
         private T activeInstance;
 
-        StatePermit(State<T> state) {
+        StatePermit(PermitState<T> state) {
             this.state = state;
             this.executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
                 @Override
@@ -121,7 +121,7 @@ public final class DefaultPermitManager implements PermitManager {
         }
 
         @Override
-        public State<T> getState() {
+        public PermitState<T> getState() {
             return state;
         }
 

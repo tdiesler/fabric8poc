@@ -20,8 +20,8 @@
 package io.fabric8.api;
 
 import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.State;
-import io.fabric8.internal.api.StateTimeoutException;
+import io.fabric8.internal.api.PermitState;
+import io.fabric8.internal.api.PermitStateTimeoutException;
 import io.fabric8.internal.api.PermitManager.Permit;
 import io.fabric8.internal.service.DefaultPermitManager;
 
@@ -48,7 +48,7 @@ public class PermitManagerTestCase {
 
     @Test
     public void testBasicLifecycle() throws Exception {
-        State<StateA> stateA = new State<StateA>(StateA.class, "A", 1);
+        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 1);
 
         // No permit on inactive state
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
@@ -74,7 +74,7 @@ public class PermitManagerTestCase {
     @Test
     public void testReleaseFromOtherThread() throws Exception {
 
-        State<StateA> stateA = new State<StateA>(StateA.class, "A", 1);
+        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 1);
 
         stateService.activate(stateA, new StateA());
 
@@ -98,7 +98,7 @@ public class PermitManagerTestCase {
     @Test
     public void testAquireExclusive() throws Exception {
 
-        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
+        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
 
         stateService.activate(stateA, new StateA());
 
@@ -116,7 +116,7 @@ public class PermitManagerTestCase {
     @Test
     public void testDeactivateWithExclusivePermit() throws Exception {
 
-        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
+        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
 
         StateA instanceA1 = new StateA();
         stateService.activate(stateA, instanceA1);
@@ -140,7 +140,7 @@ public class PermitManagerTestCase {
     @Test
     public void testMaxPermits() throws Exception {
 
-        State<StateA> stateA = new State<StateA>(StateA.class, "A", 2);
+        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
 
         stateService.activate(stateA, new StateA());
 
@@ -155,20 +155,20 @@ public class PermitManagerTestCase {
         stateService.aquirePermit(stateA, false);
     }
 
-    private void assertPermitTimeout(State<?> state, boolean exclusive, long timeout, TimeUnit unit) {
+    private void assertPermitTimeout(PermitState<?> state, boolean exclusive, long timeout, TimeUnit unit) {
         try {
             stateService.aquirePermit(state, exclusive, timeout, unit);
             Assert.fail("TimeoutException expected");
-        } catch (StateTimeoutException ex) {
+        } catch (PermitStateTimeoutException ex) {
             // expected
         }
     }
 
-    private void assertDeactivateTimeout(State<?> state, long timeout, TimeUnit unit) {
+    private void assertDeactivateTimeout(PermitState<?> state, long timeout, TimeUnit unit) {
         try {
             stateService.deactivate(state, timeout, unit);
             Assert.fail("TimeoutException expected");
-        } catch (StateTimeoutException ex) {
+        } catch (PermitStateTimeoutException ex) {
             // expected
         }
     }

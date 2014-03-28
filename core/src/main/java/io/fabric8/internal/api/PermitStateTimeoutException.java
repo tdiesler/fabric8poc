@@ -28,22 +28,22 @@ import java.util.concurrent.TimeUnit;
 * @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
 */
-public final class StateTimeoutException extends RuntimeException {
+public final class PermitStateTimeoutException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private final State<?> state;
+    private final PermitState<?> state;
     private final long timeout;
     private final TimeUnit unit;
 
-    public StateTimeoutException(String message, State<?> state, long timeout, TimeUnit unit) {
+    public PermitStateTimeoutException(String message, PermitState<?> state, long timeout, TimeUnit unit) {
         super(message);
         this.state = state;
         this.timeout = timeout;
         this.unit = unit;
     }
 
-    public State<?> getState() {
+    public PermitState<?> getState() {
         return state;
     }
 

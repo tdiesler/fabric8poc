@@ -20,8 +20,6 @@
 package io.fabric8.internal.service;
 
 import io.fabric8.api.Constants;
-import io.fabric8.api.Container;
-import io.fabric8.internal.api.FabricService;
 import io.fabric8.internal.api.PermitManager;
 import io.fabric8.internal.scr.AbstractProtectedComponent;
 import io.fabric8.internal.scr.ValidatingReference;
@@ -35,7 +33,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = { FabricService.class }, configurationPid = Constants.PID, immediate = true)
-public final class FabricServiceImpl extends AbstractProtectedComponent<FabricService> implements FabricService {
+public final class FabricServiceComponent extends AbstractProtectedComponent<FabricService> implements FabricService {
 
     private static AtomicInteger INSTANCE_COUNT = new AtomicInteger();
     private final String name = getClass().getSimpleName() + "#" + INSTANCE_COUNT.incrementAndGet();
@@ -49,7 +47,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
         activateComponent(PROTECTED_STATE, this);
     }
 
-    // @Modified not implemented - we get a new compoennt with every config change
+    // @Modified not implemented - we get a new component with every config change
 
     @Deactivate
     void deactivate() {
@@ -57,13 +55,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     }
 
     @Override
-    public String getContainerPrefix() {
-        assertValid();
-        return prefix;
-    }
-
-    @Override
-    public Container createContainer(String name) {
+    public ContainerState createContainer(String name) {
         assertValid();
         synchronized (containerRegistry) {
             ContainerState containerState = containerRegistry.get().getContainer(name);
@@ -71,52 +63,51 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
                 throw new IllegalStateException("Container already exists: " + name);
 
             String prefixedName = prefix != null ? prefix + "." + name : name;
-            containerState = containerRegistry.get().addContainer(prefixedName);
-            return new ImmutableContainer(containerState);
+            return containerRegistry.get().addContainer(prefixedName);
         }
     }
 
     @Override
-    public Container getContainerByName(String name) {
+    public ContainerState getContainerByName(String name) {
         assertValid();
-        ContainerState containerState = containerRegistry.get().getContainer(name);
-        return containerState != null ? new ImmutableContainer(containerState) : null;
+        return containerRegistry.get().getContainer(name);
     }
 
     @Override
-    public Container startContainer(String name) {
-        assertValid();
-        ContainerState containerState = assertContainerExists(name);
-        containerState.start();
-        return new ImmutableContainer(containerState);
-    }
-
-    @Override
-    public Container stopContainer(String name) {
-        assertValid();
-        ContainerState containerState = assertContainerExists(name);
-        containerState.stop();
-        return new ImmutableContainer(containerState);
-    }
-
-    @Override
-    public Container destroyContainer(String name) {
+    public ContainerState startContainer(String name) {
         assertValid();
         synchronized (containerRegistry) {
-            ContainerState containerState = containerRegistry.get().removeContainer(name);
-            if (containerState == null)
-                throw new IllegalStateException("Container does not exist: " + name);
-            containerState.destroy();
-            return new ImmutableContainer(containerState);
+            ContainerState container = getRequiredContainer(name);
+            container.start();
+            return container;
         }
     }
 
-    private ContainerState assertContainerExists(String name) {
+    @Override
+    public ContainerState stopContainer(String name) {
+        assertValid();
         synchronized (containerRegistry) {
-            ContainerState container = containerRegistry.get().getContainer(name);
+            ContainerState container = getRequiredContainer(name);
+            container.stop();
+            return container;
+        }
+    }
+
+    @Override
+    public ContainerState destroyContainer(String name) {
+        assertValid();
+        synchronized (containerRegistry) {
+            ContainerState container = containerRegistry.get().removeContainer(name);
             if (container == null)
                 throw new IllegalStateException("Container does not exist: " + name);
+            container.destroy();
             return container;
+        }
+    }
+
+    private ContainerState getRequiredContainer(String name) {
+        synchronized (containerRegistry) {
+            return containerRegistry.get().getRequiredContainer(name);
         }
     }
 
@@ -124,15 +115,18 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     void bindContainerRegistry(ContainerRegistry registry) {
         this.containerRegistry.bind(registry);
     }
+
     void unbindContainerRegistry(ContainerRegistry registry) {
         this.containerRegistry.unbind(registry);
     }
+
     @Reference
-    protected void bindStateService(PermitManager stateService) {
-        super.bindStateService(stateService);
+    protected void bindPermitManager(PermitManager stateService) {
+        super.bindPermitManager(stateService);
     }
-    protected void unbindStateService(PermitManager stateService) {
-        super.unbindStateService(stateService);
+
+    protected void unbindPermitManager(PermitManager stateService) {
+        super.unbindPermitManager(stateService);
     }
 
     @Override

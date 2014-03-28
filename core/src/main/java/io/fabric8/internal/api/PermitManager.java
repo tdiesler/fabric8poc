@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 /**
 * A service that allows controlled transitions from one state to another.
 *
-* A {@link State} is associated with a number of permits that a client can obtain.
+* A {@link PermitState} is associated with a number of permits that a client can obtain.
 * To begin a state transition, all activity on a given state must be completed (i.e. all permits returned)
 * During a state transition it is not possible to aquire a state permit.
 * When a state transition ends the maximum set of state permits is restored.
@@ -37,7 +37,7 @@ public interface PermitManager {
     /**
      * Activate the given state
      */
-    <T> void activate(State<T> state, T instance);
+    <T> void activate(PermitState<T> state, T instance);
 
     /**
      * Deactivate the given state.
@@ -45,7 +45,7 @@ public interface PermitManager {
      * This method blocks until all permits for the given state are returned.
      * No new permits can be aquired while the given state is in transition.
      */
-    void deactivate(State<?> state);
+    void deactivate(PermitState<?> state);
 
     /**
      * Deactivate the given state.
@@ -53,32 +53,32 @@ public interface PermitManager {
      * This method blocks until all permits for the given state are returned.
      * No new permits can be aquired while the given state is in transition.
      *
-     * @throws StateTimeoutException if the given timeout was reached before all permits were returned
+     * @throws PermitStateTimeoutException if the given timeout was reached before all permits were returned
      */
-    void deactivate(State<?> state, long timeout, TimeUnit unit) throws StateTimeoutException;
+    void deactivate(PermitState<?> state, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
 
     /**
      * Aquire an exclusive permit for the given state.
      *
      * This method blocks until a permit on the given state is available.
      */
-    <T> Permit<T> aquirePermit(State<T> state, boolean exclusive);
+    <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive);
 
     /**
      * Aquire a permit for the given state.
      *
      * This method blocks until a permit on the given state is available.
      *
-     * @throws StateTimeoutException if the given timeout was reached before a permit became available
+     * @throws PermitStateTimeoutException if the given timeout was reached before a permit became available
      */
-    <T> Permit<T> aquirePermit(State<T> state, boolean exclusive, long timeout, TimeUnit unit) throws StateTimeoutException;
+    <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
 
     interface Permit<T> {
 
         /**
          * Get the state associated with this permit
          */
-        State<T> getState();
+        PermitState<T> getState();
 
         /**
          * Get the instance associated with this permit

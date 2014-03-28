@@ -48,11 +48,19 @@ public final class ContainerRegistry extends AbstractComponent {
         return containers.get(name);
     }
 
+    ContainerState getRequiredContainer(String name) {
+        assertValid();
+        ContainerState container = containers.get(name);
+        if (container == null)
+            throw new IllegalStateException("Container not registered: " + name);
+        return container;
+    }
+
     ContainerState addContainer(String name) {
         assertValid();
-        ContainerState containerState = new ContainerState(name);
-        containers.put(name, containerState);
-        return containerState;
+        ContainerState container = new ContainerState(name);
+        containers.put(name, container);
+        return container;
     }
 
     ContainerState removeContainer(String name) {

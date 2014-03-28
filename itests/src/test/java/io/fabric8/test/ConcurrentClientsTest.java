@@ -22,7 +22,7 @@ package io.fabric8.test;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerManager;
+import io.fabric8.api.FabricManager;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
@@ -55,11 +55,11 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ConcurrentClientsTest.class);
 
-    private ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Exception lastException;
 
     @After
-    public void setUp() throws Exception {
+    public void tearDown() throws Exception {
         executor.shutdown();
         Assert.assertTrue("Terminated in time", executor.awaitTermination(10, TimeUnit.SECONDS));
     }
@@ -68,10 +68,14 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
     public void testConcurrentClients() throws Exception {
 
         Future<Boolean> modifyFuture = executor.submit(new ModifyClient());
-        Future<Boolean> containerFuture = executor.submit(new ContainerClient());
+        Future<Boolean> clientA = executor.submit(new ContainerClient("cntA"));
+        Future<Boolean> clientB = executor.submit(new ContainerClient("cntB"));
+        Future<Boolean> clientC = executor.submit(new ContainerClient("cntC"));
 
         Assert.assertTrue("Modify client ok", modifyFuture.get());
-        Assert.assertTrue("Container client ok", containerFuture.get());
+        Assert.assertTrue("ClientA ok", clientA.get());
+        Assert.assertTrue("ClientB ok", clientB.get());
+        Assert.assertTrue("ClientC ok", clientC.get());
     }
 
     class ModifyClient implements Callable<Boolean> {
@@ -95,9 +99,15 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
     class ContainerClient implements Callable<Boolean> {
 
+        private final String prefix;
+
+        ContainerClient(String prefix) {
+            this.prefix = prefix;
+        }
+
         @Override
         public Boolean call() throws Exception {
-            ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
+            FabricManager service = ServiceLocator.getRequiredService(FabricManager.class);
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     Container container = createAndStart(service, i);
@@ -113,23 +123,27 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             return true;
         }
 
-        private Container createAndStart(ContainerManager service, int i) throws InterruptedException {
-            Container container = service.createContainer("cnt#" + i);
+        private Container createAndStart(FabricManager service, int index) throws InterruptedException {
+            Container container = service.createContainer(prefix + "#" + index);
+            System.out.println(container);
             Assert.assertSame(State.CREATED, container.getState());
             Thread.sleep(10);
 
-            container = service.startContainer(container.getName());
+            container.start();
+            System.out.println(container);
             Assert.assertSame(State.STARTED, container.getState());
             return container;
         }
 
 
-        private void stopAndDestroy(ContainerManager service, Container container) throws InterruptedException {
-            container = service.stopContainer(container.getName());
+        private void stopAndDestroy(FabricManager service, Container container) throws InterruptedException {
+            container.stop();
+            System.out.println(container);
             Assert.assertSame(State.STOPPED, container.getState());
             Thread.sleep(10);
 
-            container = service.destroyContainer(container.getName());
+            container.destroy();
+            System.out.println(container);
             Assert.assertSame(State.DESTROYED, container.getState());
         }
     }

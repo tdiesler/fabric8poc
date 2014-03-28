@@ -17,19 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.internal.service;
 
+import io.fabric8.internal.api.PermitState;
 
+interface FabricService {
 
-public interface ContainerManager {
+    PermitState<FabricService> PROTECTED_STATE = new PermitState<FabricService>(FabricService.class);
 
-    Container createContainer(String name);
+    ContainerState createContainer(String name);
 
-    Container getContainerByName(String name);
+    ContainerState getContainerByName(String name);
 
-    Container startContainer(String name);
+    ContainerState startContainer(String name);
 
-    Container stopContainer(String name);
+    ContainerState stopContainer(String name);
 
-    Container destroyContainer(String name);
+    ContainerState destroyContainer(String name);
 }

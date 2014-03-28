@@ -20,7 +20,7 @@
 package io.fabric8.test;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerManager;
+import io.fabric8.api.FabricManager;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.Container.State;
 import io.fabric8.test.support.AbstractEmbeddedTest;
@@ -39,18 +39,25 @@ public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
     @Test
     public void testContainerLifecycle() throws Exception {
 
-        ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
+        FabricManager service = ServiceLocator.getRequiredService(FabricManager.class);
         Container cntA = service.createContainer("cntA");
         Assert.assertEquals("cntA", cntA.getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        cntA = service.startContainer(cntA.getName());
+        cntA.start();
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        cntA = service.stopContainer(cntA.getName());
+        cntA.stop();
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = service.destroyContainer(cntA.getName());
+        cntA.destroy();
         Assert.assertSame(State.DESTROYED, cntA.getState());
+
+        try {
+            cntA.start();
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            // expected
+        }
     }
 }

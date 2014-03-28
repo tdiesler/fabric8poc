@@ -20,18 +20,18 @@
 package io.fabric8.internal.scr;
 
 import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.State;
+import io.fabric8.internal.api.PermitState;
 
 public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
     private final ValidatingReference<PermitManager> stateService = new ValidatingReference<PermitManager>();
 
-    protected void activateComponent(State<T> state, T instance) {
+    protected void activateComponent(PermitState<T> state, T instance) {
         super.activateComponent();
         stateService.get().activate(state, instance);
     }
 
-    protected void deactivateComponent(State<T> state) {
+    protected void deactivateComponent(PermitState<T> state) {
         stateService.get().deactivate(state);
         super.deactivateComponent();
     }
@@ -40,10 +40,10 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
         throw new UnsupportedOperationException();
     }
 
-    protected void bindStateService(PermitManager stateService) {
+    protected void bindPermitManager(PermitManager stateService) {
         this.stateService.bind(stateService);
     }
-    protected void unbindStateService(PermitManager stateService) {
+    protected void unbindPermitManager(PermitManager stateService) {
         this.stateService.unbind(stateService);
     }
 }

@@ -22,7 +22,7 @@ package io.fabric8.test;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerManager;
+import io.fabric8.api.FabricManager;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
@@ -54,8 +54,8 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
     @Test
     public void testModifyService() throws Exception {
 
-        // Aquire the {@link ContainerManager} instance
-        ContainerManager service = ServiceLocator.getRequiredService(ContainerManager.class);
+        // Aquire the {@link FabricManager} instance
+        FabricManager service = ServiceLocator.getRequiredService(FabricManager.class);
 
         final CountDownLatch updateLatch = new CountDownLatch(1);
         ConfigurationListener listener = new ConfigurationListener() {
@@ -95,13 +95,13 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         Assert.assertEquals("foo.cntA", cntA.getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        cntA = service.startContainer(cntA.getName());
+        cntA.start();
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        cntA = service.stopContainer(cntA.getName());
+        cntA.stop();
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = service.destroyContainer(cntA.getName());
+        cntA.destroy();
         Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }

@@ -17,24 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.api;
-
-import io.fabric8.api.Container;
+package io.fabric8.api;
 
 
-public interface FabricService {
 
-    State<FabricService> PROTECTED_STATE = new State<FabricService>(FabricService.class);
-
-    String getContainerPrefix();
+public interface FabricManager {
 
     Container createContainer(String name);
 
-    Container getContainerByName(String name);
-
-    Container startContainer(String name);
-
-    Container stopContainer(String name);
-
-    Container destroyContainer(String name);
+    Container getContainer(String name);
 }
