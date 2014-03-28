@@ -133,7 +133,9 @@ public final class FabricManagerComponent extends AbstractComponent implements F
 
         @Override
         public boolean equals(Object obj) {
-            return delegate.equals(obj);
+            if (!(obj instanceof ContainerImpl)) return false;
+            ContainerImpl other = (ContainerImpl) obj;
+            return delegate.equals(other);
         }
 
         @Override
