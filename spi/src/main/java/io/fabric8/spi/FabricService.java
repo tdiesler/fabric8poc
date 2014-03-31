@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.Identity;
 import io.fabric8.spi.permit.PermitState;
 
 /**
@@ -51,26 +52,26 @@ public interface FabricService {
     ContainerState createContainer(String name);
 
     /**
-     * Get a container with a given name
+     * Get a container with a given identity
      * @return the container or <code>null</code>
      */
-    ContainerState getContainerByName(String name);
+    ContainerState getContainerByName(Identity identity);
 
     /**
-     * Start the container with the given name
+     * Start the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState startContainer(String name);
+    ContainerState startContainer(Identity identity);
 
     /**
-     * Stop the container with the given name
+     * Stop the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState stopContainer(String name);
+    ContainerState stopContainer(Identity identity);
 
     /**
-     * Destroy the container with the given name
+     * Destroy the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState destroyContainer(String name);
+    ContainerState destroyContainer(Identity identity);
 }

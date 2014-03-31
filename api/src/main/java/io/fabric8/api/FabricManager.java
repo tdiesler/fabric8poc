@@ -19,10 +19,14 @@
  */
 package io.fabric8.api;
 
+import java.util.Set;
+
+import org.jboss.gravia.runtime.Runtime;
+
 /**
  * The main entry point to the Fabric8 system.
  *
- * An instance of this service can be obtained from the service registry.
+ * An instance of this service can be obtained from the gravia {@link Runtime}.
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
@@ -30,14 +34,37 @@ package io.fabric8.api;
 public interface FabricManager {
 
     /**
-     * Create a container with a given name
-     * @throws IllegalStateException if a container with the given name already exists
+     * Get the set of nodes in the cluster
      */
-    Container createContainer(String name);
+    Set<Node> getNodes();
 
     /**
-     * Get a container with a given name
-     * @return the container or <code>null</code>
+     * Get the current node
      */
-    Container getContainerByName(String name);
+    Node getCurrentNode();
+
+    /**
+     * Set the current node
+     */
+    void setCurrentNode(Node node);
+
+    /**
+     * Get a new node builder
+     */
+    NodeBuilder newNodeBuilder();
+
+    /**
+     * Get a new container builder for the current node
+     */
+    ContainerBuilder newContainerBuilder();
+
+    /**
+     * Get a new profile builder for the current node
+     */
+    ProcessBuilder newProfileBuilder();
+
+    /**
+     * Get a new version builder for the current node
+     */
+    VersionBuilder newVersionBuilder();
 }

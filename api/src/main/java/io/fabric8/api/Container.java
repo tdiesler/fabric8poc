@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import java.util.List;
+
 
 /**
  * The abstraction of a Fabric8 container
@@ -26,21 +28,41 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Container {
+public interface Container extends IdentitySupport, AttributeSupport, ProfileSupport, VersionSupport, FailureSupport {
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
 
     /**
-     * Get the immutable name for this container
-     */
-    String getName();
-
-    /**
      * Get the current state for this container
      */
     State getState();
+
+    /**
+     * Get the node that this container runs on
+     */
+    Node getNode();
+
+    /**
+     * Get the list of child containers
+     */
+    List<Container> getChildren();
+
+    /**
+     * Join an existing fabric
+     * [TODO]
+     * <ol>
+     * <li> How does this relate to states?
+     * <li> Does this need to be queried?
+     * </ol>
+     */
+    void joinFabric();
+
+    /**
+     * Leave the fabric
+     */
+    void leaveFabric();
 
     /**
      * Start this container
@@ -56,4 +78,5 @@ public interface Container {
      * Destroy this container
      */
     void destroy();
+
 }

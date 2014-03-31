@@ -123,7 +123,7 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         }
 
         private Container createAndStart(FabricManager service, int index) throws InterruptedException {
-            Container container = service.createContainer(prefix + "#" + index);
+            Container container = service.newContainerBuilder().addIdentity(prefix + "#" + index).createContainer();
             //System.out.println(container);
             Assert.assertSame(State.CREATED, container.getState());
             Thread.sleep(10);

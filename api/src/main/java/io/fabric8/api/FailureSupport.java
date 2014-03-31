@@ -17,27 +17,27 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.List;
+
 
 
 /**
- * The internal container state
+ * Provide failure support for a construct
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface FailureSupport {
 
     /**
-     * Get the identity for this container
+     * Get the current list of failures
      */
-    Identity getIdentity();
+    List<Throwable> getFailures();
 
     /**
-     * Get the current state for this container
+     * Clear the failure list and return the current failures
      */
-    State getState();
+    List<Throwable> clearFailures();
 }

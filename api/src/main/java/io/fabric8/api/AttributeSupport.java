@@ -17,27 +17,31 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.Map;
 
 
 /**
- * The internal container state
+ * Provide attribute support for a construct
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface AttributeSupport {
 
     /**
-     * Get the identity for this container
+     * Get a map of attributes associaed with this container
      */
-    Identity getIdentity();
+    Map<String, String> getAttributes();
 
     /**
-     * Get the current state for this container
+     * Get an attribute value for this container
      */
-    State getState();
+    String getAttribute(String key);
+
+    /**
+     * Set an attribute value for this container
+     */
+    void setAttribute(String key, String value);
 }

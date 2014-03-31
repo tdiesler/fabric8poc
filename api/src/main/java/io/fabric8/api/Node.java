@@ -17,27 +17,44 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.Set;
 
 
 /**
- * The internal container state
+ * The abstraction of a Fabric8 node
+ *
+ * [TODO] node lifecycle?
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface Node extends IdentitySupport, AttributeSupport, ProfileSupport, VersionSupport {
 
     /**
-     * Get the identity for this container
+     * Get the set of associated containers
      */
-    Identity getIdentity();
+    Set<Container> getContainers();
 
     /**
-     * Get the current state for this container
+     * Get a container with a given identity
+     * @return the container or <code>null</code>
      */
-    State getState();
+    Container getContainerById(Identity identity);
+
+    /**
+     * Get the set of management domains provided bu the node
+     */
+    Set<String> getManagementDomains();
+
+    /**
+     * Get the set of available service endpoints
+     */
+    Set<ServiceEndpoint> getServiceEndpoints();
+
+    /**
+     * Ping this node
+     */
+    boolean ping();
 }

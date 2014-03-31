@@ -17,27 +17,19 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
 
 
 /**
- * The internal container state
+ * A builder for a fabric version
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface VersionBuilder {
 
-    /**
-     * Get the identity for this container
-     */
-    Identity getIdentity();
+    VersionBuilder addIdentity(Identity identity);
 
-    /**
-     * Get the current state for this container
-     */
-    State getState();
+    Version createVersion();
 }

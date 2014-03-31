@@ -17,27 +17,44 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.List;
+
+import org.jboss.gravia.resource.Adaptable;
 
 
 /**
- * The internal container state
+ * The abstraction of a Fabric8 profile
+ *
+ * <ol>
+ * <li> How does profile templating work?
+ * <li> How do container specific profiles work?
+ * </ol>
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface Profile extends IdentitySupport, AttributeSupport, VersionSupport, Adaptable {
 
     /**
-     * Get the identity for this container
+     * Get the list of profiles that this profile depends on.
      */
-    Identity getIdentity();
+    List<Profile> getDependencies();
 
     /**
-     * Get the current state for this container
+     * Get the list of associated containers
      */
-    State getState();
+    List<Container> getContainers();
+
+    /**
+     * Get profile items for the given type
+     * @param type The item type or <code>null</code> for all types
+     */
+    List<ProfileItem> getItems(Class<? extends ProfileItem> type);
+
+    /**
+     * Delete this profile
+     */
+    void delete();
 }

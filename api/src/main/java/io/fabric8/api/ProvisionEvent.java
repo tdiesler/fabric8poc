@@ -17,27 +17,23 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.EventObject;
 
 
 /**
- * The internal container state
+ * A provisioning event
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public class ProvisionEvent extends EventObject {
 
-    /**
-     * Get the identity for this container
-     */
-    Identity getIdentity();
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * Get the current state for this container
-     */
-    State getState();
+    public ProvisionEvent(Object source) {
+        super(source);
+    }
+
 }

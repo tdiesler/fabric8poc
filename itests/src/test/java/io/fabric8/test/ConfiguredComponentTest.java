@@ -91,8 +91,8 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Wait a little for the component to get updated
         Thread.sleep(100);
 
-        Container cntA = service.createContainer("cntA");
-        Assert.assertEquals("foo.cntA", cntA.getName());
+        Container cntA = service.newContainerBuilder().addIdentity("cntA").createContainer();
+        Assert.assertEquals("foo.cntA", cntA.getIdentity().getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 
         cntA.start();

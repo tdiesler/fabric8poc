@@ -17,27 +17,18 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
-
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
- * The internal container state
+ * A builder for a fabric profile
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface ProfileWriter {
 
-    /**
-     * Get the identity for this container
-     */
-    Identity getIdentity();
-
-    /**
-     * Get the current state for this container
-     */
-    State getState();
+    void exportProfile(OutputStream input) throws IOException;
 }

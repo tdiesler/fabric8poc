@@ -19,16 +19,17 @@
  */
 package io.fabric8.spi.service;
 
-import io.fabric8.api.Container;
+import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.FabricManager;
-import io.fabric8.spi.ContainerState;
-import io.fabric8.spi.FabricService;
+import io.fabric8.api.Node;
+import io.fabric8.api.NodeBuilder;
+import io.fabric8.api.VersionBuilder;
 import io.fabric8.spi.permit.PermitManager;
-import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -52,25 +53,38 @@ public final class FabricManagerImpl extends AbstractComponent implements Fabric
     }
 
     @Override
-    public Container createContainer(String name) {
-        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
-        try {
-            FabricService fabricService = permit.getInstance();
-            return new ContainerImpl(fabricService.createContainer(name));
-        } finally {
-            permit.release();
-        }
+    public Set<Node> getNodes() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public Container getContainerByName(String name) {
-        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
-        try {
-            FabricService fabricService = permit.getInstance();
-            return new ContainerImpl(fabricService.getContainerByName(name));
-        } finally {
-            permit.release();
-        }
+    public Node getCurrentNode() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setCurrentNode(Node node) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public NodeBuilder newNodeBuilder() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ContainerBuilder newContainerBuilder() {
+        return new ContainerBuilderImpl(permitManager.get());
+    }
+
+    @Override
+    public ProcessBuilder newProfileBuilder() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public VersionBuilder newVersionBuilder() {
+        throw new UnsupportedOperationException();
     }
 
     @Reference
@@ -80,74 +94,5 @@ public final class FabricManagerImpl extends AbstractComponent implements Fabric
 
     void unbindStateService(PermitManager stateService) {
         this.permitManager.unbind(stateService);
-    }
-
-    class ContainerImpl implements Container {
-
-        private final ContainerState delegate;
-
-        ContainerImpl(ContainerState delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public String getName() {
-            return delegate.getName();
-        }
-
-        @Override
-        public State getState() {
-            return delegate.getState();
-        }
-
-        @Override
-        public void start() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
-            try {
-                FabricService fabricService = permit.getInstance();
-                fabricService.startContainer(getName());
-            } finally {
-                permit.release();
-            }
-        }
-
-        @Override
-        public void stop() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
-            try {
-                FabricService fabricService = permit.getInstance();
-                fabricService.stopContainer(getName());
-            } finally {
-                permit.release();
-            }
-        }
-
-        @Override
-        public void destroy() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
-            try {
-                FabricService fabricService = permit.getInstance();
-                fabricService.destroyContainer(getName());
-            } finally {
-                permit.release();
-            }
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof ContainerImpl)) return false;
-            ContainerImpl other = (ContainerImpl) obj;
-            return delegate.equals(other);
-        }
-
-        @Override
-        public int hashCode() {
-            return delegate.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return delegate.toString();
-        }
     }
 }

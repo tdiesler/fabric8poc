@@ -20,6 +20,7 @@
 package io.fabric8.core;
 
 import io.fabric8.api.Container.State;
+import io.fabric8.api.Identity;
 import io.fabric8.spi.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
-    private final Map<String, ContainerState> containers = new ConcurrentHashMap<String, ContainerState>();
+    private final Map<Identity, ContainerState> containers = new ConcurrentHashMap<Identity, ContainerState>();
 
     @Activate
     void activate() {
@@ -46,44 +47,44 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    ContainerState getContainer(String name) {
+    ContainerState getContainer(Identity identity) {
         assertValid();
-        return containers.get(name);
+        return containers.get(identity);
     }
 
-    ContainerState getRequiredContainer(String name) {
+    ContainerState getRequiredContainer(Identity identity) {
         assertValid();
-        ContainerState container = containers.get(name);
+        ContainerState container = containers.get(identity);
         if (container == null)
-            throw new IllegalStateException("Container not registered: " + name);
+            throw new IllegalStateException("Container not registered: " + identity);
         return container;
     }
 
-    ContainerState addContainer(String name) {
+    ContainerState addContainer(Identity identity) {
         assertValid();
-        ContainerState container = new ContainerStateImpl(name);
-        containers.put(name, container);
+        ContainerState container = new ContainerStateImpl(identity);
+        containers.put(identity, container);
         return container;
     }
 
-    ContainerState removeContainer(String name) {
+    ContainerState removeContainer(Identity identity) {
         assertValid();
-        return containers.remove(name);
+        return containers.remove(identity);
     }
 
     static final class ContainerStateImpl implements ContainerState {
 
-        private final String name;
+        private final Identity identity;
         private final AtomicReference<State> state = new AtomicReference<State>();
 
-        public ContainerStateImpl(String name) {
-            this.name = name;
+        public ContainerStateImpl(Identity identity) {
+            this.identity = identity;
             this.state.set(State.CREATED);
         }
 
         @Override
-        public String getName() {
-            return name;
+        public Identity getIdentity() {
+            return identity;
         }
 
         @Override
@@ -119,7 +120,7 @@ public final class ContainerRegistry extends AbstractComponent {
 
         @Override
         public String toString() {
-            return "Container[name=" + name + ",state=" + state.get() + "]";
+            return "Container[name=" + identity + ",state=" + state.get() + "]";
         }
     }
 }

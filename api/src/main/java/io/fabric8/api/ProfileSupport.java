@@ -17,27 +17,31 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import java.util.List;
 
 
 /**
- * The internal container state
+ * Provide profile support for a construct
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface ProfileSupport {
 
     /**
-     * Get the identity for this container
+     * Get the list of profiles asociated with this container
      */
-    Identity getIdentity();
+    List<Profile> getProfiles();
 
     /**
-     * Get the current state for this container
+     * Add the given profiles to the container
      */
-    State getState();
+    void addProfiles(List<Profile> profiles, ProvisionListener listener);
+
+    /**
+     * Remove the given profiles from the container
+     */
+    void removeProfiles(List<Profile> profiles, ProvisionListener listener);
 }

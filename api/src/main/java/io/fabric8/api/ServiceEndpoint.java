@@ -17,27 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
-
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
-
+package io.fabric8.api;
 
 /**
- * The internal container state
+ * The abstraction of a service endpoint
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface ServiceEndpoint extends IdentitySupport, AttributeSupport {
 
-    /**
-     * Get the identity for this container
-     */
-    Identity getIdentity();
-
-    /**
-     * Get the current state for this container
-     */
-    State getState();
 }

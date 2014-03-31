@@ -17,27 +17,25 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import org.jboss.gravia.runtime.RuntimeType;
+
 
 
 /**
- * The internal container state
+ * A builder for a fabric container
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface ContainerBuilder {
 
-    /**
-     * Get the identity for this container
-     */
-    Identity getIdentity();
+    ContainerBuilder setRuntimeType(RuntimeType type);
 
-    /**
-     * Get the current state for this container
-     */
-    State getState();
+    ContainerBuilder addIdentity(String name);
+
+    ContainerBuilder setNode(Node node);
+
+    Container createContainer();
 }
