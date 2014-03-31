@@ -200,6 +200,9 @@
                         <!-- Default configuration for all reports -->
                         <excludePackageNames>io.fabric8.core:io.fabric8.spi.*</excludePackageNames>
                         <quiet>true</quiet>
+                        <links>
+                            <link>http://tdiesler.github.io/gravia/1.1/apidocs/</link>
+                        </links>
                         <tags>
                             <tag>
                                 <name>Immutable</name>
