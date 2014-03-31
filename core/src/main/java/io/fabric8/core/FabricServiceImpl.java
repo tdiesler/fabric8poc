@@ -17,12 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.service;
+package io.fabric8.core;
 
-import io.fabric8.api.Constants;
-import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.scr.AbstractProtectedComponent;
-import io.fabric8.internal.scr.ValidatingReference;
+import io.fabric8.core.ContainerRegistry.ContainerStateImpl;
+import io.fabric8.spi.ContainerState;
+import io.fabric8.spi.FabricService;
+import io.fabric8.spi.permit.PermitManager;
+import io.fabric8.spi.scr.AbstractProtectedComponent;
+import io.fabric8.spi.scr.ValidatingReference;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,26 +34,32 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { FabricService.class }, configurationPid = Constants.PID, immediate = true)
-public final class FabricServiceComponent extends AbstractProtectedComponent<FabricService> implements FabricService {
+@Component(service = { FabricService.class }, configurationPid = FabricService.FABRIC_SERVICE_PID, immediate = true)
+public final class FabricServiceImpl extends AbstractProtectedComponent<FabricService> implements FabricService {
 
     private static AtomicInteger INSTANCE_COUNT = new AtomicInteger();
     private final String name = getClass().getSimpleName() + "#" + INSTANCE_COUNT.incrementAndGet();
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
+    private final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
     private String prefix;
 
     @Activate
     void activate(Map<String, ?> config) {
-        prefix = (String) config.get(Constants.KEY_NAME_PREFIX);
-        activateComponent(PROTECTED_STATE, this);
+        prefix = (String) config.get(FabricService.KEY_NAME_PREFIX);
+        activateComponent(PERMIT, this);
     }
 
     // @Modified not implemented - we get a new component with every config change
 
     @Deactivate
     void deactivate() {
-        deactivateComponent(PROTECTED_STATE);
+        deactivateComponent(PERMIT);
+    }
+
+    @Override
+    protected PermitManager getPermitManager() {
+        return permitManager.get();
     }
 
     @Override
@@ -78,7 +86,7 @@ public final class FabricServiceComponent extends AbstractProtectedComponent<Fab
         assertValid();
         synchronized (containerRegistry) {
             ContainerState container = getRequiredContainer(name);
-            container.start();
+            ((ContainerStateImpl) container).start();
             return container;
         }
     }
@@ -88,7 +96,7 @@ public final class FabricServiceComponent extends AbstractProtectedComponent<Fab
         assertValid();
         synchronized (containerRegistry) {
             ContainerState container = getRequiredContainer(name);
-            container.stop();
+            ((ContainerStateImpl) container).stop();
             return container;
         }
     }
@@ -100,7 +108,7 @@ public final class FabricServiceComponent extends AbstractProtectedComponent<Fab
             ContainerState container = containerRegistry.get().removeContainer(name);
             if (container == null)
                 throw new IllegalStateException("Container does not exist: " + name);
-            container.destroy();
+            ((ContainerStateImpl) container).destroy();
             return container;
         }
     }
@@ -121,16 +129,17 @@ public final class FabricServiceComponent extends AbstractProtectedComponent<Fab
     }
 
     @Reference
-    protected void bindPermitManager(PermitManager stateService) {
-        super.bindPermitManager(stateService);
+    void bindPermitManager(PermitManager stateService) {
+        this.permitManager.bind(stateService);
     }
 
-    protected void unbindPermitManager(PermitManager stateService) {
-        super.unbindPermitManager(stateService);
+    void unbindPermitManager(PermitManager stateService) {
+        this.permitManager.unbind(stateService);
     }
 
     @Override
     public String toString() {
         return name;
     }
+
 }

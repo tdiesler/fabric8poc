@@ -17,14 +17,16 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.service;
+package io.fabric8.spi.service;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.FabricManager;
-import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.PermitManager.Permit;
-import io.fabric8.internal.scr.AbstractComponent;
-import io.fabric8.internal.scr.ValidatingReference;
+import io.fabric8.spi.ContainerState;
+import io.fabric8.spi.FabricService;
+import io.fabric8.spi.permit.PermitManager;
+import io.fabric8.spi.permit.PermitManager.Permit;
+import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.spi.scr.ValidatingReference;
 
 import java.util.Map;
 
@@ -35,7 +37,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = { FabricManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class FabricManagerComponent extends AbstractComponent implements FabricManager {
+public final class FabricManagerImpl extends AbstractComponent implements FabricManager {
 
     private final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
 
@@ -51,7 +53,7 @@ public final class FabricManagerComponent extends AbstractComponent implements F
 
     @Override
     public Container createContainer(String name) {
-        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PROTECTED_STATE, false);
+        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
         try {
             FabricService fabricService = permit.getInstance();
             return new ContainerImpl(fabricService.createContainer(name));
@@ -61,8 +63,8 @@ public final class FabricManagerComponent extends AbstractComponent implements F
     }
 
     @Override
-    public Container getContainer(String name) {
-        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PROTECTED_STATE, false);
+    public Container getContainerByName(String name) {
+        Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
         try {
             FabricService fabricService = permit.getInstance();
             return new ContainerImpl(fabricService.getContainerByName(name));
@@ -100,7 +102,7 @@ public final class FabricManagerComponent extends AbstractComponent implements F
 
         @Override
         public void start() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PROTECTED_STATE, false);
+            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
             try {
                 FabricService fabricService = permit.getInstance();
                 fabricService.startContainer(getName());
@@ -111,7 +113,7 @@ public final class FabricManagerComponent extends AbstractComponent implements F
 
         @Override
         public void stop() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PROTECTED_STATE, false);
+            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
             try {
                 FabricService fabricService = permit.getInstance();
                 fabricService.stopContainer(getName());
@@ -122,7 +124,7 @@ public final class FabricManagerComponent extends AbstractComponent implements F
 
         @Override
         public void destroy() {
-            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PROTECTED_STATE, false);
+            Permit<FabricService> permit = permitManager.get().aquirePermit(FabricService.PERMIT, false);
             try {
                 FabricService fabricService = permit.getInstance();
                 fabricService.destroyContainer(getName());

@@ -22,10 +22,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.runtime.Filter;
 import org.jboss.gravia.runtime.ModuleContext;
+import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.runtime.ServiceTracker;
 
+/**
+ * Locate a service in the {@link Runtime}
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 public final class ServiceLocator {
 
 	public static final Long DEFAULT_TIMEOUT = 10000L;

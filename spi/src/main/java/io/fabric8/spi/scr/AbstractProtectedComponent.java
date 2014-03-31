@@ -17,22 +17,20 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.scr;
+package io.fabric8.spi.scr;
 
-import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.PermitState;
+import io.fabric8.spi.permit.PermitManager;
+import io.fabric8.spi.permit.PermitState;
 
 public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
-    private final ValidatingReference<PermitManager> stateService = new ValidatingReference<PermitManager>();
-
     protected void activateComponent(PermitState<T> state, T instance) {
         super.activateComponent();
-        stateService.get().activate(state, instance);
+        getPermitManager().activate(state, instance);
     }
 
     protected void deactivateComponent(PermitState<T> state) {
-        stateService.get().deactivate(state);
+        getPermitManager().deactivate(state);
         super.deactivateComponent();
     }
 
@@ -40,10 +38,5 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
         throw new UnsupportedOperationException();
     }
 
-    protected void bindPermitManager(PermitManager stateService) {
-        this.stateService.bind(stateService);
-    }
-    protected void unbindPermitManager(PermitManager stateService) {
-        this.stateService.unbind(stateService);
-    }
+    protected abstract PermitManager getPermitManager();
 }

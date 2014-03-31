@@ -42,7 +42,7 @@ import org.junit.BeforeClass;
  */
 public abstract class AbstractEmbeddedTest {
 
-    private static String[] moduleNames = new String[] { "fabric8-api", "fabric8-core" };
+    private static String[] moduleNames = new String[] { "fabric8-api", "fabric8-spi", "fabric8-core" };
 
     @BeforeClass
     public static void beforeClass() throws Exception {

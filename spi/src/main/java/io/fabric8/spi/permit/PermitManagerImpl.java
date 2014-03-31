@@ -17,12 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.service;
+package io.fabric8.spi.permit;
 
-import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.PermitState;
-import io.fabric8.internal.api.PermitStateTimeoutException;
-import io.fabric8.internal.scr.AbstractComponent;
+import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +28,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
 @Component(service = { PermitManager.class }, immediate = true)
-public final class PermitManagerComponent extends AbstractComponent implements PermitManager {
+public final class PermitManagerImpl extends AbstractComponent implements PermitManager {
 
     private final PermitManager delegate = new DefaultPermitManager();
 

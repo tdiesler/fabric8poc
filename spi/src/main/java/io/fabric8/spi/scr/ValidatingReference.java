@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.internal.scr;
+package io.fabric8.spi.scr;
 
 import java.util.concurrent.atomic.AtomicReference;
 

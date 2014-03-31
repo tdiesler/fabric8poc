@@ -19,11 +19,11 @@
  */
 package io.fabric8.test;
 
-import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.FabricManager;
 import io.fabric8.api.ServiceLocator;
+import io.fabric8.spi.FabricService;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -63,7 +63,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
                 int type = event.getType();
-                if (Constants.PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
+                if (FabricService.FABRIC_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
                     updateLatch.countDown();
                 }
             }
@@ -78,9 +78,9 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             ModuleContext moduleContext = module.getModuleContext();
 
             ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(Constants.PID);
+            Configuration config = configAdmin.getConfiguration(FabricService.FABRIC_SERVICE_PID);
             Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(Constants.KEY_NAME_PREFIX, "foo");
+            props.put(FabricService.KEY_NAME_PREFIX, "foo");
             config.update(props);
 
             Assert.assertTrue("Config updated", updateLatch.await(2, TimeUnit.SECONDS));

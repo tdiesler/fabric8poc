@@ -14,26 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.internal.scr;
-
+package io.fabric8.spi.scr;
 
 /**
- * An interface implemented by validatable components.
+ * A runtime exception thrown by invalid components.
  *
  * @author Thomas.Diesler@jboss.com
  * @since 13-Sep-2013
  */
-public interface Validatable {
+public class InvalidComponentException extends RuntimeException {
 
-    /**
-     * True if the component is valid.
-     */
-    boolean isValid();
+    private static final long serialVersionUID = 1L;
 
-    /**
-     * Assert that the component is valid
-     *
-     * @throws InvalidComponentException If the instance is not valid
-     */
-    void assertValid();
+    public InvalidComponentException() {
+    }
+
+    public InvalidComponentException(String message) {
+        super(message);
+    }
+
+    public InvalidComponentException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -195,6 +195,32 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <!-- Default configuration for all reports -->
+                        <excludePackageNames>io.fabric8.core:io.fabric8.spi.*</excludePackageNames>
+                        <quiet>true</quiet>
+                        <tags>
+                            <tag>
+                                <name>Immutable</name>
+                                <placement>t</placement>
+                                <head>Thread Safety: Immutable</head>
+                            </tag>
+                            <tag>
+                                <name>ThreadSafe</name>
+                                <placement>t</placement>
+                                <head>Thread Safety: Thread Safe</head>
+                            </tag>
+                            <tag>
+                                <name>NotThreadSafe</name>
+                                <placement>t</placement>
+                                <head>Thread Safety: Not Thread Safe</head>
+                            </tag>
+                        </tags>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
                         <source>1.6</source>
@@ -234,7 +260,31 @@
     <modules>
         <module>api</module>
         <module>core</module>
+        <module>spi</module>
         <module>itests</module>
     </modules>
 
+    <!-- Profiles -->
+    <profiles>
+        <profile>
+            <id>distro</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>aggregate</id>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                                <phase>install</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

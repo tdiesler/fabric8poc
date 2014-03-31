@@ -17,12 +17,15 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.service;
+package io.fabric8.core;
 
-import io.fabric8.internal.scr.AbstractComponent;
+import io.fabric8.api.Container.State;
+import io.fabric8.spi.ContainerState;
+import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -58,7 +61,7 @@ public final class ContainerRegistry extends AbstractComponent {
 
     ContainerState addContainer(String name) {
         assertValid();
-        ContainerState container = new ContainerState(name);
+        ContainerState container = new ContainerStateImpl(name);
         containers.put(name, container);
         return container;
     }
@@ -66,5 +69,57 @@ public final class ContainerRegistry extends AbstractComponent {
     ContainerState removeContainer(String name) {
         assertValid();
         return containers.remove(name);
+    }
+
+    static final class ContainerStateImpl implements ContainerState {
+
+        private final String name;
+        private final AtomicReference<State> state = new AtomicReference<State>();
+
+        public ContainerStateImpl(String name) {
+            this.name = name;
+            this.state.set(State.CREATED);
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public State getState() {
+            return state.get();
+        }
+
+        void start() {
+            synchronized (state) {
+                assertNotDestroyed();
+                state.set(State.STARTED);
+            }
+        }
+
+        void stop() {
+            synchronized (state) {
+                assertNotDestroyed();
+                state.set(State.STOPPED);
+            }
+        }
+
+        void destroy() {
+            synchronized (state) {
+                assertNotDestroyed();
+                state.set(State.DESTROYED);
+            }
+        }
+
+        private void assertNotDestroyed() {
+            if (state.get() == State.DESTROYED)
+                throw new IllegalStateException("Container already destroyed: " + this);
+        }
+
+        @Override
+        public String toString() {
+            return "Container[name=" + name + ",state=" + state.get() + "]";
+        }
     }
 }

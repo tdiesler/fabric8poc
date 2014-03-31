@@ -19,11 +19,25 @@
  */
 package io.fabric8.api;
 
-
-
+/**
+ * The main entry point to the Fabric8 system.
+ *
+ * An instance of this service can be obtained from the service registry.
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 public interface FabricManager {
 
+    /**
+     * Create a container with a given name
+     * @throws IllegalStateException if a container with the given name already exists
+     */
     Container createContainer(String name);
 
-    Container getContainer(String name);
+    /**
+     * Get a container with a given name
+     * @return the container or <code>null</code>
+     */
+    Container getContainerByName(String name);
 }

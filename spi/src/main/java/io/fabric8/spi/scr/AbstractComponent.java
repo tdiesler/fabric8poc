@@ -14,40 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.internal.scr;
+package io.fabric8.spi.scr;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
- * Provides validation support.
+ * An abstract base class for validatable components.
  *
  * @author Thomas.Diesler@jboss.com
  * @since 13-Sep-2013
  *
  * @ThreadSafe
  */
-public final class ValidationSupport implements Validatable {
+public abstract class AbstractComponent implements Validatable {
 
-    // Use volatile to make sure that every thread sees the last written value
-    private volatile boolean valid;
+    private static final transient Logger LOGGER = LoggerFactory.getLogger(AbstractComponent.class);
 
-    public void setValid() {
-        valid = true;
+    private final ValidationSupport active = new ValidationSupport();
+
+    protected void activateComponent() {
+        active.setValid();
+        LOGGER.info("activateComponent: " + this);
     }
 
-    public void setInvalid() {
-        valid = false;
+    protected void deactivateComponent() {
+        LOGGER.info("deactivateComponent: " + this);
+        active.setInvalid();
     }
 
     @Override
     public boolean isValid() {
-        return valid;
+        return active.isValid();
     }
 
     @Override
     public void assertValid() {
-        if (!valid) {
-            throw new InvalidComponentException();
-        }
+        active.assertValid();
     }
 }

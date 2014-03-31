@@ -17,12 +17,26 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
+
+import io.fabric8.api.Container.State;
 
 
-public interface Constants {
+/**
+ * The internal container state
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
+public interface ContainerState {
 
-    String KEY_NAME_PREFIX = "container.prefix";
-    String PID = "fabric.service.pid";
+    /**
+     * Get the immutable name for this container
+     */
+    String getName();
 
+    /**
+     * Get the current state for this container
+     */
+    State getState();
 }

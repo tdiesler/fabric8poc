@@ -20,19 +20,40 @@
 package io.fabric8.api;
 
 
+/**
+ * The abstraction of a Fabric8 container
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 public interface Container {
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
 
+    /**
+     * Get the immutable name for this container
+     */
     String getName();
 
+    /**
+     * Get the current state for this container
+     */
     State getState();
 
+    /**
+     * Start this container
+     */
     void start();
 
+    /**
+     * Stop this container
+     */
     void stop();
 
+    /**
+     * Destroy this container
+     */
     void destroy();
 }

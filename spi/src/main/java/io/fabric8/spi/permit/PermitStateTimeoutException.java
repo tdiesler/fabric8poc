@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.api;
+package io.fabric8.spi.permit;
 
 import java.util.concurrent.TimeUnit;
 

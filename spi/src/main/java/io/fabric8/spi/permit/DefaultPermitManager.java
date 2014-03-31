@@ -17,11 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.internal.service;
-
-import io.fabric8.internal.api.PermitManager;
-import io.fabric8.internal.api.PermitState;
-import io.fabric8.internal.api.PermitStateTimeoutException;
+package io.fabric8.spi.permit;
 
 import java.util.HashMap;
 import java.util.Map;
