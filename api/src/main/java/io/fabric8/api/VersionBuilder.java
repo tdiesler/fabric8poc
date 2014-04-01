@@ -27,9 +27,13 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface VersionBuilder {
+public abstract class VersionBuilder {
 
-    VersionBuilder addIdentity(Identity identity);
+    public static <T extends VersionBuilder> T create(Class<T> type) {
+        throw new UnsupportedOperationException();
+    }
 
-    Version createVersion();
+    public abstract VersionBuilder addIdentity(Identity identity);
+
+    public abstract Version createVersion();
 }

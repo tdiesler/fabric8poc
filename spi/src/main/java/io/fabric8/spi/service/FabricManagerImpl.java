@@ -19,11 +19,8 @@
  */
 package io.fabric8.spi.service;
 
-import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.FabricManager;
 import io.fabric8.api.Node;
-import io.fabric8.api.NodeBuilder;
-import io.fabric8.api.VersionBuilder;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -54,36 +51,6 @@ public final class FabricManagerImpl extends AbstractComponent implements Fabric
 
     @Override
     public Set<Node> getNodes() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Node getCurrentNode() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setCurrentNode(Node node) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public NodeBuilder newNodeBuilder() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ContainerBuilder newContainerBuilder() {
-        return new ContainerBuilderImpl(permitManager.get());
-    }
-
-    @Override
-    public ProcessBuilder newProfileBuilder() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public VersionBuilder newVersionBuilder() {
         throw new UnsupportedOperationException();
     }
 

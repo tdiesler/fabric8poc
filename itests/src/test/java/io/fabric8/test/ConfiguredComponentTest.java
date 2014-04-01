@@ -21,7 +21,7 @@ package io.fabric8.test;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.FabricManager;
+import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.FabricService;
 import io.fabric8.test.support.AbstractEmbeddedTest;
@@ -53,9 +53,6 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
 
     @Test
     public void testModifyService() throws Exception {
-
-        // Aquire the {@link FabricManager} instance
-        FabricManager service = ServiceLocator.getRequiredService(FabricManager.class);
 
         final CountDownLatch updateLatch = new CountDownLatch(1);
         ConfigurationListener listener = new ConfigurationListener() {
@@ -91,7 +88,8 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Wait a little for the component to get updated
         Thread.sleep(100);
 
-        Container cntA = service.newContainerBuilder().addIdentity("cntA").createContainer();
+        ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
+        Container cntA = builder.addIdentity("cntA").createContainer();
         Assert.assertEquals("foo.cntA", cntA.getIdentity().getName());
         Assert.assertSame(State.CREATED, cntA.getState());
 

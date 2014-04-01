@@ -21,6 +21,7 @@ package io.fabric8.test;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.FabricManager;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.FabricService;
@@ -106,12 +107,12 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
         @Override
         public Boolean call() throws Exception {
-            FabricManager service = ServiceLocator.getRequiredService(FabricManager.class);
+            FabricManager fabricManager = ServiceLocator.getRequiredService(FabricManager.class);
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    Container container = createAndStart(service, i);
+                    Container container = createAndStart(fabricManager, i);
                     Thread.sleep(10);
-                    stopAndDestroy(service, container);
+                    stopAndDestroy(fabricManager, container);
                     Thread.sleep(10);
                 } catch (Exception ex) {
                     lastException = ex;
@@ -122,8 +123,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             return true;
         }
 
-        private Container createAndStart(FabricManager service, int index) throws InterruptedException {
-            Container container = service.newContainerBuilder().addIdentity(prefix + "#" + index).createContainer();
+        private Container createAndStart(FabricManager fabricManager, int index) throws InterruptedException {
+            ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
+            Container container = builder.addIdentity(prefix + "#" + index).createContainer();
             //System.out.println(container);
             Assert.assertSame(State.CREATED, container.getState());
             Thread.sleep(10);
@@ -134,7 +136,7 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         }
 
 
-        private void stopAndDestroy(FabricManager service, Container container) throws InterruptedException {
+        private void stopAndDestroy(FabricManager fabricManager, Container container) throws InterruptedException {
             container.stop();
             //System.out.println(container);
             Assert.assertSame(State.STOPPED, container.getState());

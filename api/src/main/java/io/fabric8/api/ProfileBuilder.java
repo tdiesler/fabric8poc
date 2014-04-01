@@ -28,11 +28,15 @@ import java.io.InputStream;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder {
+public abstract class ProfileBuilder {
 
-    ProfileBuilder addIdentity(Identity identity);
+    public static <T extends ProfileBuilder> T create(Class<T> type) {
+        throw new UnsupportedOperationException();
+    }
 
-    ProfileBuilder importProfile(InputStream input);
+    public abstract ProfileBuilder addIdentity(Identity identity);
 
-    Profile createProfile();
+    public abstract ProfileBuilder importProfile(InputStream input);
+
+    public abstract Profile createProfile();
 }

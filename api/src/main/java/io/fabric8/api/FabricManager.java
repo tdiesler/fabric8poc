@@ -38,33 +38,4 @@ public interface FabricManager {
      */
     Set<Node> getNodes();
 
-    /**
-     * Get the current node
-     */
-    Node getCurrentNode();
-
-    /**
-     * Set the current node
-     */
-    void setCurrentNode(Node node);
-
-    /**
-     * Get a new node builder
-     */
-    NodeBuilder newNodeBuilder();
-
-    /**
-     * Get a new container builder for the current node
-     */
-    ContainerBuilder newContainerBuilder();
-
-    /**
-     * Get a new profile builder for the current node
-     */
-    ProcessBuilder newProfileBuilder();
-
-    /**
-     * Get a new version builder for the current node
-     */
-    VersionBuilder newVersionBuilder();
 }

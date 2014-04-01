@@ -22,19 +22,20 @@ package io.fabric8.spi.service;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.Node;
+import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.FabricService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 
 import org.jboss.gravia.runtime.RuntimeType;
 
-final class ContainerBuilderImpl implements ContainerBuilder {
+public final class DefaultContainerBuilder extends ContainerBuilder {
 
     private final PermitManager permitManager;
     private String identity;
 
-    ContainerBuilderImpl(PermitManager permitManager) {
-        this.permitManager = permitManager;
+    public DefaultContainerBuilder() {
+        this.permitManager = ServiceLocator.getRequiredService(PermitManager.class);
     }
 
     @Override

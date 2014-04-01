@@ -27,9 +27,13 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface NodeBuilder {
+public abstract class NodeBuilder {
 
-    NodeBuilder addIdentity(Identity identity);
+    public static <T extends NodeBuilder> T create(Class<T> type) {
+        throw new UnsupportedOperationException();
+    }
 
-    Node createNode();
+    public abstract NodeBuilder addIdentity(Identity identity);
+
+    public abstract Node createNode();
 }
