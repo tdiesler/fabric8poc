@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 
 
 /**
@@ -28,28 +27,8 @@ import java.util.List;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Version extends IdentitySupport, AttributeSupport {
+public interface Version extends IdentitySupport, ProfileSupport, Comparable<Version> {
 
-    /**
-     * Get the list of profiles associated with this version
-     */
-    List<Profile> getProfiles();
-
-    /**
-     * Gets a profile with the given name.
-     * @return The profile or <code>null</code>
-     */
-    Profile getProfileByName(String name);
-
-    /**
-     * Create a profile associated with this version
-     */
-    Profile createProfile(String name);
-
-    /**
-     * True if this version is associated with the given profile name
-     */
-    boolean hasProfile(String name);
 
     /**
      * Delete this version

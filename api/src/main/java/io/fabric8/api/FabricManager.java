@@ -34,14 +34,14 @@ import org.jboss.gravia.runtime.Runtime;
 public interface FabricManager {
 
     /**
-     * Get the set of nodes in the cluster
+     * Get the set of hosts in the cluster
      */
-    Set<Node> getNodes();
+    Set<Host> getHosts();
 
     /**
-     * Get the current node
+     * Get the current host
      */
-    Node getCurrentNode();
+    Host getCurrentHost();
 
     /**
      * Get the set of containers in the cluster

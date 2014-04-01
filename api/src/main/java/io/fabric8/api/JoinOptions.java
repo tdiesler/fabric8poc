@@ -22,18 +22,11 @@ package io.fabric8.api;
 
 
 /**
- * A builder for a fabric node
+ * Container join options
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class NodeBuilder {
+public interface JoinOptions extends AttributeSupport {
 
-    public static <T extends NodeBuilder> T create(Class<T> type) {
-        throw new UnsupportedOperationException();
-    }
-
-    public abstract NodeBuilder addIdentity(Identity identity);
-
-    public abstract Node createNode();
 }

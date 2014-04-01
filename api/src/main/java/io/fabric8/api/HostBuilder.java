@@ -19,40 +19,21 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 
 
 /**
- * Provide profile support for a construct
+ * A builder for a fabric host
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileSupport {
+public abstract class HostBuilder {
 
-    /**
-     * Get the associated list of profiles
-     */
-    List<Profile> getProfiles();
+    public static <T extends HostBuilder> T create(Class<T> type) {
+        throw new UnsupportedOperationException();
+    }
 
-    /**
-     * Get the profile with the given identity
-     * @return The profile or <code>null</code>
-     */
-    Profile getProfile(Identity identity);
+    public abstract HostBuilder addIdentity(Identity identity);
 
-    /**
-     * True if the profile with the given identity exists
-     */
-    boolean hasProfile(Identity identity);
-
-    /**
-     * Add the given profiles
-     */
-    void addProfiles(List<Profile> profiles, ProvisionListener listener);
-
-    /**
-     * Remove the given profiles
-     */
-    void removeProfiles(List<Profile> profiles, ProvisionListener listener);
+    public abstract Host createHost();
 }

@@ -19,7 +19,7 @@
  */
 package io.fabric8.api;
 
-import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -31,17 +31,17 @@ import java.util.Map;
 public interface AttributeSupport {
 
     /**
-     * Get a map of attributes associaed with this container
+     * Get the list of attribute keys
      */
-    Map<String, String> getAttributes();
+    Set<AttributeKey<?>> getAttributeKeys();
 
     /**
-     * Get an attribute value for this container
+     * Get an attribute value
      */
-    String getAttribute(String key);
+    <T> T getAttribute(AttributeKey<T> key);
 
     /**
-     * Set an attribute value for this container
+     * True if the given attribute key exists
      */
-    void setAttribute(String key, String value);
+    <T> boolean hasAttribute(AttributeKey<T> key);
 }

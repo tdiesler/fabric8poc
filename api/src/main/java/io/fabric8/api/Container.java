@@ -20,6 +20,7 @@
 package io.fabric8.api;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -40,14 +41,34 @@ public interface Container extends IdentitySupport, AttributeSupport, ProfileSup
     State getState();
 
     /**
-     * Get the node that this container runs on
+     * Get the associated host
      */
-    Node getNode();
+    Host getHost();
+
+    /**
+     * Set the container version
+     */
+    void setVersion(Version version, ProvisionListener listener);
 
     /**
      * Get the list of child containers
      */
     List<Container> getChildren();
+
+    /**
+     * Get the set of provided management domains
+     */
+    Set<String> getManagementDomains();
+
+    /**
+     * Get the set of available service endpoints
+     */
+    Set<ServiceEndpoint> getServiceEndpoints();
+
+    /**
+     * Ping this container
+     */
+    boolean ping();
 
     /**
      * Join an existing fabric
@@ -57,7 +78,7 @@ public interface Container extends IdentitySupport, AttributeSupport, ProfileSup
      * <li> Does this need to be queried?
      * </ol>
      */
-    void joinFabric();
+    void joinFabric(JoinOptions options);
 
     /**
      * Leave the fabric

@@ -30,18 +30,28 @@ import org.jboss.gravia.utils.NotNullException;
 public final class Identity {
 
     private final String name;
+    private final String description;
 
     public static Identity create(String name) {
-        return new Identity(name);
+        return new Identity(name, null);
     }
 
-    private Identity(String name) {
+    public static Identity create(String name, String description) {
+        return new Identity(name, description);
+    }
+
+    private Identity(String name, String description) {
         NotNullException.assertValue(name, "name");
         this.name = name;
+        this.description = description;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     @Override

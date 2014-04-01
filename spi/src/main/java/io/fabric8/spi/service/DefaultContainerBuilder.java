@@ -21,7 +21,7 @@ package io.fabric8.spi.service;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.Node;
+import io.fabric8.api.Host;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.FabricService;
 import io.fabric8.spi.permit.PermitManager;
@@ -50,7 +50,7 @@ public final class DefaultContainerBuilder extends ContainerBuilder {
     }
 
     @Override
-    public ContainerBuilder setNode(Node node) {
+    public ContainerBuilder setHost(Host host) {
         throw new UnsupportedOperationException();
     }
 

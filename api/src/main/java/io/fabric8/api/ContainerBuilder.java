@@ -74,7 +74,7 @@ public abstract class ContainerBuilder {
 
     public abstract ContainerBuilder addIdentity(String name);
 
-    public abstract ContainerBuilder setNode(Node node);
+    public abstract ContainerBuilder setHost(Host host);
 
     public abstract Container createContainer();
 }

@@ -23,14 +23,12 @@ import java.util.Set;
 
 
 /**
- * The abstraction of a Fabric8 node
- *
- * [TODO] node lifecycle?
+ * The abstraction of a fabric host
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Node extends IdentitySupport, AttributeSupport, ProfileSupport, VersionSupport {
+public interface Host extends IdentitySupport, AttributeSupport {
 
     /**
      * Get the set of associated containers
@@ -39,22 +37,7 @@ public interface Node extends IdentitySupport, AttributeSupport, ProfileSupport,
 
     /**
      * Get a container with a given identity
-     * @return the container or <code>null</code>
+     * @return The container or <code>null</code>
      */
-    Container getContainerById(Identity identity);
-
-    /**
-     * Get the set of management domains provided bu the node
-     */
-    Set<String> getManagementDomains();
-
-    /**
-     * Get the set of available service endpoints
-     */
-    Set<ServiceEndpoint> getServiceEndpoints();
-
-    /**
-     * Ping this node
-     */
-    boolean ping();
+    Container getContainer(Identity identity);
 }

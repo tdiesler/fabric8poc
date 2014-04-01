@@ -19,40 +19,27 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 
 
 /**
- * Provide profile support for a construct
+ * A typed attribute key
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileSupport {
+public final class AttributeKey<T> {
 
-    /**
-     * Get the associated list of profiles
-     */
-    List<Profile> getProfiles();
+    private final Class<T> type;
 
-    /**
-     * Get the profile with the given identity
-     * @return The profile or <code>null</code>
-     */
-    Profile getProfile(Identity identity);
+    public static <T> AttributeKey<T> create(Class<T> type) {
+        return new AttributeKey<T>(type);
+    }
 
-    /**
-     * True if the profile with the given identity exists
-     */
-    boolean hasProfile(Identity identity);
+    private AttributeKey(Class<T> type) {
+        this.type = type;
+    }
 
-    /**
-     * Add the given profiles
-     */
-    void addProfiles(List<Profile> profiles, ProvisionListener listener);
-
-    /**
-     * Remove the given profiles
-     */
-    void removeProfiles(List<Profile> profiles, ProvisionListener listener);
+    public Class<T> getType() {
+        return type;
+    }
 }

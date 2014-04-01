@@ -19,11 +19,14 @@
  */
 package io.fabric8.spi.service;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
+import io.fabric8.api.Host;
 import io.fabric8.api.Identity;
-import io.fabric8.api.Node;
+import io.fabric8.api.JoinOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProvisionListener;
+import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.Version;
 import io.fabric8.spi.ContainerState;
 import io.fabric8.spi.FabricService;
@@ -31,7 +34,7 @@ import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 final class ContainerImpl implements Container {
 
@@ -92,42 +95,22 @@ final class ContainerImpl implements Container {
     }
 
     @Override
+    public void setVersion(Version version, ProvisionListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<Profile> getProfiles() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Node getNode() {
+    public Profile getProfile(Identity identity) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Container> getChildren() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Map<String, String> getAttributes() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getAttribute(String key) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setAttribute(String key, String value) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void joinFabric() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void leaveFabric() {
+    public boolean hasProfile(Identity identity) {
         throw new UnsupportedOperationException();
     }
 
@@ -142,12 +125,62 @@ final class ContainerImpl implements Container {
     }
 
     @Override
+    public Host getHost() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Container> getChildren() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<AttributeKey<?>> getAttributeKeys() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T getAttribute(AttributeKey<T> key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> boolean hasAttribute(AttributeKey<T> key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void joinFabric(JoinOptions options) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void leaveFabric() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<Throwable> getFailures() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public List<Throwable> clearFailures() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<String> getManagementDomains() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<ServiceEndpoint> getServiceEndpoints() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean ping() {
         throw new UnsupportedOperationException();
     }
 
