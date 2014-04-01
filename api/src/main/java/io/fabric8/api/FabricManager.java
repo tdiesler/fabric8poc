@@ -38,4 +38,28 @@ public interface FabricManager {
      */
     Set<Node> getNodes();
 
+    /**
+     * Get the current node
+     */
+    Node getCurrentNode();
+
+    /**
+     * Get the set of containers in the cluster
+     */
+    Set<Container> getContainers();
+
+    /**
+     * Get the current container
+     */
+    Container getCurrentContainer();
+
+    /**
+     * Get the set of versions in the cluster
+     */
+    Set<Version> getVersions();
+
+    /**
+     * Get the set of profiles in the cluster
+     */
+    Set<Profile> getProfiles();
 }

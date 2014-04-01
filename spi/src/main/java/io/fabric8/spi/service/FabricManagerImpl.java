@@ -19,8 +19,11 @@
  */
 package io.fabric8.spi.service;
 
+import io.fabric8.api.Container;
 import io.fabric8.api.FabricManager;
 import io.fabric8.api.Node;
+import io.fabric8.api.Profile;
+import io.fabric8.api.Version;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -51,6 +54,31 @@ public final class FabricManagerImpl extends AbstractComponent implements Fabric
 
     @Override
     public Set<Node> getNodes() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Node getCurrentNode() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Container> getContainers() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Container getCurrentContainer() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Version> getVersions() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Profile> getProfiles() {
         throw new UnsupportedOperationException();
     }
 
