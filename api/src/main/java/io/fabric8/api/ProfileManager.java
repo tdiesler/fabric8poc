@@ -36,11 +36,6 @@ import org.jboss.gravia.runtime.Runtime;
 public interface ProfileManager {
 
     /**
-     * Get a profile builder
-     */
-    ProfileBuilder getProfileBuilder();
-
-    /**
      * Get the list of profile versions in the cluster
      */
     List<Version> getVersions();

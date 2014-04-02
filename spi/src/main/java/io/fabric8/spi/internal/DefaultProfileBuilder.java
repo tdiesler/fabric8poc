@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.service;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -28,7 +28,7 @@ import java.io.InputStream;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 
-public final class DefaultProfileBuilder implements ProfileBuilder {
+public final class DefaultProfileBuilder extends ProfileBuilder {
 
     private ProfileIdentity identity;
 

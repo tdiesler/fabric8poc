@@ -19,6 +19,14 @@
  */
 package io.fabric8.api;
 
+import java.util.Iterator;
+import java.util.ServiceLoader;
+
+import org.jboss.gravia.runtime.ModuleContext;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceReference;
+
 
 
 
@@ -28,9 +36,46 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilder {
+public abstract class ContainerBuilder {
 
-    ContainerBuilder addIdentity(String symbolicName);
+    @SuppressWarnings("unchecked")
+    public static <T extends ContainerBuilder> T create(Class<T> type) {
 
-    CreateOptions getCreateOptions();
+        T builder = null;
+
+        // First check if we have a {@link ContainerBuilder} service
+        Runtime runtime = RuntimeLocator.getRuntime();
+        if (runtime != null) {
+            ModuleContext sysontext = runtime.getModuleContext();
+            for (ServiceReference<ContainerBuilder> sref : sysontext.getServiceReferences(ContainerBuilder.class, null)) {
+                ContainerBuilder service = sysontext.getService(sref);
+                if (type.isAssignableFrom(service.getClass())) {
+                    builder = (T) service;
+                    break;
+                }
+            }
+        }
+
+        // Next use ServiceLoader discovery
+        if (builder == null) {
+            ClassLoader classLoader = ContainerBuilder.class.getClassLoader();
+            ServiceLoader<ContainerBuilder> loader = ServiceLoader.load(ContainerBuilder.class, classLoader);
+            Iterator<ContainerBuilder> iterator = loader.iterator();
+            while (builder == null && iterator.hasNext()) {
+                ContainerBuilder service = iterator.next();
+                if (type.isAssignableFrom(service.getClass())) {
+                    builder = (T) service;
+                }
+            }
+        }
+
+        if (builder == null)
+            throw new IllegalStateException("Cannot obtain ContainerBuilder service for: " + type);
+
+        return builder;
+    }
+
+    public abstract ContainerBuilder addIdentity(String symbolicName);
+
+    public abstract CreateOptions getCreateOptions();
 }

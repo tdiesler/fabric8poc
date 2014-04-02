@@ -55,7 +55,7 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         Assert.assertTrue("No profiles", manager.getAllProfiles().isEmpty());
 
         // Build a profile
-        ProfileBuilder builder = manager.getProfileBuilder();
+        ProfileBuilder builder = ProfileBuilder.create();
         Profile profile = builder.addIdentity("foo", null).createProfile();
         Assert.assertEquals(Version.emptyVersion, profile.getIdentity().getVersion());
         Assert.assertTrue("No profiles", manager.getAllProfiles().isEmpty());

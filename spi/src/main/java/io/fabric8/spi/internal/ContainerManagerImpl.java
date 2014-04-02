@@ -17,10 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.service;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -58,12 +57,6 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     @Deactivate
     void deactivate() {
         deactivateComponent();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ContainerBuilder> T getContainerBuilder(Class<T> type) {
-        return (T) new DefaultContainerBuilder();
     }
 
     @Override

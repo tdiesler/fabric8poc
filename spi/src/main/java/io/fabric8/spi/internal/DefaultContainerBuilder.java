@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.service;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
@@ -25,7 +25,7 @@ import io.fabric8.api.CreateOptions;
 
 import java.util.Set;
 
-public final class DefaultContainerBuilder implements ContainerBuilder {
+public final class DefaultContainerBuilder extends ContainerBuilder {
 
     private String symbolicName;
 

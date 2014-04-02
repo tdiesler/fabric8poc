@@ -17,10 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.service;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.ProfileService;
@@ -53,11 +52,6 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     @Deactivate
     void deactivate() {
         deactivateComponent();
-    }
-
-    @Override
-    public ProfileBuilder getProfileBuilder() {
-        return new DefaultProfileBuilder();
     }
 
     @Override

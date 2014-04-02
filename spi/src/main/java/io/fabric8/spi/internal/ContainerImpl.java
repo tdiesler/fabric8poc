@@ -17,47 +17,65 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.service;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.Profile;
+import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerState;
-import io.fabric8.spi.ProfileState;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ProfileImpl implements Profile {
+final class ContainerImpl implements Container {
 
-    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
-    private final List<Resource> resources = new ArrayList<Resource>();
-    private final ProfileIdentity identity;
+    private final ContainerIdentity identity;
+    private final State state;
 
-    ProfileImpl(ProfileState profileState) {
-        NotNullException.assertValue(profileState, "profileState");
-        this.identity = profileState.getIdentity();
-        for (ContainerState cntState : profileState.getContainers()) {
-            this.containers.add(cntState.getIdentity());
-        }
-        this.resources.addAll(profileState.getResources());
-    }
-
-    ProfileImpl(ProfileIdentity identity) {
-        NotNullException.assertValue(identity, "identity");
-        this.identity = identity;
+    ContainerImpl(ContainerState delegate) {
+        NotNullException.assertValue(delegate, "delegate");
+        this.identity = delegate.getIdentity();
+        this.state = delegate.getState();
     }
 
     @Override
-    public ProfileIdentity getIdentity() {
+    public ContainerIdentity getIdentity() {
         return identity;
+    }
+
+    @Override
+    public State getState() {
+        return state;
+    }
+
+    @Override
+    public Version getVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<ProfileIdentity> getProfiles() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasProfile(ProfileIdentity identity) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public HostIdentity getHost() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<ContainerIdentity> getChildren() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -76,20 +94,19 @@ final class ProfileImpl implements Profile {
     }
 
     @Override
-    public Set<ContainerIdentity> getContainers() {
-        return Collections.unmodifiableSet(containers);
+    public Set<String> getManagementDomains() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Resource> getResources() {
-        return Collections.unmodifiableList(resources);
+    public Set<ServiceEndpointIdentity> getServiceEndpoints() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ProfileImpl))
-            return false;
-        ProfileImpl other = (ProfileImpl) obj;
+        if (!(obj instanceof ContainerImpl)) return false;
+        ContainerImpl other = (ContainerImpl) obj;
         return other.identity.equals(identity);
     }
 

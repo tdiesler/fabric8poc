@@ -20,9 +20,13 @@
 package io.fabric8.api;
 
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
 
 
 /**
@@ -31,13 +35,39 @@ import org.jboss.gravia.resource.Version;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder {
+public abstract class ProfileBuilder {
 
-    ProfileBuilder addIdentity(String symbolicName, Version version);
+    public static ProfileBuilder create() {
 
-    ProfileBuilder importProfile(InputStream input);
+        ProfileBuilder builder = null;
 
-    ProfileBuilder addResources(Resource... resource);
+        // First check if we have a {@link ContainerBuilder} service
+        Runtime runtime = RuntimeLocator.getRuntime();
+        if (runtime != null) {
+            builder = ServiceLocator.getService(ProfileBuilder.class);
+        }
 
-    Profile createProfile();
+        // Next use ServiceLoader discovery
+        if (builder == null) {
+            ClassLoader classLoader = ProfileBuilder.class.getClassLoader();
+            ServiceLoader<ProfileBuilder> loader = ServiceLoader.load(ProfileBuilder.class, classLoader);
+            Iterator<ProfileBuilder> iterator = loader.iterator();
+            while (builder == null && iterator.hasNext()) {
+                builder = iterator.next();
+            }
+        }
+
+        if (builder == null)
+            throw new IllegalStateException("Cannot obtain ProfileBuilder service");
+
+        return builder;
+    }
+
+    public abstract ProfileBuilder addIdentity(String symbolicName, Version version);
+
+    public abstract ProfileBuilder importProfile(InputStream input);
+
+    public abstract ProfileBuilder addResources(Resource... resource);
+
+    public abstract Profile createProfile();
 }

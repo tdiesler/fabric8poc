@@ -91,9 +91,10 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Wait a little for the component to get updated
         Thread.sleep(100);
 
-        ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
-        ContainerBuilder builder = manager.getContainerBuilder(ContainerBuilder.class);
+        ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
+
+        ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cnt = manager.createContainer(options);
 
         ContainerIdentity cntId = cnt.getIdentity();

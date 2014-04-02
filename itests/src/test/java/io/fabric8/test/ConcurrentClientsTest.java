@@ -126,10 +126,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         }
 
         private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
-            ContainerBuilder builder = manager.getContainerBuilder(ContainerBuilder.class);
+            ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
             CreateOptions options = builder.addIdentity(prefix + "#" + index).getCreateOptions();
             Container cnt = manager.createContainer(options);
-
             ContainerIdentity cntId = cnt.getIdentity();
             //System.out.println(container);
             Assert.assertSame(State.CREATED, cnt.getState());

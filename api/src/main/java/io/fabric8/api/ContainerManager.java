@@ -36,11 +36,6 @@ import org.jboss.gravia.runtime.Runtime;
 public interface ContainerManager {
 
     /**
-     * Get a container builder for the given type
-     */
-    <T extends ContainerBuilder> T getContainerBuilder(Class<T> type);
-
-    /**
      * Create a container with the given options
      */
     Container createContainer(CreateOptions options);
