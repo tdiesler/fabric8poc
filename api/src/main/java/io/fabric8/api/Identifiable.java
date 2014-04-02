@@ -19,12 +19,18 @@
  */
 package io.fabric8.api;
 
+
+
 /**
- * The abstraction of a service endpoint
+ * A container identity
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+public interface Identifiable<T> {
 
+    /**
+     * Get the indentity
+     */
+    T getIdentity();
 }

@@ -19,51 +19,49 @@
  */
 package io.fabric8.api;
 
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 
 
 /**
- * A builder for a fabric profile
+ * A builder for a profile version
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileBuilder {
+public abstract class ProfileVersionBuilder {
 
-    public static ProfileBuilder create() {
+    public static ProfileVersionBuilder create() {
 
-        ProfileBuilder builder = null;
+        ProfileVersionBuilder builder = null;
 
-        // First check if we have a {@link ProfileBuilder} service
+        // First check if we have a {@link ProfileVersionBuilder} service
         Runtime runtime = RuntimeLocator.getRuntime();
         if (runtime != null) {
-            builder = ServiceLocator.getService(ProfileBuilder.class);
+            builder = ServiceLocator.getService(ProfileVersionBuilder.class);
         }
 
         // Next use ServiceLoader discovery
         if (builder == null) {
-            ClassLoader classLoader = ProfileBuilder.class.getClassLoader();
-            ServiceLoader<ProfileBuilder> loader = ServiceLoader.load(ProfileBuilder.class, classLoader);
-            Iterator<ProfileBuilder> iterator = loader.iterator();
+            ClassLoader classLoader = ProfileVersionBuilder.class.getClassLoader();
+            ServiceLoader<ProfileVersionBuilder> loader = ServiceLoader.load(ProfileVersionBuilder.class, classLoader);
+            Iterator<ProfileVersionBuilder> iterator = loader.iterator();
             while (builder == null && iterator.hasNext()) {
                 builder = iterator.next();
             }
         }
 
         if (builder == null)
-            throw new IllegalStateException("Cannot obtain ProfileBuilder service");
+            throw new IllegalStateException("Cannot obtain ProfileVersionBuilder service");
 
         return builder;
     }
 
-    public abstract ProfileBuilder addIdentity(String symbolicName);
+    public abstract ProfileVersionBuilder addIdentity(Version version);
 
-    public abstract ProfileBuilder importProfile(InputStream input);
-
-    public abstract Profile createProfile();
+    public abstract ProfileVersion createProfileVersion();
 }

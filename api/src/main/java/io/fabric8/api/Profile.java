@@ -19,10 +19,9 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.Version;
 
 
 /**
@@ -36,20 +35,15 @@ import org.jboss.gravia.resource.Resource;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Profile extends AttributeSupport {
+public interface Profile extends Attributeable, Identifiable<ProfileIdentity> {
 
     /**
-     * Get the identity
+     * Get the associated profile version
      */
-    ProfileIdentity getIdentity();
+    Version getProfileVersion();
 
     /**
-     * Get the set of associated containers
+     * Get the profile parents
      */
-    Set<ContainerIdentity> getContainers();
-
-    /**
-     * Get profile resources
-     */
-    List<Resource> getResources();
+    Set<ProfileIdentity> getParents();
 }

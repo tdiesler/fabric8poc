@@ -25,26 +25,18 @@ import io.fabric8.api.ProfileIdentity;
 
 import java.io.InputStream;
 
-import org.jboss.gravia.resource.Resource;
-import org.jboss.gravia.resource.Version;
-
 public final class DefaultProfileBuilder extends ProfileBuilder {
 
     private ProfileIdentity identity;
 
     @Override
-    public ProfileBuilder addIdentity(String symbolicName, Version version) {
-        this.identity = ProfileIdentity.create(symbolicName, version);
+    public ProfileBuilder addIdentity(String symbolicName) {
+        this.identity = ProfileIdentity.create(symbolicName);
         return this;
     }
 
     @Override
     public ProfileBuilder importProfile(InputStream input) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ProfileBuilder addResources(Resource... resource) {
         throw new UnsupportedOperationException();
     }
 

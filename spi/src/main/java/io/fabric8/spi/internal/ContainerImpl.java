@@ -54,31 +54,6 @@ final class ContainerImpl implements Container {
     }
 
     @Override
-    public Version getVersion() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ProfileIdentity> getProfiles() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasProfile(ProfileIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public HostIdentity getHost() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ContainerIdentity> getChildren() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
         throw new UnsupportedOperationException();
     }
@@ -94,12 +69,32 @@ final class ContainerImpl implements Container {
     }
 
     @Override
+    public HostIdentity getHost() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<ContainerIdentity> getChildContainers() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Set<String> getManagementDomains() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public Set<ServiceEndpointIdentity> getServiceEndpoints() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Version getProfileVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<ProfileIdentity> getProfiles() {
         throw new UnsupportedOperationException();
     }
 

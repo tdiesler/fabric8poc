@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
 
 
 /**
@@ -28,37 +27,13 @@ import org.jboss.gravia.utils.NotNullException;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class HostIdentity {
-
-    private final String symbolicName;
+public final class HostIdentity extends Identity {
 
     public static HostIdentity create(String symbolicNamen) {
         return new HostIdentity(symbolicNamen);
     }
 
     private HostIdentity(String symbolicName) {
-        NotNullException.assertValue(symbolicName, "symbolicName");
-        this.symbolicName = symbolicName;
-    }
-
-    public String getSymbolicName() {
-        return symbolicName;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof HostIdentity)) return false;
-        HostIdentity other = (HostIdentity) obj;
-        return other.symbolicName.equals(symbolicName);
-    }
-
-    @Override
-    public int hashCode() {
-        return symbolicName.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return getSymbolicName();
+        super(symbolicName);
     }
 }

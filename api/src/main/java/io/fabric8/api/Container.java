@@ -25,21 +25,16 @@ import org.jboss.gravia.resource.Version;
 
 
 /**
- * The abstraction of a Fabric8 container
+ * A fabric container
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Container extends AttributeSupport {
+public interface Container extends Attributeable, Identifiable<ContainerIdentity> {
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
-
-    /**
-     * Get the container identity
-     */
-    ContainerIdentity getIdentity();
 
     /**
      * Get the associated host
@@ -52,9 +47,9 @@ public interface Container extends AttributeSupport {
     State getState();
 
     /**
-     * Get the list of child containers
+     * Get the set of child containers
      */
-    Set<ContainerIdentity> getChildren();
+    Set<ContainerIdentity> getChildContainers();
 
     /**
      * Get the set of provided management domains
@@ -69,16 +64,10 @@ public interface Container extends AttributeSupport {
     /**
      * Get the profile version
      */
-    Version getVersion();
+    Version getProfileVersion();
 
     /**
      * Get the associated list of profiles
      */
     Set<ProfileIdentity> getProfiles();
-
-    /**
-     * True if the profile with the given identity exists
-     */
-    boolean hasProfile(ProfileIdentity identity);
-
 }

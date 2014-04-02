@@ -22,10 +22,12 @@ package io.fabric8.test;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
-import java.util.List;
+import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 import org.junit.Assert;
@@ -43,31 +45,28 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
     public void testProfiles() throws Exception {
 
         ProfileManager manager = ServiceLocator.getRequiredService(ProfileManager.class);
-        List<Version> versions = manager.getVersions();
+        Set<ProfileVersion> versions = manager.getProfileVersions(null);
         Assert.assertTrue("No versions", versions.isEmpty());
 
         Version version = Version.parseVersion("1.0");
 
+        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.create();
+        ProfileVersion profileVersion = pvbuilder.addIdentity(version).createProfileVersion();
+
         // Add a profile version
-        manager.addProfileVersion(version);
-        Assert.assertEquals(1, manager.getVersions().size());
-        Assert.assertEquals("1.0.0", manager.getVersions().get(0).toString());
-        Assert.assertTrue("No profiles", manager.getAllProfiles().isEmpty());
+        manager.addProfileVersion(profileVersion);
+        Assert.assertEquals(1, manager.getProfileVersions(null).size());
 
         // Build a profile
-        ProfileBuilder builder = ProfileBuilder.create();
-        Profile profile = builder.addIdentity("foo", null).createProfile();
-        Assert.assertEquals(Version.emptyVersion, profile.getIdentity().getVersion());
-        Assert.assertTrue("No profiles", manager.getAllProfiles().isEmpty());
+        ProfileBuilder pbuilder = ProfileBuilder.create();
+        Profile profile = pbuilder.addIdentity("foo").createProfile();
 
         // Add the profile to the given version
-        manager.addProfile(profile, version);
-        Assert.assertEquals(1, manager.getAllProfiles().size());
-        Assert.assertEquals(1, manager.getProfiles(version).size());
+        profile = manager.addProfile(version, profile);
+        Assert.assertEquals(1, manager.getProfiles(version, null).size());
 
         // Remove profile version
         manager.removeProfileVersion(version);
-        Assert.assertEquals(0, manager.getAllProfiles().size());
-        Assert.assertEquals(0, manager.getProfiles(version).size());
+        Assert.assertEquals(0, manager.getProfiles(version, null).size());
     }
 }

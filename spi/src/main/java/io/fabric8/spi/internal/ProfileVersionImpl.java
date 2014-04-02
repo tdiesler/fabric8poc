@@ -20,45 +20,32 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.spi.ProfileState;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.spi.ProfileVersionState;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ProfileImpl implements Profile {
+final class ProfileVersionImpl implements ProfileVersion {
 
-    private final ProfileIdentity identity;
-    private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
+    private final Version identity;
 
-    ProfileImpl(ProfileState profileState) {
-        NotNullException.assertValue(profileState, "profileState");
-        this.identity = profileState.getIdentity();
+    ProfileVersionImpl(ProfileVersionState versionState) {
+        NotNullException.assertValue(versionState, "versionState");
+        this.identity = versionState.getIdentity();
     }
 
-    ProfileImpl(ProfileIdentity identity) {
+    ProfileVersionImpl(Version identity) {
         NotNullException.assertValue(identity, "identity");
         this.identity = identity;
     }
 
     @Override
-    public ProfileIdentity getIdentity() {
+    public Version getIdentity() {
         return identity;
-    }
-
-    @Override
-    public Version getProfileVersion() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ProfileIdentity> getParents() {
-        return Collections.unmodifiableSet(parents);
     }
 
     @Override
@@ -77,10 +64,14 @@ final class ProfileImpl implements Profile {
     }
 
     @Override
+    public Set<ProfileIdentity> getProfiles() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ProfileImpl))
-            return false;
-        ProfileImpl other = (ProfileImpl) obj;
+        if (!(obj instanceof ProfileVersionImpl)) return false;
+        ProfileVersionImpl other = (ProfileVersionImpl) obj;
         return other.identity.equals(identity);
     }
 

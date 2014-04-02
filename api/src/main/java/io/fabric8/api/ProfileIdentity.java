@@ -19,8 +19,6 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
 
 
 /**
@@ -29,43 +27,13 @@ import org.jboss.gravia.utils.NotNullException;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ProfileIdentity {
+public final class ProfileIdentity extends Identity {
 
-    private final String symbolicName;
-    private final Version version;
-
-    public static ProfileIdentity create(String symbolicName, Version version) {
-        return new ProfileIdentity(symbolicName, version);
+    public static ProfileIdentity create(String symbolicNamen) {
+        return new ProfileIdentity(symbolicNamen);
     }
 
-    private ProfileIdentity(String symbolicName, Version version) {
-        NotNullException.assertValue(symbolicName, "symbolicName");
-        this.version = version != null ? version : Version.emptyVersion;
-        this.symbolicName = symbolicName;
-    }
-
-    public String getSymbolicName() {
-        return symbolicName;
-    }
-
-    public Version getVersion() {
-        return version;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ProfileIdentity)) return false;
-        ProfileIdentity other = (ProfileIdentity) obj;
-        return other.symbolicName.equals(symbolicName) && other.version.equals(version);
-    }
-
-    @Override
-    public int hashCode() {
-        return (symbolicName + version).hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "[" + symbolicName + "-" + version + "]";
+    private ProfileIdentity(String symbolicName) {
+        super(symbolicName);
     }
 }

@@ -17,14 +17,23 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
+
+import io.fabric8.api.Identifiable;
+import io.fabric8.api.ProfileIdentity;
+
+import java.util.Map;
+
+import org.jboss.gravia.resource.Version;
 
 /**
- * The abstraction of a service endpoint
+ * The internal profile profile state
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+public interface ProfileVersionState extends Identifiable<Version> {
+
+    Map<ProfileIdentity, ProfileState> getProfiles();
 
 }

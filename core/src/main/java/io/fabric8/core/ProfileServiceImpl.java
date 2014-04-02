@@ -21,22 +21,21 @@ package io.fabric8.core;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.spi.ContainerState;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.ProfileState;
+import io.fabric8.spi.ProfileVersionState;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -67,78 +66,59 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public List<Version> getVersions() {
+    public Map<Version, ProfileVersionState> getProfileVersions() {
         synchronized (profileVersions) {
-            List<Version> versions = new ArrayList<Version>(profileVersions.keySet());
-            return Collections.unmodifiableList(versions);
+            HashMap<Version, ProfileVersionState> snapshot = new HashMap<Version, ProfileVersionState>(profileVersions);
+            return Collections.unmodifiableMap(snapshot);
         }
     }
 
     @Override
-    public void addProfileVersion(Version version) {
+    public ProfileVersionState addProfileVersion(ProfileVersion version) {
         synchronized (profileVersions) {
-            ProfileVersionState versionState = new ProfileVersionState(version);
-            profileVersions.put(version, versionState);
+            ProfileVersionState versionState = new ProfileVersionStateImpl(version);
+            profileVersions.put(version.getIdentity(), versionState);
+            return versionState;
         }
     }
 
     @Override
-    public void removeProfileVersion(Version version) {
+    public ProfileVersionState removeProfileVersion(Version version) {
         synchronized (profileVersions) {
-            profileVersions.remove(version);
+            return profileVersions.remove(version);
         }
     }
 
     @Override
-    public Set<ProfileIdentity> getAllProfiles() {
+    public Map<ProfileIdentity, ProfileState> getProfiles(Version version) {
         synchronized (profileVersions) {
-            Set<ProfileIdentity> result = new HashSet<ProfileIdentity>();
-            for (Version version : profileVersions.keySet()) {
-                result.addAll(getProfiles(version));
-            }
-            return Collections.unmodifiableSet(result);
-        }
-    }
-
-    @Override
-    public Set<ProfileIdentity> getProfiles(Version version) {
-        synchronized (profileVersions) {
-            Set<ProfileIdentity> result = new HashSet<ProfileIdentity>();
             ProfileVersionState versionState = profileVersions.get(version);
-            if (versionState != null) {
-                for (ProfileState state : versionState.getProfileStates()) {
-                    result.add(state.getIdentity());
-                }
-            }
-            return Collections.unmodifiableSet(result);
+            return versionState != null ? versionState.getProfiles() : Collections.<ProfileIdentity, ProfileState> emptyMap();
         }
     }
 
     @Override
-    public ProfileState getProfile(ProfileIdentity identity) {
+    public ProfileState addProfile(Version version, Profile profile) {
         synchronized (profileVersions) {
-            ProfileVersionState versionState = profileVersions.get(identity.getVersion());
-            return versionState != null ? versionState.getProfile(identity.getSymbolicName()) : null;
-        }
-    }
-
-    @Override
-    public ProfileState addProfile(Profile profile, Version version) {
-        synchronized (profileVersions) {
-            if (version == null) {
-                version = profile.getIdentity().getVersion();
-            }
-            ProfileVersionState versionState = profileVersions.get(version);
-            if (versionState == null)
+            ProfileVersionStateImpl versionState = (ProfileVersionStateImpl) profileVersions.get(version);
+            if (versionState == null) {
                 throw new IllegalStateException("Profile version does not exist: " + version);
-
-            return versionState.addProfile(profile);
+            } else {
+                return versionState.addProfile(profile);
+            }
         }
     }
 
     @Override
-    public ProfileState removeProfile(ProfileIdentity profile) {
-        throw new UnsupportedOperationException();
+    public ProfileState removeProfile(Version version, ProfileIdentity identity) {
+        synchronized (profileVersions) {
+            ProfileVersionStateImpl versionState = (ProfileVersionStateImpl) profileVersions.get(version);
+            if (versionState == null) {
+                throw new IllegalStateException("Profile version does not exist: " + version);
+            } else {
+                return versionState.removeProfile(identity);
+            }
+        }
     }
 
     @Reference
@@ -150,43 +130,52 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         this.permitManager.unbind(stateService);
     }
 
-    static class ProfileVersionState {
+    static class ProfileVersionStateImpl implements ProfileVersionState {
 
         private final Version identity;
-        private Map<String, ProfileState> profileStates = new LinkedHashMap<String, ProfileState>();
+        private final Map<ProfileIdentity, ProfileState> profileStates = new HashMap<ProfileIdentity, ProfileState>();
 
-        ProfileVersionState(Version identity) {
-            this.identity = identity;
+        ProfileVersionStateImpl(ProfileVersion version) {
+            this.identity = version.getIdentity();
         }
 
-        Version getIdentity() {
+        @Override
+        public Version getIdentity() {
             return identity;
         }
 
-        List<ProfileState> getProfileStates() {
+        @Override
+        public Map<ProfileIdentity, ProfileState> getProfiles() {
             synchronized (profileStates) {
-                List<ProfileState> list = new ArrayList<ProfileState>(profileStates.values());
-                return Collections.unmodifiableList(list);
-            }
-        }
-
-        ProfileState getProfile(String symbolicName) {
-            synchronized (profileStates) {
-                return profileStates.get(symbolicName);
-            }
-        }
-
-        boolean hasProfile(String symbolicName) {
-            synchronized (profileStates) {
-                return profileStates.containsKey(symbolicName);
+                HashMap<ProfileIdentity, ProfileState> snapshot = new HashMap<ProfileIdentity, ProfileState>(profileStates);
+                return Collections.unmodifiableMap(snapshot);
             }
         }
 
         ProfileState addProfile(Profile profile) {
             synchronized (profileStates) {
-                ProfileState profileState = new ProfileStateImpl(profile);
-                profileStates.put(profile.getIdentity().getSymbolicName(), profileState);
+                ProfileState profileState = new ProfileStateImpl(this, profile, getProfileParents(profile));
+                profileStates.put(profile.getIdentity(), profileState);
                 return profileState;
+            }
+        }
+
+        ProfileState removeProfile(ProfileIdentity identity) {
+            synchronized (profileStates) {
+                return profileStates.remove(identity);
+            }
+        }
+
+        private Set<ProfileState> getProfileParents(Profile profile) {
+            synchronized (profileStates) {
+                Set<ProfileState> result = new HashSet<ProfileState>();
+                for (ProfileIdentity pid : profile.getParents()) {
+                    ProfileState pstate = profileStates.get(pid);
+                    if (pstate == null)
+                        throw new IllegalStateException("Cannot obtain parent profile: " + pid);
+                    result.add(pstate);
+                }
+                return Collections.unmodifiableSet(result);
             }
         }
     }
@@ -194,12 +183,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     static class ProfileStateImpl implements ProfileState {
 
         private final ProfileIdentity identity;
-        private final List<Resource> resources = new ArrayList<Resource>();
-        private final Set<ContainerState> containers = new HashSet<ContainerState>();
+        private final ProfileVersionState versionState;
+        private final Set<ProfileState> parents = new HashSet<ProfileState>();
 
-        ProfileStateImpl(Profile profile) {
+        ProfileStateImpl(ProfileVersionState versionState, Profile profile, Set<ProfileState> parents) {
+            this.versionState = versionState;
             this.identity = profile.getIdentity();
-            this.resources.addAll(profile.getResources());
+            this.parents.addAll(parents);
         }
 
         @Override
@@ -208,13 +198,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
 
         @Override
-        public Set<ContainerState> getContainers() {
-            return Collections.unmodifiableSet(containers);
+        public ProfileVersionState getProfileVersion() {
+            return versionState;
         }
 
         @Override
-        public List<Resource> getResources() {
-            return Collections.unmodifiableList(resources);
+        public Set<ProfileState> getParents() {
+            return Collections.unmodifiableSet(parents);
         }
     }
 }

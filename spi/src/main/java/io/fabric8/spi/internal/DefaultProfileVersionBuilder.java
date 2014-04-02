@@ -17,31 +17,25 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi.internal;
 
-import java.util.Set;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 
+import org.jboss.gravia.resource.Version;
 
-/**
- * Provide attribute support for a construct
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface AttributeSupport {
+public final class DefaultProfileVersionBuilder extends ProfileVersionBuilder {
 
-    /**
-     * Get the list of attribute keys
-     */
-    Set<AttributeKey<?>> getAttributeKeys();
+    private Version identity;
 
-    /**
-     * Get an attribute value
-     */
-    <T> T getAttribute(AttributeKey<T> key);
+    @Override
+    public ProfileVersionBuilder addIdentity(Version version) {
+        this.identity = version;
+        return this;
+    }
 
-    /**
-     * True if the given attribute key exists
-     */
-    <T> boolean hasAttribute(AttributeKey<T> key);
+    @Override
+    public ProfileVersion createProfileVersion() {
+        return new ProfileVersionImpl(identity);
+    }
 }

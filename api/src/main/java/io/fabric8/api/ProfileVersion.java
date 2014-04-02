@@ -19,12 +19,21 @@
  */
 package io.fabric8.api;
 
+import java.util.Set;
+
+import org.jboss.gravia.resource.Version;
+
+
 /**
- * The abstraction of a service endpoint
+ * A profile version
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+public interface ProfileVersion extends Attributeable, Identifiable<Version> {
 
+    /**
+     * Get the associated list of profiles
+     */
+    Set<ProfileIdentity> getProfiles();
 }

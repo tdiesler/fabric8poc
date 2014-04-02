@@ -104,7 +104,12 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Set<ContainerIdentity> getAllContainers() {
+    public Set<ContainerIdentity> getContainerIdentities() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Set<Container> getContainers(Set<ContainerIdentity> identities) {
         throw new UnsupportedOperationException();
     }
 

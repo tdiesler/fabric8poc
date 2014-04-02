@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.Identifiable;
 
 
 /**
@@ -29,15 +30,7 @@ import io.fabric8.api.ContainerIdentity;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState {
+public interface ContainerState extends Identifiable<ContainerIdentity> {
 
-    /**
-     * Get the identity for this container
-     */
-    ContainerIdentity getIdentity();
-
-    /**
-     * Get the current state for this container
-     */
     State getState();
 }

@@ -21,10 +21,10 @@ package io.fabric8.spi;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.permit.PermitState;
 
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
 
@@ -42,44 +42,32 @@ public interface ProfileService {
     PermitState<ProfileService> PERMIT = new PermitState<ProfileService>(ProfileService.class);
 
     /**
-     * Get the list of profile versions in the cluster
+     * Get the set of profile versions in the cluster
      */
-    List<Version> getVersions();
+    Map<Version, ProfileVersionState> getProfileVersions();
 
     /**
      * Add a profile version
      */
-    void addProfileVersion(Version version);
+    ProfileVersionState addProfileVersion(ProfileVersion version);
 
     /**
      * Remove a profile version
      */
-    void removeProfileVersion(Version version);
-
-    /**
-     * Get all profiles
-     */
-    Set<ProfileIdentity> getAllProfiles();
+    ProfileVersionState removeProfileVersion(Version version);
 
     /**
      * Get the profiles for a given version
      */
-    Set<ProfileIdentity> getProfiles(Version version);
-
-    /**
-     * Get the profile for a given identity
-     */
-    ProfileState getProfile(ProfileIdentity identity);
+    Map<ProfileIdentity, ProfileState> getProfiles(Version version);
 
     /**
      * Add a profile to the given version
-     *
-     * @param version can be null, in which case the profile identity must specify the version
      */
-    ProfileState addProfile(Profile profile, Version version);
+    ProfileState addProfile(Version version, Profile profile);
 
     /**
      * Remove the profile with the given identity
      */
-    ProfileState removeProfile(ProfileIdentity profile);
+    ProfileState removeProfile(Version version, ProfileIdentity profile);
 }

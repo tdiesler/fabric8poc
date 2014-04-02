@@ -19,46 +19,19 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
-
-
 /**
  * A container identity
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ContainerIdentity {
-
-    private final String symbolicName;
+public final class ContainerIdentity extends Identity {
 
     public static ContainerIdentity create(String symbolicNamen) {
         return new ContainerIdentity(symbolicNamen);
     }
 
     private ContainerIdentity(String symbolicName) {
-        NotNullException.assertValue(symbolicName, "symbolicName");
-        this.symbolicName = symbolicName;
-    }
-
-    public String getSymbolicName() {
-        return symbolicName;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ContainerIdentity)) return false;
-        ContainerIdentity other = (ContainerIdentity) obj;
-        return other.symbolicName.equals(symbolicName);
-    }
-
-    @Override
-    public int hashCode() {
-        return symbolicName.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return getSymbolicName();
+        super(symbolicName);
     }
 }

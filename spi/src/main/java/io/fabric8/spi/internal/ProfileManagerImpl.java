@@ -22,14 +22,19 @@ package io.fabric8.spi.internal;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.ProfileService;
+import io.fabric8.spi.ProfileState;
+import io.fabric8.spi.ProfileVersionState;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -55,88 +60,123 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public List<Version> getVersions() {
+    public Set<Version> getProfileVersionIdentities() {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getVersions();
+            return Collections.unmodifiableSet(service.getProfileVersions().keySet());
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public void addProfileVersion(Version version) {
+    public Set<ProfileVersion> getProfileVersions(Set<Version> identities) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            service.addProfileVersion(version);
+            Set<ProfileVersion> result = new HashSet<ProfileVersion>();
+            for (Entry<Version, ProfileVersionState> entry : service.getProfileVersions().entrySet()) {
+                if (identities == null || identities.contains(entry.getKey())) {
+                    result.add(new ProfileVersionImpl(entry.getValue()));
+                }
+            }
+            return Collections.unmodifiableSet(result);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public void removeProfileVersion(Version version) {
+    public ProfileVersion getProfileVersion(Version identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            service.removeProfileVersion(version);
+            ProfileVersionState pvstate = service.getProfileVersions().get(identity);
+            return pvstate != null ? new ProfileVersionImpl(pvstate) : null;
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Set<ProfileIdentity> getAllProfiles() {
+    public ProfileVersion addProfileVersion(ProfileVersion version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getAllProfiles();
+            return new ProfileVersionImpl(service.addProfileVersion(version));
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Set<ProfileIdentity> getProfiles(Version version) {
+    public ProfileVersion removeProfileVersion(Version version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getProfiles(version);
+            return new ProfileVersionImpl(service.removeProfileVersion(version));
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Profile getProfile(ProfileIdentity identity) {
+    public Set<ProfileIdentity> getProfileIdentities(Version version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.getProfile(identity));
+            return service.getProfiles(version).keySet();
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Profile addProfile(Profile profile, Version version) {
+    public Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.addProfile(profile, version));
+            Set<Profile> result = new HashSet<Profile>();
+            for (Entry<ProfileIdentity, ProfileState> entry : service.getProfiles(version).entrySet()) {
+                if (identities == null || identities.contains(entry.getKey())) {
+                    result.add(new ProfileImpl(entry.getValue()));
+                }
+            }
+            return Collections.unmodifiableSet(result);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Profile removeProfile(ProfileIdentity profile) {
+    public Profile getProfile(Version version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.removeProfile(profile));
+            return new ProfileImpl(service.getProfiles(version).get(identity));
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public Profile addProfile(Version version, Profile profile) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return new ProfileImpl(service.addProfile(version, profile));
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public Profile removeProfile(Version version, ProfileIdentity profile) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return new ProfileImpl(service.removeProfile(version, profile));
         } finally {
             permit.release();
         }

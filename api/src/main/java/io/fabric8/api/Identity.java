@@ -19,12 +19,42 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.utils.NotNullException;
+
+
 /**
- * The abstraction of a service endpoint
+ * An abstract identity
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+abstract class Identity {
 
+    private final String symbolicName;
+
+    Identity(String symbolicName) {
+        NotNullException.assertValue(symbolicName, "symbolicName");
+        this.symbolicName = symbolicName;
+    }
+
+    public String getSymbolicName() {
+        return symbolicName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Identity)) return false;
+        Identity other = (Identity) obj;
+        return other.symbolicName.equals(symbolicName);
+    }
+
+    @Override
+    public int hashCode() {
+        return symbolicName.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "[" + symbolicName + "]";
+    }
 }

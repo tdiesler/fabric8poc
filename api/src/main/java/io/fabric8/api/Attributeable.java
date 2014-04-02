@@ -19,12 +19,29 @@
  */
 package io.fabric8.api;
 
+import java.util.Set;
+
+
 /**
- * The abstraction of a service endpoint
+ * Provide attribute support for a construct
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+public interface Attributeable {
 
+    /**
+     * Get the list of attribute keys
+     */
+    Set<AttributeKey<?>> getAttributeKeys();
+
+    /**
+     * Get an attribute value
+     */
+    <T> T getAttribute(AttributeKey<T> key);
+
+    /**
+     * True if the given attribute key exists
+     */
+    <T> boolean hasAttribute(AttributeKey<T> key);
 }

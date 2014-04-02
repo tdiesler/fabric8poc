@@ -19,12 +19,10 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.Identifiable;
 import io.fabric8.api.ProfileIdentity;
 
-import java.util.List;
 import java.util.Set;
-
-import org.jboss.gravia.resource.Resource;
 
 
 /**
@@ -33,20 +31,9 @@ import org.jboss.gravia.resource.Resource;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileState {
+public interface ProfileState extends Identifiable<ProfileIdentity> {
 
-    /**
-     * Get the identity
-     */
-    ProfileIdentity getIdentity();
+    ProfileVersionState getProfileVersion();
 
-    /**
-     * Get the set of associated containers
-     */
-    Set<ContainerState> getContainers();
-
-    /**
-     * Get profile resources
-     */
-    List<Resource> getResources();
+    Set<ProfileState> getParents();
 }

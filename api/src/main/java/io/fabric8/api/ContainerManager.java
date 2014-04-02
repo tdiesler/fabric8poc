@@ -41,19 +41,25 @@ public interface ContainerManager {
     Container createContainer(CreateOptions options);
 
     /**
-     * Get the set of containers in the cluster
+     * Get the set of container identities in the cluster
      */
-    Set<ContainerIdentity> getAllContainers();
+    Set<ContainerIdentity> getContainerIdentities();
 
     /**
-     * Get the current container
+     * Get the set of containers for the given identities
+     * @param identities The requested identities or <code>null</code> for all containers
      */
-    Container getCurrentContainer();
+    Set<Container> getContainers(Set<ContainerIdentity> identities);
 
     /**
      * Get the container with the given identity
      */
     Container getContainer(ContainerIdentity identity);
+
+    /**
+     * Get the current container
+     */
+    Container getCurrentContainer();
 
     /**
      * Start the container with the given identity

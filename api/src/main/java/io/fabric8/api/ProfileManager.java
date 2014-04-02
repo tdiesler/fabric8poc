@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -36,44 +35,54 @@ import org.jboss.gravia.runtime.Runtime;
 public interface ProfileManager {
 
     /**
-     * Get the list of profile versions in the cluster
+     * Get the set of profile version identities in the cluster
      */
-    List<Version> getVersions();
+    Set<Version> getProfileVersionIdentities();
+
+    /**
+     * Get the set of profile versions for the given identities
+     * @param identities The requested identities or <code>null</code> for all profile versions
+     */
+    Set<ProfileVersion> getProfileVersions(Set<Version> identities);
+
+    /**
+     * Get the profile versions for the given identity
+     */
+    ProfileVersion getProfileVersion(Version identity);
 
     /**
      * Add a profile version
      */
-    void addProfileVersion(Version version);
+    ProfileVersion addProfileVersion(ProfileVersion version);
 
     /**
      * Remove a profile version
      */
-    void removeProfileVersion(Version version);
+    ProfileVersion removeProfileVersion(Version version);
 
     /**
-     * Get all profiles
+     * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getAllProfiles();
+    Set<ProfileIdentity> getProfileIdentities(Version version);
 
     /**
-     * Get the profiles for a given version
+     * Get the profiles for a given version and identities
+     * @param identities The requested identities or <code>null</code> for all profile versions
      */
-    Set<ProfileIdentity> getProfiles(Version version);
+    Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities);
 
     /**
-     * Get the profile for a given identity
+     * Get the profile for a given identity and version
      */
-    Profile getProfile(ProfileIdentity identity);
+    Profile getProfile(Version version, ProfileIdentity identity);
 
     /**
      * Add a profile to the given version
-     *
-     * @param version can be null, in which case the profile identity must specify the version
      */
-    Profile addProfile(Profile profile, Version version);
+    Profile addProfile(Version version, Profile profile);
 
     /**
-     * Remove the profile with the given identity
+     * Remove a profile from the given version
      */
-    Profile removeProfile(ProfileIdentity profile);
+    Profile removeProfile(Version version, ProfileIdentity identity);
 }
