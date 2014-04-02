@@ -19,16 +19,16 @@
  */
 package io.fabric8.api;
 
-import java.io.IOException;
-import java.io.OutputStream;
+
 
 /**
- * A builder for a fabric profile
+ * Container create options
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileWriter {
+public interface CreateOptions extends AttributeSupport {
 
-    void exportProfile(OutputStream input) throws IOException;
+    String getSymbolicName();
+
 }

@@ -28,16 +28,21 @@ import java.util.Set;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Host extends IdentitySupport, AttributeSupport {
+public interface Host extends AttributeSupport {
+
+    /**
+     * Get the host identity
+     */
+    HostIdentity getIdentity();
 
     /**
      * Get the set of associated containers
      */
-    Set<Container> getContainers();
+    Set<ContainerIdentity> getContainers();
 
     /**
      * Get a container with a given identity
      * @return The container or <code>null</code>
      */
-    Container getContainer(Identity identity);
+    Container getContainer(ContainerIdentity identity);
 }

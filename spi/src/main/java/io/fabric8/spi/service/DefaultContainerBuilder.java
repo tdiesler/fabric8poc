@@ -19,49 +19,45 @@
  */
 package io.fabric8.spi.service;
 
-import io.fabric8.api.Container;
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.Host;
-import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.FabricService;
-import io.fabric8.spi.permit.PermitManager;
-import io.fabric8.spi.permit.PermitManager.Permit;
+import io.fabric8.api.CreateOptions;
 
-import org.jboss.gravia.runtime.RuntimeType;
+import java.util.Set;
 
-public final class DefaultContainerBuilder extends ContainerBuilder {
+public final class DefaultContainerBuilder implements ContainerBuilder {
 
-    private final PermitManager permitManager;
-    private String identity;
-
-    public DefaultContainerBuilder() {
-        this.permitManager = ServiceLocator.getRequiredService(PermitManager.class);
-    }
+    private String symbolicName;
 
     @Override
-    public ContainerBuilder setRuntimeType(RuntimeType type) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ContainerBuilder addIdentity(String identity) {
-        this.identity = identity;
+    public ContainerBuilder addIdentity(String symbolicName) {
+        this.symbolicName = symbolicName;
         return this;
     }
 
     @Override
-    public ContainerBuilder setHost(Host host) {
-        throw new UnsupportedOperationException();
-    }
+    public CreateOptions getCreateOptions() {
+        return new CreateOptions() {
 
-    @Override
-    public Container createContainer() {
-        Permit<FabricService> permit = permitManager.aquirePermit(FabricService.PERMIT, false);
-        try {
-            FabricService fabricService = permit.getInstance();
-            return new ContainerImpl(permitManager, fabricService.createContainer(identity));
-        } finally {
-            permit.release();
-        }
+            @Override
+            public <T> boolean hasAttribute(AttributeKey<T> key) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Set<AttributeKey<?>> getAttributeKeys() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <T> T getAttribute(AttributeKey<T> key) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String getSymbolicName() {
+                return symbolicName;
+            }
+        };
     }
 }

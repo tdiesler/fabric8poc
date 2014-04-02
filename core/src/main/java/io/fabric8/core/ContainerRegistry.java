@@ -20,7 +20,7 @@
 package io.fabric8.core;
 
 import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 
@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
-    private final Map<Identity, ContainerState> containers = new ConcurrentHashMap<Identity, ContainerState>();
+    private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();
 
     @Activate
     void activate() {
@@ -47,12 +47,12 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    ContainerState getContainer(Identity identity) {
+    ContainerState getContainer(ContainerIdentity identity) {
         assertValid();
         return containers.get(identity);
     }
 
-    ContainerState getRequiredContainer(Identity identity) {
+    ContainerState getRequiredContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState container = containers.get(identity);
         if (container == null)
@@ -60,30 +60,30 @@ public final class ContainerRegistry extends AbstractComponent {
         return container;
     }
 
-    ContainerState addContainer(Identity identity) {
+    ContainerState addContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState container = new ContainerStateImpl(identity);
         containers.put(identity, container);
         return container;
     }
 
-    ContainerState removeContainer(Identity identity) {
+    ContainerState removeContainer(ContainerIdentity identity) {
         assertValid();
         return containers.remove(identity);
     }
 
     static final class ContainerStateImpl implements ContainerState {
 
-        private final Identity identity;
+        private final ContainerIdentity identity;
         private final AtomicReference<State> state = new AtomicReference<State>();
 
-        public ContainerStateImpl(Identity identity) {
+        public ContainerStateImpl(ContainerIdentity identity) {
             this.identity = identity;
             this.state.set(State.CREATED);
         }
 
         @Override
-        public Identity getIdentity() {
+        public ContainerIdentity getIdentity() {
             return identity;
         }
 

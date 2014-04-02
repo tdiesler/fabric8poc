@@ -20,62 +20,44 @@
 package io.fabric8.spi.service;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.HostIdentity;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerState;
+import io.fabric8.spi.ProfileState;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ContainerImpl implements Container {
+final class ProfileImpl implements Profile {
 
-    private final ContainerIdentity identity;
-    private final State state;
+    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
+    private final List<Resource> resources = new ArrayList<Resource>();
+    private final ProfileIdentity identity;
 
-    ContainerImpl(ContainerState delegate) {
-        NotNullException.assertValue(delegate, "delegate");
-        this.identity = delegate.getIdentity();
-        this.state = delegate.getState();
+    ProfileImpl(ProfileState profileState) {
+        NotNullException.assertValue(profileState, "profileState");
+        this.identity = profileState.getIdentity();
+        for (ContainerState cntState : profileState.getContainers()) {
+            this.containers.add(cntState.getIdentity());
+        }
+        this.resources.addAll(profileState.getResources());
+    }
+
+    ProfileImpl(ProfileIdentity identity) {
+        NotNullException.assertValue(identity, "identity");
+        this.identity = identity;
     }
 
     @Override
-    public ContainerIdentity getIdentity() {
+    public ProfileIdentity getIdentity() {
         return identity;
-    }
-
-    @Override
-    public State getState() {
-        return state;
-    }
-
-    @Override
-    public Version getVersion() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ProfileIdentity> getProfiles() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasProfile(ProfileIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public HostIdentity getHost() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ContainerIdentity> getChildren() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -94,19 +76,20 @@ final class ContainerImpl implements Container {
     }
 
     @Override
-    public Set<String> getManagementDomains() {
-        throw new UnsupportedOperationException();
+    public Set<ContainerIdentity> getContainers() {
+        return Collections.unmodifiableSet(containers);
     }
 
     @Override
-    public Set<ServiceEndpointIdentity> getServiceEndpoints() {
-        throw new UnsupportedOperationException();
+    public List<Resource> getResources() {
+        return Collections.unmodifiableList(resources);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ContainerImpl)) return false;
-        ContainerImpl other = (ContainerImpl) obj;
+        if (!(obj instanceof ProfileImpl))
+            return false;
+        ProfileImpl other = (ProfileImpl) obj;
         return other.identity.equals(identity);
     }
 

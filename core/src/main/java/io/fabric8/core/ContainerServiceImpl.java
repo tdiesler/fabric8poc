@@ -19,10 +19,11 @@
  */
 package io.fabric8.core;
 
-import io.fabric8.api.Identity;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.CreateOptions;
 import io.fabric8.core.ContainerRegistry.ContainerStateImpl;
 import io.fabric8.spi.ContainerState;
-import io.fabric8.spi.FabricService;
+import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -34,8 +35,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { FabricService.class }, configurationPid = FabricService.FABRIC_SERVICE_PID, immediate = true)
-public final class FabricServiceImpl extends AbstractProtectedComponent<FabricService> implements FabricService {
+@Component(service = { ContainerService.class }, configurationPid = ContainerService.FABRIC_SERVICE_PID, immediate = true)
+public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
@@ -43,7 +44,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
 
     @Activate
     void activate(Map<String, ?> config) {
-        prefix = (String) config.get(FabricService.KEY_NAME_PREFIX);
+        prefix = (String) config.get(ContainerService.KEY_NAME_PREFIX);
         activateComponent(PERMIT, this);
     }
 
@@ -60,10 +61,11 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     }
 
     @Override
-    public ContainerState createContainer(String name) {
+    public ContainerState createContainer(CreateOptions options) {
         assertValid();
         synchronized (containerRegistry) {
-            Identity identity = Identity.create(prefix != null ? prefix + "." + name : name);
+            String name = options.getSymbolicName();
+            ContainerIdentity identity = ContainerIdentity.create(prefix != null ? prefix + "." + name : name);
             ContainerState containerState = containerRegistry.get().getContainer(identity);
             if (containerState != null)
                 throw new IllegalStateException("Container already exists: " + identity);
@@ -73,13 +75,13 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     }
 
     @Override
-    public ContainerState getContainerByName(Identity identity) {
+    public ContainerState getContainerByName(ContainerIdentity identity) {
         assertValid();
         return containerRegistry.get().getContainer(identity);
     }
 
     @Override
-    public ContainerState startContainer(Identity identity) {
+    public ContainerState startContainer(ContainerIdentity identity) {
         assertValid();
         synchronized (containerRegistry) {
             ContainerState container = getRequiredContainer(identity);
@@ -89,7 +91,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     }
 
     @Override
-    public ContainerState stopContainer(Identity identity) {
+    public ContainerState stopContainer(ContainerIdentity identity) {
         assertValid();
         synchronized (containerRegistry) {
             ContainerState container = getRequiredContainer(identity);
@@ -99,7 +101,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
     }
 
     @Override
-    public ContainerState destroyContainer(Identity identity) {
+    public ContainerState destroyContainer(ContainerIdentity identity) {
         assertValid();
         synchronized (containerRegistry) {
             ContainerState container = containerRegistry.get().removeContainer(identity);
@@ -110,7 +112,7 @@ public final class FabricServiceImpl extends AbstractProtectedComponent<FabricSe
         }
     }
 
-    private ContainerState getRequiredContainer(Identity identity) {
+    private ContainerState getRequiredContainer(ContainerIdentity identity) {
         synchronized (containerRegistry) {
             return containerRegistry.get().getRequiredContainer(identity);
         }

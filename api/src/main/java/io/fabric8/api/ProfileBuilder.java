@@ -21,6 +21,9 @@ package io.fabric8.api;
 
 import java.io.InputStream;
 
+import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.Version;
+
 
 /**
  * A builder for a fabric profile
@@ -28,15 +31,13 @@ import java.io.InputStream;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileBuilder {
+public interface ProfileBuilder {
 
-    public static <T extends ProfileBuilder> T create(Class<T> type) {
-        throw new UnsupportedOperationException();
-    }
+    ProfileBuilder addIdentity(String symbolicName, Version version);
 
-    public abstract ProfileBuilder addIdentity(Identity identity);
+    ProfileBuilder importProfile(InputStream input);
 
-    public abstract ProfileBuilder importProfile(InputStream input);
+    ProfileBuilder addResources(Resource... resource);
 
-    public abstract Profile createProfile();
+    Profile createProfile();
 }

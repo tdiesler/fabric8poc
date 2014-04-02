@@ -25,6 +25,10 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends IdentitySupport, AttributeSupport {
+public interface ServiceEndpoint extends AttributeSupport {
 
+    /**
+     * Get the identity
+     */
+    ServiceEndpointIdentity getIdentity();
 }

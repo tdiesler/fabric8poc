@@ -17,27 +17,36 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
+
+import io.fabric8.api.ProfileIdentity;
 
 import java.util.List;
+import java.util.Set;
 
+import org.jboss.gravia.resource.Resource;
 
 
 /**
- * Provide failure support for a construct
+ * The internal profile state
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface FailureSupport {
+public interface ProfileState {
 
     /**
-     * Get the current list of failures
+     * Get the identity
      */
-    List<Throwable> getFailures();
+    ProfileIdentity getIdentity();
 
     /**
-     * Clear the failure list and return the current failures
+     * Get the set of associated containers
      */
-    List<Throwable> clearFailures();
+    Set<ContainerState> getContainers();
+
+    /**
+     * Get profile resources
+     */
+    List<Resource> getResources();
 }

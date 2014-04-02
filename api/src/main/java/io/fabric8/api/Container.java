@@ -19,8 +19,9 @@
  */
 package io.fabric8.api;
 
-import java.util.List;
 import java.util.Set;
+
+import org.jboss.gravia.resource.Version;
 
 
 /**
@@ -29,31 +30,31 @@ import java.util.Set;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Container extends IdentitySupport, AttributeSupport, ProfileSupport, VersionSupport, FailureSupport {
+public interface Container extends AttributeSupport {
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
 
     /**
-     * Get the current state for this container
+     * Get the container identity
      */
-    State getState();
+    ContainerIdentity getIdentity();
 
     /**
      * Get the associated host
      */
-    Host getHost();
+    HostIdentity getHost();
 
     /**
-     * Set the container version
+     * Get the container state
      */
-    void setVersion(Version version, ProvisionListener listener);
+    State getState();
 
     /**
      * Get the list of child containers
      */
-    List<Container> getChildren();
+    Set<ContainerIdentity> getChildren();
 
     /**
      * Get the set of provided management domains
@@ -63,41 +64,21 @@ public interface Container extends IdentitySupport, AttributeSupport, ProfileSup
     /**
      * Get the set of available service endpoints
      */
-    Set<ServiceEndpoint> getServiceEndpoints();
+    Set<ServiceEndpointIdentity> getServiceEndpoints();
 
     /**
-     * Ping this container
+     * Get the profile version
      */
-    boolean ping();
+    Version getVersion();
 
     /**
-     * Join an existing fabric
-     * [TODO]
-     * <ol>
-     * <li> How does this relate to states?
-     * <li> Does this need to be queried?
-     * </ol>
+     * Get the associated list of profiles
      */
-    void joinFabric(JoinOptions options);
+    Set<ProfileIdentity> getProfiles();
 
     /**
-     * Leave the fabric
+     * True if the profile with the given identity exists
      */
-    void leaveFabric();
-
-    /**
-     * Start this container
-     */
-    void start();
-
-    /**
-     * Stop this container
-     */
-    void stop();
-
-    /**
-     * Destroy this container
-     */
-    void destroy();
+    boolean hasProfile(ProfileIdentity identity);
 
 }

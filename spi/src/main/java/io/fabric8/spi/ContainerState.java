@@ -20,7 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.Container.State;
-import io.fabric8.api.Identity;
+import io.fabric8.api.ContainerIdentity;
 
 
 /**
@@ -34,7 +34,7 @@ public interface ContainerState {
     /**
      * Get the identity for this container
      */
-    Identity getIdentity();
+    ContainerIdentity getIdentity();
 
     /**
      * Get the current state for this container

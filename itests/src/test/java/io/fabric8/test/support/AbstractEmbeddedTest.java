@@ -21,7 +21,7 @@
  */
 package io.fabric8.test.support;
 
-import io.fabric8.api.FabricManager;
+import io.fabric8.api.ContainerManager;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +57,7 @@ public abstract class AbstractEmbeddedTest {
                     latch.countDown();
             }
         };
-        syscontext.addServiceListener(listener, "(objectClass=" + FabricManager.class.getName() + ")");
+        syscontext.addServiceListener(listener, "(objectClass=" + ContainerManager.class.getName() + ")");
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {

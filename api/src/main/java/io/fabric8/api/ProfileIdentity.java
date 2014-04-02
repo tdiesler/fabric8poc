@@ -19,55 +19,53 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
+
 /**
- * An identity
+ * A profile identity
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class Identity {
+public final class ProfileIdentity {
 
-    private final String name;
-    private final String description;
+    private final String symbolicName;
+    private final Version version;
 
-    public static Identity create(String name) {
-        return new Identity(name, null);
+    public static ProfileIdentity create(String symbolicName, Version version) {
+        return new ProfileIdentity(symbolicName, version);
     }
 
-    public static Identity create(String name, String description) {
-        return new Identity(name, description);
+    private ProfileIdentity(String symbolicName, Version version) {
+        NotNullException.assertValue(symbolicName, "symbolicName");
+        this.version = version != null ? version : Version.emptyVersion;
+        this.symbolicName = symbolicName;
     }
 
-    private Identity(String name, String description) {
-        NotNullException.assertValue(name, "name");
-        this.name = name;
-        this.description = description;
+    public String getSymbolicName() {
+        return symbolicName;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
+    public Version getVersion() {
+        return version;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Identity)) return false;
-        Identity other = (Identity) obj;
-        return other.name.equals(name);
+        if (!(obj instanceof ProfileIdentity)) return false;
+        ProfileIdentity other = (ProfileIdentity) obj;
+        return other.symbolicName.equals(symbolicName) && other.version.equals(version);
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return (symbolicName + version).hashCode();
     }
 
     @Override
     public String toString() {
-        return name;
+        return "[" + symbolicName + "-" + version + "]";
     }
 }

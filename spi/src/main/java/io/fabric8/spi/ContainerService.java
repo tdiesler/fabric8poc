@@ -19,7 +19,8 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Identity;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.CreateOptions;
 import io.fabric8.spi.permit.PermitState;
 
 /**
@@ -28,7 +29,7 @@ import io.fabric8.spi.permit.PermitState;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface FabricService {
+public interface ContainerService {
 
     /**
      * A key into the configuration that names the container name prefix created by the current service instance
@@ -43,35 +44,35 @@ public interface FabricService {
     /**
      * The {@link PermitState} that protects this service.
      */
-    PermitState<FabricService> PERMIT = new PermitState<FabricService>(FabricService.class);
+    PermitState<ContainerService> PERMIT = new PermitState<ContainerService>(ContainerService.class);
 
     /**
-     * Create a container with a given name
+     * Create a container with a given create options
      * @throws IllegalStateException if a container with the given name already exists
      */
-    ContainerState createContainer(String name);
+    ContainerState createContainer(CreateOptions options);
 
     /**
      * Get a container with a given identity
      * @return the container or <code>null</code>
      */
-    ContainerState getContainerByName(Identity identity);
+    ContainerState getContainerByName(ContainerIdentity identity);
 
     /**
      * Start the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState startContainer(Identity identity);
+    ContainerState startContainer(ContainerIdentity identity);
 
     /**
      * Stop the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState stopContainer(Identity identity);
+    ContainerState stopContainer(ContainerIdentity identity);
 
     /**
      * Destroy the container with the given identity
      * @throws IllegalStateException if the container does not exist
      */
-    ContainerState destroyContainer(Identity identity);
+    ContainerState destroyContainer(ContainerIdentity identity);
 }

@@ -20,8 +20,9 @@
 package io.fabric8.api;
 
 import java.util.List;
+import java.util.Set;
 
-import org.jboss.gravia.resource.Adaptable;
+import org.jboss.gravia.resource.Resource;
 
 
 /**
@@ -35,26 +36,20 @@ import org.jboss.gravia.resource.Adaptable;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Profile extends IdentitySupport, AttributeSupport, VersionSupport, Adaptable {
+public interface Profile extends AttributeSupport {
 
     /**
-     * Get the list of profiles that this profile depends on.
+     * Get the identity
      */
-    List<Profile> getDependencies();
+    ProfileIdentity getIdentity();
 
     /**
-     * Get the list of associated containers
+     * Get the set of associated containers
      */
-    List<Container> getContainers();
+    Set<ContainerIdentity> getContainers();
 
     /**
-     * Get profile items for the given type
-     * @param type The item type or <code>null</code> for all types
+     * Get profile resources
      */
-    List<ProfileItem> getItems(Class<? extends ProfileItem> type);
-
-    /**
-     * Delete this profile
-     */
-    void delete();
+    List<Resource> getResources();
 }

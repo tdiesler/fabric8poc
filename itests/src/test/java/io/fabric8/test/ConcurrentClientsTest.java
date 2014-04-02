@@ -22,9 +22,11 @@ package io.fabric8.test;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.FabricManager;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ContainerManager;
+import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.FabricService;
+import io.fabric8.spi.ContainerService;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -47,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test basic runtime functionality.
+ * Test concurrent access to container functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
@@ -87,9 +89,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             ModuleContext syscontext = runtime.getModuleContext();
             for (int i = 0; lastException == null && i < 20; i++) {
                 ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
-                Configuration config = configAdmin.getConfiguration(FabricService.FABRIC_SERVICE_PID, null);
+                Configuration config = configAdmin.getConfiguration(ContainerService.FABRIC_SERVICE_PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(FabricService.KEY_NAME_PREFIX, "config#" + i);
+                props.put(ContainerService.KEY_NAME_PREFIX, "config#" + i);
                 config.update(props);
                 Thread.sleep(50);
             }
@@ -107,12 +109,12 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
         @Override
         public Boolean call() throws Exception {
-            FabricManager fabricManager = ServiceLocator.getRequiredService(FabricManager.class);
+            ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    Container container = createAndStart(fabricManager, i);
+                    ContainerIdentity cntId = createAndStart(manager, i);
                     Thread.sleep(10);
-                    stopAndDestroy(fabricManager, container);
+                    stopAndDestroy(manager, cntId);
                     Thread.sleep(10);
                 } catch (Exception ex) {
                     lastException = ex;
@@ -123,27 +125,30 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             return true;
         }
 
-        private Container createAndStart(FabricManager fabricManager, int index) throws InterruptedException {
-            ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
-            Container container = builder.addIdentity(prefix + "#" + index).createContainer();
+        private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
+            ContainerBuilder builder = manager.getContainerBuilder(ContainerBuilder.class);
+            CreateOptions options = builder.addIdentity(prefix + "#" + index).getCreateOptions();
+            Container cnt = manager.createContainer(options);
+
+            ContainerIdentity cntId = cnt.getIdentity();
             //System.out.println(container);
-            Assert.assertSame(State.CREATED, container.getState());
+            Assert.assertSame(State.CREATED, cnt.getState());
             Thread.sleep(10);
-            container.start();
+            cnt = manager.start(cntId);
             //System.out.println(container);
-            Assert.assertSame(State.STARTED, container.getState());
-            return container;
+            Assert.assertSame(State.STARTED, cnt.getState());
+            return cntId;
         }
 
 
-        private void stopAndDestroy(FabricManager fabricManager, Container container) throws InterruptedException {
-            container.stop();
+        private void stopAndDestroy(ContainerManager manager, ContainerIdentity cntId) throws InterruptedException {
+            Container cnt = manager.stop(cntId);
             //System.out.println(container);
-            Assert.assertSame(State.STOPPED, container.getState());
+            Assert.assertSame(State.STOPPED, cnt.getState());
             Thread.sleep(10);
-            container.destroy();
+            cnt = manager.destroy(cntId);
             //System.out.println(container);
-            Assert.assertSame(State.DESTROYED, container.getState());
+            Assert.assertSame(State.DESTROYED, cnt.getState());
         }
     }
 }
