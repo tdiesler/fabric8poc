@@ -25,6 +25,7 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileItemBuilder;
+import io.fabric8.spi.ImmutableProfile;
 
 import java.io.InputStream;
 import java.util.HashSet;
@@ -64,6 +65,6 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
 
     @Override
     public Profile createProfile() {
-        return new ProfileImpl(identity, items);
+        return new ImmutableProfile(identity, items);
     }
 }

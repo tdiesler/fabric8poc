@@ -21,6 +21,7 @@ package io.fabric8.spi.internal;
 
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.spi.ImmutableProfileVersion;
 
 import org.jboss.gravia.resource.Version;
 
@@ -36,6 +37,6 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     @Override
     public ProfileVersion createProfileVersion() {
-        return new ProfileVersionImpl(identity);
+        return new ImmutableProfileVersion(identity);
     }
 }

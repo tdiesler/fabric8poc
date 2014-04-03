@@ -20,8 +20,8 @@
 package io.fabric8.core;
 
 import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.Profile;
 import io.fabric8.spi.ProfileService;
-import io.fabric8.spi.ProfileState;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
@@ -55,7 +55,7 @@ public final class BootstrapService extends AbstractComponent {
     private void activateInternal() throws IOException {
 
         // Read the default profile and apply ConfigurationItems to ConfigurationAdmin
-        ProfileState defaultProfile = profileService.get().getDefaultProfile();
+        Profile defaultProfile = profileService.get().getDefaultProfile();
         Set<ConfigurationItem> items = defaultProfile.getProfileItems(ConfigurationItem.class);
         ProfileSupport.applyConfigurationItems(configAdmin.get(), items);
     }

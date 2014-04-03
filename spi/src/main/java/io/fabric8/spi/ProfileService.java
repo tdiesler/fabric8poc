@@ -19,16 +19,8 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitState;
-
-import java.util.Map;
-import java.util.Set;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * The internal profile service
@@ -36,60 +28,10 @@ import org.jboss.gravia.resource.Version;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileService {
+public interface ProfileService extends ProfileManager {
 
     /**
      * The {@link PermitState} that protects this service.
      */
     PermitState<ProfileService> PERMIT = new PermitState<ProfileService>(ProfileService.class);
-
-    /**
-     * Get the default profile
-     */
-    ProfileState getDefaultProfile();
-
-    /**
-     * Get the set of profile versions in the cluster
-     */
-    Map<Version, ProfileVersionState> getProfileVersions();
-
-    /**
-     * Get the profile version for the given identity
-     */
-    ProfileVersionState getProfileVersion(Version identity);
-
-    /**
-     * Add a profile version
-     */
-    ProfileVersionState addProfileVersion(ProfileVersion version);
-
-    /**
-     * Remove a profile version
-     */
-    ProfileVersionState removeProfileVersion(Version version);
-
-    /**
-     * Get the profiles for a given version
-     */
-    Map<ProfileIdentity, ProfileState> getProfiles(Version version);
-
-    /**
-     * Get the profile for a given version and identity
-     */
-    ProfileState getProfile(Version version, ProfileIdentity identity);
-
-    /**
-     * Add a profile to the given version
-     */
-    ProfileState addProfile(Version version, Profile profile);
-
-    /**
-     * Remove the profile with the given identity
-     */
-    ProfileState removeProfile(Version version, ProfileIdentity identity);
-
-    /**
-     * Update profile items in the given profile
-     */
-    ProfileState updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply);
 }

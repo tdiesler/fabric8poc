@@ -17,13 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.spi.ProfileState;
+import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,19 +32,25 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ProfileImpl implements Profile {
+public final class ImmutableProfile implements Profile {
 
     private final ProfileIdentity identity;
+
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
     private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
+    private final AttributeSupport attributes = new AttributeSupport();
 
-    ProfileImpl(ProfileState profileState) {
-        NotNullException.assertValue(profileState, "profileState");
-        this.identity = profileState.getIdentity();
-        this.profileItems.addAll(profileState.getProfileItems(null));
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public ImmutableProfile(Profile profile) {
+        NotNullException.assertValue(profile, "profile");
+        identity = profile.getIdentity();
+        profileItems.addAll(profile.getProfileItems(null));
+        for (AttributeKey key : profile.getAttributeKeys()) {
+            attributes.putAttribute(key, profile.getAttribute(key));
+        }
     }
 
-    ProfileImpl(ProfileIdentity identity, Set<ProfileItem> items) {
+    public ImmutableProfile(ProfileIdentity identity, Set<ProfileItem> items) {
         NotNullException.assertValue(identity, "identity");
         NotNullException.assertValue(items, "items");
         this.identity = identity;
@@ -68,17 +74,17 @@ final class ProfileImpl implements Profile {
 
     @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
-        throw new UnsupportedOperationException();
+        return attributes.getAttributeKeys();
     }
 
     @Override
     public <T> T getAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.getAttribute(key);
     }
 
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.hasAttribute(key);
     }
 
     @Override
@@ -95,9 +101,8 @@ final class ProfileImpl implements Profile {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ProfileImpl))
-            return false;
-        ProfileImpl other = (ProfileImpl) obj;
+        if (!(obj instanceof ImmutableProfile)) return false;
+        ImmutableProfile other = (ImmutableProfile) obj;
         return other.identity.equals(identity);
     }
 

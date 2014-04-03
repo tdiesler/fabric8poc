@@ -25,17 +25,12 @@ import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.ProfileService;
-import io.fabric8.spi.ProfileState;
-import io.fabric8.spi.ProfileVersionState;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -65,7 +60,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return Collections.unmodifiableSet(service.getProfileVersions().keySet());
+            return service.getProfileVersionIdentities();
         } finally {
             permit.release();
         }
@@ -76,13 +71,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            Set<ProfileVersion> result = new HashSet<ProfileVersion>();
-            for (Entry<Version, ProfileVersionState> entry : service.getProfileVersions().entrySet()) {
-                if (identities == null || identities.contains(entry.getKey())) {
-                    result.add(new ProfileVersionImpl(entry.getValue()));
-                }
-            }
-            return Collections.unmodifiableSet(result);
+            return service.getProfileVersions(identities);
         } finally {
             permit.release();
         }
@@ -93,8 +82,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            ProfileVersionState pvstate = service.getProfileVersions().get(identity);
-            return pvstate != null ? new ProfileVersionImpl(pvstate) : null;
+            return service.getProfileVersion(identity);
         } finally {
             permit.release();
         }
@@ -105,7 +93,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileVersionImpl(service.addProfileVersion(version));
+            return service.addProfileVersion(version);
         } finally {
             permit.release();
         }
@@ -116,7 +104,18 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileVersionImpl(service.removeProfileVersion(version));
+            return service.removeProfileVersion(version);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public Profile getDefaultProfile() {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return service.getDefaultProfile();
         } finally {
             permit.release();
         }
@@ -127,7 +126,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getProfiles(version).keySet();
+            return service.getProfileIdentities(version);
         } finally {
             permit.release();
         }
@@ -138,13 +137,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            Set<Profile> result = new HashSet<Profile>();
-            for (Entry<ProfileIdentity, ProfileState> entry : service.getProfiles(version).entrySet()) {
-                if (identities == null || identities.contains(entry.getKey())) {
-                    result.add(new ProfileImpl(entry.getValue()));
-                }
-            }
-            return Collections.unmodifiableSet(result);
+            return service.getProfiles(version, identities);
         } finally {
             permit.release();
         }
@@ -155,7 +148,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.getProfiles(version).get(identity));
+            return service.getProfile(version, identity);
         } finally {
             permit.release();
         }
@@ -166,7 +159,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.addProfile(version, profile));
+            return service.addProfile(version, profile);
         } finally {
             permit.release();
         }
@@ -177,7 +170,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.removeProfile(version, identity));
+            return service.removeProfile(version, identity);
         } finally {
             permit.release();
         }
@@ -188,7 +181,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.updateProfile(version, identity, profileItems, apply));
+            return service.updateProfile(version, identity, profileItems, apply);
         } finally {
             permit.release();
         }

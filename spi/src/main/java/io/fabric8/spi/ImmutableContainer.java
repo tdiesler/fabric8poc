@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
@@ -25,7 +25,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
@@ -35,25 +34,28 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ImmutableContainer implements Container {
+public final class ImmutableContainer implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
     private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final AttributeSupport attributes;
+    private final AttributeSupport attributes = new AttributeSupport();
     private final ContainerIdentity parent;
     private final State state;
 
-    ImmutableContainer(ContainerState cntState) {
-        NotNullException.assertValue(cntState, "cntState");
-        identity = cntState.getIdentity();
-        parent = cntState.getParent();
-        attributes = new AttributeSupport(cntState.getAttributes());
-        profileVersion = cntState.getProfileVersion();
-        state = cntState.getState();
-        children.addAll(cntState.getChildContainers());
-        profiles.addAll(cntState.getProfiles());
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public ImmutableContainer(Container container) {
+        NotNullException.assertValue(container, "container");
+        identity = container.getIdentity();
+        parent = container.getParent();
+        profileVersion = container.getProfileVersion();
+        state = container.getState();
+        children.addAll(container.getChildContainers());
+        profiles.addAll(container.getProfileIdentities());
+        for (AttributeKey key : container.getAttributeKeys()) {
+            attributes.putAttribute(key, container.getAttribute(key));
+        }
     }
 
     @Override
@@ -82,7 +84,7 @@ final class ImmutableContainer implements Container {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfiles() {
+    public Set<ProfileIdentity> getProfileIdentities() {
         return Collections.unmodifiableSet(profiles);
     }
 

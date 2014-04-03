@@ -32,15 +32,16 @@ import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionListener;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ProfileService;
-import io.fabric8.spi.ProfileState;
 import io.fabric8.spi.internal.AttributeSupport;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,10 +57,10 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = { ContainerService.class }, configurationPid = ContainerService.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
-
-    private String prefix;
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+
+    private String prefix;
 
     @Activate
     void activate(Map<String, ?> config) {
@@ -176,13 +177,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         synchronized (cntState) {
-            Version profVersion = cntState.getProfileVersion();
-            List<ProfileState> profileStates = new ArrayList<ProfileState>();
-            for (ProfileIdentity profid : profiles) {
-                ProfileState profState = profileService.get().getProfile(profVersion, profid);
-                profileStates.add(profState);
-            }
-            cntState.addProfiles(profileStates);
+            cntState.addProfiles(profiles);
         }
     }
 
@@ -241,7 +236,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerIdentity identity;
         private final AttributeSupport attributes = new AttributeSupport();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
-        private final Map<ProfileIdentity, ProfileState> profiles = new HashMap<ProfileIdentity, ProfileState>();
+        private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
         private final AtomicReference<Version> profileVersion = new AtomicReference<Version>();
         private final AtomicReference<State> state = new AtomicReference<Container.State>();
         private ContainerState parent;
@@ -261,10 +256,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         @Override
         public State getState() {
             return state.get();
-        }
-
-        Map<AttributeKey<?>, Object> getAttributes() {
-            return attributes.getAttributes();
         }
 
         @Override
@@ -313,8 +304,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         @Override
-        public Set<ProfileIdentity> getProfiles() {
-            return profiles.keySet();
+        public Set<ProfileIdentity> getProfileIdentities() {
+            return Collections.unmodifiableSet(profiles);
         }
 
         // Package protected. Adding/Removing a container and setting the parent/child relationship is an atomic operation
@@ -332,16 +323,17 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             children.remove(childIdentity);
         }
 
-        private void addProfiles(List<ProfileState> profileStates) {
-            for (ProfileState profState : profileStates) {
-                profiles.put(profState.getIdentity(), profState);
-            }
+        // Package protected. Used by {@link ImmutableContainer }
+        Map<AttributeKey<?>, Object> getAttributes() {
+            return attributes.getAttributes();
+        }
+
+        private void addProfiles(List<ProfileIdentity> profiles) {
+            profiles.addAll(profiles);
         }
 
         private void removeProfiles(List<ProfileIdentity> profileIdentitites) {
-            for (ProfileIdentity profId : profileIdentitites) {
-                profiles.remove(profId);
-            }
+            profiles.removeAll(profiles);
         }
 
         private void start() {

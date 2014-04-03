@@ -116,62 +116,134 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
 
     @Override
     public Set<ContainerIdentity> getContainerIdentities() {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getContainerIdentities();
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public Set<Container> getContainers(Set<ContainerIdentity> identities) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getContainers(identities);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public Container getCurrentContainer() {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getCurrentContainer();
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public Container getContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getContainer(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public void setVersion(ContainerIdentity identity, Version version, ProvisionListener listener) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            service.setVersion(identity, version, listener);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public boolean ping(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.ping(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public void joinFabric(ContainerIdentity identity, JoinOptions options) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            service.joinFabric(identity, options);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public void leaveFabric(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            service.leaveFabric(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public void addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            service.addProfiles(identity, profiles, listener);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public void removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            service.removeProfiles(identity, profiles, listener);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public List<Failure> getFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getFailures(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
     public List<Failure> clearFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.clearFailures(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Reference

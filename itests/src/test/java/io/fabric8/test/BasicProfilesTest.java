@@ -83,8 +83,8 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         Assert.assertEquals(1, manager.getProfiles(version, null).size());
 
         // Remove profile version
-        manager.removeProfileVersion(version);
-        Assert.assertEquals(0, manager.getProfiles(version, null).size());
+        profileVersion = manager.removeProfileVersion(version);
+        Assert.assertEquals(0, profileVersion.getProfileIdentities().size());
     }
 
     @Test
@@ -129,7 +129,7 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
 
         // Remove profile version
-        manager.removeProfileVersion(version);
-        Assert.assertEquals(0, manager.getProfiles(version, null).size());
+        profileVersion = manager.removeProfileVersion(version);
+        Assert.assertEquals(0, profileVersion.getProfileIdentities().size());
     }
 }

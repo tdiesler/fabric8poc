@@ -61,6 +61,11 @@ public interface ProfileManager {
     ProfileVersion removeProfileVersion(Version version);
 
     /**
+     * Get the default profile
+     */
+    Profile getDefaultProfile();
+
+    /**
      * Get the profile idetities for a given version
      */
     Set<ProfileIdentity> getProfileIdentities(Version version);
