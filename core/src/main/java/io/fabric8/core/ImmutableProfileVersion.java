@@ -17,11 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
@@ -31,25 +32,17 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-public final class ImmutableProfileVersion implements ProfileVersion {
+final class ImmutableProfileVersion implements ProfileVersion {
 
     private final Version identity;
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final AttributeSupport attributes = new AttributeSupport();
+    private final AttributeSupport attributes;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public ImmutableProfileVersion(ProfileVersion profileVersion) {
+    ImmutableProfileVersion(ProfileVersionState profileVersion) {
         NotNullException.assertValue(profileVersion, "profileVersion");
         identity = profileVersion.getIdentity();
         profiles.addAll(profileVersion.getProfileIdentities());
-        for (AttributeKey key : profileVersion.getAttributeKeys()) {
-            attributes.putAttribute(key, profileVersion.getAttribute(key));
-        }
-    }
-
-    public ImmutableProfileVersion(Version identity) {
-        NotNullException.assertValue(identity, "identity");
-        this.identity = identity;
+        attributes = new AttributeSupport(profileVersion.getAttributes());
     }
 
     @Override

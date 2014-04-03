@@ -25,11 +25,13 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileItemBuilder;
-import io.fabric8.spi.ImmutableProfile;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.jboss.gravia.resource.Version;
 
 public final class DefaultProfileBuilder implements ProfileBuilder {
 
@@ -65,6 +67,30 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
 
     @Override
     public Profile createProfile() {
-        return new ImmutableProfile(identity, items);
+        return new ProfileImpl();
+    }
+
+    class ProfileImpl extends AttributeSupport implements Profile {
+
+        @Override
+        public ProfileIdentity getIdentity() {
+            return identity;
+        }
+
+        @Override
+        public Version getProfileVersion() {
+            return null;
+        }
+
+        @Override
+        public Set<ProfileIdentity> getParents() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
+            return (Set<T>) items;
+        }
     }
 }

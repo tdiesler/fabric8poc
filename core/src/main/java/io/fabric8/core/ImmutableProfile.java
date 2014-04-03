@@ -17,12 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.core.ProfileServiceImpl.ProfileState;
 import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
@@ -32,29 +33,19 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-public final class ImmutableProfile implements Profile {
+final class ImmutableProfile implements Profile {
 
     private final ProfileIdentity identity;
 
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
     private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
-    private final AttributeSupport attributes = new AttributeSupport();
+    private final AttributeSupport attributes;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public ImmutableProfile(Profile profile) {
+    ImmutableProfile(ProfileState profile) {
         NotNullException.assertValue(profile, "profile");
         identity = profile.getIdentity();
         profileItems.addAll(profile.getProfileItems(null));
-        for (AttributeKey key : profile.getAttributeKeys()) {
-            attributes.putAttribute(key, profile.getAttribute(key));
-        }
-    }
-
-    public ImmutableProfile(ProfileIdentity identity, Set<ProfileItem> items) {
-        NotNullException.assertValue(identity, "identity");
-        NotNullException.assertValue(items, "items");
-        this.identity = identity;
-        this.profileItems.addAll(items);
+        attributes = new AttributeSupport(profile.getAttributes());
     }
 
     @Override

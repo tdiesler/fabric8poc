@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
@@ -34,28 +35,25 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-public final class ImmutableContainer implements Container {
+final class ImmutableContainer implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
     private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final AttributeSupport attributes = new AttributeSupport();
+    private final AttributeSupport attributes;
     private final ContainerIdentity parent;
     private final State state;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public ImmutableContainer(Container container) {
-        NotNullException.assertValue(container, "container");
-        identity = container.getIdentity();
-        parent = container.getParent();
-        profileVersion = container.getProfileVersion();
-        state = container.getState();
-        children.addAll(container.getChildContainers());
-        profiles.addAll(container.getProfileIdentities());
-        for (AttributeKey key : container.getAttributeKeys()) {
-            attributes.putAttribute(key, container.getAttribute(key));
-        }
+    ImmutableContainer(ContainerState containerState) {
+        NotNullException.assertValue(containerState, "containerState");
+        identity = containerState.getIdentity();
+        parent = containerState.getParent();
+        profileVersion = containerState.getProfileVersion();
+        state = containerState.getState();
+        children.addAll(containerState.getChildContainers());
+        profiles.addAll(containerState.getProfileIdentities());
+        attributes = new AttributeSupport(containerState.getAttributes());
     }
 
     @Override

@@ -33,8 +33,6 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.ImmutableProfile;
-import io.fabric8.spi.ImmutableProfileVersion;
 import io.fabric8.spi.NullProfileItem;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.internal.AttributeSupport;
@@ -265,7 +263,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         this.profileBuilderFactory.unbind(service);
     }
 
-    private static class ProfileVersionState implements ProfileVersion {
+    static class ProfileVersionState {
 
         private final Version identity;
         private final AttributeSupport attributes = new AttributeSupport();
@@ -275,28 +273,27 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             this.identity = version.getIdentity();
         }
 
-        @Override
-        public Version getIdentity() {
+        Version getIdentity() {
             return identity;
         }
 
-        @Override
-        public Set<AttributeKey<?>> getAttributeKeys() {
+        Map<AttributeKey<?>, Object> getAttributes() {
+            return attributes.getAttributes();
+        }
+
+        Set<AttributeKey<?>> getAttributeKeys() {
             return attributes.getAttributeKeys();
         }
 
-        @Override
-        public <T> T getAttribute(AttributeKey<T> key) {
+        <T> T getAttribute(AttributeKey<T> key) {
             return attributes.getAttribute(key);
         }
 
-        @Override
-        public <T> boolean hasAttribute(AttributeKey<T> key) {
+        <T> boolean hasAttribute(AttributeKey<T> key) {
             return attributes.hasAttribute(key);
         }
 
-        @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        Set<ProfileIdentity> getProfileIdentities() {
             synchronized (profiles) {
                 HashSet<ProfileIdentity> snapshot = new HashSet<ProfileIdentity>(profiles.keySet());
                 return Collections.unmodifiableSet(snapshot);
@@ -323,6 +320,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return profileState;
         }
 
+        // NOTE - Methods that mutate this objects should be private
+        // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
+
         private ProfileState addProfile(Profile profile) {
             synchronized (profiles) {
                 ProfileState profileState = new ProfileState(this, profile, getProfileParents(profile));
@@ -344,20 +344,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
 
         private Set<ProfileState> getProfileParents(Profile profile) {
-            synchronized (profiles) {
-                Set<ProfileState> result = new HashSet<ProfileState>();
-                for (ProfileIdentity pid : profile.getParents()) {
-                    ProfileState pstate = profiles.get(pid);
-                    if (pstate == null)
-                        throw new IllegalStateException("Cannot obtain parent profile: " + pid);
-                    result.add(pstate);
-                }
-                return Collections.unmodifiableSet(result);
+            Set<ProfileState> result = new HashSet<ProfileState>();
+            for (ProfileIdentity pid : profile.getParents()) {
+                ProfileState pstate = profiles.get(pid);
+                if (pstate == null)
+                    throw new IllegalStateException("Cannot obtain parent profile: " + pid);
+                result.add(pstate);
             }
+            return Collections.unmodifiableSet(result);
         }
     }
 
-    private static class ProfileState implements Profile {
+    static class ProfileState {
 
         private final ProfileIdentity identity;
         private final ProfileVersionState versionState;
@@ -376,39 +374,36 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        @Override
-        public ProfileIdentity getIdentity() {
+        ProfileIdentity getIdentity() {
             return identity;
         }
 
-        @Override
-        public Set<AttributeKey<?>> getAttributeKeys() {
+        Map<AttributeKey<?>, Object> getAttributes() {
+            return attributes.getAttributes();
+        }
+
+        Set<AttributeKey<?>> getAttributeKeys() {
             return attributes.getAttributeKeys();
         }
 
-        @Override
-        public <T> T getAttribute(AttributeKey<T> key) {
+        <T> T getAttribute(AttributeKey<T> key) {
             return attributes.getAttribute(key);
         }
 
-        @Override
-        public <T> boolean hasAttribute(AttributeKey<T> key) {
+        <T> boolean hasAttribute(AttributeKey<T> key) {
             return attributes.hasAttribute(key);
         }
 
-        @Override
-        public Version getProfileVersion() {
+        Version getProfileVersion() {
             return versionState.getIdentity();
         }
 
-        @Override
-        public Set<ProfileIdentity> getParents() {
+        Set<ProfileIdentity> getParents() {
             return parents.keySet();
         }
 
-        @Override
         @SuppressWarnings("unchecked")
-        public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
+        <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
             Set<T> result = new HashSet<T>();
             synchronized (profileItems) {
                 for (ProfileItem item : profileItems.values()) {
@@ -419,6 +414,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
             return Collections.unmodifiableSet(result);
         }
+
+        // NOTE - Methods that mutate this objects should be private
+        // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
 
         private void updateProfileItems(Set<? extends ProfileItem> items) {
             synchronized (profileItems) {

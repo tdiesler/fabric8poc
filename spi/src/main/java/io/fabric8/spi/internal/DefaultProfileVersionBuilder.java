@@ -19,9 +19,12 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.spi.ImmutableProfileVersion;
+
+import java.util.Collections;
+import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
@@ -37,6 +40,19 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     @Override
     public ProfileVersion createProfileVersion() {
-        return new ImmutableProfileVersion(identity);
+        return new ProfileVersionImpl();
+    }
+
+    class ProfileVersionImpl extends AttributeSupport implements ProfileVersion {
+
+        @Override
+        public Version getIdentity() {
+            return identity;
+        }
+
+        @Override
+        public Set<ProfileIdentity> getProfileIdentities() {
+            return Collections.emptySet();
+        }
     }
 }

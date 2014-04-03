@@ -22,6 +22,7 @@ package io.fabric8.core;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.FabricException;
@@ -32,7 +33,6 @@ import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionListener;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.internal.AttributeSupport;
 import io.fabric8.spi.permit.PermitManager;
@@ -231,14 +231,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         this.permitManager.unbind(service);
     }
 
-    static final class ContainerState implements Container {
+    static final class ContainerState {
 
         private final ContainerIdentity identity;
         private final AttributeSupport attributes = new AttributeSupport();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
         private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
         private final AtomicReference<Version> profileVersion = new AtomicReference<Version>();
-        private final AtomicReference<State> state = new AtomicReference<Container.State>();
+        private final AtomicReference<Container.State> state = new AtomicReference<Container.State>();
         private ContainerState parent;
 
         ContainerState(ContainerState parent, ContainerIdentity identity) {
@@ -248,91 +248,84 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.state.set(State.CREATED);
         }
 
-        @Override
-        public ContainerIdentity getIdentity() {
+        ContainerIdentity getIdentity() {
             return identity;
         }
 
-        @Override
-        public State getState() {
+        State getState() {
             return state.get();
         }
 
-        @Override
-        public Version getProfileVersion() {
+        Version getProfileVersion() {
             return profileVersion.get();
         }
 
-        @Override
-        public Set<AttributeKey<?>> getAttributeKeys() {
+        Map<AttributeKey<?>, Object> getAttributes() {
+            return attributes.getAttributes();
+        }
+
+        Set<AttributeKey<?>> getAttributeKeys() {
             return attributes.getAttributeKeys();
         }
 
-        @Override
-        public <T> T getAttribute(AttributeKey<T> key) {
+        <T> T getAttribute(AttributeKey<T> key) {
             return attributes.getAttribute(key);
         }
 
-        @Override
-        public <T> boolean hasAttribute(AttributeKey<T> key) {
+        <T> boolean hasAttribute(AttributeKey<T> key) {
             return attributes.hasAttribute(key);
         }
 
-        @Override
-        public HostIdentity getHost() {
+        HostIdentity getHost() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public ContainerIdentity getParent() {
+        ContainerIdentity getParent() {
             return parent != null ? parent.getIdentity() : null;
         }
 
-        @Override
-        public Set<ContainerIdentity> getChildContainers() {
+        Set<ContainerIdentity> getChildContainers() {
             return children.keySet();
         }
 
-        @Override
-        public Set<String> getManagementDomains() {
+        Set<String> getManagementDomains() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public Set<ServiceEndpointIdentity> getServiceEndpoints() {
+        Set<ServiceEndpointIdentity> getServiceEndpoints() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        Set<ProfileIdentity> getProfileIdentities() {
             return Collections.unmodifiableSet(profiles);
         }
 
-        // Package protected. Adding/Removing a container and setting the parent/child relationship is an atomic operation
         ContainerState getParentState() {
             return parent;
         }
 
+        // NOTE - Methods that mutate this objects should be private
+        // Only the {@link ContainerService} is supposed to mutate the ContainerState
+
         // Package protected. Adding/Removing a container and setting the parent/child relationship is an atomic operation
         void addChild(ContainerState childState) {
+            assertNotDestroyed();
             children.put(childState.getIdentity(), childState);
         }
 
         // Package protected. Adding/Removing a container and setting the parent/child relationship is an atomic operation
         void removeChild(ContainerIdentity childIdentity) {
+            assertNotDestroyed();
             children.remove(childIdentity);
         }
 
-        // Package protected. Used by {@link ImmutableContainer }
-        Map<AttributeKey<?>, Object> getAttributes() {
-            return attributes.getAttributes();
-        }
-
         private void addProfiles(List<ProfileIdentity> profiles) {
+            assertNotDestroyed();
             profiles.addAll(profiles);
         }
 
         private void removeProfiles(List<ProfileIdentity> profileIdentitites) {
+            assertNotDestroyed();
             profiles.removeAll(profiles);
         }
 
