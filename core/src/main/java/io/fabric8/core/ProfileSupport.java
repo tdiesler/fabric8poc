@@ -38,10 +38,14 @@ final class ProfileSupport {
     private ProfileSupport() {
     }
 
-    static void applyConfigurationItems(ConfigurationAdmin configAdmin, Set<ConfigurationItem> configurationItems) throws IOException {
+    static void applyConfigurationItems(ConfigurationAdmin configAdmin, Set<ConfigurationItem> configurationItems) {
         for (ConfigurationItem item : configurationItems) {
-            Configuration config = configAdmin.getConfiguration(item.getIdentity(), null);
-            config.update(toDictionary(item.getConfiguration()));
+            try {
+                Configuration config = configAdmin.getConfiguration(item.getIdentity(), null);
+                config.update(toDictionary(item.getConfiguration()));
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot update configuration: " + item.getIdentity(), ex);
+            }
         }
     }
 

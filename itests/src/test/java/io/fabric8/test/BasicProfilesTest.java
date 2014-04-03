@@ -21,7 +21,6 @@ package io.fabric8.test;
 
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
-import io.fabric8.api.FabricException;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
@@ -46,7 +45,7 @@ import org.junit.Test;
 public class BasicProfilesTest extends AbstractEmbeddedTest {
 
     @Test
-    public void testProfiles() throws Exception {
+    public void testProfileAddRemove() throws Exception {
 
         ProfileManager manager = ServiceLocator.getRequiredService(ProfileManager.class);
         Set<ProfileVersion> versions = manager.getProfileVersions(null);
@@ -82,6 +81,52 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         // Add the profile to the given version
         profile = manager.addProfile(version, profile);
         Assert.assertEquals(1, manager.getProfiles(version, null).size());
+
+        // Remove profile version
+        manager.removeProfileVersion(version);
+        Assert.assertEquals(0, manager.getProfiles(version, null).size());
+    }
+
+    @Test
+    public void testProfileUpdate() throws Exception {
+
+        Version version = Version.parseVersion("1.2");
+
+        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create();
+        ProfileVersion profileVersion = pvbuilder.addIdentity(version).createProfileVersion();
+
+        // Add a profile version
+        ProfileManager manager = ServiceLocator.getRequiredService(ProfileManager.class);
+        manager.addProfileVersion(profileVersion);
+        Assert.assertEquals(2, manager.getProfileVersions(null).size());
+
+        // Build a profile
+        ProfileBuilder pbuilder = ProfileBuilder.Factory.create();
+        pbuilder.addIdentity("foo");
+        ConfigurationItemBuilder ibuilder = pbuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ibuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", "yyy"));
+        pbuilder.addProfileItem(ibuilder.getConfigurationItem());
+        Profile profile = pbuilder.createProfile();
+
+        // Add the profile to the given version
+        profile = manager.addProfile(version, profile);
+        Assert.assertEquals(1, manager.getProfiles(version, null).size());
+
+        // Update the profile item
+        pbuilder = ProfileBuilder.Factory.create();
+        ibuilder = pbuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ibuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", "zzz"));
+        ConfigurationItem item = ibuilder.getConfigurationItem();
+
+        Set<ConfigurationItem> items = Collections.singleton(item);
+        profile = manager.updateProfile(version, profile.getIdentity(), items, false);
+
+        // Verify profile
+        items = profile.getProfileItems(ConfigurationItem.class);
+        Assert.assertEquals("One item", 1, items.size());
+        ConfigurationItem citem = items.iterator().next();
+        Assert.assertEquals("some.pid", citem.getIdentity());
+        Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
 
         // Remove profile version
         manager.removeProfileVersion(version);

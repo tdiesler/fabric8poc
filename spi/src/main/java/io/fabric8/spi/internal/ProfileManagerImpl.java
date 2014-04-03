@@ -21,6 +21,7 @@ package io.fabric8.spi.internal;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.ProfileService;
@@ -172,11 +173,22 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile removeProfile(Version version, ProfileIdentity profile) {
+    public Profile removeProfile(Version version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return new ProfileImpl(service.removeProfile(version, profile));
+            return new ProfileImpl(service.removeProfile(version, identity));
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return new ProfileImpl(service.updateProfile(version, identity, profileItems, apply));
         } finally {
             permit.release();
         }

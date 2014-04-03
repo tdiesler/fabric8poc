@@ -21,10 +21,12 @@ package io.fabric8.spi;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.permit.PermitState;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
@@ -35,16 +37,6 @@ import org.jboss.gravia.resource.Version;
  * @since 14-Mar-2014
  */
 public interface ProfileService {
-
-    /**
-     * The default profile version
-     */
-    Version DEFAULT_PROFILE_VERSION = Version.parseVersion("1.0");
-
-    /**
-     * The default profile name
-     */
-    String DEFAULT_PROFILE_NAME = "default";
 
     /**
      * The {@link PermitState} that protects this service.
@@ -95,4 +87,9 @@ public interface ProfileService {
      * Remove the profile with the given identity
      */
     ProfileState removeProfile(Version version, ProfileIdentity identity);
+
+    /**
+     * Update profile items in the given profile
+     */
+    ProfileState updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply);
 }

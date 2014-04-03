@@ -19,6 +19,9 @@
  */
 package io.fabric8.core;
 
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_NAME;
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -29,6 +32,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.NullProfileItem;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.ProfileState;
 import io.fabric8.spi.ProfileVersionState;
@@ -44,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -53,6 +58,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = { ProfileService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class ProfileServiceImpl extends AbstractProtectedComponent<ProfileService> implements ProfileService {
 
+    private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
     private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
     private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
 
@@ -179,6 +185,20 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
     }
 
+    @Override
+    public ProfileState updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply) {
+        ProfileStateImpl profileState = (ProfileStateImpl) getProfile(version, identity);
+        if (profileState == null)
+            throw new IllegalStateException("Cannot obtain profile state: " + version + "/" + identity);
+
+        profileState.updateProfileItems(items);
+        if (apply) {
+            Set<ConfigurationItem> configItems = profileState.getProfileItems(ConfigurationItem.class);
+            ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
+        }
+        return profileState;
+    }
+
     @Reference
     void bindPermitManager(PermitManager stateService) {
         this.permitManager.bind(stateService);
@@ -186,6 +206,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     void unbindPermitManager(PermitManager stateService) {
         this.permitManager.unbind(stateService);
+    }
+
+    @Reference
+    void bindConfigurationAdmin(ConfigurationAdmin service) {
+        this.configAdmin.bind(service);
+    }
+
+    void unbindConfigurationAdmin(ConfigurationAdmin service) {
+        this.configAdmin.unbind(service);
     }
 
     @Reference
@@ -261,13 +290,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         private final ProfileIdentity identity;
         private final ProfileVersionState versionState;
         private final Set<ProfileState> parents = new HashSet<ProfileState>();
-        private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
+        private final Map<String, ProfileItem> profileItems = new HashMap<String, ProfileItem>();
 
         ProfileStateImpl(ProfileVersionState versionState, Profile profile, Set<ProfileState> parents) {
             this.versionState = versionState;
             this.identity = profile.getIdentity();
             this.parents.addAll(parents);
-            this.profileItems.addAll(profile.getProfileItems(null));
+            for (ProfileItem item : profile.getProfileItems(null)) {
+                profileItems.put(item.getIdentity(), item);
+            }
         }
 
         @Override
@@ -289,12 +320,26 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         @SuppressWarnings("unchecked")
         public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
             Set<T> result = new HashSet<T>();
-            for (ProfileItem item : profileItems) {
-                if (type == null || type.isAssignableFrom(item.getClass())) {
-                    result.add((T) item);
+            synchronized (profileItems) {
+                for (ProfileItem item : profileItems.values()) {
+                    if (type == null || type.isAssignableFrom(item.getClass())) {
+                        result.add((T) item);
+                    }
                 }
             }
             return Collections.unmodifiableSet(result);
+        }
+
+        void updateProfileItems(Set<? extends ProfileItem> items) {
+            synchronized (profileItems) {
+                for (ProfileItem item : items) {
+                    if (item instanceof NullProfileItem) {
+                        profileItems.remove(item.getIdentity());
+                    } else {
+                        profileItems.put(item.getIdentity(), item);
+                    }
+                }
+            }
         }
     }
 }

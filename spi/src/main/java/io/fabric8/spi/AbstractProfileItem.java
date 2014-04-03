@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileItem;
@@ -26,11 +26,11 @@ import java.util.Set;
 
 import org.jboss.gravia.utils.NotNullException;
 
-class AbstractProfileItem implements ProfileItem {
+public abstract class AbstractProfileItem implements ProfileItem {
 
     private final String identity;
 
-    AbstractProfileItem(String identity) {
+    protected AbstractProfileItem(String identity) {
         NotNullException.assertValue(identity, "identity");
         this.identity = identity;
     }

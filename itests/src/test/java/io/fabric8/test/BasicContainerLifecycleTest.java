@@ -19,6 +19,7 @@
  */
 package io.fabric8.test;
 
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerBuilder;
@@ -47,11 +48,11 @@ public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
 
         ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cnt = manager.createContainer(options);
-
         ContainerIdentity cntId = cnt.getIdentity();
 
         Assert.assertEquals("default.cntA", cntId.getSymbolicName());
         Assert.assertSame(State.CREATED, cnt.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cnt.getProfileVersion());
 
         cnt = manager.start(cntId);
         Assert.assertSame(State.STARTED, cnt.getState());

@@ -35,12 +35,14 @@ import org.jboss.gravia.utils.NotNullException;
 final class ContainerImpl implements Container {
 
     private final ContainerIdentity identity;
+    private final Version profileVersion;
     private final State state;
 
     ContainerImpl(ContainerState delegate) {
         NotNullException.assertValue(delegate, "delegate");
-        this.identity = delegate.getIdentity();
-        this.state = delegate.getState();
+        identity = delegate.getIdentity();
+        profileVersion = delegate.getProfileVersion();
+        state = delegate.getState();
     }
 
     @Override
@@ -90,7 +92,7 @@ final class ContainerImpl implements Container {
 
     @Override
     public Version getProfileVersion() {
-        throw new UnsupportedOperationException();
+        return profileVersion;
     }
 
     @Override

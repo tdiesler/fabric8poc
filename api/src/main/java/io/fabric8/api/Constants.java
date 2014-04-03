@@ -17,24 +17,25 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
 import org.jboss.gravia.resource.Version;
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.Identifiable;
-
-
 /**
- * The internal container state
+ * Fabric constants
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerState extends Identifiable<ContainerIdentity> {
+public interface Constants {
 
-    State getState();
+    /**
+     * The default profile version
+     */
+    Version DEFAULT_PROFILE_VERSION = Version.parseVersion("1.0");
 
-    Version getProfileVersion();
+    /**
+     * The default profile name
+     */
+    String DEFAULT_PROFILE_NAME = "default";
 }

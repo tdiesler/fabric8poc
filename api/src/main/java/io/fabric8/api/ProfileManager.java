@@ -85,4 +85,9 @@ public interface ProfileManager {
      * Remove a profile from the given version
      */
     Profile removeProfile(Version version, ProfileIdentity identity);
+
+    /**
+     * Update profile items in the given profile
+     */
+    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply);
 }

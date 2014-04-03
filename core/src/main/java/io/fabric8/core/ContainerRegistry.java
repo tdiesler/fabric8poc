@@ -19,6 +19,7 @@
  */
 package io.fabric8.core;
 
+import io.fabric8.api.Constants;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.ContainerState;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -75,6 +77,7 @@ public final class ContainerRegistry extends AbstractComponent {
     static final class ContainerStateImpl implements ContainerState {
 
         private final ContainerIdentity identity;
+        private final Version profileVersion = Constants.DEFAULT_PROFILE_VERSION;
         private final AtomicReference<State> state = new AtomicReference<State>();
 
         public ContainerStateImpl(ContainerIdentity identity) {
@@ -90,6 +93,11 @@ public final class ContainerRegistry extends AbstractComponent {
         @Override
         public State getState() {
             return state.get();
+        }
+
+        @Override
+        public Version getProfileVersion() {
+            return profileVersion;
         }
 
         void start() {

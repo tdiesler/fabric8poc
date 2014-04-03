@@ -19,22 +19,9 @@
  */
 package io.fabric8.spi;
 
-import org.jboss.gravia.resource.Version;
+public final class NullProfileItem extends AbstractProfileItem {
 
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.Identifiable;
-
-
-/**
- * The internal container state
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ContainerState extends Identifiable<ContainerIdentity> {
-
-    State getState();
-
-    Version getProfileVersion();
+    public NullProfileItem(String identity) {
+        super(identity);
+    }
 }

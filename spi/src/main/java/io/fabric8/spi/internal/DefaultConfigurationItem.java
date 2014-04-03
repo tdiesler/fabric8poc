@@ -20,6 +20,7 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.ConfigurationItem;
+import io.fabric8.spi.AbstractProfileItem;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,5 +41,4 @@ final class DefaultConfigurationItem extends AbstractProfileItem implements Conf
     public Map<String, String> getConfiguration() {
         return Collections.unmodifiableMap(configuration);
     }
-
 }
