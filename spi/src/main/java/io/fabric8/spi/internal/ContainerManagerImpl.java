@@ -64,7 +64,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return new ContainerImpl(service.createContainer(options));
+            return service.createContainer(options);
         } finally {
             permit.release();
         }
@@ -75,7 +75,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return new ContainerImpl(service.createChildContainer(identity, options));
+            return service.createChildContainer(identity, options);
         } finally {
             permit.release();
         }
@@ -86,7 +86,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return new ContainerImpl(service.startContainer(identity));
+            return service.start(identity);
         } finally {
             permit.release();
         }
@@ -97,7 +97,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return new ContainerImpl(service.stopContainer(identity));
+            return service.stop(identity);
         } finally {
             permit.release();
         }
@@ -108,7 +108,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return new ContainerImpl(service.destroyContainer(identity));
+            return service.destroy(identity);
         } finally {
             permit.release();
         }

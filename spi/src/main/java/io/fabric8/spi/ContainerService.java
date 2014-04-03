@@ -19,8 +19,7 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.CreateOptions;
+import io.fabric8.api.ContainerManager;
 import io.fabric8.spi.permit.PermitState;
 
 /**
@@ -29,7 +28,7 @@ import io.fabric8.spi.permit.PermitState;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerService {
+public interface ContainerService extends ContainerManager {
 
     /**
      * A key into the configuration that names the container name prefix created by the current service instance
@@ -45,39 +44,4 @@ public interface ContainerService {
      * The {@link PermitState} that protects this service.
      */
     PermitState<ContainerService> PERMIT = new PermitState<ContainerService>(ContainerService.class);
-
-    /**
-     * Create a container with a given create options
-     * @throws IllegalStateException if a container with the given name already exists
-     */
-    ContainerState createContainer(CreateOptions options);
-
-    /**
-     * Create a child container with the given options
-     */
-    ContainerState createChildContainer(ContainerIdentity identity, CreateOptions options);
-
-    /**
-     * Get a container with a given identity
-     * @return the container or <code>null</code>
-     */
-    ContainerState getContainerByName(ContainerIdentity identity);
-
-    /**
-     * Start the container with the given identity
-     * @throws IllegalStateException if the container does not exist
-     */
-    ContainerState startContainer(ContainerIdentity identity);
-
-    /**
-     * Stop the container with the given identity
-     * @throws IllegalStateException if the container does not exist
-     */
-    ContainerState stopContainer(ContainerIdentity identity);
-
-    /**
-     * Destroy the container with the given identity
-     * @throws IllegalStateException if the container does not exist
-     */
-    ContainerState destroyContainer(ContainerIdentity identity);
 }

@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
@@ -25,8 +25,8 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.ContainerState;
-import io.fabric8.spi.ProfileState;
+import io.fabric8.core.ContainerServiceImpl.ContainerState;
+import io.fabric8.spi.internal.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +35,7 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
-final class ContainerImpl implements Container {
+final class ImmutableContainer implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
@@ -45,20 +45,15 @@ final class ContainerImpl implements Container {
     private final ContainerIdentity parent;
     private final State state;
 
-    ContainerImpl(ContainerState cntState) {
+    ImmutableContainer(ContainerState cntState) {
         NotNullException.assertValue(cntState, "cntState");
-        ContainerState parentState = cntState.getParent();
         identity = cntState.getIdentity();
-        parent = parentState != null ? parentState.getIdentity() : null;
+        parent = cntState.getParent();
         attributes = new AttributeSupport(cntState.getAttributes());
         profileVersion = cntState.getProfileVersion();
         state = cntState.getState();
-        for (ContainerState aux : cntState.getChildren()) {
-            children.add(aux.getIdentity());
-        }
-        for (ProfileState aux : cntState.getProfiles()) {
-            profiles.add(aux.getIdentity());
-        }
+        children.addAll(cntState.getChildContainers());
+        profiles.addAll(cntState.getProfiles());
     }
 
     @Override
@@ -123,8 +118,8 @@ final class ContainerImpl implements Container {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ContainerImpl)) return false;
-        ContainerImpl other = (ContainerImpl) obj;
+        if (!(obj instanceof ImmutableContainer)) return false;
+        ImmutableContainer other = (ImmutableContainer) obj;
         return other.identity.equals(identity);
     }
 
