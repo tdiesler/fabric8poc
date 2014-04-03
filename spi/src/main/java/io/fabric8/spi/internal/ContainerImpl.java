@@ -26,7 +26,10 @@ import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerState;
+import io.fabric8.spi.ProfileState;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -36,13 +39,31 @@ final class ContainerImpl implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
+    private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
+    private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
+    private final AttributeSupport attributes;
+    private final ContainerIdentity parent;
     private final State state;
 
-    ContainerImpl(ContainerState delegate) {
-        NotNullException.assertValue(delegate, "delegate");
-        identity = delegate.getIdentity();
-        profileVersion = delegate.getProfileVersion();
-        state = delegate.getState();
+    ContainerImpl(ContainerState cntState) {
+        NotNullException.assertValue(cntState, "cntState");
+        ContainerState parentState = cntState.getParent();
+        identity = cntState.getIdentity();
+        parent = parentState != null ? parentState.getIdentity() : null;
+        attributes = new AttributeSupport(cntState.getAttributes());
+        profileVersion = cntState.getProfileVersion();
+        state = cntState.getState();
+        for (ContainerState aux : cntState.getChildren()) {
+            children.add(aux.getIdentity());
+        }
+        for (ProfileState aux : cntState.getProfiles()) {
+            profiles.add(aux.getIdentity());
+        }
+    }
+
+    @Override
+    public ContainerIdentity getParent() {
+        return parent;
     }
 
     @Override
@@ -56,27 +77,37 @@ final class ContainerImpl implements Container {
     }
 
     @Override
+    public Set<ContainerIdentity> getChildContainers() {
+        return Collections.unmodifiableSet(children);
+    }
+
+    @Override
+    public Version getProfileVersion() {
+        return profileVersion;
+    }
+
+    @Override
+    public Set<ProfileIdentity> getProfiles() {
+        return Collections.unmodifiableSet(profiles);
+    }
+
+    @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
-        throw new UnsupportedOperationException();
+        return attributes.getAttributeKeys();
     }
 
     @Override
     public <T> T getAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.getAttribute(key);
     }
 
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.hasAttribute(key);
     }
 
     @Override
     public HostIdentity getHost() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<ContainerIdentity> getChildContainers() {
         throw new UnsupportedOperationException();
     }
 
@@ -87,16 +118,6 @@ final class ContainerImpl implements Container {
 
     @Override
     public Set<ServiceEndpointIdentity> getServiceEndpoints() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Version getProfileVersion() {
-        return profileVersion;
-    }
-
-    @Override
-    public Set<ProfileIdentity> getProfiles() {
         throw new UnsupportedOperationException();
     }
 

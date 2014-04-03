@@ -27,6 +27,6 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface JoinOptions extends Attributeable {
+public interface JoinOptions extends Attributable {
 
 }

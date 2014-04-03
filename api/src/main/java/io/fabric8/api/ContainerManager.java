@@ -41,6 +41,11 @@ public interface ContainerManager {
     Container createContainer(CreateOptions options);
 
     /**
+     * Create a child container with the given options
+     */
+    Container createChildContainer(ContainerIdentity identity, CreateOptions options);
+
+    /**
      * Get the set of container identities in the cluster
      */
     Set<ContainerIdentity> getContainerIdentities();
@@ -77,11 +82,6 @@ public interface ContainerManager {
     Container destroy(ContainerIdentity identity);
 
     /**
-     * Set the version for the container with the given identity
-     */
-    void setVersion(ContainerIdentity identity, Version version, ProvisionListener listener);
-
-    /**
      * Ping the container with the given identity
      */
     boolean ping(ContainerIdentity identity);
@@ -100,6 +100,11 @@ public interface ContainerManager {
      * Leave fabric for the container with the given identity
      */
     void leaveFabric(ContainerIdentity identity);
+
+    /**
+     * Set the version for the container with the given identity
+     */
+    void setVersion(ContainerIdentity identity, Version version, ProvisionListener listener);
 
     /**
      * Add profiles to the container with the given identity

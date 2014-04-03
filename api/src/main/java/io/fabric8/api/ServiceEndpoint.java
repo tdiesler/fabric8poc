@@ -25,6 +25,6 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributeable, Identifiable<ServiceEndpointIdentity> {
+public interface ServiceEndpoint extends Attributable, Identifiable<ServiceEndpointIdentity> {
 
 }

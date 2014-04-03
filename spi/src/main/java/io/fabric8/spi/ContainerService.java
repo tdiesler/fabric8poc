@@ -53,6 +53,11 @@ public interface ContainerService {
     ContainerState createContainer(CreateOptions options);
 
     /**
+     * Create a child container with the given options
+     */
+    ContainerState createChildContainer(ContainerIdentity identity, CreateOptions options);
+
+    /**
      * Get a container with a given identity
      * @return the container or <code>null</code>
      */

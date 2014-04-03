@@ -28,7 +28,7 @@ import java.util.Set;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Attributeable {
+public interface Attributable {
 
     /**
      * Get the list of attribute keys

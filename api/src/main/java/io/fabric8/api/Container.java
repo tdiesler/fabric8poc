@@ -30,7 +30,7 @@ import org.jboss.gravia.resource.Version;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Container extends Attributeable, Identifiable<ContainerIdentity> {
+public interface Container extends Attributable, Identifiable<ContainerIdentity> {
 
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
@@ -45,6 +45,11 @@ public interface Container extends Attributeable, Identifiable<ContainerIdentity
      * Get the container state
      */
     State getState();
+
+    /**
+     * Get the parent container
+     */
+    ContainerIdentity getParent();
 
     /**
      * Get the set of child containers

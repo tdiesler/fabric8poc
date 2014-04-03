@@ -19,11 +19,15 @@
  */
 package io.fabric8.spi;
 
-import org.jboss.gravia.resource.Version;
-
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Identifiable;
+
+import java.util.Map;
+import java.util.Set;
+
+import org.jboss.gravia.resource.Version;
 
 
 /**
@@ -36,5 +40,13 @@ public interface ContainerState extends Identifiable<ContainerIdentity> {
 
     State getState();
 
+    ContainerState getParent();
+
+    Set<ContainerState> getChildren();
+
     Version getProfileVersion();
+
+    Set<ProfileState> getProfiles();
+
+    Map<AttributeKey<?>, Object> getAttributes();
 }

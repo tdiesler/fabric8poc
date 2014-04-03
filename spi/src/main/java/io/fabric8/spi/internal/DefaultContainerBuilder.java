@@ -27,6 +27,7 @@ import java.util.Set;
 
 public final class DefaultContainerBuilder implements ContainerBuilder {
 
+    private final AttributeSupport attributes = new AttributeSupport();
     private String symbolicName;
 
     @Override
@@ -41,17 +42,17 @@ public final class DefaultContainerBuilder implements ContainerBuilder {
 
             @Override
             public <T> boolean hasAttribute(AttributeKey<T> key) {
-                throw new UnsupportedOperationException();
+                return attributes.hasAttribute(key);
             }
 
             @Override
             public Set<AttributeKey<?>> getAttributeKeys() {
-                throw new UnsupportedOperationException();
+                return attributes.getAttributeKeys();
             }
 
             @Override
             public <T> T getAttribute(AttributeKey<T> key) {
-                throw new UnsupportedOperationException();
+                return attributes.getAttribute(key);
             }
 
             @Override

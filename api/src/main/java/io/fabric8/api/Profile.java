@@ -35,7 +35,7 @@ import org.jboss.gravia.resource.Version;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Profile extends Attributeable, Identifiable<ProfileIdentity> {
+public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
 
     /**
      * Get the associated profile version

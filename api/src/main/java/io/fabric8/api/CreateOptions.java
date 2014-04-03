@@ -27,7 +27,7 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface CreateOptions extends Attributeable {
+public interface CreateOptions extends Attributable {
 
     String getSymbolicName();
 

@@ -28,7 +28,7 @@ import java.util.Set;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Host extends Attributeable, Identifiable<HostIdentity> {
+public interface Host extends Attributable, Identifiable<HostIdentity> {
 
     /**
      * Get the set of associated containers

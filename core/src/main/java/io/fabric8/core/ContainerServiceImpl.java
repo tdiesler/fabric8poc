@@ -21,6 +21,7 @@ package io.fabric8.core;
 
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.FabricException;
 import io.fabric8.core.ContainerRegistry.ContainerStateImpl;
 import io.fabric8.spi.ContainerState;
 import io.fabric8.spi.ContainerService;
@@ -59,13 +60,19 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public ContainerState createContainer(CreateOptions options) {
         assertValid();
         synchronized (containerRegistry) {
-            String name = options.getSymbolicName();
-            ContainerIdentity identity = ContainerIdentity.create(prefix != null ? prefix + "." + name : name);
-            ContainerState containerState = containerRegistry.get().getContainer(identity);
-            if (containerState != null)
-                throw new IllegalStateException("Container already exists: " + identity);
+            String prefixedName = prefix + "." + options.getSymbolicName();
+            ContainerIdentity identity = ContainerIdentity.create(prefixedName);
+            return containerRegistry.get().addContainer(identity, null);
+        }
+    }
 
-            return containerRegistry.get().addContainer(identity);
+    @Override
+    public ContainerState createChildContainer(ContainerIdentity parentId, CreateOptions options) {
+        assertValid();
+        synchronized (containerRegistry) {
+            String prefixedName = prefix + "." + options.getSymbolicName();
+            ContainerIdentity childId = ContainerIdentity.create(parentId.getSymbolicName() + ":" + prefixedName);
+            return containerRegistry.get().addContainer(childId, parentId);
         }
     }
 
@@ -99,10 +106,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public ContainerState destroyContainer(ContainerIdentity identity) {
         assertValid();
         synchronized (containerRegistry) {
-            ContainerState container = containerRegistry.get().removeContainer(identity);
-            if (container == null)
-                throw new IllegalStateException("Container does not exist: " + identity);
-            ((ContainerStateImpl) container).destroy();
+            ContainerStateImpl container = (ContainerStateImpl) getRequiredContainer(identity);
+            if (!container.getChildren().isEmpty()) {
+                throw new FabricException("Cannot destroy a container that has active child containers: " + identity);
+            }
+            containerRegistry.get().removeContainer(identity);
+            container.destroy();
             return container;
         }
     }
