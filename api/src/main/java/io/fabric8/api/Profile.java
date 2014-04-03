@@ -46,4 +46,10 @@ public interface Profile extends Attributeable, Identifiable<ProfileIdentity> {
      * Get the profile parents
      */
     Set<ProfileIdentity> getParents();
+
+    /**
+     * Get the set of profile items for the given type
+     */
+    <T extends ProfileItem> Set<T> getProfileItems(Class<T> type);
+
 }

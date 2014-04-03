@@ -19,28 +19,19 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
+
 
 /**
- * A builder for a fabric container
+ * A configuration item builder
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilder {
+public interface ConfigurationItemBuilder extends ProfileItemBuilder<ConfigurationItem> {
 
-    ContainerBuilder addIdentity(String symbolicName);
+    ConfigurationItemBuilder addIdentity(String identity);
 
-    CreateOptions getCreateOptions();
-
-    final class Factory {
-
-        public static <T extends ContainerBuilder> T create(Class<T> type) {
-            ContainerBuilderFactory factory = ServiceLocator.awaitService(ContainerBuilderFactory.class);
-            return factory.create(type);
-        }
-
-        // Hide ctor
-        private Factory() {
-        }
-    }
+    ConfigurationItemBuilder setConfiguration(Map<String, String> config);
 }

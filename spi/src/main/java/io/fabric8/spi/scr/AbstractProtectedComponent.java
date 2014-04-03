@@ -24,19 +24,19 @@ import io.fabric8.spi.permit.PermitState;
 
 public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
+    protected final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
+
     protected void activateComponent(PermitState<T> state, T instance) {
         super.activateComponent();
-        getPermitManager().activate(state, instance);
+        permitManager.get().activate(state, instance);
     }
 
     protected void deactivateComponent(PermitState<T> state) {
-        getPermitManager().deactivate(state);
+        permitManager.get().deactivate(state);
         super.deactivateComponent();
     }
 
     protected final void deactivateComponent() {
         throw new UnsupportedOperationException();
     }
-
-    protected abstract PermitManager getPermitManager();
 }

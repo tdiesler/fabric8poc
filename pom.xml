@@ -56,12 +56,12 @@
         <version.apache.felix.scr.ds.annotations>1.2.4</version.apache.felix.scr.ds.annotations>
         <version.apache.felix.scr.generator>1.8.0</version.apache.felix.scr.generator>
         <version.jboss.arquillian.core>1.1.2.Final</version.jboss.arquillian.core>
-        <version.jboss.gravia>1.1.0.Beta11</version.jboss.gravia>
+        <version.jboss.gravia>1.1.0.Beta12</version.jboss.gravia>
         <version.junit>4.11</version.junit>
         <version.log4j>1.2.16</version.log4j>
         <version.mockito>1.8.4</version.mockito>
         <version.osgi>5.0.0</version.osgi>
-        <version.slf4j>1.5.11</version.slf4j>
+        <version.slf4j>1.6.6</version.slf4j>
 
         <!-- Plugin Versions -->
         <apache-felix-scr-plugin-version>1.15.0</apache-felix-scr-plugin-version>

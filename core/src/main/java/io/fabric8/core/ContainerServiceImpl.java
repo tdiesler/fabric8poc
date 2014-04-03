@@ -36,11 +36,10 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { ContainerService.class }, configurationPid = ContainerService.FABRIC_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
+@Component(service = { ContainerService.class }, configurationPid = ContainerService.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
-    private final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
     private String prefix;
 
     @Activate
@@ -54,11 +53,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Deactivate
     void deactivate() {
         deactivateComponent(PERMIT);
-    }
-
-    @Override
-    protected PermitManager getPermitManager() {
-        return permitManager.get();
     }
 
     @Override

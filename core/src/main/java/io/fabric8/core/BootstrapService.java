@@ -19,15 +19,15 @@
  */
 package io.fabric8.core;
 
-import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import io.fabric8.spi.ContainerService;
+import io.fabric8.api.ConfigurationItem;
+import io.fabric8.spi.ProfileService;
+import io.fabric8.spi.ProfileState;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import org.osgi.service.cm.Configuration;
+import java.io.IOException;
+import java.util.Set;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -39,6 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 public final class BootstrapService extends AbstractComponent {
 
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
+    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
     @Activate
     void activate() throws Exception {
@@ -52,10 +53,11 @@ public final class BootstrapService extends AbstractComponent {
     }
 
     private void activateInternal() throws IOException {
-        Configuration config = configAdmin.get().getConfiguration(ContainerService.FABRIC_SERVICE_PID, null);
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ContainerService.KEY_NAME_PREFIX, "default");
-        config.update(props);
+
+        // Read the default profile and apply ConfigurationItems to ConfigurationAdmin
+        ProfileState defaultProfile = profileService.get().getDefaultProfile();
+        Set<ConfigurationItem> items = defaultProfile.getProfileItems(ConfigurationItem.class);
+        ProfileSupport.applyConfigurationItems(configAdmin.get(), items);
     }
 
     @Reference
@@ -65,5 +67,14 @@ public final class BootstrapService extends AbstractComponent {
 
     void unbindConfigurationAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
+    }
+
+    @Reference
+    void bindProfileService(ProfileService service) {
+        this.profileService.bind(service);
+    }
+
+    void unbindProfileService(ProfileService service) {
+        this.profileService.unbind(service);
     }
 }

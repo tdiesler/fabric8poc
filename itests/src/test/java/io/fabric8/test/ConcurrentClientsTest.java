@@ -89,7 +89,7 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             ModuleContext syscontext = runtime.getModuleContext();
             for (int i = 0; lastException == null && i < 20; i++) {
                 ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
-                Configuration config = configAdmin.getConfiguration(ContainerService.FABRIC_SERVICE_PID, null);
+                Configuration config = configAdmin.getConfiguration(ContainerService.CONTAINER_SERVICE_PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
                 props.put(ContainerService.KEY_NAME_PREFIX, "config#" + i);
                 config.update(props);
@@ -126,7 +126,7 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
         }
 
         private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
-            ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
+            ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
             CreateOptions options = builder.addIdentity(prefix + "#" + index).getCreateOptions();
             Container cnt = manager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();

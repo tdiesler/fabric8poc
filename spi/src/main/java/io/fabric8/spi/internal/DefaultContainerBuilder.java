@@ -25,7 +25,7 @@ import io.fabric8.api.CreateOptions;
 
 import java.util.Set;
 
-public final class DefaultContainerBuilder extends ContainerBuilder {
+public final class DefaultContainerBuilder implements ContainerBuilder {
 
     private String symbolicName;
 

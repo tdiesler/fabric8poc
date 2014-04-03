@@ -39,7 +39,7 @@ public interface ContainerService {
     /**
      * The configuration PID for this service
      */
-    String FABRIC_SERVICE_PID = "fabric.service.pid";
+    String CONTAINER_SERVICE_PID = "container.service.pid";
 
     /**
      * The {@link PermitState} that protects this service.

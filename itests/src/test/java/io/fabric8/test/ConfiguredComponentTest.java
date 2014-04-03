@@ -63,7 +63,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
                 int type = event.getType();
-                if (ContainerService.FABRIC_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
+                if (ContainerService.CONTAINER_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
                     updateLatch.countDown();
                 }
             }
@@ -78,7 +78,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             ModuleContext moduleContext = module.getModuleContext();
 
             ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(ContainerService.FABRIC_SERVICE_PID);
+            Configuration config = configAdmin.getConfiguration(ContainerService.CONTAINER_SERVICE_PID);
             Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(ContainerService.KEY_NAME_PREFIX, "foo");
             config.update(props);
@@ -91,7 +91,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Wait a little for the component to get updated
         Thread.sleep(100);
 
-        ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
+        ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
         ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);

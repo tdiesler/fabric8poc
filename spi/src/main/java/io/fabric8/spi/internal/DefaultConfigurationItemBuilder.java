@@ -19,23 +19,30 @@
  */
 package io.fabric8.spi.internal;
 
-import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.ConfigurationItemBuilder;
 
-import org.jboss.gravia.resource.Version;
+import java.util.Map;
 
-public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
+public final class DefaultConfigurationItemBuilder implements ConfigurationItemBuilder {
 
-    private Version identity;
+    private String identity;
+    private Map<String, String> config;
 
     @Override
-    public ProfileVersionBuilder addIdentity(Version version) {
-        this.identity = version;
+    public ConfigurationItemBuilder addIdentity(String identity) {
+        this.identity = identity;
         return this;
     }
 
     @Override
-    public ProfileVersion createProfileVersion() {
-        return new ProfileVersionImpl(identity);
+    public ConfigurationItemBuilder setConfiguration(Map<String, String> config) {
+        this.config = config;
+        return this;
+    }
+
+    @Override
+    public ConfigurationItem getConfigurationItem() {
+        return new DefaultConfigurationItem(identity, config);
     }
 }

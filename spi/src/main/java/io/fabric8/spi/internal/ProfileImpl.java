@@ -22,6 +22,7 @@ package io.fabric8.spi.internal;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileItem;
 import io.fabric8.spi.ProfileState;
 
 import java.util.Collections;
@@ -35,15 +36,19 @@ final class ProfileImpl implements Profile {
 
     private final ProfileIdentity identity;
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
+    private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
 
     ProfileImpl(ProfileState profileState) {
         NotNullException.assertValue(profileState, "profileState");
         this.identity = profileState.getIdentity();
+        this.profileItems.addAll(profileState.getProfileItems(null));
     }
 
-    ProfileImpl(ProfileIdentity identity) {
+    ProfileImpl(ProfileIdentity identity, Set<ProfileItem> items) {
         NotNullException.assertValue(identity, "identity");
+        NotNullException.assertValue(items, "items");
         this.identity = identity;
+        this.profileItems.addAll(items);
     }
 
     @Override
@@ -74,6 +79,18 @@ final class ProfileImpl implements Profile {
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
+        Set<T> result = new HashSet<T>();
+        for (ProfileItem item : profileItems) {
+            if (type == null || type.isAssignableFrom(item.getClass())) {
+                result.add((T) item);
+            }
+        }
+        return Collections.unmodifiableSet(result);
     }
 
     @Override

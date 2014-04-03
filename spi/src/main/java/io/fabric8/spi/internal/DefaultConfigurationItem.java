@@ -17,30 +17,28 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi.internal;
 
+import io.fabric8.api.ConfigurationItem;
 
-/**
- * A builder for a fabric container
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ContainerBuilder {
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-    ContainerBuilder addIdentity(String symbolicName);
+final class DefaultConfigurationItem extends AbstractProfileItem implements ConfigurationItem {
 
-    CreateOptions getCreateOptions();
+    private final Map<String, String> configuration = new HashMap<String, String>();
 
-    final class Factory {
-
-        public static <T extends ContainerBuilder> T create(Class<T> type) {
-            ContainerBuilderFactory factory = ServiceLocator.awaitService(ContainerBuilderFactory.class);
-            return factory.create(type);
-        }
-
-        // Hide ctor
-        private Factory() {
+    DefaultConfigurationItem(String identity, Map<String, String> config) {
+        super(identity);
+        if (config != null) {
+            configuration.putAll(config);
         }
     }
+
+    @Override
+    public Map<String, String> getConfiguration() {
+        return Collections.unmodifiableMap(configuration);
+    }
+
 }

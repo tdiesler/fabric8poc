@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.Identifiable;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileItem;
 
 import java.util.Set;
 
@@ -36,4 +37,6 @@ public interface ProfileState extends Identifiable<ProfileIdentity> {
     ProfileVersionState getProfileVersion();
 
     Set<ProfileState> getParents();
+
+    <T extends ProfileItem> Set<T> getProfileItems(Class<T> type);
 }

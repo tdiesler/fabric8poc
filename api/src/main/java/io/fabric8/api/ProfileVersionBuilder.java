@@ -19,13 +19,7 @@
  */
 package io.fabric8.api;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.runtime.Runtime;
-import org.jboss.gravia.runtime.RuntimeLocator;
-
 
 /**
  * A builder for a profile version
@@ -33,35 +27,21 @@ import org.jboss.gravia.runtime.RuntimeLocator;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileVersionBuilder {
+public interface ProfileVersionBuilder {
 
-    public static ProfileVersionBuilder create() {
+    ProfileVersionBuilder addIdentity(Version version);
 
-        ProfileVersionBuilder builder = null;
+    ProfileVersion createProfileVersion();
 
-        // First check if we have a {@link ProfileVersionBuilder} service
-        Runtime runtime = RuntimeLocator.getRuntime();
-        if (runtime != null) {
-            builder = ServiceLocator.getService(ProfileVersionBuilder.class);
+    final class Factory {
+
+        public static ProfileVersionBuilder create() {
+            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            return factory.create();
         }
 
-        // Next use ServiceLoader discovery
-        if (builder == null) {
-            ClassLoader classLoader = ProfileVersionBuilder.class.getClassLoader();
-            ServiceLoader<ProfileVersionBuilder> loader = ServiceLoader.load(ProfileVersionBuilder.class, classLoader);
-            Iterator<ProfileVersionBuilder> iterator = loader.iterator();
-            while (builder == null && iterator.hasNext()) {
-                builder = iterator.next();
-            }
+        // Hide ctor
+        private Factory() {
         }
-
-        if (builder == null)
-            throw new IllegalStateException("Cannot obtain ProfileVersionBuilder service");
-
-        return builder;
     }
-
-    public abstract ProfileVersionBuilder addIdentity(Version version);
-
-    public abstract ProfileVersion createProfileVersion();
 }

@@ -19,19 +19,41 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileItem;
+import io.fabric8.api.ProfileItemBuilder;
 
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
-public final class DefaultProfileBuilder extends ProfileBuilder {
+public final class DefaultProfileBuilder implements ProfileBuilder {
 
+    private final Set<ProfileItem> items = new HashSet<ProfileItem>();
     private ProfileIdentity identity;
 
     @Override
     public ProfileBuilder addIdentity(String symbolicName) {
-        this.identity = ProfileIdentity.create(symbolicName);
+        identity = ProfileIdentity.create(symbolicName);
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends ProfileItemBuilder<?>> T getItemBuilder(Class<T> type) {
+        if (ConfigurationItemBuilder.class.isAssignableFrom(type)) {
+            return (T) new DefaultConfigurationItemBuilder();
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+    }
+
+    @Override
+    public ProfileBuilder addProfileItem(ProfileItem item) {
+        items.add(item);
         return this;
     }
 
@@ -42,6 +64,6 @@ public final class DefaultProfileBuilder extends ProfileBuilder {
 
     @Override
     public Profile createProfile() {
-        return new ProfileImpl(identity);
+        return new ProfileImpl(identity, items);
     }
 }

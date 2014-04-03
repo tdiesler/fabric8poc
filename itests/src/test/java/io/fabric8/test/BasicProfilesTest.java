@@ -19,6 +19,9 @@
  */
 package io.fabric8.test;
 
+import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.ConfigurationItemBuilder;
+import io.fabric8.api.FabricException;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
@@ -27,6 +30,7 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -46,20 +50,34 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
 
         ProfileManager manager = ServiceLocator.getRequiredService(ProfileManager.class);
         Set<ProfileVersion> versions = manager.getProfileVersions(null);
-        Assert.assertTrue("No versions", versions.isEmpty());
+        Assert.assertEquals("One version", 1, versions.size());
 
-        Version version = Version.parseVersion("1.0");
+        ProfileVersion defaultVersion = versions.iterator().next();;
+        Assert.assertEquals("1.0.0", defaultVersion.getIdentity().toString());
 
-        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.create();
+        Version version = Version.parseVersion("1.1");
+
+        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create();
         ProfileVersion profileVersion = pvbuilder.addIdentity(version).createProfileVersion();
 
         // Add a profile version
         manager.addProfileVersion(profileVersion);
-        Assert.assertEquals(1, manager.getProfileVersions(null).size());
+        Assert.assertEquals(2, manager.getProfileVersions(null).size());
 
         // Build a profile
-        ProfileBuilder pbuilder = ProfileBuilder.create();
-        Profile profile = pbuilder.addIdentity("foo").createProfile();
+        ProfileBuilder pbuilder = ProfileBuilder.Factory.create();
+        pbuilder.addIdentity("foo");
+        ConfigurationItemBuilder ibuilder = pbuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ibuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", "yyy"));
+        pbuilder.addProfileItem(ibuilder.getConfigurationItem());
+        Profile profile = pbuilder.createProfile();
+
+        // Verify profile
+        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        Assert.assertEquals("One item", 1, items.size());
+        ConfigurationItem citem = items.iterator().next();
+        Assert.assertEquals("some.pid", citem.getIdentity());
+        Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
 
         // Add the profile to the given version
         profile = manager.addProfile(version, profile);

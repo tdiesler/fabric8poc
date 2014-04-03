@@ -37,14 +37,34 @@ import org.jboss.gravia.resource.Version;
 public interface ProfileService {
 
     /**
+     * The default profile version
+     */
+    Version DEFAULT_PROFILE_VERSION = Version.parseVersion("1.0");
+
+    /**
+     * The default profile name
+     */
+    String DEFAULT_PROFILE_NAME = "default";
+
+    /**
      * The {@link PermitState} that protects this service.
      */
     PermitState<ProfileService> PERMIT = new PermitState<ProfileService>(ProfileService.class);
 
     /**
+     * Get the default profile
+     */
+    ProfileState getDefaultProfile();
+
+    /**
      * Get the set of profile versions in the cluster
      */
     Map<Version, ProfileVersionState> getProfileVersions();
+
+    /**
+     * Get the profile version for the given identity
+     */
+    ProfileVersionState getProfileVersion(Version identity);
 
     /**
      * Add a profile version
@@ -62,6 +82,11 @@ public interface ProfileService {
     Map<ProfileIdentity, ProfileState> getProfiles(Version version);
 
     /**
+     * Get the profile for a given version and identity
+     */
+    ProfileState getProfile(Version version, ProfileIdentity identity);
+
+    /**
      * Add a profile to the given version
      */
     ProfileState addProfile(Version version, Profile profile);
@@ -69,5 +94,5 @@ public interface ProfileService {
     /**
      * Remove the profile with the given identity
      */
-    ProfileState removeProfile(Version version, ProfileIdentity profile);
+    ProfileState removeProfile(Version version, ProfileIdentity identity);
 }

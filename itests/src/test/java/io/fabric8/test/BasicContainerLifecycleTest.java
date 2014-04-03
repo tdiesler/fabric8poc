@@ -42,7 +42,7 @@ public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
     @Test
     public void testContainerLifecycle() throws Exception {
 
-        ContainerBuilder builder = ContainerBuilder.create(ContainerBuilder.class);
+        ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
         ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
