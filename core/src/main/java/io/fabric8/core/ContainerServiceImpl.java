@@ -32,10 +32,11 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { ContainerService.class }, configurationPid = ContainerService.FABRIC_SERVICE_PID, immediate = true)
+@Component(service = { ContainerService.class }, configurationPid = ContainerService.FABRIC_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
@@ -119,20 +120,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Reference
-    void bindContainerRegistry(ContainerRegistry registry) {
-        this.containerRegistry.bind(registry);
+    void bindContainerRegistry(ContainerRegistry service) {
+        this.containerRegistry.bind(service);
     }
 
-    void unbindContainerRegistry(ContainerRegistry registry) {
-        this.containerRegistry.unbind(registry);
+    void unbindContainerRegistry(ContainerRegistry service) {
+        this.containerRegistry.unbind(service);
     }
 
     @Reference
-    void bindPermitManager(PermitManager stateService) {
-        this.permitManager.bind(stateService);
+    void bindPermitManager(PermitManager service) {
+        this.permitManager.bind(service);
     }
 
-    void unbindPermitManager(PermitManager stateService) {
-        this.permitManager.unbind(stateService);
+    void unbindPermitManager(PermitManager service) {
+        this.permitManager.unbind(service);
     }
 }

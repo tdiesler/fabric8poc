@@ -50,7 +50,7 @@ public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
 
         ContainerIdentity cntId = cnt.getIdentity();
 
-        Assert.assertEquals("cntA", cntId.getSymbolicName());
+        Assert.assertEquals("default.cntA", cntId.getSymbolicName());
         Assert.assertSame(State.CREATED, cnt.getState());
 
         cnt = manager.start(cntId);
