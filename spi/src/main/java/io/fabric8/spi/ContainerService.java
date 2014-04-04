@@ -31,16 +31,6 @@ import io.fabric8.spi.permit.PermitState;
 public interface ContainerService extends ContainerManager {
 
     /**
-     * A key into the configuration that names the container name prefix created by the current service instance
-     */
-    String KEY_NAME_PREFIX = "container.prefix";
-
-    /**
-     * The configuration PID for this service
-     */
-    String CONTAINER_SERVICE_PID = "container.service.pid";
-
-    /**
      * The {@link PermitState} that protects this service.
      */
     PermitState<ContainerService> PERMIT = new PermitState<ContainerService>(ContainerService.class);

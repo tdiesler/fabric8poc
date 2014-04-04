@@ -23,6 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 
+import java.util.Map;
 import java.util.Set;
 
 public final class DefaultContainerBuilder implements ContainerBuilder {
@@ -39,6 +40,11 @@ public final class DefaultContainerBuilder implements ContainerBuilder {
     @Override
     public CreateOptions getCreateOptions() {
         return new CreateOptions() {
+
+            @Override
+            public Map<AttributeKey<?>, Object> getAttributes() {
+                return attributes.getAttributes();
+            }
 
             @Override
             public <T> boolean hasAttribute(AttributeKey<T> key) {

@@ -26,7 +26,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.ContainerService;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -89,9 +88,9 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             ModuleContext syscontext = runtime.getModuleContext();
             for (int i = 0; lastException == null && i < 20; i++) {
                 ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
-                Configuration config = configAdmin.getConfiguration(ContainerService.CONTAINER_SERVICE_PID, null);
+                Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(ContainerService.KEY_NAME_PREFIX, "config#" + i);
+                props.put(Container.CNFKEY_CONFIG_TOKEN, "config#" + i);
                 config.update(props);
                 Thread.sleep(50);
             }

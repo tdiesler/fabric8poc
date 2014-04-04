@@ -26,7 +26,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.ContainerService;
 import io.fabric8.test.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -63,7 +62,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
                 int type = event.getType();
-                if (ContainerService.CONTAINER_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
+                if (Container.CONTAINER_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
                     updateLatch.countDown();
                 }
             }
@@ -78,9 +77,9 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             ModuleContext moduleContext = module.getModuleContext();
 
             ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(ContainerService.CONTAINER_SERVICE_PID);
+            Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID);
             Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(ContainerService.KEY_NAME_PREFIX, "foo");
+            props.put(Container.CNFKEY_CONFIG_TOKEN, "foo");
             config.update(props);
 
             Assert.assertTrue("Config updated", updateLatch.await(2, TimeUnit.SECONDS));
@@ -98,7 +97,8 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         Container cnt = manager.createContainer(options);
 
         ContainerIdentity cntId = cnt.getIdentity();
-        Assert.assertEquals("foo.cntA", cntId.getSymbolicName());
+        Assert.assertEquals("cntA", cntId.getSymbolicName());
+        Assert.assertEquals("foo", cnt.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cnt.getState());
 
         cnt = manager.start(cntId);

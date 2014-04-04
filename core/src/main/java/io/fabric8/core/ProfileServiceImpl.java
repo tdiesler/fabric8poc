@@ -24,6 +24,7 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
+import io.fabric8.api.Container;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
@@ -32,7 +33,6 @@ import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
-import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.NullProfileItem;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.internal.AttributeSupport;
@@ -86,8 +86,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         ProfileBuilder profileBuilder = profileBuilderFactory.get().create();
         profileBuilder.addIdentity(DEFAULT_PROFILE_IDENTITY.getSymbolicName());
         ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
-        configBuilder.addIdentity(ContainerService.CONTAINER_SERVICE_PID);
-        configBuilder.setConfiguration(Collections.singletonMap(ContainerService.KEY_NAME_PREFIX, "default"));
+        configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
+        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, "default"));
         profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
         versionState.addProfile(profileBuilder.createProfile());
     }

@@ -54,17 +54,17 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { ContainerService.class }, configurationPid = ContainerService.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
+@Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
-    private String prefix;
+    private String configToken;
 
     @Activate
     void activate(Map<String, ?> config) {
-        prefix = (String) config.get(ContainerService.KEY_NAME_PREFIX);
+        configToken = (String) config.get(Container.CNFKEY_CONFIG_TOKEN);
         activateComponent(PERMIT, this);
     }
 
@@ -78,9 +78,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container createContainer(CreateOptions options) {
         assertValid();
-        String prefixedName = prefix + "." + options.getSymbolicName();
-        ContainerIdentity cntIdentity = ContainerIdentity.create(prefixedName);
-        ContainerState cntState = new ContainerState(null, cntIdentity);
+        ContainerState cntState = new ContainerState(null, options, configToken);
         containerRegistry.get().addContainer(null, cntState);
         return new ImmutableContainer(cntState);
     }
@@ -89,9 +87,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container createChildContainer(ContainerIdentity parentId, CreateOptions options) {
         assertValid();
         ContainerState cntParent = getRequiredContainer(parentId);
-        String prefixedName = prefix + "." + options.getSymbolicName();
-        ContainerIdentity cntIdentity = ContainerIdentity.create(parentId.getSymbolicName() + ":" + prefixedName);
-        ContainerState cntState = new ContainerState(cntParent, cntIdentity);
+        ContainerState cntState = new ContainerState(cntParent, options, configToken);
         containerRegistry.get().addContainer(parentId, cntState);
         return new ImmutableContainer(cntState);
     }
@@ -234,18 +230,21 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     static final class ContainerState {
 
         private final ContainerIdentity identity;
-        private final AttributeSupport attributes = new AttributeSupport();
+        private final AttributeSupport attributes;
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
         private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
         private final AtomicReference<Version> profileVersion = new AtomicReference<Version>();
         private final AtomicReference<Container.State> state = new AtomicReference<Container.State>();
         private ContainerState parent;
 
-        ContainerState(ContainerState parent, ContainerIdentity identity) {
+        ContainerState(ContainerState parent, CreateOptions options, String configToken) {
             this.parent = parent;
-            this.identity = identity;
             this.profileVersion.set(Constants.DEFAULT_PROFILE_VERSION);
             this.state.set(State.CREATED);
+            String parentName = parent != null ? parent.getIdentity().getSymbolicName() + ":" : "";
+            this.identity = ContainerIdentity.create(parentName + options.getSymbolicName());
+            this.attributes = new AttributeSupport(options.getAttributes());
+            this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
         }
 
         ContainerIdentity getIdentity() {

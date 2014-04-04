@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
 
 
 /**
@@ -31,4 +33,5 @@ public interface CreateOptions extends Attributable {
 
     String getSymbolicName();
 
+    Map<AttributeKey<?>, Object> getAttributes();
 }

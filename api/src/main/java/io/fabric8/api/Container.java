@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-
 /**
  * A fabric container
  *
@@ -32,9 +31,27 @@ import org.jboss.gravia.resource.Version;
  */
 public interface Container extends Attributable, Identifiable<ContainerIdentity> {
 
+    /**
+     * The container states
+     */
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
+
+    /**
+     * A config key that is made available as a container attribute
+     */
+    String CNFKEY_CONFIG_TOKEN = "config.token";
+
+    /**
+     * An attribute key for the {@link CNFKEY_CONFIG_TOKEN} value
+     */
+    AttributeKey<String> ATTKEY_CONFIG_TOKEN = AttributeKey.create(String.class);
+
+    /**
+     * The configuration PID for this service
+     */
+    String CONTAINER_SERVICE_PID = "container.service.pid";
 
     /**
      * Get the associated host

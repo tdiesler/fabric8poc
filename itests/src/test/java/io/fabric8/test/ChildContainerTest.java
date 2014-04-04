@@ -55,7 +55,8 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
 
         Container child = manager.createChildContainer(parentId, options);
         ContainerIdentity childId = child.getIdentity();
-        Assert.assertEquals("default.cntA:default.cntB", childId.getSymbolicName());
+        Assert.assertEquals("cntA:cntB", childId.getSymbolicName());
+        Assert.assertEquals("default", child.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         try {
             manager.destroy(parentId);
