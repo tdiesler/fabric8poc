@@ -24,7 +24,7 @@ import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitState;
 
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.jboss.gravia.resource.Version;
 
@@ -44,7 +44,7 @@ public interface ProfileService extends ProfileManager {
     /**
      * Aquire a lock on the give profile version
      */
-    Lock aquireProfileVersionLock(Version version);
+    WriteLock aquireProfileVersionLock(Version version);
 
     void addContainerToProfileVersion(Version version, ContainerIdentity containerId);
 
