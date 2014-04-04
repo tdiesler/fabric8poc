@@ -20,6 +20,7 @@
 package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
@@ -39,6 +40,7 @@ final class ImmutableProfile implements Profile {
     private final ProfileIdentity identity;
 
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
+    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
     private final AttributeSupport attributes;
 
@@ -46,6 +48,7 @@ final class ImmutableProfile implements Profile {
         NotNullException.assertValue(profile, "profile");
         version = profile.getProfileVersion();
         identity = profile.getIdentity();
+        containers.addAll(profile.getContainerIds());
         profileItems.addAll(profile.getProfileItems(null));
         attributes = new AttributeSupport(profile.getAttributes());
     }
@@ -63,6 +66,11 @@ final class ImmutableProfile implements Profile {
     @Override
     public Set<ProfileIdentity> getParents() {
         return Collections.unmodifiableSet(parents);
+    }
+
+    @Override
+    public Set<ContainerIdentity> getContainerIds() {
+        return Collections.unmodifiableSet(containers);
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package io.fabric8.test;
 
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -100,6 +101,7 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
         ProfileVersion profVersion20 = pvbuilder.addIdentity(version20).createProfileVersion();
 
         // Verify that the version cannot be set
+        // because it is not registered with the {@link ProfileManager}
         try {
             cntManager.setVersion(idParent, version20, null);
             Assert.fail("IllegalStateException expected");
@@ -110,6 +112,8 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
         prfManager.addProfileVersion(profVersion20);
 
         // Verify that the version can still not be set
+        // because the contaier uses the default profile
+        // which is not yet part of profile 2.0
         try {
             cntManager.setVersion(idParent, version20, null);
             Assert.fail("IllegalStateException expected");
@@ -117,41 +121,140 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
             // expected
         }
 
-        // Build a new profile and associated it with the version
+        // Build a new profile and associated it with 2.0
         ProfileBuilder pbuilder = ProfileBuilder.Factory.create();
         Profile default20 = pbuilder.addIdentity("default").createProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch latchA = new CountDownLatch(1);
         ProvisionListener listener = new ProvisionListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
                 if (event.getType() == EventType.PROVISIONED && "default".equals(symbolicName)) {
-                    latch.countDown();
+                    latchA.countDown();
                 }
             }
         };
 
         // Switch the container to version 2.0
-        cntManager.setVersion(idParent, version20, listener);
-        Assert.assertTrue(latch.await(100, TimeUnit.MILLISECONDS));
+        cntParent = cntManager.setVersion(idParent, version20, listener);
+        Assert.assertTrue("ProvisionEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertEquals(version20, cntParent.getProfileVersion());
+        Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIds().size());
 
-        // Create and add another profile
+        // Create profile foo
         pbuilder = ProfileBuilder.Factory.create();
-        Profile profFoo = pbuilder.addIdentity("foo").createProfile();
-        prfManager.addProfile(version20, profFoo);
+        Profile fooProfile = pbuilder.addIdentity("foo").createProfile();
 
-        // Verify that the profile cannot be added again
+        // Verify that the profile cannot be added
         try {
-            prfManager.addProfile(version20, profFoo);
+            cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException ex) {
             // expected
         }
 
-        // Remove the profile version
+        // Add profile foo to 2.0
+        prfManager.addProfile(version20, fooProfile);
+        Assert.assertEquals(2, prfManager.getProfileIds(version20).size());
+
+        // Verify that the profile cannot be added again
+        try {
+            prfManager.addProfile(version20, fooProfile);
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+
+        // Setup the provision listener
+        final CountDownLatch latchB = new CountDownLatch(1);
+        listener = new ProvisionListener() {
+            @Override
+            public void processEvent(ProvisionEvent event) {
+                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                if (event.getType() == EventType.PROVISIONED && "foo".equals(symbolicName)) {
+                    latchB.countDown();
+                }
+            }
+        };
+
+        // Add profile foo to container
+        cntParent = cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
+        Assert.assertTrue("ProvisionEvent received", latchB.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertEquals(version20, cntParent.getProfileVersion());
+        Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIds().contains(fooProfile.getIdentity()));
+        Assert.assertEquals(2, cntParent.getProfileIds().size());
+
+        // Verify that the profile cannot be removed
+        // because it is still used by a container
+        try {
+            prfManager.removeProfile(version20, fooProfile.getIdentity());
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+
+        // Setup the provision listener
+        final CountDownLatch latchC = new CountDownLatch(1);
+        listener = new ProvisionListener() {
+            @Override
+            public void processEvent(ProvisionEvent event) {
+                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                if (event.getType() == EventType.REMOVED && "foo".equals(symbolicName)) {
+                    latchC.countDown();
+                }
+            }
+        };
+
+        // Remove profile foo from container
+        cntParent = cntManager.removeProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
+        Assert.assertTrue("ProvisionEvent received", latchC.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertEquals(version20, cntParent.getProfileVersion());
+        Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIds().size());
+
+        // Remove profile foo from 2.0
+        prfManager.removeProfile(version20, fooProfile.getIdentity());
+        Assert.assertEquals(1, prfManager.getProfileIds(version20).size());
+
+        // Verify that the profile version cannot be removed
+        // because it is still used by a container
+        try {
+            prfManager.removeProfileVersion(version20);
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+
+        // Setup the provision listener
+        final CountDownLatch latchD = new CountDownLatch(2);
+        listener = new ProvisionListener() {
+            @Override
+            public void processEvent(ProvisionEvent event) {
+                Profile profile = event.getProfile();
+                String version = profile.getProfileVersion().toString();
+                String symbolicName = profile.getIdentity().getSymbolicName();
+                if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
+                    latchD.countDown();
+                }
+                if (event.getType() == EventType.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
+                    latchD.countDown();
+                }
+            }
+        };
+
+        // Set the default profile version
+        cntParent = cntManager.setVersion(idParent, Constants.DEFAULT_PROFILE_VERSION, listener);
+        Assert.assertTrue("ProvisionEvent received", latchD.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
+        Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIds().size());
+
+        // Remove profile version 2.0
         prfManager.removeProfileVersion(version20);
 
         cntChild = cntManager.destroy(idChild);

@@ -94,27 +94,27 @@ public interface ContainerManager {
      * <li> Does this need to be queried?
      * </ol>
      */
-    void joinFabric(ContainerIdentity identity, JoinOptions options);
+    Container joinFabric(ContainerIdentity identity, JoinOptions options);
 
     /**
      * Leave fabric for the container with the given identity
      */
-    void leaveFabric(ContainerIdentity identity);
+    Container leaveFabric(ContainerIdentity identity);
 
     /**
      * Set the version for the container with the given identity
      */
-    void setVersion(ContainerIdentity identity, Version version, ProvisionListener listener);
+    Container setVersion(ContainerIdentity identity, Version version, ProvisionListener listener);
 
     /**
      * Add profiles to the container with the given identity
      */
-    void addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener);
+    Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener);
 
     /**
      * Remove profiles from the container with the given identity
      */
-    void removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener);
+    Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener);
 
     /**
      * Get failures from the container with the given identity

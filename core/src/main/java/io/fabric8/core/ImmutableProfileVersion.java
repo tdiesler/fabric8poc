@@ -20,6 +20,7 @@
 package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
@@ -35,12 +36,14 @@ import org.jboss.gravia.utils.NotNullException;
 final class ImmutableProfileVersion implements ProfileVersion {
 
     private final Version identity;
+    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
     private final AttributeSupport attributes;
 
     ImmutableProfileVersion(ProfileVersionState profileVersion) {
         NotNullException.assertValue(profileVersion, "profileVersion");
         identity = profileVersion.getIdentity();
+        containers.addAll(profileVersion.getContainerIds());
         profiles.addAll(profileVersion.getProfileIdentities());
         attributes = new AttributeSupport(profileVersion.getAttributes());
     }
@@ -48,6 +51,11 @@ final class ImmutableProfileVersion implements ProfileVersion {
     @Override
     public Version getIdentity() {
         return identity;
+    }
+
+    @Override
+    public Set<ContainerIdentity> getContainerIds() {
+        return Collections.unmodifiableSet(containers);
     }
 
     @Override
@@ -66,7 +74,7 @@ final class ImmutableProfileVersion implements ProfileVersion {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities() {
+    public Set<ProfileIdentity> getProfileIds() {
         return Collections.unmodifiableSet(profiles);
     }
 

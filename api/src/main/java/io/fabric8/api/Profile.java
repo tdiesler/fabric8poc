@@ -43,6 +43,11 @@ public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
     Version getProfileVersion();
 
     /**
+     * Get the associated list of containers
+     */
+    Set<ContainerIdentity> getContainerIds();
+
+    /**
      * Get the profile parents
      */
     Set<ProfileIdentity> getParents();

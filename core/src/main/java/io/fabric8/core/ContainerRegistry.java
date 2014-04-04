@@ -82,13 +82,16 @@ public final class ContainerRegistry extends AbstractComponent {
         return container;
     }
 
-    ContainerState addContainer(ContainerState parent, ContainerState cntState) {
+    ContainerState addContainer(ContainerState parentState, ContainerState cntState) {
         assertValid();
         synchronized (containers) {
             ContainerIdentity cntIdentity = cntState.getIdentity();
             if (getContainerInternal(cntIdentity) != null)
                 throw new IllegalStateException("Container already exists: " + cntIdentity);
 
+            if (parentState != null) {
+                parentState.addChild(cntState);
+            }
             containers.put(cntIdentity, cntState);
             return cntState;
         }
@@ -97,9 +100,13 @@ public final class ContainerRegistry extends AbstractComponent {
     ContainerState removeContainer(ContainerIdentity identity) {
         assertValid();
         synchronized (containers) {
-            ContainerState child = getRequiredContainer(identity);
+            ContainerState cntState = getRequiredContainer(identity);
             containers.remove(identity);
-            return child;
+            ContainerState parentState = cntState.getParent();
+            if (parentState != null) {
+                parentState.removeChild(identity);
+            }
+            return cntState;
         }
     }
 

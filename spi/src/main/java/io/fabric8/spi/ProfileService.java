@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitState;
 
@@ -43,4 +45,12 @@ public interface ProfileService extends ProfileManager {
      * Aquire a lock on the give profile version
      */
     Lock aquireProfileVersionLock(Version version);
+
+    void addContainerToProfileVersion(Version version, ContainerIdentity containerId);
+
+    void removeContainerFromProfileVersion(Version version, ContainerIdentity containerId);
+
+    void addContainerToProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId);
+
+    void removeContainerFromProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId);
 }

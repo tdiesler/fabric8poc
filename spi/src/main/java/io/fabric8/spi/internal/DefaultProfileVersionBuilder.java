@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
@@ -51,7 +52,12 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        public Set<ContainerIdentity> getContainerIds() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<ProfileIdentity> getProfileIds() {
             return Collections.emptySet();
         }
     }

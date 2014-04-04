@@ -59,7 +59,7 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         Assert.assertEquals("One version", 1, versions.size());
 
         ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
-        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIdentities();
+        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIds();
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
@@ -93,7 +93,7 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version);
-        Assert.assertEquals(0, profileVersion.getProfileIdentities().size());
+        Assert.assertEquals(0, profileVersion.getProfileIds().size());
     }
 
     @Test
@@ -139,6 +139,6 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
 
         // Remove profile version
         profileVersion = manager.removeProfileVersion(version);
-        Assert.assertEquals(0, profileVersion.getProfileIdentities().size());
+        Assert.assertEquals(0, profileVersion.getProfileIds().size());
     }
 }

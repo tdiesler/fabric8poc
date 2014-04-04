@@ -38,7 +38,7 @@ public class ProvisionEvent extends EventObject {
     private final Throwable error;
 
     public enum EventType {
-        PROVISIONING, PROVISIONED, ERROR
+        PROVISIONING, PROVISIONED, REMOVING, REMOVED, ERROR
     }
 
     public ProvisionEvent(Container source, Profile profile, EventType type) {

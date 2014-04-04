@@ -20,6 +20,7 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.ConfigurationItemBuilder;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
@@ -84,6 +85,11 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
 
         @Override
         public Set<ProfileIdentity> getParents() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Set<ContainerIdentity> getContainerIds() {
             return Collections.emptySet();
         }
 

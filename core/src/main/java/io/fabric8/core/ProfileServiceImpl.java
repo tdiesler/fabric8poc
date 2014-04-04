@@ -25,6 +25,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Container;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
@@ -174,6 +175,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         synchronized (profileVersionLocks) {
             Lock lock = aquireProfileVersionLock(version);
             try {
+                Set<ContainerIdentity> containers = getRequiredProfileVersion(version).getContainerIds();
+                if (!containers.isEmpty())
+                    throw new IllegalStateException("Cannot remove profile version used by: " + containers);
+
                 profileVersionLocks.remove(version);
                 synchronized (profileVersions) {
                     ProfileVersionState versionState = profileVersions.remove(version);
@@ -254,6 +259,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             synchronized (versionState) {
+                Set<ContainerIdentity> containers = versionState.getRequiredProfile(identity).getContainerIds();
+                if (!containers.isEmpty())
+                    throw new IllegalStateException("Cannot remove profile used by: " + containers);
+
                 ProfileState profileState = versionState.removeProfile(identity);
                 return profileState != null ? new ImmutableProfile(profileState) : null;
             }
@@ -282,7 +291,58 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
     }
 
-    public ProfileVersionState getRequiredProfileVersion(Version version) {
+
+    @Override
+    public void addContainerToProfileVersion(Version version, ContainerIdentity containerId) {
+        assertValid();
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState profileVersion = getRequiredProfileVersion(version);
+            profileVersion.addContainer(containerId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void removeContainerFromProfileVersion(Version version, ContainerIdentity containerId) {
+        assertValid();
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState profileVersion = getRequiredProfileVersion(version);
+            profileVersion.removeContainer(containerId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void addContainerToProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId) {
+        assertValid();
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState profileVersion = getRequiredProfileVersion(version);
+            ProfileState profileState = profileVersion.getRequiredProfile(profileId);
+            profileState.addContainer(containerId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void removeContainerFromProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId) {
+        assertValid();
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState profileVersion = getRequiredProfileVersion(version);
+            ProfileState profileState = profileVersion.getRequiredProfile(profileId);
+            profileState.removeContainer(containerId);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private ProfileVersionState getRequiredProfileVersion(Version version) {
         synchronized (profileVersions) {
             ProfileVersionState versionState = profileVersions.get(version);
             if (versionState == null)
@@ -331,6 +391,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         private final Version identity;
         private final AttributeSupport attributes = new AttributeSupport();
+        private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
         private final Map<ProfileIdentity, ProfileState> profiles = new HashMap<ProfileIdentity, ProfileState>();
 
         private ProfileVersionState(ProfileVersion version) {
@@ -339,6 +400,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         Version getIdentity() {
             return identity;
+        }
+
+        Set<ContainerIdentity> getContainerIds() {
+            synchronized (containers) {
+                HashSet<ContainerIdentity> snapshot = new HashSet<ContainerIdentity>(containers);
+                return Collections.unmodifiableSet(snapshot);
+            }
         }
 
         Map<AttributeKey<?>, Object> getAttributes() {
@@ -364,20 +432,20 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        private Set<ProfileState> getProfileStates() {
+        Set<ProfileState> getProfileStates() {
             synchronized (profiles) {
                 HashSet<ProfileState> snapshot = new HashSet<ProfileState>(profiles.values());
                 return Collections.unmodifiableSet(snapshot);
             }
         }
 
-        private ProfileState getProfileState(ProfileIdentity profid) {
+        ProfileState getProfileState(ProfileIdentity profid) {
             synchronized (profiles) {
                 return profiles.get(profid);
             }
         }
 
-        private ProfileState getRequiredProfile(ProfileIdentity profid) {
+        ProfileState getRequiredProfile(ProfileIdentity profid) {
             ProfileState profileState = getProfileState(profid);
             if (profileState == null)
                 throw new IllegalStateException("Cannot obtain profile state: " + identity + "/" + profid);
@@ -386,6 +454,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         // NOTE - Methods that mutate this objects should be private
         // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
+
+        private void addContainer(ContainerIdentity identity) {
+            synchronized (containers) {
+                containers.add(identity);
+            }
+        }
+
+        private void removeContainer(ContainerIdentity identity) {
+            synchronized (containers) {
+                containers.remove(identity);
+            }
+        }
 
         private ProfileState addProfile(Profile profile) {
             synchronized (profiles) {
@@ -424,6 +504,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         private final ProfileIdentity identity;
         private final ProfileVersionState versionState;
         private final AttributeSupport attributes = new AttributeSupport();
+        private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
         private final Map<ProfileIdentity, ProfileState> parents = new HashMap<ProfileIdentity, ProfileState>();
         private final Map<String, ProfileItem> profileItems = new HashMap<String, ProfileItem>();
 
@@ -440,6 +521,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         ProfileIdentity getIdentity() {
             return identity;
+        }
+
+        Set<ContainerIdentity> getContainerIds() {
+            synchronized (containers) {
+                HashSet<ContainerIdentity> snapshot = new HashSet<ContainerIdentity>(containers);
+                return Collections.unmodifiableSet(snapshot);
+            }
         }
 
         Map<AttributeKey<?>, Object> getAttributes() {
@@ -481,6 +569,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         // NOTE - Methods that mutate this objects should be private
         // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
+
+        private void addContainer(ContainerIdentity identity) {
+            synchronized (containers) {
+                containers.add(identity);
+            }
+        }
+
+        private void removeContainer(ContainerIdentity identity) {
+            synchronized (containers) {
+                containers.remove(identity);
+            }
+        }
 
         private void updateProfileItems(Set<? extends ProfileItem> items) {
             synchronized (profileItems) {

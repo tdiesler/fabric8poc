@@ -159,11 +159,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public void setVersion(ContainerIdentity identity, Version version, ProvisionListener listener) {
+    public Container setVersion(ContainerIdentity identity, Version version, ProvisionListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            service.setVersion(identity, version, listener);
+            return service.setVersion(identity, version, listener);
         } finally {
             permit.release();
         }
@@ -181,44 +181,44 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public void joinFabric(ContainerIdentity identity, JoinOptions options) {
+    public Container joinFabric(ContainerIdentity identity, JoinOptions options) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            service.joinFabric(identity, options);
+            return service.joinFabric(identity, options);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public void leaveFabric(ContainerIdentity identity) {
+    public Container leaveFabric(ContainerIdentity identity) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            service.leaveFabric(identity);
+            return service.leaveFabric(identity);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public void addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener) {
+    public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            service.addProfiles(identity, profiles, listener);
+            return service.addProfiles(identity, profiles, listener);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public void removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            service.removeProfiles(identity, profiles, listener);
+            return service.removeProfiles(identity, profiles, listener);
         } finally {
             permit.release();
         }

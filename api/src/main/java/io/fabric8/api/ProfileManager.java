@@ -53,12 +53,12 @@ public interface ProfileManager {
     /**
      * Add a profile version
      */
-    ProfileVersion addProfileVersion(ProfileVersion version);
+    ProfileVersion addProfileVersion(ProfileVersion profileVersion);
 
     /**
      * Remove a profile version
      */
-    ProfileVersion removeProfileVersion(Version version);
+    ProfileVersion removeProfileVersion(Version identity);
 
     /**
      * Get the default profile
@@ -68,7 +68,7 @@ public interface ProfileManager {
     /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version version);
+    Set<ProfileIdentity> getProfileIds(Version identity);
 
     /**
      * Get the profiles for a given version and identities
@@ -94,5 +94,5 @@ public interface ProfileManager {
     /**
      * Update profile items in the given profile
      */
-    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply);
+    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply);
 }
