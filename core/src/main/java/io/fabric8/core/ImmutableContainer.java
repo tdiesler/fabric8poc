@@ -48,11 +48,12 @@ final class ImmutableContainer implements Container {
     ImmutableContainer(ContainerState containerState) {
         NotNullException.assertValue(containerState, "containerState");
         identity = containerState.getIdentity();
-        parent = containerState.getParent();
+        ContainerState parentState = containerState.getParent();
+        parent = parentState != null ? parentState.getIdentity() : null;
         profileVersion = containerState.getProfileVersion();
         state = containerState.getState();
         children.addAll(containerState.getChildContainers());
-        profiles.addAll(containerState.getProfileIdentities());
+        profiles.addAll(containerState.getProfiles());
         attributes = new AttributeSupport(containerState.getAttributes());
     }
 
@@ -82,7 +83,7 @@ final class ImmutableContainer implements Container {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities() {
+    public Set<ProfileIdentity> getProfileIds() {
         return Collections.unmodifiableSet(profiles);
     }
 

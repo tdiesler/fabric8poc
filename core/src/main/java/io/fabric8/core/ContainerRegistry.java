@@ -23,8 +23,11 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -45,6 +48,27 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
+    Set<ContainerIdentity> getContainerIds() {
+        assertValid();
+        synchronized (containers) {
+            Set<ContainerIdentity> snapshot = new HashSet<ContainerIdentity>(containers.keySet());
+            return Collections.unmodifiableSet(snapshot);
+        }
+    }
+
+    Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
+        assertValid();
+        synchronized (containers) {
+            Set<ContainerState> result = new HashSet<ContainerState>();
+            for (ContainerState aux : containers.values()) {
+                if (identities == null || identities.contains(aux.getIdentity())) {
+                    result.add(aux);
+                }
+            }
+            return Collections.unmodifiableSet(result);
+        }
+    }
+
     ContainerState getContainer(ContainerIdentity identity) {
         assertValid();
         return getContainerInternal(identity);
@@ -58,18 +82,14 @@ public final class ContainerRegistry extends AbstractComponent {
         return container;
     }
 
-    ContainerState addContainer(ContainerIdentity parentId, ContainerState cntState) {
+    ContainerState addContainer(ContainerState parent, ContainerState cntState) {
         assertValid();
         synchronized (containers) {
             ContainerIdentity cntIdentity = cntState.getIdentity();
             if (getContainerInternal(cntIdentity) != null)
                 throw new IllegalStateException("Container already exists: " + cntIdentity);
 
-            ContainerState parent = parentId != null ? getRequiredContainer(parentId) : null;
             containers.put(cntIdentity, cntState);
-            if (parent != null) {
-                parent.addChild(cntState);
-            }
             return cntState;
         }
     }
@@ -78,10 +98,6 @@ public final class ContainerRegistry extends AbstractComponent {
         assertValid();
         synchronized (containers) {
             ContainerState child = getRequiredContainer(identity);
-            ContainerState parent = child.getParentState();
-            if (parent != null) {
-                parent.removeChild(identity);
-            }
             containers.remove(identity);
             return child;
         }

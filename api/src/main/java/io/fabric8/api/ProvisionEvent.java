@@ -21,6 +21,8 @@ package io.fabric8.api;
 
 import java.util.EventObject;
 
+import org.jboss.gravia.utils.NotNullException;
+
 
 /**
  * A provisioning event
@@ -28,12 +30,44 @@ import java.util.EventObject;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
+@SuppressWarnings("serial")
 public class ProvisionEvent extends EventObject {
 
-    private static final long serialVersionUID = 1L;
+    private final EventType type;
+    private final Profile profile;
+    private final Throwable error;
 
-    public ProvisionEvent(Object source) {
-        super(source);
+    public enum EventType {
+        PROVISIONING, PROVISIONED, ERROR
     }
 
+    public ProvisionEvent(Container source, Profile profile, EventType type) {
+        this(source, profile, type, null);
+    }
+
+    public ProvisionEvent(Container source, Profile profile, EventType type, Throwable error) {
+        super(source);
+        NotNullException.assertValue(profile, "profile");
+        NotNullException.assertValue(type, "type");
+        this.profile = profile;
+        this.type = type;
+        this.error = error;
+    }
+
+    @Override
+    public Container getSource() {
+        return (Container) super.getSource();
+    }
+
+    public EventType getType() {
+        return type;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public Throwable getError() {
+        return error;
+    }
 }

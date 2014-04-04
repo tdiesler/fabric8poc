@@ -41,14 +41,14 @@ public interface ContainerManager {
     Container createContainer(CreateOptions options);
 
     /**
-     * Create a child container with the given options
+     * Create a container with the given options
      */
-    Container createChildContainer(ContainerIdentity identity, CreateOptions options);
+    Container createContainer(ContainerIdentity parentId, CreateOptions options, ProvisionListener listener);
 
     /**
      * Get the set of container identities in the cluster
      */
-    Set<ContainerIdentity> getContainerIdentities();
+    Set<ContainerIdentity> getContainerIds();
 
     /**
      * Get the set of containers for the given identities

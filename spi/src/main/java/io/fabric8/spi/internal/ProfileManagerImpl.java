@@ -56,11 +56,11 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<Version> getProfileVersionIdentities() {
+    public Set<Version> getProfileVersionIds() {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getProfileVersionIdentities();
+            return service.getProfileVersionIds();
         } finally {
             permit.release();
         }
@@ -122,11 +122,11 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities(Version version) {
+    public Set<ProfileIdentity> getProfileIds(Version version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.getProfileIdentities(version);
+            return service.getProfileIds(version);
         } finally {
             permit.release();
         }

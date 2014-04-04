@@ -43,9 +43,11 @@ import io.fabric8.spi.scr.ValidatingReference;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.jboss.gravia.resource.Version;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -62,7 +64,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
     private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
 
-    private Map<Version, ProfileVersionState> profileVersions = new LinkedHashMap<Version, ProfileVersionState>();
+    private Map<Version, ProfileVersionState> profileVersions = new HashMap<Version, ProfileVersionState>();
+    private Map<Version, ReentrantLock> profileVersionLocks = new HashMap<Version, ReentrantLock>();
 
     @Activate
     void activate() {
@@ -93,7 +96,28 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Version> getProfileVersionIdentities() {
+    public Lock aquireProfileVersionLock(Version version) {
+        ReentrantLock lock;
+        synchronized (profileVersionLocks) {
+            lock = profileVersionLocks.get(version);
+            if (lock == null)
+                throw new IllegalStateException("Cannot obtain lock for profile version: " + version);
+        }
+
+        boolean success;
+        try {
+            success = lock.tryLock() || lock.tryLock(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            success = false;
+        }
+        if (!success)
+            throw new IllegalStateException("Cannot obtain profile version lock in time");
+
+        return lock;
+    }
+
+    @Override
+    public Set<Version> getProfileVersionIds() {
         assertValid();
         synchronized (profileVersions) {
             return Collections.unmodifiableSet(new HashSet<Version>(profileVersions.keySet()));
@@ -131,22 +155,39 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private ProfileVersionState addProfileVersionInternal(ProfileVersion version) {
         ProfileVersionState versionState = new ProfileVersionState(version);
-        profileVersions.put(version.getIdentity(), versionState);
+        synchronized (profileVersionLocks) {
+            Version identity = version.getIdentity();
+            synchronized (profileVersions) {
+                if (profileVersions.get(identity) != null)
+                    throw new IllegalStateException("ProfileVersion already exists: " + identity);
+
+                profileVersions.put(identity, versionState);
+            }
+            profileVersionLocks.put(identity, new ReentrantLock());
+        }
         return versionState;
     }
 
     @Override
     public ProfileVersion removeProfileVersion(Version version) {
         assertValid();
-        synchronized (profileVersions) {
-            ProfileVersionState versionState = profileVersions.remove(version);
-            versionState.clearProfiles();
-            return versionState != null ? new ImmutableProfileVersion(versionState) : null;
+        synchronized (profileVersionLocks) {
+            Lock lock = aquireProfileVersionLock(version);
+            try {
+                profileVersionLocks.remove(version);
+                synchronized (profileVersions) {
+                    ProfileVersionState versionState = profileVersions.remove(version);
+                    versionState.clearProfiles();
+                    return new ImmutableProfileVersion(versionState);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities(Version version) {
+    public Set<ProfileIdentity> getProfileIds(Version version) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         synchronized (versionState) {
@@ -182,43 +223,66 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                 }
             }
         }
+        if (identities != null && result.size() != identities.size()) {
+            throw new IllegalStateException("Cannot obtain the full set of given profiles: " + identities);
+        }
         return Collections.unmodifiableSet(result);
     }
 
     @Override
     public Profile addProfile(Version version, Profile profile) {
         assertValid();
-        ProfileVersionState versionState = getRequiredProfileVersion(version);
-        synchronized (versionState) {
-            return new ImmutableProfile(versionState.addProfile(profile));
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState versionState = getRequiredProfileVersion(version);
+            synchronized (versionState) {
+                ProfileIdentity identity = profile.getIdentity();
+                if (versionState.getProfileState(identity) != null)
+                    throw new IllegalStateException("Profile already exists: " + identity);
+
+                return new ImmutableProfile(versionState.addProfile(profile));
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public Profile removeProfile(Version version, ProfileIdentity identity) {
         assertValid();
-        ProfileVersionState versionState = getRequiredProfileVersion(version);
-        synchronized (versionState) {
-            ProfileState profileState = versionState.removeProfile(identity);
-            return profileState != null ? new ImmutableProfile(profileState) : null;
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState versionState = getRequiredProfileVersion(version);
+            synchronized (versionState) {
+                ProfileState profileState = versionState.removeProfile(identity);
+                return profileState != null ? new ImmutableProfile(profileState) : null;
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply) {
-        ProfileVersionState versionState = getRequiredProfileVersion(version);
-        ProfileState profileState = versionState.getRequiredProfile(identity);
-        synchronized (profileState) {
-            profileState.updateProfileItems(items);
-            if (apply) {
-                Set<ConfigurationItem> configItems = profileState.getProfileItems(ConfigurationItem.class);
-                ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
+        assertValid();
+        Lock lock = aquireProfileVersionLock(version);
+        try {
+            ProfileVersionState versionState = getRequiredProfileVersion(version);
+            ProfileState profileState = versionState.getRequiredProfile(identity);
+            synchronized (profileState) {
+                profileState.updateProfileItems(items);
+                if (apply) {
+                    Set<ConfigurationItem> configItems = profileState.getProfileItems(ConfigurationItem.class);
+                    ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
+                }
+                return new ImmutableProfile(profileState);
             }
-            return new ImmutableProfile(profileState);
+        } finally {
+            lock.unlock();
         }
     }
 
-    private ProfileVersionState getRequiredProfileVersion(Version version) {
+    public ProfileVersionState getRequiredProfileVersion(Version version) {
         synchronized (profileVersions) {
             ProfileVersionState versionState = profileVersions.get(version);
             if (versionState == null)

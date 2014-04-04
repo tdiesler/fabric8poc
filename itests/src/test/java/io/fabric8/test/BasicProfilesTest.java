@@ -21,8 +21,10 @@ package io.fabric8.test;
 
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
+import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
@@ -47,12 +49,19 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
     @Test
     public void testProfileAddRemove() throws Exception {
 
-        ProfileManager manager = ServiceLocator.getRequiredService(ProfileManager.class);
-        Set<ProfileVersion> versions = manager.getProfileVersions(null);
+        // Verify the default profile
+        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+        Profile defaultProfile = prfManager.getDefaultProfile();
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, defaultProfile.getProfileVersion());
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, defaultProfile.getIdentity());
+
+        Set<ProfileVersion> versions = prfManager.getProfileVersions(null);
         Assert.assertEquals("One version", 1, versions.size());
 
-        ProfileVersion defaultVersion = versions.iterator().next();;
-        Assert.assertEquals("1.0.0", defaultVersion.getIdentity().toString());
+        ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
+        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIdentities();
+        Assert.assertEquals("One profile", 1, profileIdentities.size());
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
         Version version = Version.parseVersion("1.1");
 
@@ -60,8 +69,8 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         ProfileVersion profileVersion = pvbuilder.addIdentity(version).createProfileVersion();
 
         // Add a profile version
-        manager.addProfileVersion(profileVersion);
-        Assert.assertEquals(2, manager.getProfileVersions(null).size());
+        prfManager.addProfileVersion(profileVersion);
+        Assert.assertEquals(2, prfManager.getProfileVersions(null).size());
 
         // Build a profile
         ProfileBuilder pbuilder = ProfileBuilder.Factory.create();
@@ -79,11 +88,11 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
 
         // Add the profile to the given version
-        profile = manager.addProfile(version, profile);
-        Assert.assertEquals(1, manager.getProfiles(version, null).size());
+        profile = prfManager.addProfile(version, profile);
+        Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
 
         // Remove profile version
-        profileVersion = manager.removeProfileVersion(version);
+        profileVersion = prfManager.removeProfileVersion(version);
         Assert.assertEquals(0, profileVersion.getProfileIdentities().size());
     }
 

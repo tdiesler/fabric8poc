@@ -35,6 +35,7 @@ import org.jboss.gravia.utils.NotNullException;
 
 final class ImmutableProfile implements Profile {
 
+    private final Version version;
     private final ProfileIdentity identity;
 
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
@@ -43,6 +44,7 @@ final class ImmutableProfile implements Profile {
 
     ImmutableProfile(ProfileState profile) {
         NotNullException.assertValue(profile, "profile");
+        version = profile.getProfileVersion();
         identity = profile.getIdentity();
         profileItems.addAll(profile.getProfileItems(null));
         attributes = new AttributeSupport(profile.getAttributes());
@@ -55,7 +57,7 @@ final class ImmutableProfile implements Profile {
 
     @Override
     public Version getProfileVersion() {
-        throw new UnsupportedOperationException();
+        return version;
     }
 
     @Override

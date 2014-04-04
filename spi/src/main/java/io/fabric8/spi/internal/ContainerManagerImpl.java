@@ -71,11 +71,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container createChildContainer(ContainerIdentity identity, CreateOptions options) {
+    public Container createContainer(ContainerIdentity identity, CreateOptions options, ProvisionListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.createChildContainer(identity, options);
+            return service.createContainer(identity, options, null);
         } finally {
             permit.release();
         }
@@ -115,11 +115,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
+    public Set<ContainerIdentity> getContainerIds() {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.getContainerIdentities();
+            return service.getContainerIds();
         } finally {
             permit.release();
         }

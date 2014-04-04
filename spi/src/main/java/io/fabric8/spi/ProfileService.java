@@ -22,6 +22,10 @@ package io.fabric8.spi;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitState;
 
+import java.util.concurrent.locks.Lock;
+
+import org.jboss.gravia.resource.Version;
+
 /**
  * The internal profile service
  *
@@ -34,4 +38,9 @@ public interface ProfileService extends ProfileManager {
      * The {@link PermitState} that protects this service.
      */
     PermitState<ProfileService> PERMIT = new PermitState<ProfileService>(ProfileService.class);
+
+    /**
+     * Aquire a lock on the give profile version
+     */
+    Lock aquireProfileVersionLock(Version version);
 }
