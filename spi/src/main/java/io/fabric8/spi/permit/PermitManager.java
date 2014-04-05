@@ -22,12 +22,7 @@ package io.fabric8.spi.permit;
 import java.util.concurrent.TimeUnit;
 
 /**
-* A service that allows controlled transitions from one state to another.
-*
-* A {@link PermitState} is associated with a number of permits that a client can obtain.
-* To begin a state transition, all activity on a given state must be completed (i.e. all permits returned)
-* During a state transition it is not possible to aquire a state permit.
-* When a state transition ends the maximum set of state permits is restored.
+* A service that allows controlled transitions from one key to another.
 *
 * @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
@@ -35,50 +30,50 @@ import java.util.concurrent.TimeUnit;
 public interface PermitManager {
 
     /**
-     * Activate the given state
+     * Activate the permit for the given key.
      */
-    <T> void activate(PermitState<T> state, T instance);
+    <T> void activate(PermitKey<T> key, T instance);
 
     /**
-     * Deactivate the given state.
+     * Deactivate the permit for the given key.
      *
-     * This method blocks until all permits for the given state are returned.
-     * No new permits can be aquired while the given state is in transition.
+     * This method blocks until all permits for the given key are returned.
+     * No new permits can be aquired while the permit is deactive.
      */
-    void deactivate(PermitState<?> state);
+    void deactivate(PermitKey<?> key);
 
     /**
-     * Deactivate the given state.
+     * Deactivate the permit for the given key.
      *
-     * This method blocks until all permits for the given state are returned.
-     * No new permits can be aquired while the given state is in transition.
+     * This method blocks until all permits for the given key are returned.
+     * No new permits can be aquired while the permit is deactive.
      *
      * @throws PermitStateTimeoutException if the given timeout was reached before all permits were returned
      */
-    void deactivate(PermitState<?> state, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
+    void deactivate(PermitKey<?> key, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
 
     /**
-     * Aquire an exclusive permit for the given state.
+     * Aquire a permit for the given key.
      *
-     * This method blocks until a permit on the given state is available.
+     * This method blocks until a permit is available.
      */
-    <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive);
+    <T> Permit<T> aquirePermit(PermitKey<T> key, boolean exclusive);
 
     /**
-     * Aquire a permit for the given state.
+     * Aquire a permit for the given key.
      *
-     * This method blocks until a permit on the given state is available.
+     * This method blocks until a permit is available.
      *
      * @throws PermitStateTimeoutException if the given timeout was reached before a permit became available
      */
-    <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
+    <T> Permit<T> aquirePermit(PermitKey<T> key, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException;
 
     interface Permit<T> {
 
         /**
-         * Get the state associated with this permit
+         * Get the associated key.
          */
-        PermitState<T> getState();
+        PermitKey<T> getPermitKey();
 
         /**
          * Get the instance associated with this permit
@@ -86,7 +81,7 @@ public interface PermitManager {
         T getInstance();
 
         /**
-         * Releaes this permit
+         * Release this permit.
          */
         void release();
     }

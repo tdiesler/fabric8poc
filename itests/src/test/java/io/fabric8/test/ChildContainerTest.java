@@ -33,7 +33,7 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
-import io.fabric8.api.ProvisionEvent.Type;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
@@ -111,7 +111,7 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == Type.PROVISIONED && "default".equals(symbolicName)) {
+                if (event.getType() == EventType.PROVISIONED && "default".equals(symbolicName)) {
                     latchA.countDown();
                 }
             }
@@ -160,7 +160,7 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == Type.PROVISIONED && "foo".equals(symbolicName)) {
+                if (event.getType() == EventType.PROVISIONED && "foo".equals(symbolicName)) {
                     latchB.countDown();
                 }
             }
@@ -212,7 +212,7 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == Type.REMOVED && "foo".equals(symbolicName)) {
+                if (event.getType() == EventType.REMOVED && "foo".equals(symbolicName)) {
                     latchC.countDown();
                 }
             }
@@ -246,10 +246,10 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
                 Profile profile = event.getProfile();
                 String version = profile.getProfileVersion().toString();
                 String symbolicName = profile.getIdentity().getSymbolicName();
-                if (event.getType() == Type.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
+                if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
                 }
-                if (event.getType() == Type.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
+                if (event.getType() == EventType.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
                 }
             }

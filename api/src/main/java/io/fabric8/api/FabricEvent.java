@@ -34,14 +34,12 @@ import org.jboss.gravia.utils.NotNullException;
 public abstract class FabricEvent<S, T> extends EventObject {
 
     private final T type;
-    private final Profile profile;
     private final Throwable error;
 
-    public FabricEvent(S source, T type, Profile profile, Throwable error) {
+    public FabricEvent(S source, T type, Throwable error) {
         super(source);
         NotNullException.assertValue(source, "source");
         NotNullException.assertValue(type, "type");
-        this.profile = profile;
         this.error = error;
         this.type = type;
     }
@@ -56,11 +54,12 @@ public abstract class FabricEvent<S, T> extends EventObject {
         return type;
     }
 
-    public Profile getProfile() {
-        return profile;
-    }
-
     public Throwable getError() {
         return error;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[source=" + getSource() + ",type=" + getType() + "]";
     }
 }

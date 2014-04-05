@@ -35,10 +35,11 @@ import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
-import io.fabric8.api.ProvisionEvent.Type;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.internal.AttributeSupport;
 import io.fabric8.spi.permit.PermitManager;
@@ -100,7 +101,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
-    private final ValidatingReference<EventDispatcher> eventDispatcher = new ValidatingReference<EventDispatcher>();
 
     private String configToken;
     private ServiceRegistration<?> listenerRegistration;
@@ -129,11 +129,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
             @Override
             public void processEvent(ProfileEvent event) {
-                Profile profile = event.getProfile();
+                Profile profile = event.getSource();
                 Set<ContainerIdentity> identities = profile.getContainerIds();
 
                 LOGGER.info("Profile updated: {} => {}", profile, identities);
-                if (identities.isEmpty() || event.getType() != ProfileEvent.Type.UPDATED)
+                if (identities.isEmpty() || event.getType() != ProfileEvent.EventType.UPDATED)
                     return;
 
                 Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
@@ -409,7 +409,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Provision profile: {} <= {}", cntState, profile);
 
         Container container = new ImmutableContainer(cntState);
-        ProvisionEvent event = new ProvisionEvent(container, Type.PROVISIONING, profile);
+        ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Do the provisioning
@@ -419,7 +419,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Associate the profile with the container
         profileService.get().addContainerToProfile(cntState.getProfileVersion(), profile.getIdentity(), cntState.getIdentity());
 
-        event = new ProvisionEvent(container, Type.PROVISIONED, profile);
+        event = new ProvisionEvent(container, EventType.PROVISIONED, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
@@ -433,7 +433,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Unprovision profile: {} => {}", cntState, profile);
 
         Container container = new ImmutableContainer(cntState);
-        ProvisionEvent event = new ProvisionEvent(container, Type.REMOVING, profile);
+        ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // do the removing
@@ -441,7 +441,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Unassociate the profile with the container
         profileService.get().removeContainerFromProfile(cntState.getProfileVersion(), profile.getIdentity(), cntState.getIdentity());
 
-        event = new ProvisionEvent(container, Type.REMOVED, profile);
+        event = new ProvisionEvent(container, EventType.REMOVED, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 

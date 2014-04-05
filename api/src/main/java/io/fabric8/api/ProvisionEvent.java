@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.utils.NotNullException;
+
 
 
 /**
@@ -28,22 +30,30 @@ package io.fabric8.api;
  * @since 14-Mar-2014
  */
 @SuppressWarnings("serial")
-public class ProvisionEvent extends FabricEvent<Container, ProvisionEvent.Type> {
+public class ProvisionEvent extends FabricEvent<Container, ProvisionEvent.EventType> {
 
-    public enum Type {
+    public enum EventType {
         PROVISIONING, PROVISIONED, REMOVING, REMOVED, ERROR
     }
 
-    public ProvisionEvent(Container source, Type type, Profile profile) {
+    private final Profile profile;
+
+    public ProvisionEvent(Container source, EventType type, Profile profile) {
         this(source, type, profile, null);
     }
 
-    public ProvisionEvent(Container source, Type type, Profile profile, Throwable error) {
-        super(source, type, profile, error);
+    public ProvisionEvent(Container source, EventType type, Profile profile, Throwable error) {
+        super(source, type, error);
+        NotNullException.assertValue(profile, "profile");
+        this.profile = profile;
+    }
+
+    public Profile getProfile() {
+        return profile;
     }
 
     @Override
     public String toString() {
-        return "ProvisionEvent[source=" + getSource().getIdentity() + ",profile=" + getProfile().getIdentity() + ",type=" + getType() + "]";
+        return "ProvisionEvent[source=" + getSource().getIdentity() + ",profile=" + profile.getIdentity() + ",type=" + getType() + "]";
     }
 }

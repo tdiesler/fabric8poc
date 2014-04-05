@@ -21,15 +21,16 @@ package io.fabric8.spi.permit;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.jboss.gravia.utils.NotNullException;
 import org.slf4j.Logger;
@@ -43,263 +44,187 @@ import org.slf4j.LoggerFactory;
 */
 public final class DefaultPermitManager implements PermitManager {
 
+    public static long DEFAULT_TIMEOUT = 60000L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPermitManager.class);
-    private final Map<PermitState<?>, StatePermit<?>> permitmapping = new HashMap<PermitState<?>, StatePermit<?>>();
+    private final Map<PermitKey<?>, PermitState<?>> permits = new HashMap<PermitKey<?>, PermitState<?>>();
 
     @Override
-    public <T> void activate(PermitState<T> state, T instance) {
-        getStatePermit(state).activate(instance);
+    public <T> void activate(PermitKey<T> key, T instance) {
+        getPermitState(key).activate(instance);
     }
 
     @Override
-    public void deactivate(PermitState<?> state) {
-        getStatePermit(state).deactivate(-1, null);
+    public void deactivate(PermitKey<?> key) {
+        getPermitState(key).deactivate(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public void deactivate(PermitState<?> state, long timeout, TimeUnit unit) {
-        if (!getStatePermit(state).deactivate(timeout, unit)) {
-            throw new PermitStateTimeoutException("Cannot deactivate state [" + state.getName() + "] in time", state, timeout, unit);
-        }
+    public void deactivate(PermitKey<?> key, long timeout, TimeUnit unit) {
+        getPermitState(key).deactivate(timeout, unit);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive) {
-        StatePermit<T> statePermit = getStatePermit(state);
-        statePermit.acquire(exclusive, -1, null);
-        return statePermit;
+    public <T> Permit<T> aquirePermit(PermitKey<T> key, boolean exclusive) {
+        return getPermitState(key).acquire(exclusive, DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) {
-        StatePermit<T> statePermit = getStatePermit(state);
-        if (!statePermit.acquire(exclusive, timeout, unit)) {
-            throw new PermitStateTimeoutException("Cannot aquire permit for state [" + state.getName() + "] in time", state, timeout, unit);
-        }
-        return statePermit;
+    public <T> Permit<T> aquirePermit(PermitKey<T> key, boolean exclusive, long timeout, TimeUnit unit) {
+        return getPermitState(key).acquire(exclusive, timeout, unit);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> StatePermit<T> getStatePermit(PermitState<T> state) {
-        NotNullException.assertValue(state, "state");
-        synchronized (permitmapping) {
-            StatePermit<?> statePermit = permitmapping.get(state);
-            if (statePermit == null) {
-                statePermit = new StatePermit<T>(state);
-                permitmapping.put(state, statePermit);
+    private <T> PermitState<T> getPermitState(PermitKey<T> key) {
+        NotNullException.assertValue(key, "key");
+        synchronized (permits) {
+            PermitState<?> permitState = permits.get(key);
+            if (permitState == null) {
+                permitState = new PermitState<T>(key);
+                permits.put(key, permitState);
             }
-            return (StatePermit<T>) statePermit;
+            return (PermitState<T>) permitState;
         }
     }
 
-    static class StatePermit<T> implements Permit<T> {
+    static class PermitState<T> {
 
-        private final Semaphore clientPermits = new Semaphore(0);
+        private final Semaphore semaphore = new Semaphore(0);
+        private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock(true);
+        private final AtomicReference<CountDownLatch> deactivationLatch = new AtomicReference<CountDownLatch>();
+        private final AtomicReference<T> activeInstance = new AtomicReference<T>();
+        private final AtomicBoolean exclusiveLock = new AtomicBoolean();
+        private final AtomicInteger usageCount = new AtomicInteger();
         private final AtomicBoolean active = new AtomicBoolean();
-        private final ExecutorService executor;
-        private final PermitState<T> state;
+        private final PermitKey<T> key;
 
-        private CountDownLatch deactivationLatch;
-        private boolean exclusiveLock;
-        private int usageCount;
-        private T activeInstance;
+        PermitState(PermitKey<T> key) {
+            this.key = key;
+        }
 
-        StatePermit(PermitState<T> state) {
-            this.state = state;
-            this.executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        void activate(T instance) {
+            if (!active.compareAndSet(false, true))
+                throw new IllegalStateException("Cannot activate an already active state");
+
+            LOGGER.debug("activating: {}",  key);
+
+            deactivationLatch.set(new CountDownLatch(0));
+            activeInstance.set(instance);
+            exclusiveLock.set(false);
+            semaphore.release(1);
+        }
+
+        Permit<T> acquire(boolean exclusive, long timeout, TimeUnit unit) {
+
+            final String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
+            final String exclstr = exclusive ? " exclusive" : "";
+            LOGGER.debug("aquiring" + exclstr + timestr + ": {}", key);
+
+            getSinglePermit(timeout, unit);
+
+            final Lock lock;
+            if (exclusive) {
+                lock = writeLock(timeout, unit);
+                exclusiveLock.set(true);
+            } else {
+                lock = readLock(timeout, unit);
+                usageCount.incrementAndGet();
+                semaphore.release(1);
+            }
+
+            LOGGER.debug("aquired" + exclstr + ": {}", key);
+
+            return new Permit<T>() {
+
                 @Override
-                public Thread newThread(Runnable target) {
-                    return new Thread(target, "StateActivation");
+                public PermitKey<T> getPermitKey() {
+                    return key;
                 }
-            });
-        }
 
-        @Override
-        public PermitState<T> getState() {
-            return state;
-        }
-
-        @Override
-        public T getInstance() {
-            return activeInstance;
-        }
-
-        void activate(final T instance) {
-            LOGGER.trace("activating: {}",  state);
-            Runnable task = new Runnable() {
                 @Override
-                public void run() {
-                    if (active.compareAndSet(false, true)) {
-                        activeInstance = instance;
-                        if (!exclusiveLock) {
-                            clientPermits.release(state.getMaximumPermits());
-                        }
-                        LOGGER.trace("activated: {}",  state);
-                    } else {
-                        LOGGER.trace("already active: {}",  state);
+                public T getInstance() {
+                    return activeInstance.get();
+                }
+
+                @Override
+                public void release() {
+                    LOGGER.debug("releasing" + exclstr + ": {}", key);
+                    deactivationLatch.get().countDown();
+                    int usage = usageCount.decrementAndGet();
+                    if (usage > 0) {
+                        LOGGER.debug("remaining: {} => [{}]", key, usage);
                     }
+                    lock.unlock();
                 }
             };
-            try {
-                executor.submit(task).get();
-            } catch (InterruptedException ex) {
-                // ignore
-            } catch (ExecutionException ex) {
-                throw new IllegalStateException("Cannot activate state: " + state, ex.getCause());
-            }
         }
 
-        boolean acquire(boolean exclusive, long timeout, TimeUnit unit) {
-            String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
-            String exclstr = exclusive ? " exclusive" : "";
-            LOGGER.trace("aquiring" + exclstr + timestr + ": {}", state);
+        void deactivate(long timeout, TimeUnit unit) {
+
+            LOGGER.debug("deactivating: {}",  key);
+
+            if (!active.get()) {
+                LOGGER.debug("not active: {}",  key);
+                return;
+            }
+
+            if (exclusiveLock.get()) {
+                LOGGER.debug("deactivated: {}",  key);
+                active.set(false);
+                return;
+            }
+
+            getSinglePermit(timeout, unit);
 
             boolean success;
             try {
-                if (timeout > 0 && unit != null) {
-                    success = clientPermits.tryAcquire(timeout, unit);
-                } else {
-                    clientPermits.acquire();
-                    success = true;
-                }
+                int usage = usageCount.get();
+                deactivationLatch.set(new CountDownLatch(usage));
+                LOGGER.debug("waiting: {} => [{}]",  key, usage);
+                success = deactivationLatch.get().await(timeout, unit);
             } catch (InterruptedException ex) {
-                throw new IllegalStateException(ex);
-            }
-
-            if (!success) {
-                LOGGER.warn("Not aquired: {}", state);
-                return false;
-            }
-
-            if (exclusive) {
-
-                synchronized (this) {
-                    clientPermits.drainPermits();
-                    deactivationLatch = new CountDownLatch(usageCount);
-                }
-
-                long permitCount = deactivationLatch.getCount();
-                LOGGER.trace("awaiting [{}] permits: {}", permitCount, state);
-
-                // Wait for all permits to get returned
-                try {
-                    if (timeout > 0 && unit != null) {
-                        success = deactivationLatch.await(timeout, unit);
-                    } else {
-                        deactivationLatch.await();
-                        success = true;
-                    }
-                } catch (InterruptedException ex) {
-                    throw new IllegalStateException(ex);
-                } finally {
-                    synchronized (this) {
-                        deactivationLatch = null;
-                    }
-                }
+                success = false;
             }
 
             if (success) {
-                synchronized (this) {
-                    exclusiveLock = exclusive;
-                    usageCount++;
-                }
-                LOGGER.trace("aquired [" + usageCount + "]: {}", state);
-            } else {
-                LOGGER.warn("Not aquired: {}", state);
-            }
-            return success;
-        }
-
-        @Override
-        public void release() {
-            synchronized (this) {
-
-                if (usageCount == 0) {
-                    LOGGER.warn("State not in use: {}", state);
-                    return;
-                }
-
-                usageCount--;
-
-                if (deactivationLatch != null) {
-                    deactivationLatch.countDown();
-                } else {
-                    if (exclusiveLock && usageCount == 0) {
-                        exclusiveLock = false;
-                        clientPermits.release(state.getMaximumPermits());
-                    } else {
-                        clientPermits.release();
-                    }
-                }
-            }
-            LOGGER.trace("released [" + usageCount + "]: {}", state);
-        }
-
-        boolean deactivate(final long timeout, final TimeUnit unit) {
-            String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
-            LOGGER.trace("deactivating" + timestr + ": {}", state);
-
-            Callable<Boolean> task = new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-
-                    if (!active.get()) {
-                        LOGGER.trace("already inactive: {}",  state);
-                        return true;
-                    }
-
-                    synchronized (StatePermit.this) {
-                        clientPermits.drainPermits();
-                        deactivationLatch = new CountDownLatch(exclusiveLock ? 0 : usageCount);
-                    }
-
-                    long permitCount = deactivationLatch.getCount();
-                    LOGGER.trace("awaiting [{}] permits: {}", permitCount, state);
-
-                    try {
-                        if (timeout > 0 && unit != null) {
-                            return deactivationLatch.await(timeout, unit);
-                        } else {
-                            deactivationLatch.await();
-                            return true;
-                        }
-                    } finally {
-                        synchronized (StatePermit.this) {
-                            deactivationLatch = null;
-                            activeInstance = null;
-                        }
-                    }
-                }
-            };
-            try {
-                return deactivationResult(executor.submit(task).get());
-            } catch (InterruptedException ex) {
-                deactivationResult(false);
-                throw new IllegalStateException(ex);
-            } catch (ExecutionException ex) {
-                deactivationResult(false);
-                throw new IllegalStateException(ex.getCause());
-            }
-        }
-
-        private boolean deactivationResult(boolean success) {
-            if (success) {
-                LOGGER.trace("deactivated: {}", state);
+                LOGGER.debug("deactivated: {}",  key);
                 active.set(false);
             } else {
-                LOGGER.warn("Not deactivated: {}", state);
-                restorePermits();
+                semaphore.release(1);
+                throw new PermitStateTimeoutException("Cannot deactivate state [" + key.getName() + "] in time", key, timeout, unit);
             }
-            return success;
         }
 
-        private void restorePermits() {
-            synchronized (this) {
-                int permits = state.getMaximumPermits() - usageCount;
-                if (permits > 0) {
-                    clientPermits.release(permits);
+        private void getSinglePermit(long timeout, TimeUnit unit) {
+            try {
+                if (!semaphore.tryAcquire(timeout, unit)) {
+                    throw new PermitStateTimeoutException("Cannot aquire permit for [" + key.getName() + "] in time", key, timeout, unit);
                 }
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
             }
+        }
+
+        private ReadLock readLock(long timeout, TimeUnit unit) {
+            ReadLock lock = rwlock.readLock();
+            try {
+                if (!lock.tryLock() && !lock.tryLock(timeout, unit))
+                    throw new PermitStateTimeoutException("Cannot aquire read lock for [" + key.getName() + "] in time", key, timeout, unit);
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+            return lock;
+        }
+
+        private WriteLock writeLock(long timeout, TimeUnit unit) {
+            WriteLock lock = rwlock.writeLock();
+            try {
+                if (!lock.tryLock() && !lock.tryLock(timeout, unit))
+                    throw new PermitStateTimeoutException("Cannot aquire write lock for [" + key.getName() + "] in time", key, timeout, unit);
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+            return lock;
         }
     }
 }

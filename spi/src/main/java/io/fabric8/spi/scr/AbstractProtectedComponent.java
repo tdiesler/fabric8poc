@@ -19,21 +19,46 @@
  */
 package io.fabric8.spi.scr;
 
+
+import io.fabric8.api.ComponentEvent;
+import io.fabric8.api.ComponentEvent.EventType;
+import io.fabric8.spi.EventDispatcher;
+import io.fabric8.spi.permit.PermitKey;
 import io.fabric8.spi.permit.PermitManager;
-import io.fabric8.spi.permit.PermitState;
 
 public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
+    protected final ValidatingReference<EventDispatcher> eventDispatcher = new ValidatingReference<EventDispatcher>();
     protected final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
 
-    protected void activateComponent(PermitState<T> state, T instance) {
-        super.activateComponent();
-        permitManager.get().activate(state, instance);
+    protected void activateComponent(PermitKey<T> key, T instance) {
+        ComponentEvent event = new ComponentEvent(key.getName(), EventType.ACTIVATING);
+        eventDispatcher.get().dispatchComponentEvent(event);
+        try {
+            super.activateComponent();
+            permitManager.get().activate(key, instance);
+            event = new ComponentEvent(key.getName(), EventType.ACTIVATED);
+            eventDispatcher.get().dispatchComponentEvent(event);
+        } catch (RuntimeException ex) {
+            event = new ComponentEvent(key.getName(), EventType.ERROR, ex);
+            eventDispatcher.get().dispatchComponentEvent(event);
+            throw ex;
+        }
     }
 
-    protected void deactivateComponent(PermitState<T> state) {
-        permitManager.get().deactivate(state);
-        super.deactivateComponent();
+    protected void deactivateComponent(PermitKey<T> key) {
+        ComponentEvent event = new ComponentEvent(key.getName(), EventType.DEACTIVATING);
+        eventDispatcher.get().dispatchComponentEvent(event);
+        try {
+            permitManager.get().deactivate(key);
+            super.deactivateComponent();
+            event = new ComponentEvent(key.getName(), EventType.DEACTIVATED);
+            eventDispatcher.get().dispatchComponentEvent(event);
+        } catch (RuntimeException ex) {
+            event = new ComponentEvent(key.getName(), EventType.ERROR, ex);
+            eventDispatcher.get().dispatchComponentEvent(event);
+            throw ex;
+        }
     }
 
     @Override

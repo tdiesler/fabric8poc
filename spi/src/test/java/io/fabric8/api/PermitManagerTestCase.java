@@ -20,12 +20,14 @@
 package io.fabric8.api;
 
 import io.fabric8.spi.permit.DefaultPermitManager;
+import io.fabric8.spi.permit.PermitKey;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
-import io.fabric8.spi.permit.PermitState;
 import io.fabric8.spi.permit.PermitStateTimeoutException;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,134 +41,109 @@ import org.junit.Test;
  */
 public class PermitManagerTestCase {
 
-    PermitManager stateService;
+    PermitManager permitManager;
 
     @Before
     public void setUp() {
-        stateService = new DefaultPermitManager();
+        permitManager = new DefaultPermitManager();
     }
 
     @Test
     public void testBasicLifecycle() throws Exception {
-        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 1);
+        PermitKey<StateA> stateA = new PermitKey<StateA>(StateA.class, "A");
 
-        // No permit on inactive state
+        // No permit on inactive
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
 
-        // Activate the state
-        stateService.activate(stateA, new StateA());
+        // Activate
+        permitManager.activate(stateA, new StateA());
 
-        // Aquire max permits
-        Permit<StateA> permit = stateService.aquirePermit(stateA, false);
-        assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
+        // Aquire permit
+        Permit<StateA> permit = permitManager.aquirePermit(stateA, false);
 
         // Cannot deactivate while permits in use
         assertDeactivateTimeout(stateA, 100, TimeUnit.MILLISECONDS);
         permit.release();
 
-        // Deactivate state
-        stateService.deactivate(stateA, 100, TimeUnit.MILLISECONDS);
+        // Deactivate
+        permitManager.deactivate(stateA, 100, TimeUnit.MILLISECONDS);
 
-        // No permit on inactive state
+        // No permit on inactive
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
-    }
-
-    @Test
-    public void testReleaseFromOtherThread() throws Exception {
-
-        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 1);
-
-        stateService.activate(stateA, new StateA());
-
-        final Permit<StateA> permit = stateService.aquirePermit(stateA, false);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-                permit.release();
-            }
-        }).start();
-
-        stateService.deactivate(stateA, 500, TimeUnit.MILLISECONDS);
     }
 
     @Test
     public void testAquireExclusive() throws Exception {
 
-        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
+        PermitKey<StateA> stateA = new PermitKey<StateA>(StateA.class, "A");
 
-        stateService.activate(stateA, new StateA());
+        permitManager.activate(stateA, new StateA());
 
         // Aquire exclusive permit
-        Permit<StateA> permit = stateService.aquirePermit(stateA, true);
+        Permit<StateA> permit = permitManager.aquirePermit(stateA, true);
 
         // Assert that no other permit can be obtained
         assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
         assertPermitTimeout(stateA, true, 100, TimeUnit.MILLISECONDS);
 
         permit.release();
-        stateService.aquirePermit(stateA, false);
     }
 
     @Test
     public void testDeactivateWithExclusivePermit() throws Exception {
 
-        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
+        final PermitKey<StateA> stateA = new PermitKey<StateA>(StateA.class, "A");
 
         StateA instanceA1 = new StateA();
-        stateService.activate(stateA, instanceA1);
+        permitManager.activate(stateA, instanceA1);
 
-        // Aquire all permits
-        Permit<StateA> permit = stateService.aquirePermit(stateA, true);
+        // Aquire exclusive permit
+        Permit<StateA> permit = permitManager.aquirePermit(stateA, true);
 
         // Deactivate while holding an exclusive permit
-        stateService.deactivate(stateA, 100, TimeUnit.MILLISECONDS);
+        permitManager.deactivate(stateA, 100, TimeUnit.MILLISECONDS);
 
         StateA instanceA2 = new StateA();
-        stateService.activate(stateA, instanceA2);
+        permitManager.activate(stateA, instanceA2);
 
-        // Assert that no other permit can be obtained
-        assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
+        // Verify that another thread cannot aquire a permit
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicInteger failures = new AtomicInteger();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    permitManager.aquirePermit(stateA, false, 100, TimeUnit.MILLISECONDS);
+                } catch (PermitStateTimeoutException ex) {
+                    failures.incrementAndGet();
+                }
+                try {
+                    permitManager.aquirePermit(stateA, true, 100, TimeUnit.MILLISECONDS);
+                } catch (PermitStateTimeoutException ex) {
+                    failures.incrementAndGet();
+                }
+                latch.countDown();
+            }
+        }).start();
+
+        Assert.assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
+        Assert.assertEquals("TimeoutException expected", 2, failures.get());
 
         permit.release();
-        stateService.aquirePermit(stateA, false);
     }
 
-    @Test
-    public void testMaxPermits() throws Exception {
-
-        PermitState<StateA> stateA = new PermitState<StateA>(StateA.class, "A", 2);
-
-        stateService.activate(stateA, new StateA());
-
-        // Aquire all permits
-        stateService.aquirePermit(stateA, false);
-        Permit<StateA> permit = stateService.aquirePermit(stateA, false);
-
-        // Assert that no other permit can be obtained
-        assertPermitTimeout(stateA, false, 100, TimeUnit.MILLISECONDS);
-
-        permit.release();
-        stateService.aquirePermit(stateA, false);
-    }
-
-    private void assertPermitTimeout(PermitState<?> state, boolean exclusive, long timeout, TimeUnit unit) {
+    private void assertPermitTimeout(PermitKey<?> state, boolean exclusive, long timeout, TimeUnit unit) {
         try {
-            stateService.aquirePermit(state, exclusive, timeout, unit);
+            permitManager.aquirePermit(state, exclusive, timeout, unit);
             Assert.fail("TimeoutException expected");
         } catch (PermitStateTimeoutException ex) {
             // expected
         }
     }
 
-    private void assertDeactivateTimeout(PermitState<?> state, long timeout, TimeUnit unit) {
+    private void assertDeactivateTimeout(PermitKey<?> state, long timeout, TimeUnit unit) {
         try {
-            stateService.deactivate(state, timeout, unit);
+            permitManager.deactivate(state, timeout, unit);
             Assert.fail("TimeoutException expected");
         } catch (PermitStateTimeoutException ex) {
             // expected

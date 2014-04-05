@@ -58,14 +58,17 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public LockHandle aquireProfileVersionLock(Version version) {
-        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
-        try {
-            ProfileService service = permit.getInstance();
-            return service.aquireProfileVersionLock(version);
-        } finally {
-            permit.release();
-        }
+    public LockHandle aquireProfileVersionLock(Version identity) {
+        final Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        final ProfileService service = permit.getInstance();
+        final LockHandle writeLock = service.aquireProfileVersionLock(identity);
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                writeLock.unlock();
+                permit.release();
+            }
+        };
     }
 
     @Override

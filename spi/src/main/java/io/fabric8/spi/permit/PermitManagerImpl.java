@@ -43,31 +43,31 @@ public final class PermitManagerImpl extends AbstractComponent implements Permit
     }
 
     @Override
-    public <T> void activate(PermitState<T> state, T instance) {
+    public <T> void activate(PermitKey<T> state, T instance) {
         assertValid();
         delegate.activate(state, instance);
     }
 
     @Override
-    public void deactivate(PermitState<?> state) {
+    public void deactivate(PermitKey<?> state) {
         assertValid();
         delegate.deactivate(state);
     }
 
     @Override
-    public void deactivate(PermitState<?> state, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
+    public void deactivate(PermitKey<?> state, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
         assertValid();
         delegate.deactivate(state, timeout, unit);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive) {
+    public <T> Permit<T> aquirePermit(PermitKey<T> state, boolean exclusive) {
         assertValid();
         return delegate.aquirePermit(state, exclusive);
     }
 
     @Override
-    public <T> Permit<T> aquirePermit(PermitState<T> state, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
+    public <T> Permit<T> aquirePermit(PermitKey<T> state, boolean exclusive, long timeout, TimeUnit unit) throws PermitStateTimeoutException {
         assertValid();
         return delegate.aquirePermit(state, exclusive, timeout, unit);
     }

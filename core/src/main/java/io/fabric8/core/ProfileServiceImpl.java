@@ -36,6 +36,7 @@ import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
+import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.NullProfileItem;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.internal.AttributeSupport;
@@ -95,7 +96,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
-    private final ValidatingReference<EventDispatcher> eventDispatcher = new ValidatingReference<EventDispatcher>();
     private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
     private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
 
@@ -407,12 +407,12 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             try {
                 profileState.updateProfileItems(items);
                 Profile profile = new ImmutableProfile(profileState);
-                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.Type.UPDATED);
+                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.EventType.UPDATED);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
                 return profile;
             } catch (RuntimeException ex) {
                 Profile profile = new ImmutableProfile(profileState);
-                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.Type.ERROR, ex);
+                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.EventType.ERROR, ex);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
                 throw ex;
             }

@@ -20,7 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.ContainerManager;
-import io.fabric8.spi.permit.PermitState;
+import io.fabric8.spi.permit.PermitKey;
 
 /**
  * The internal fabric service
@@ -31,7 +31,7 @@ import io.fabric8.spi.permit.PermitState;
 public interface ContainerService extends ContainerManager {
 
     /**
-     * The {@link PermitState} that protects this service.
+     * The {@link PermitKey} that protects this service.
      */
-    PermitState<ContainerService> PERMIT = new PermitState<ContainerService>(ContainerService.class);
+    PermitKey<ContainerService> PERMIT = new PermitKey<ContainerService>(ContainerService.class);
 }

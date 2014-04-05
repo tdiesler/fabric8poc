@@ -62,13 +62,16 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
 
     @Override
     public LockHandle aquireContainerLock(ContainerIdentity identity) {
-        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
-        try {
-            ContainerService service = permit.getInstance();
-            return service.aquireContainerLock(identity);
-        } finally {
-            permit.release();
-        }
+        final Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        final ContainerService service = permit.getInstance();
+        final LockHandle writeLock = service.aquireContainerLock(identity);
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                writeLock.unlock();
+                permit.release();
+            }
+        };
     }
 
     @Override

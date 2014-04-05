@@ -19,11 +19,14 @@
  */
 package io.fabric8.core;
 
+import io.fabric8.api.ComponentEvent;
+import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.FabricEventListener;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.Collections;
@@ -46,16 +49,18 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
 @Component(service = { EventDispatcher.class }, immediate = true)
-public final class EventDispatcher extends AbstractComponent {
+public final class EventDispatcherImpl extends AbstractComponent implements EventDispatcher {
 
     private final Map<Class<?>, Set<FabricEventListener<?>>> listenerMapping = new HashMap<Class<?>, Set<FabricEventListener<?>>>();
     private ServiceTracker<ProvisionEventListener, ProvisionEventListener> provisionTracker;
     private ServiceTracker<ProfileEventListener, ProfileEventListener> profileTracker;
+    private ServiceTracker<ComponentEventListener, ComponentEventListener> componentTracker;
     private ExecutorService executor;
 
     @Activate
     void activate() {
         executor = Executors.newCachedThreadPool(getThreadFactory());
+        componentTracker = createTracker(ComponentEventListener.class);
         provisionTracker = createTracker(ProvisionEventListener.class);
         profileTracker = createTracker(ProfileEventListener.class);
         activateComponent();
@@ -64,12 +69,14 @@ public final class EventDispatcher extends AbstractComponent {
     @Deactivate
     void deactivate() {
         executor.shutdown();
+        componentTracker.close();
         provisionTracker.close();
         profileTracker.close();
         deactivateComponent();
     }
 
-    void dispatchProvisionEvent(final ProvisionEvent event, final ProvisionEventListener listener) {
+    @Override
+    public void dispatchProvisionEvent(final ProvisionEvent event, final ProvisionEventListener listener) {
         NotNullException.assertValue(event, "event");
         Set<ProvisionEventListener> listeners = getEventListeners(ProvisionEventListener.class, listener);
         if (listeners != null) {
@@ -84,11 +91,28 @@ public final class EventDispatcher extends AbstractComponent {
         }
     }
 
-    void dispatchProfileEvent(final ProfileEvent event, final ProfileEventListener listener) {
+    @Override
+    public void dispatchProfileEvent(final ProfileEvent event, final ProfileEventListener listener) {
         NotNullException.assertValue(event, "event");
         Set<ProfileEventListener> listeners = getEventListeners(ProfileEventListener.class, listener);
         if (listeners != null) {
             for (final ProfileEventListener aux : listeners) {
+                Runnable task = new Runnable() {
+                    public void run() {
+                        aux.processEvent(event);
+                    }
+                };
+                executor.submit(task);
+            }
+        }
+    }
+
+    @Override
+    public void dispatchComponentEvent(final ComponentEvent event) {
+        NotNullException.assertValue(event, "event");
+        Set<ComponentEventListener> listeners = getEventListeners(ComponentEventListener.class, null);
+        if (listeners != null) {
+            for (final ComponentEventListener aux : listeners) {
                 Runnable task = new Runnable() {
                     public void run() {
                         aux.processEvent(event);
@@ -118,7 +142,7 @@ public final class EventDispatcher extends AbstractComponent {
         ThreadFactory threadFactory = new ThreadFactory() {
             @Override
             public Thread newThread(Runnable run) {
-                return new Thread(run, EventDispatcher.class.getSimpleName());
+                return new Thread(run, EventDispatcherImpl.class.getSimpleName());
             }
         };
         return threadFactory;

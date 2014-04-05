@@ -29,26 +29,18 @@ import org.jboss.gravia.utils.NotNullException;
  *
  * @Immutable
  */
-public final class PermitState<T> {
-
-    public static final int DEFAULT_MAXIMUM_PERMITS = Integer.MAX_VALUE;
+public final class PermitKey<T> {
 
     private final Class<T> type;
     private final String name;
-    private final int maxpermits;
 
-    public PermitState(Class<T> type) {
-        this(type, type.getName(), DEFAULT_MAXIMUM_PERMITS);
+    public PermitKey(Class<T> type) {
+        this(type, type.getName());
     }
 
-    public PermitState(Class<T> type, String name) {
-        this(null, name, DEFAULT_MAXIMUM_PERMITS);
-    }
-
-    public PermitState(Class<T> type, String name, int maxpermits) {
+    public PermitKey(Class<T> type, String name) {
         NotNullException.assertValue(type, "type");
         NotNullException.assertValue(name, "name");
-        this.maxpermits = maxpermits;
         this.type = type;
         this.name = name;
     }
@@ -61,10 +53,6 @@ public final class PermitState<T> {
         return name;
     }
 
-    public int getMaximumPermits() {
-        return maxpermits;
-    }
-
     @Override
     public int hashCode() {
         return name.hashCode();
@@ -72,11 +60,9 @@ public final class PermitState<T> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!(obj instanceof PermitState))
-            return false;
-        PermitState<?> other = (PermitState<?>) obj;
+        if (this == obj) return true;
+        if (!(obj instanceof PermitKey)) return false;
+        PermitKey<?> other = (PermitKey<?>) obj;
         return name.equals(other.name);
     }
 

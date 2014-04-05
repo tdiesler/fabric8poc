@@ -19,29 +19,14 @@
  */
 package io.fabric8.api;
 
+
+
 /**
- * A profile event
+ * A component event listener
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-@SuppressWarnings("serial")
-public class ProfileEvent extends FabricEvent<Profile, ProfileEvent.EventType> {
+public interface ComponentEventListener extends FabricEventListener<ComponentEvent> {
 
-    public enum EventType {
-        UPDATED, ERROR
-    }
-
-    public ProfileEvent(Profile profile, EventType type) {
-        this(profile, type, null);
-    }
-
-    public ProfileEvent(Profile profile, EventType type, Throwable error) {
-        super(profile, type, error);
-    }
-
-    @Override
-    public String toString() {
-        return "ProfileEvent[source=" + getSource().getIdentity() + ",type=" + getType() + "]";
-    }
 }

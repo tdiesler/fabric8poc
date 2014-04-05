@@ -32,18 +32,18 @@ public final class PermitStateTimeoutException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private final PermitState<?> state;
+    private final PermitKey<?> state;
     private final long timeout;
     private final TimeUnit unit;
 
-    public PermitStateTimeoutException(String message, PermitState<?> state, long timeout, TimeUnit unit) {
+    public PermitStateTimeoutException(String message, PermitKey<?> state, long timeout, TimeUnit unit) {
         super(message);
         this.state = state;
         this.timeout = timeout;
         this.unit = unit;
     }
 
-    public PermitState<?> getState() {
+    public PermitKey<?> getState() {
         return state;
     }
 
