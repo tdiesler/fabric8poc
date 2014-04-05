@@ -92,6 +92,6 @@ final class ImmutableProfileVersion implements ProfileVersion {
 
     @Override
     public String toString() {
-        return identity.toString();
+        return "ProfileVersion[name=" + identity + "]";
     }
 }

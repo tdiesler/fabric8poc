@@ -131,6 +131,6 @@ final class ImmutableContainer implements Container {
 
     @Override
     public String toString() {
-        return identity.toString();
+        return "Container[name=" + identity + ",state=" + state + "]";
     }
 }

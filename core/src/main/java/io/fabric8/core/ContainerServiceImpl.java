@@ -27,6 +27,7 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionEvent;
@@ -46,8 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
@@ -56,7 +56,32 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE,  immediate = true)
+/**
+ * The internal {@link ContainerService}
+ *
+ * It is the owner of all {@link Container} instances.
+ * Internally it maintains mutable versions these instances. All mutating operations must go through this service.
+ * The public API returns shallow immutable {@link Container} instances, mutable {@link ContainerState} instances must not leak outside this service.
+ *
+ * This service is protected by a permit.
+ * Access without the calling client holding a permit is considered a programming error.
+ *
+ * Concurrency & Locking Strategy
+ * ------------------------------
+ *
+ * Read access to {@link Container} can happen concurrently.
+ * Each {@link Container} instance is associated with a {@link ReentrantReadWriteLock}
+ * The mutable {@link ContainerState} must synchronize concurrent read operations, write operations are synchronized by the lock on {@link Container}
+ *
+ * A client may explicitly aquire a write lock for a {@link Container}.
+ * Obtaining a write lock for a {@link Container} also obtains a write lock on the associated {@link ProfileVersion}.
+ * This is necessary when exclusive acccess to {@link Container} content is required. For example when making multiple calls
+ * as part of one operation - while doing so the {@link Container} and its associated {@link ProfileVersion} must be locked and cannot change.
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
+@Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
@@ -79,6 +104,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
+    public LockHandle aquireContainerLock(ContainerIdentity identity) {
+        assertValid();
+        return aquireWriteLock(identity);
+    }
+
+    private LockHandle aquireWriteLock(ContainerIdentity identity) {
+        return containerRegistry.get().aquireWriteLock(identity);
+    }
+
+    private LockHandle aquireReadLock(ContainerIdentity identity) {
+        return containerRegistry.get().aquireReadLock(identity);
+    }
+
+    @Override
     public Container createContainer(CreateOptions options) {
         assertValid();
         return createContainerInternal(null, options, null);
@@ -92,76 +131,101 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container createContainerInternal(ContainerState parentState, CreateOptions options, ProvisionListener listener) {
         ContainerState cntState = new ContainerState(parentState, options, configToken);
-        synchronized (containerRegistry) {
-            containerRegistry.get().addContainer(parentState, cntState);
-        }
+        ContainerIdentity identity = cntState.getIdentity();
+        containerRegistry.get().addContainer(parentState, cntState);
         Profile defaultProfile = profileService.get().getDefaultProfile();
-        setVersionInternal(cntState, defaultProfile.getProfileVersion(), listener);
-        addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
-        return new ImmutableContainer(cntState);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            setVersionInternal(cntState, defaultProfile.getProfileVersion(), listener);
+            addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
+            return new ImmutableContainer(cntState);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     @Override
     public Container getContainer(ContainerIdentity identity) {
         assertValid();
+
+        LockHandle readLock = null;
+        ContainerState cntState;
         synchronized (containerRegistry) {
-            ContainerState cntState = containerRegistry.get().getContainer(identity);
-            return cntState != null ? new ImmutableContainer(cntState) : null;
+            cntState = containerRegistry.get().getContainer(identity);
+            if (cntState != null) {
+                readLock = aquireReadLock(identity);
+            }
+        }
+        if (cntState == null)
+            return null;
+
+        try {
+            return new ImmutableContainer(cntState);
+        } finally {
+            readLock.unlock();
         }
     }
 
     @Override
     public Container start(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        synchronized (cntState) {
-            cntState.start();
-            return new ImmutableContainer(cntState);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            ContainerState cntState = getRequiredContainerState(identity);
+            return new ImmutableContainer(cntState.start());
+        } finally {
+            writeLock.unlock();
         }
     }
 
     @Override
     public Container stop(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        synchronized (cntState) {
-            cntState.stop();
-            return new ImmutableContainer(cntState);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            ContainerState cntState = getRequiredContainerState(identity);
+            return new ImmutableContainer(cntState.stop());
+        } finally {
+            writeLock.unlock();
         }
     }
 
     @Override
     public Container destroy(ContainerIdentity identity) {
         assertValid();
-        synchronized (containerRegistry) {
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
             ContainerState cntState = getRequiredContainerState(identity);
-            synchronized (cntState) {
-                if (!cntState.getChildContainers().isEmpty()) {
-                    throw new IllegalStateException("Cannot destroy a container that has active child containers: " + identity);
-                }
+            if (!cntState.getChildContainers().isEmpty())
+                throw new IllegalStateException("Cannot destroy a container that has active child containers: " + identity);
+
+            synchronized (containerRegistry) {
                 containerRegistry.get().removeContainer(identity);
                 cntState.destroy();
-                return new ImmutableContainer(cntState);
             }
+            return new ImmutableContainer(cntState);
+        } finally {
+            writeLock.unlock();
         }
     }
 
     @Override
     public Set<ContainerIdentity> getContainerIds() {
         assertValid();
-        synchronized (containerRegistry) {
-            return containerRegistry.get().getContainerIds();
-        }
+        return containerRegistry.get().getContainerIds();
     }
 
     @Override
     public Set<Container> getContainers(Set<ContainerIdentity> identities) {
         assertValid();
         Set<Container> result = new HashSet<Container>();
-        synchronized (containerRegistry) {
-            for (ContainerState aux : containerRegistry.get().getContainers(identities)) {
-                if (identities == null || identities.contains(aux.getIdentity())) {
+        for (ContainerState aux : containerRegistry.get().getContainers(identities)) {
+            if (identities == null || identities.contains(aux.getIdentity())) {
+                LockHandle readLock = aquireReadLock(aux.getIdentity());
+                try {
                     result.add(new ImmutableContainer(aux));
+                } finally {
+                    readLock.unlock();
                 }
             }
         }
@@ -176,88 +240,82 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container setVersion(ContainerIdentity identity, Version version, ProvisionListener listener) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        return setVersionInternal(cntState, version, listener);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            ContainerState cntState = getRequiredContainerState(identity);
+            return setVersionInternal(cntState, version, listener);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionListener listener) {
-        synchronized (cntState) {
-            Version prevVersion = cntState.getProfileVersion();
-            Lock lock = profileService.get().aquireProfileVersionLock(nextVersion);
-            try {
-                Set<ProfileIdentity> cntProfiles = cntState.getProfiles();
+        Version prevVersion = cntState.getProfileVersion();
+        Set<ProfileIdentity> cntProfiles = cntState.getProfiles();
 
-                // Unprovision the previous profiles
-                if (prevVersion != null) {
-                    Set<Profile> prevProfiles = profileService.get().getProfiles(prevVersion, cntProfiles);
-                    unprovisionProfiles(cntState, prevProfiles, listener);
-                    profileService.get().removeContainerFromProfileVersion(prevVersion, cntState.getIdentity());
-                }
-
-                // Provision the next profiles
-                Set<Profile> nextProfiles = profileService.get().getProfiles(nextVersion, cntProfiles);
-                provisionProfiles(cntState, nextProfiles, listener);
-
-                // Update the references
-                cntState.setProfileVersion(nextVersion);
-                profileService.get().addContainerToProfileVersion(nextVersion, cntState.getIdentity());
-            } finally {
-                lock.unlock();
-            }
-            return new ImmutableContainer(cntState);
+        // Unprovision the previous profiles
+        if (prevVersion != null) {
+            Set<Profile> prevProfiles = profileService.get().getProfiles(prevVersion, cntProfiles);
+            unprovisionProfiles(cntState, prevProfiles, listener);
+            profileService.get().removeContainerFromProfileVersion(prevVersion, cntState.getIdentity());
         }
+
+        // Provision the next profiles
+        Set<Profile> nextProfiles = profileService.get().getProfiles(nextVersion, cntProfiles);
+        provisionProfiles(cntState, nextProfiles, listener);
+
+        // Update the references
+        cntState.setProfileVersion(nextVersion);
+        profileService.get().addContainerToProfileVersion(nextVersion, cntState.getIdentity());
+        return new ImmutableContainer(cntState);
     }
 
     @Override
     public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> identities, ProvisionListener listener) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        return addProfilesInternal(cntState, identities, listener);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            ContainerState cntState = getRequiredContainerState(identity);
+            return addProfilesInternal(cntState, identities, listener);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     private Container addProfilesInternal(ContainerState cntState, Set<ProfileIdentity> identities, ProvisionListener listener) {
-        synchronized (cntState) {
-            Version version = cntState.getProfileVersion();
-            Lock lock = profileService.get().aquireProfileVersionLock(version);
-            try {
-                Set<Profile> profiles = profileService.get().getProfiles(version, identities);
+        Version version = cntState.getProfileVersion();
+        Set<Profile> profiles = profileService.get().getProfiles(version, identities);
 
-                // Provision the profiles
-                provisionProfiles(cntState, profiles, listener);
+        // Provision the profiles
+        provisionProfiles(cntState, profiles, listener);
 
-                // Update the references
-                cntState.addProfiles(identities);
-            } finally {
-                lock.unlock();
-            }
-            return new ImmutableContainer(cntState);
-        }
+        // Update the references
+        cntState.addProfiles(identities);
+        return new ImmutableContainer(cntState);
     }
 
     @Override
     public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> identities, ProvisionListener listener) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        return removeProfilesInternal(cntState, identities, listener);
+        LockHandle writeLock = aquireWriteLock(identity);
+        try {
+            ContainerState cntState = getRequiredContainerState(identity);
+            return removeProfilesInternal(cntState, identities, listener);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     private Container removeProfilesInternal(ContainerState cntState, Set<ProfileIdentity> identities, ProvisionListener listener) {
-        synchronized (cntState) {
-            Version version = cntState.getProfileVersion();
-            Lock lock = profileService.get().aquireProfileVersionLock(version);
-            try {
-                Set<Profile> profiles = profileService.get().getProfiles(version, identities);
+        Version version = cntState.getProfileVersion();
+        Set<Profile> profiles = profileService.get().getProfiles(version, identities);
 
-                // Unprovision the profiles
-                unprovisionProfiles(cntState, profiles, listener);
+        // Unprovision the profiles
+        unprovisionProfiles(cntState, profiles, listener);
 
-                // Update the references
-                cntState.removeProfiles(identities);
-            } finally {
-                lock.unlock();
-            }
-            return new ImmutableContainer(cntState);
-        }
+        // Update the references
+        cntState.removeProfiles(identities);
+        return new ImmutableContainer(cntState);
     }
 
     private void provisionProfiles(ContainerState cntState, Set<Profile> profiles, ProvisionListener listener) {
@@ -364,12 +422,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final AttributeSupport attributes;
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
         private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-        private final AtomicReference<Version> profileVersion = new AtomicReference<Version>();
-        private final AtomicReference<State> state = new AtomicReference<State>();
+        private Version profileVersion;
+        private State state;
 
         ContainerState(ContainerState parent, CreateOptions options, String configToken) {
             this.parent = parent;
-            this.state.set(State.CREATED);
+            this.state = State.CREATED;
             String parentName = parent != null ? parent.getIdentity().getSymbolicName() + ":" : "";
             this.identity = ContainerIdentity.create(parentName + options.getSymbolicName());
             this.attributes = new AttributeSupport(options.getAttributes());
@@ -381,11 +439,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         State getState() {
-            return state.get();
+            return state;
         }
 
         Version getProfileVersion() {
-            return profileVersion.get();
+            return profileVersion;
         }
 
         Map<AttributeKey<?>, Object> getAttributes() {
@@ -445,7 +503,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         private void setProfileVersion(Version version) {
             assertNotDestroyed();
-            profileVersion.set(version);
+            profileVersion = version;
         }
 
         private void addProfiles(Set<ProfileIdentity> identities) {
@@ -458,29 +516,32 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             profiles.removeAll(identities);
         }
 
-        private void start() {
+        private ContainerState start() {
             assertNotDestroyed();
-            state.set(State.STARTED);
+            state = State.STARTED;
+            return this;
         }
 
-        private void stop() {
+        private ContainerState stop() {
             assertNotDestroyed();
-            state.set(State.STOPPED);
+            state = State.STOPPED;
+            return this;
         }
 
-        private void destroy() {
+        private ContainerState destroy() {
             assertNotDestroyed();
-            state.set(State.DESTROYED);
+            state = State.DESTROYED;
+            return this;
         }
 
         private void assertNotDestroyed() {
-            if (state.get() == State.DESTROYED)
+            if (state == State.DESTROYED)
                 throw new IllegalStateException("Container already destroyed: " + this);
         }
 
         @Override
         public String toString() {
-            return "Container[name=" + identity + ",state=" + state.get() + "]";
+            return "Container[name=" + identity + ",state=" + state + "]";
         }
     }
 }

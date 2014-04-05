@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.JoinOptions;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionListener;
 import io.fabric8.spi.ContainerService;
@@ -57,6 +58,17 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     @Deactivate
     void deactivate() {
         deactivateComponent();
+    }
+
+    @Override
+    public LockHandle aquireContainerLock(ContainerIdentity identity) {
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.aquireContainerLock(identity);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override

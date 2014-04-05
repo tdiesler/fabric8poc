@@ -26,6 +26,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
@@ -80,9 +81,9 @@ import org.osgi.service.component.annotations.Reference;
  * The mutable {@link ProfileVersionState} and {@link ProfileState} must synchronize concurrent read operations,
  * write operations are synchronized by the lock on {@link ProfileVersion}
  *
- * A client may explicitly aquire a write lock for a {@link ProfileVersion}. This is necessary when it requires
- * exclusive acccess to the {@link ProfileVersion} content while applying it in a larger context. For example
- * when provisioning a container - while doing so the {@link ProfileVersion} must be locked and cannot change.
+ * A client may explicitly aquire a write lock for a {@link ProfileVersion}. This is necessary when
+ * exclusive acccess to {@link ProfileVersion} content is required.
+ * For example when provisioning a container - while doing so the {@link ProfileVersion} must be locked and cannot change.
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
@@ -125,7 +126,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Profile defaultProfile = profileBuilder.createProfile();
 
         // Add the default profile
-        WriteLock writeLock = aquireWriteLock(DEFAULT_PROFILE_VERSION);
+        LockHandle writeLock = aquireWriteLock(DEFAULT_PROFILE_VERSION);
         try {
             versionState.addProfile(defaultProfile);
         } finally {
@@ -134,13 +135,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public WriteLock aquireProfileVersionLock(Version version) {
+    public LockHandle aquireProfileVersionLock(Version version) {
         assertValid();
         return aquireWriteLock(version);
     }
 
-    private WriteLock aquireWriteLock(Version version) {
-        WriteLock writeLock;
+    private LockHandle aquireWriteLock(Version version) {
+        final WriteLock writeLock;
         synchronized (profileVersions) {
             ReentrantReadWriteLock lock = profileVersionLocks.get(version);
             if (lock == null)
@@ -158,11 +159,16 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         if (!success)
             throw new IllegalStateException("Cannot obtain write lock in time for: " + version);
 
-        return writeLock;
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                writeLock.unlock();
+            }
+        };
     }
 
-    private ReadLock aquireReadLock(Version version) {
-        ReadLock readLock;
+    private LockHandle aquireReadLock(Version version) {
+        final ReadLock readLock;
         synchronized (profileVersions) {
             ReentrantReadWriteLock lock = profileVersionLocks.get(version);
             if (lock == null)
@@ -180,25 +186,28 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         if (!success)
             throw new IllegalStateException("Cannot obtain read lock in time for: " + version);
 
-        return readLock;
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                readLock.unlock();
+            }
+        };
     }
 
     @Override
     public Set<Version> getProfileVersionIds() {
         assertValid();
-        Set<Version> snapshot = new HashSet<Version>(profileVersions.keySet());
-        return Collections.unmodifiableSet(snapshot);
+        return Collections.unmodifiableSet(profileVersions.keySet());
     }
 
     @Override
     public Set<ProfileVersion> getProfileVersions(Set<Version> identities) {
         assertValid();
         Set<ProfileVersion> result = new HashSet<ProfileVersion>();
-        Set<ProfileVersionState> snapshot = new HashSet<ProfileVersionState>(profileVersions.values());
-        for (ProfileVersionState aux : snapshot) {
+        for (ProfileVersionState aux : profileVersions.values()) {
             Version identity = aux.getIdentity();
             if (identities == null || identities.contains(identity)) {
-                ReadLock readLock = aquireReadLock(identity);
+                LockHandle readLock = aquireReadLock(identity);
                 try {
                     result.add(new ImmutableProfileVersion(aux));
                 } finally {
@@ -213,7 +222,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public ProfileVersion getProfileVersion(Version identity) {
         assertValid();
 
-        ReadLock readLock = null;
+        LockHandle readLock = null;
         ProfileVersionState versionState;
         synchronized (profileVersions) {
             versionState = profileVersions.get(identity);
@@ -235,7 +244,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public ProfileVersion addProfileVersion(ProfileVersion version) {
         assertValid();
         ProfileVersionState versionState = addProfileVersionInternal(version);
-        ReadLock readLock = aquireReadLock(versionState.getIdentity());
+        LockHandle readLock = aquireReadLock(versionState.getIdentity());
         try {
             return new ImmutableProfileVersion(versionState);
         } finally {
@@ -259,7 +268,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public ProfileVersion removeProfileVersion(Version version) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             Set<ContainerIdentity> containers = getRequiredProfileVersion(version).getContainerIds();
             if (!containers.isEmpty())
@@ -279,7 +288,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Set<ProfileIdentity> getProfileIds(Version version) {
         assertValid();
-        ReadLock readLock = aquireReadLock(version);
+        LockHandle readLock = aquireReadLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             return versionState.getProfileIdentities();
@@ -297,7 +306,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile getProfile(Version version, ProfileIdentity profid) {
         assertValid();
-        ReadLock readLock = aquireReadLock(version);
+        LockHandle readLock = aquireReadLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileState profileState = versionState.getProfileState(profid);
@@ -311,7 +320,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities) {
         assertValid();
         Set<Profile> result = new HashSet<Profile>();
-        ReadLock readLock = aquireReadLock(version);
+        LockHandle readLock = aquireReadLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             for (ProfileState aux : versionState.getProfileStates()) {
@@ -331,7 +340,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile addProfile(Version version, Profile profile) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileIdentity identity = profile.getIdentity();
@@ -347,7 +356,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile removeProfile(Version version, ProfileIdentity identity) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             Set<ContainerIdentity> containers = versionState.getRequiredProfile(identity).getContainerIds();
@@ -364,7 +373,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileState profileState = versionState.getRequiredProfile(identity);
@@ -383,7 +392,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public void addContainerToProfileVersion(Version version, ContainerIdentity containerId) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState profileVersion = getRequiredProfileVersion(version);
             profileVersion.addContainer(containerId);
@@ -395,7 +404,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public void removeContainerFromProfileVersion(Version version, ContainerIdentity containerId) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState profileVersion = getRequiredProfileVersion(version);
             profileVersion.removeContainer(containerId);
@@ -407,7 +416,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public void addContainerToProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState profileVersion = getRequiredProfileVersion(version);
             ProfileState profileState = profileVersion.getRequiredProfile(profileId);
@@ -420,7 +429,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public void removeContainerFromProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId) {
         assertValid();
-        WriteLock writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState profileVersion = getRequiredProfileVersion(version);
             ProfileState profileState = profileVersion.getRequiredProfile(profileId);

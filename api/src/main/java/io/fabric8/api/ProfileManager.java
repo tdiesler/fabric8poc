@@ -35,6 +35,11 @@ import org.jboss.gravia.runtime.Runtime;
 public interface ProfileManager {
 
     /**
+     * Aquire an exclusive write lock for the given profile version
+     */
+    LockHandle aquireProfileVersionLock(Version version);
+
+    /**
      * Get the set of profile version identities in the cluster
      */
     Set<Version> getProfileVersionIds();

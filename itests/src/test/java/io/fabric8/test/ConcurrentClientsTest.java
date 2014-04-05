@@ -129,11 +129,11 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
             CreateOptions options = builder.addIdentity(prefix + "#" + index).getCreateOptions();
             Container cnt = manager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();
-            //System.out.println(container);
+            //System.out.println(cnt);
             Assert.assertSame(State.CREATED, cnt.getState());
             Thread.sleep(10);
             cnt = manager.start(cntId);
-            //System.out.println(container);
+            //System.out.println(cnt);
             Assert.assertSame(State.STARTED, cnt.getState());
             return cntId;
         }
@@ -141,11 +141,11 @@ public class ConcurrentClientsTest extends AbstractEmbeddedTest {
 
         private void stopAndDestroy(ContainerManager manager, ContainerIdentity cntId) throws InterruptedException {
             Container cnt = manager.stop(cntId);
-            //System.out.println(container);
+            //System.out.println(cnt);
             Assert.assertSame(State.STOPPED, cnt.getState());
             Thread.sleep(10);
             cnt = manager.destroy(cntId);
-            //System.out.println(container);
+            //System.out.println(cnt);
             Assert.assertSame(State.DESTROYED, cnt.getState());
         }
     }

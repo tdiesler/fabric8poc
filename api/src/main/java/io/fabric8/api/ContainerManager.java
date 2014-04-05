@@ -36,6 +36,11 @@ import org.jboss.gravia.runtime.Runtime;
 public interface ContainerManager {
 
     /**
+     * Aquire an exclusive write lock for the given container
+     */
+    LockHandle aquireContainerLock(ContainerIdentity identity);
+
+    /**
      * Create a container with the given options
      */
     Container createContainer(CreateOptions options);

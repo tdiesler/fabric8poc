@@ -114,6 +114,6 @@ final class ImmutableProfile implements Profile {
 
     @Override
     public String toString() {
-        return identity.toString();
+        return "Profile[name=" + identity + "]";
     }
 }

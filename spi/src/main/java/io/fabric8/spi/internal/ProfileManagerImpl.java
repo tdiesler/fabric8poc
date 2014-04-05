@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
@@ -53,6 +54,17 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     @Deactivate
     void deactivate() {
         deactivateComponent();
+    }
+
+    @Override
+    public LockHandle aquireProfileVersionLock(Version version) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return service.aquireProfileVersionLock(version);
+        } finally {
+            permit.release();
+        }
     }
 
     @Override
