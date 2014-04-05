@@ -43,18 +43,20 @@ final class ImmutableContainer implements Container {
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
     private final AttributeSupport attributes;
     private final ContainerIdentity parent;
+    private final String tostring;
     private final State state;
 
-    ImmutableContainer(ContainerState containerState) {
-        NotNullException.assertValue(containerState, "containerState");
-        identity = containerState.getIdentity();
-        ContainerState parentState = containerState.getParent();
+    ImmutableContainer(ContainerState cntState) {
+        NotNullException.assertValue(cntState, "containerState");
+        identity = cntState.getIdentity();
+        ContainerState parentState = cntState.getParent();
         parent = parentState != null ? parentState.getIdentity() : null;
-        profileVersion = containerState.getProfileVersion();
-        state = containerState.getState();
-        children.addAll(containerState.getChildContainers());
-        profiles.addAll(containerState.getProfiles());
-        attributes = new AttributeSupport(containerState.getAttributes());
+        profileVersion = cntState.getProfileVersion();
+        state = cntState.getState();
+        children.addAll(cntState.getChildContainers());
+        profiles.addAll(cntState.getProfiles());
+        attributes = new AttributeSupport(cntState.getAttributes());
+        tostring = cntState.toString();
     }
 
     @Override
@@ -131,6 +133,6 @@ final class ImmutableContainer implements Container {
 
     @Override
     public String toString() {
-        return "Container[name=" + identity + ",state=" + state + "]";
+        return tostring;
     }
 }

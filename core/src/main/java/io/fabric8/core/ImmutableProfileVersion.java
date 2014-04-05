@@ -39,13 +39,15 @@ final class ImmutableProfileVersion implements ProfileVersion {
     private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
     private final AttributeSupport attributes;
+    private final String tostring;
 
-    ImmutableProfileVersion(ProfileVersionState profileVersion) {
-        NotNullException.assertValue(profileVersion, "profileVersion");
-        identity = profileVersion.getIdentity();
-        containers.addAll(profileVersion.getContainerIds());
-        profiles.addAll(profileVersion.getProfileIdentities());
-        attributes = new AttributeSupport(profileVersion.getAttributes());
+    ImmutableProfileVersion(ProfileVersionState versionState) {
+        NotNullException.assertValue(versionState, "versionState");
+        identity = versionState.getIdentity();
+        containers.addAll(versionState.getContainerIds());
+        profiles.addAll(versionState.getProfileIdentities());
+        attributes = new AttributeSupport(versionState.getAttributes());
+        tostring = versionState.toString();
     }
 
     @Override
@@ -92,6 +94,6 @@ final class ImmutableProfileVersion implements ProfileVersion {
 
     @Override
     public String toString() {
-        return "ProfileVersion[name=" + identity + "]";
+        return tostring;
     }
 }

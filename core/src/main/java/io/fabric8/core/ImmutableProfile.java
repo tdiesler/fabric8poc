@@ -43,14 +43,16 @@ final class ImmutableProfile implements Profile {
     private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
     private final AttributeSupport attributes;
+    private final String tostring;
 
-    ImmutableProfile(ProfileState profile) {
-        NotNullException.assertValue(profile, "profile");
-        version = profile.getProfileVersion();
-        identity = profile.getIdentity();
-        containers.addAll(profile.getContainerIds());
-        profileItems.addAll(profile.getProfileItems(null));
-        attributes = new AttributeSupport(profile.getAttributes());
+    ImmutableProfile(ProfileState profileState) {
+        NotNullException.assertValue(profileState, "profileState");
+        version = profileState.getProfileVersion();
+        identity = profileState.getIdentity();
+        containers.addAll(profileState.getContainerIds());
+        profileItems.addAll(profileState.getProfileItems(null));
+        attributes = new AttributeSupport(profileState.getAttributes());
+        tostring = profileState.toString();
     }
 
     @Override
@@ -114,6 +116,6 @@ final class ImmutableProfile implements Profile {
 
     @Override
     public String toString() {
-        return "Profile[name=" + identity + "]";
+        return tostring;
     }
 }

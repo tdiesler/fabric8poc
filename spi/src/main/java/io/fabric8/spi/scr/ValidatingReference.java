@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ValidatingReference<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidatingReference.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidatingReference.class);
 
     private final AtomicReference<T> reference = new AtomicReference<T>();
 
@@ -39,7 +39,7 @@ public class ValidatingReference<T> {
      * Bind the given reference
      */
     public void bind(T ref) {
-        LOG.debug("bind: {}", ref);
+        LOGGER.trace("bind: {}", ref);
         reference.set(ref);
     }
 
@@ -47,7 +47,7 @@ public class ValidatingReference<T> {
      * Unbind the given reference
      */
     public void unbind(T ref) {
-        LOG.debug("unbind: {}", ref);
+        LOGGER.trace("unbind: {}", ref);
         reference.compareAndSet(ref, null);
     }
 

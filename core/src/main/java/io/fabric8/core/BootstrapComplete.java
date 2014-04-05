@@ -20,6 +20,8 @@
 package io.fabric8.core;
 
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ProfileManager;
+import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.osgi.service.component.annotations.Activate;
@@ -47,4 +49,19 @@ public final class BootstrapComplete extends AbstractComponent {
 
     void unbindContainerManager(ContainerManager service) {
     }
+
+    @Reference
+    void bindProfileManager(ProfileManager service) {
+    }
+
+    void unbindProfileManager(ProfileManager service) {
+    }
+
+    @Reference
+    void bindContainerService(ContainerService service) {
+    }
+
+    void unbindContainerService(ContainerService service) {
+    }
+
 }

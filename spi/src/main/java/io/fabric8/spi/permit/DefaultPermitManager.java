@@ -127,7 +127,7 @@ public final class DefaultPermitManager implements PermitManager {
         }
 
         void activate(final T instance) {
-            LOGGER.debug("activating: {}",  state);
+            LOGGER.trace("activating: {}",  state);
             Runnable task = new Runnable() {
                 @Override
                 public void run() {
@@ -136,9 +136,9 @@ public final class DefaultPermitManager implements PermitManager {
                         if (!exclusiveLock) {
                             clientPermits.release(state.getMaximumPermits());
                         }
-                        LOGGER.debug("activated: {}",  state);
+                        LOGGER.trace("activated: {}",  state);
                     } else {
-                        LOGGER.debug("already active: {}",  state);
+                        LOGGER.trace("already active: {}",  state);
                     }
                 }
             };
@@ -154,7 +154,7 @@ public final class DefaultPermitManager implements PermitManager {
         boolean acquire(boolean exclusive, long timeout, TimeUnit unit) {
             String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
             String exclstr = exclusive ? " exclusive" : "";
-            LOGGER.debug("aquiring" + exclstr + timestr + ": {}", state);
+            LOGGER.trace("aquiring" + exclstr + timestr + ": {}", state);
 
             boolean success;
             try {
@@ -181,7 +181,7 @@ public final class DefaultPermitManager implements PermitManager {
                 }
 
                 long permitCount = deactivationLatch.getCount();
-                LOGGER.debug("awaiting [{}] permits: {}", permitCount, state);
+                LOGGER.trace("awaiting [{}] permits: {}", permitCount, state);
 
                 // Wait for all permits to get returned
                 try {
@@ -205,7 +205,7 @@ public final class DefaultPermitManager implements PermitManager {
                     exclusiveLock = exclusive;
                     usageCount++;
                 }
-                LOGGER.debug("aquired [" + usageCount + "]: {}", state);
+                LOGGER.trace("aquired [" + usageCount + "]: {}", state);
             } else {
                 LOGGER.warn("Not aquired: {}", state);
             }
@@ -234,19 +234,19 @@ public final class DefaultPermitManager implements PermitManager {
                     }
                 }
             }
-            LOGGER.debug("released [" + usageCount + "]: {}", state);
+            LOGGER.trace("released [" + usageCount + "]: {}", state);
         }
 
         boolean deactivate(final long timeout, final TimeUnit unit) {
             String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
-            LOGGER.debug("deactivating" + timestr + ": {}", state);
+            LOGGER.trace("deactivating" + timestr + ": {}", state);
 
             Callable<Boolean> task = new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
 
                     if (!active.get()) {
-                        LOGGER.debug("already inactive: {}",  state);
+                        LOGGER.trace("already inactive: {}",  state);
                         return true;
                     }
 
@@ -256,7 +256,7 @@ public final class DefaultPermitManager implements PermitManager {
                     }
 
                     long permitCount = deactivationLatch.getCount();
-                    LOGGER.debug("awaiting [{}] permits: {}", permitCount, state);
+                    LOGGER.trace("awaiting [{}] permits: {}", permitCount, state);
 
                     try {
                         if (timeout > 0 && unit != null) {
@@ -286,7 +286,7 @@ public final class DefaultPermitManager implements PermitManager {
 
         private boolean deactivationResult(boolean success) {
             if (success) {
-                LOGGER.debug("deactivated: {}", state);
+                LOGGER.trace("deactivated: {}", state);
                 active.set(false);
             } else {
                 LOGGER.warn("Not deactivated: {}", state);

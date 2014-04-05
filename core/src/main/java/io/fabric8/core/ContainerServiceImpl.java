@@ -55,6 +55,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The internal {@link ContainerService}
@@ -83,6 +85,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
@@ -132,6 +136,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private Container createContainerInternal(ContainerState parentState, CreateOptions options, ProvisionListener listener) {
         ContainerState cntState = new ContainerState(parentState, options, configToken);
         ContainerIdentity identity = cntState.getIdentity();
+        LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(parentState, cntState);
         Profile defaultProfile = profileService.get().getDefaultProfile();
         LockHandle writeLock = aquireWriteLock(identity);
@@ -172,6 +177,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle writeLock = aquireWriteLock(identity);
         try {
             ContainerState cntState = getRequiredContainerState(identity);
+            LOGGER.info("Start container: {}", cntState);
             return new ImmutableContainer(cntState.start());
         } finally {
             writeLock.unlock();
@@ -184,6 +190,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle writeLock = aquireWriteLock(identity);
         try {
             ContainerState cntState = getRequiredContainerState(identity);
+            LOGGER.info("Stop container: {}", cntState);
             return new ImmutableContainer(cntState.stop());
         } finally {
             writeLock.unlock();
@@ -200,6 +207,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 throw new IllegalStateException("Cannot destroy a container that has active child containers: " + identity);
 
             synchronized (containerRegistry) {
+                LOGGER.info("Destroy container: {}", cntState);
                 containerRegistry.get().removeContainer(identity);
                 cntState.destroy();
             }
@@ -250,8 +258,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionListener listener) {
+
         Version prevVersion = cntState.getProfileVersion();
         Set<ProfileIdentity> cntProfiles = cntState.getProfiles();
+        Set<Profile> nextProfiles = profileService.get().getProfiles(nextVersion, cntProfiles);
+
+        LOGGER.info("Set container version: {} <= {}", cntState, nextVersion);
 
         // Unprovision the previous profiles
         if (prevVersion != null) {
@@ -261,7 +273,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         // Provision the next profiles
-        Set<Profile> nextProfiles = profileService.get().getProfiles(nextVersion, cntProfiles);
         provisionProfiles(cntState, nextProfiles, listener);
 
         // Update the references
@@ -285,6 +296,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private Container addProfilesInternal(ContainerState cntState, Set<ProfileIdentity> identities, ProvisionListener listener) {
         Version version = cntState.getProfileVersion();
         Set<Profile> profiles = profileService.get().getProfiles(version, identities);
+
+        LOGGER.info("Add container profiles: {} <= {}", cntState, identities);
 
         // Provision the profiles
         provisionProfiles(cntState, profiles, listener);
@@ -310,6 +323,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         Version version = cntState.getProfileVersion();
         Set<Profile> profiles = profileService.get().getProfiles(version, identities);
 
+        LOGGER.info("Remove container profiles: {} => {}", cntState, identities);
+
         // Unprovision the profiles
         unprovisionProfiles(cntState, profiles, listener);
 
@@ -321,6 +336,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private void provisionProfiles(ContainerState cntState, Set<Profile> profiles, ProvisionListener listener) {
         Container cnt = new ImmutableContainer(cntState);
         for (Profile profile : profiles) {
+
+            LOGGER.info("Provision profile: {} <= {}", cntState, profile);
+
             ProvisionEvent event = new ProvisionEvent(cnt, profile, EventType.PROVISIONING);
             eventDispatcher.get().dispatchEvent(event, listener);
 
@@ -337,6 +355,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private void unprovisionProfiles(ContainerState cntState, Set<Profile> profiles, ProvisionListener listener) {
         Container cnt = new ImmutableContainer(cntState);
         for (Profile profile : profiles) {
+
+            LOGGER.info("Unprovision profile: {} => {}", cntState, profile);
+
             ProvisionEvent event = new ProvisionEvent(cnt, profile, EventType.REMOVING);
             eventDispatcher.get().dispatchEvent(event, listener);
 
@@ -541,7 +562,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         @Override
         public String toString() {
-            return "Container[name=" + identity + ",state=" + state + "]";
+            // Keep in sync with {@link ImmutableContainer}
+            return "Container[name=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
         }
     }
 }

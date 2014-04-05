@@ -60,6 +60,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The internal {@link ProfileService}
@@ -91,6 +93,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = { ProfileService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class ProfileServiceImpl extends AbstractProtectedComponent<ProfileService> implements ProfileService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
+
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
     private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
     private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
@@ -114,7 +118,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         // Add the default profile version
         ProfileVersionBuilder versionBuilder = versionBuilderFactory.get().create();
         ProfileVersion profileVersion = versionBuilder.addIdentity(DEFAULT_PROFILE_VERSION).createProfileVersion();
-        ProfileVersionState versionState = addProfileVersionInternal(profileVersion);
+        addProfileVersionInternal(profileVersion);
 
         // Build the default profile
         ProfileBuilder profileBuilder = profileBuilderFactory.get().create();
@@ -128,7 +132,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         // Add the default profile
         LockHandle writeLock = aquireWriteLock(DEFAULT_PROFILE_VERSION);
         try {
-            versionState.addProfile(defaultProfile);
+            addProfileInternal(DEFAULT_PROFILE_VERSION, defaultProfile);
         } finally {
             writeLock.unlock();
         }
@@ -254,6 +258,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private ProfileVersionState addProfileVersionInternal(ProfileVersion version) {
         ProfileVersionState versionState = new ProfileVersionState(version);
+        LOGGER.info("Add profile version: {}", versionState);
         synchronized (profileVersions) {
             Version identity = version.getIdentity();
             if (profileVersions.get(identity) != null)
@@ -276,6 +281,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
             synchronized (profileVersions) {
                 ProfileVersionState versionState = profileVersions.remove(version);
+                LOGGER.info("Remove profile version: {}", versionState);
                 profileVersionLocks.remove(version);
                 versionState.clearProfiles();
                 return new ImmutableProfileVersion(versionState);
@@ -340,6 +346,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile addProfile(Version version, Profile profile) {
         assertValid();
+        return addProfileInternal(version, profile);
+    }
+
+    private Profile addProfileInternal(Version version, Profile profile) {
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
@@ -347,10 +357,25 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             if (versionState.getProfileState(identity) != null)
                 throw new IllegalStateException("Profile already exists: " + identity);
 
-            return new ImmutableProfile(versionState.addProfile(profile));
+            Set<ProfileState> profileParents = getProfileParents(versionState, profile);
+            ProfileState profileState = new ProfileState(versionState, profile, profileParents);
+
+            LOGGER.info("Add profile to version: {} <= {}", versionState, profileState);
+            return new ImmutableProfile(versionState.addProfile(profileState));
         } finally {
             writeLock.unlock();
         }
+    }
+
+    private Set<ProfileState> getProfileParents(ProfileVersionState versionState, Profile profile) {
+        Set<ProfileState> result = new HashSet<ProfileState>();
+        for (ProfileIdentity profid : profile.getParents()) {
+            ProfileState pstate = versionState.getRequiredProfile(profid);
+            if (pstate == null)
+                throw new IllegalStateException("Cannot obtain parent profile: " + profid);
+            result.add(pstate);
+        }
+        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -363,6 +388,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             if (!containers.isEmpty())
                 throw new IllegalStateException("Cannot remove profile used by: " + containers);
 
+            LOGGER.info("Remove profile from version: {} => {}", versionState, identity);
             ProfileState profileState = versionState.removeProfile(identity);
             return profileState != null ? new ImmutableProfile(profileState) : null;
         } finally {
@@ -377,6 +403,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileState profileState = versionState.getRequiredProfile(identity);
+            LOGGER.info("Update profile: {}", profileState);
             profileState.updateProfileItems(items);
             if (apply) {
                 Set<ConfigurationItem> configItems = profileState.getProfileItems(ConfigurationItem.class);
@@ -550,9 +577,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             containers.remove(identity);
         }
 
-        private ProfileState addProfile(Profile profile) {
-            ProfileState profileState = new ProfileState(this, profile, getProfileParents(profile));
-            profiles.put(profile.getIdentity(), profileState);
+        private ProfileState addProfile(ProfileState profileState) {
+            profiles.put(profileState.getIdentity(), profileState);
             return profileState;
         }
 
@@ -564,15 +590,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             profiles.clear();
         }
 
-        private Set<ProfileState> getProfileParents(Profile profile) {
-            Set<ProfileState> result = new HashSet<ProfileState>();
-            for (ProfileIdentity pid : profile.getParents()) {
-                ProfileState pstate = profiles.get(pid);
-                if (pstate == null)
-                    throw new IllegalStateException("Cannot obtain parent profile: " + pid);
-                result.add(pstate);
-            }
-            return Collections.unmodifiableSet(result);
+        @Override
+        public String toString() {
+            return "ProfileVersion[" + identity + "]";
         }
     }
 
@@ -659,6 +679,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                     profileItems.put(item.getIdentity(), item);
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Profile[version=" + versionState.getIdentity() + ",name=" + identity + "]";
         }
     }
 }
