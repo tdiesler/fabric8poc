@@ -31,5 +31,5 @@ import java.util.Map;
  */
 public interface ConfigurationItem extends ProfileItem {
 
-    Map<String, String> getConfiguration();
+    Map<String, Object> getConfiguration();
 }

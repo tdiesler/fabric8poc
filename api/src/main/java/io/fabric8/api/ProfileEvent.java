@@ -17,32 +17,31 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.api;
 
-import io.fabric8.api.ConfigurationItem;
-import io.fabric8.api.ConfigurationItemBuilder;
+/**
+ * A profile event
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
+@SuppressWarnings("serial")
+public class ProfileEvent extends FabricEvent<Profile, ProfileEvent.Type> {
 
-import java.util.Map;
+    public enum Type {
+        UPDATED, ERROR
+    }
 
-public final class DefaultConfigurationItemBuilder implements ConfigurationItemBuilder {
+    public ProfileEvent(Profile profile, Type type) {
+        this(profile, type, null);
+    }
 
-    private String identity;
-    private Map<String, Object> config;
-
-    @Override
-    public ConfigurationItemBuilder addIdentity(String identity) {
-        this.identity = identity;
-        return this;
+    public ProfileEvent(Profile profile, Type type, Throwable error) {
+        super(profile, type, profile, error);
     }
 
     @Override
-    public ConfigurationItemBuilder setConfiguration(Map<String, Object> config) {
-        this.config = config;
-        return this;
-    }
-
-    @Override
-    public ConfigurationItem getConfigurationItem() {
-        return new DefaultConfigurationItem(identity, config);
+    public String toString() {
+        return "ProfileEvent[source=" + getSource().getIdentity() + ",type=" + getType() + "]";
     }
 }

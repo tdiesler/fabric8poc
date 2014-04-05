@@ -27,7 +27,7 @@ import io.fabric8.api.Failure;
 import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ProvisionListener;
+import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
@@ -83,7 +83,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container createContainer(ContainerIdentity identity, CreateOptions options, ProvisionListener listener) {
+    public Container createContainer(ContainerIdentity identity, CreateOptions options, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -171,7 +171,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container setVersion(ContainerIdentity identity, Version version, ProvisionListener listener) {
+    public Container setVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -215,7 +215,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener) {
+    public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -226,7 +226,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -259,11 +259,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Reference
-    void bindStateService(PermitManager stateService) {
-        this.permitManager.bind(stateService);
+    void bindPermitManager(PermitManager service) {
+        this.permitManager.bind(service);
     }
 
-    void unbindStateService(PermitManager stateService) {
-        this.permitManager.unbind(stateService);
+    void unbindPermitManager(PermitManager service) {
+        this.permitManager.unbind(service);
     }
 }

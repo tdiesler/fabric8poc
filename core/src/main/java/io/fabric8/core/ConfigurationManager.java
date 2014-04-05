@@ -20,12 +20,10 @@
 package io.fabric8.core;
 
 import io.fabric8.api.ConfigurationItem;
-import io.fabric8.api.Profile;
-import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -35,15 +33,13 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { BootstrapService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class BootstrapService extends AbstractComponent {
+@Component(service = { ConfigurationManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+public final class ConfigurationManager extends AbstractComponent {
 
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
-    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
     @Activate
-    void activate() throws Exception {
-        activateInternal();
+    void activate(Map<String, ?> config) {
         activateComponent();
     }
 
@@ -52,10 +48,9 @@ public final class BootstrapService extends AbstractComponent {
         deactivateComponent();
     }
 
-    private void activateInternal() throws IOException {
-        Profile profile = profileService.get().getDefaultProfile();
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
-        ProfileSupport.applyConfigurationItems(configAdmin.get(), items);
+    void applyConfigurationItems(Set<ConfigurationItem> configItems) {
+        assertValid();
+        ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
     }
 
     @Reference
@@ -65,14 +60,5 @@ public final class BootstrapService extends AbstractComponent {
 
     void unbindConfigurationAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
-    }
-
-    @Reference
-    void bindProfileService(ProfileService service) {
-        this.profileService.bind(service);
-    }
-
-    void unbindProfileService(ProfileService service) {
-        this.profileService.unbind(service);
     }
 }

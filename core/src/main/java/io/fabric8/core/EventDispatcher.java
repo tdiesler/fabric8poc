@@ -19,11 +19,17 @@
  */
 package io.fabric8.core;
 
+import io.fabric8.api.FabricEventListener;
+import io.fabric8.api.ProfileEvent;
+import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProvisionEvent;
-import io.fabric8.api.ProvisionListener;
+import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.scr.AbstractComponent;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,74 +48,107 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = { EventDispatcher.class }, immediate = true)
 public final class EventDispatcher extends AbstractComponent {
 
-    private final Set<ProvisionListener> listeners = new HashSet<ProvisionListener>();
-    private ServiceTracker<?, ?> tracker;
+    private final Map<Class<?>, Set<FabricEventListener<?>>> listenerMapping = new HashMap<Class<?>, Set<FabricEventListener<?>>>();
+    private ServiceTracker<ProvisionEventListener, ProvisionEventListener> provisionTracker;
+    private ServiceTracker<ProfileEventListener, ProfileEventListener> profileTracker;
     private ExecutorService executor;
 
     @Activate
     void activate() {
-        executor = createExecutor();
-        tracker = createTracker();
+        executor = Executors.newCachedThreadPool(getThreadFactory());
+        provisionTracker = createTracker(ProvisionEventListener.class);
+        profileTracker = createTracker(ProfileEventListener.class);
         activateComponent();
     }
 
     @Deactivate
     void deactivate() {
         executor.shutdown();
-        tracker.close();
+        provisionTracker.close();
+        profileTracker.close();
         deactivateComponent();
     }
 
-    void dispatchEvent(final ProvisionEvent event, final ProvisionListener listener) {
+    void dispatchProvisionEvent(final ProvisionEvent event, final ProvisionEventListener listener) {
         NotNullException.assertValue(event, "event");
+        Set<ProvisionEventListener> listeners = getEventListeners(ProvisionEventListener.class, listener);
+        if (listeners != null) {
+            for (final ProvisionEventListener aux : listeners) {
+                Runnable task = new Runnable() {
+                    public void run() {
+                        aux.processEvent(event);
+                    }
+                };
+                executor.submit(task);
+            }
+        }
+    }
 
-        // Get a snapshot of the current listeners
-        final HashSet<ProvisionListener> snapshot;
-        synchronized (listeners) {
-            snapshot = new HashSet<ProvisionListener>(listeners);
+    void dispatchProfileEvent(final ProfileEvent event, final ProfileEventListener listener) {
+        NotNullException.assertValue(event, "event");
+        Set<ProfileEventListener> listeners = getEventListeners(ProfileEventListener.class, listener);
+        if (listeners != null) {
+            for (final ProfileEventListener aux : listeners) {
+                Runnable task = new Runnable() {
+                    public void run() {
+                        aux.processEvent(event);
+                    }
+                };
+                executor.submit(task);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends FabricEventListener<?>> Set<T> getEventListeners(Class<T> type, T listener) {
+        Set<T> result = new HashSet<T>();
+        synchronized (listenerMapping) {
+            Set<T> snapshot = (Set<T>) listenerMapping.get(type);
+            if (snapshot != null) {
+                result.addAll(snapshot);
+            }
         }
         if (listener != null) {
-            snapshot.add(listener);
+            result.add(listener);
         }
-
-        // Submit the async event delivery to every listener
-        for (final ProvisionListener aux : snapshot) {
-            Runnable task = new Runnable() {
-                public void run() {
-                    aux.processEvent(event);
-                }
-            };
-            executor.submit(task);
-        }
+        return Collections.unmodifiableSet(result);
     }
 
-    private ExecutorService createExecutor() {
-        return Executors.newCachedThreadPool(new ThreadFactory() {
+    private ThreadFactory getThreadFactory() {
+        ThreadFactory threadFactory = new ThreadFactory() {
             @Override
             public Thread newThread(Runnable run) {
-                return new Thread(run, EventDispatcher.class.getSimpleName()) {
-                };
+                return new Thread(run, EventDispatcher.class.getSimpleName());
             }
-        });
+        };
+        return threadFactory;
     }
 
-    private ServiceTracker<?, ?> createTracker() {
+    private <T extends FabricEventListener<?>> ServiceTracker<T, T> createTracker(final Class<T> type) {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
-        ServiceTracker<?, ?> tracker = new ServiceTracker<ProvisionListener, ProvisionListener>(syscontext, ProvisionListener.class, null) {
+        ServiceTracker<T, T> tracker = new ServiceTracker<T, T>(syscontext, type, null) {
 
             @Override
-            public ProvisionListener addingService(ServiceReference<ProvisionListener> reference) {
-                ProvisionListener service = super.addingService(reference);
-                synchronized (listeners) {
+            @SuppressWarnings("unchecked")
+            public T addingService(ServiceReference<T> reference) {
+                T service = super.addingService(reference);
+                synchronized (listenerMapping) {
+                    Set<T> listeners = (Set<T>) listenerMapping.get(type);
+                    if (listeners == null) {
+                        listeners = new HashSet<T>();
+                        listenerMapping.put(type, (Set<FabricEventListener<?>>) listeners);
+                    }
                     listeners.add(service);
                 }
                 return service;
             }
 
             @Override
-            public void removedService(ServiceReference<ProvisionListener> reference, ProvisionListener service) {
-                synchronized (listeners) {
+            @SuppressWarnings("unchecked")
+            public void removedService(ServiceReference<T> reference, T service) {
+                synchronized (listenerMapping) {
+                    Set<T> listeners = (Set<T>) listenerMapping.get(type);
                     listeners.remove(service);
                 }
                 super.removedService(reference, service);

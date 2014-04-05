@@ -99,5 +99,5 @@ public interface ProfileManager {
     /**
      * Update profile items in the given profile
      */
-    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply);
+    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, ProfileEventListener listener);
 }

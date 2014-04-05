@@ -21,6 +21,7 @@ package io.fabric8.spi.internal;
 
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
@@ -189,22 +190,22 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, boolean apply) {
+    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, ProfileEventListener listener) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.updateProfile(version, identity, profileItems, apply);
+            return service.updateProfile(version, identity, profileItems, listener);
         } finally {
             permit.release();
         }
     }
 
     @Reference
-    void bindStateService(PermitManager stateService) {
-        this.permitManager.bind(stateService);
+    void bindPermitManager(PermitManager service) {
+        this.permitManager.bind(service);
     }
 
-    void unbindStateService(PermitManager stateService) {
-        this.permitManager.unbind(stateService);
+    void unbindPermitManager(PermitManager service) {
+        this.permitManager.unbind(service);
     }
 }

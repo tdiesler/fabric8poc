@@ -36,6 +36,11 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
         super.deactivateComponent();
     }
 
+    @Override
+    protected void activateComponent() {
+        throw new UnsupportedOperationException();
+    }
+
     protected final void deactivateComponent() {
         throw new UnsupportedOperationException();
     }

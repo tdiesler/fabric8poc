@@ -33,5 +33,5 @@ public interface ConfigurationItemBuilder extends ProfileItemBuilder<Configurati
 
     ConfigurationItemBuilder addIdentity(String identity);
 
-    ConfigurationItemBuilder setConfiguration(Map<String, String> config);
+    ConfigurationItemBuilder setConfiguration(Map<String, Object> config);
 }

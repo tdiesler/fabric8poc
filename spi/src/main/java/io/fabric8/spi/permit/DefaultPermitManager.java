@@ -109,9 +109,7 @@ public final class DefaultPermitManager implements PermitManager {
             this.executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable target) {
-                    Thread thread = new Thread(target);
-                    thread.setName("StateActivation");
-                    return thread;
+                    return new Thread(target, "StateActivation");
                 }
             });
         }

@@ -48,7 +48,7 @@ public interface ContainerManager {
     /**
      * Create a container with the given options
      */
-    Container createContainer(ContainerIdentity parentId, CreateOptions options, ProvisionListener listener);
+    Container createContainer(ContainerIdentity parentId, CreateOptions options, ProvisionEventListener listener);
 
     /**
      * Get the set of container identities in the cluster
@@ -109,17 +109,17 @@ public interface ContainerManager {
     /**
      * Set the version for the container with the given identity
      */
-    Container setVersion(ContainerIdentity identity, Version version, ProvisionListener listener);
+    Container setVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener);
 
     /**
      * Add profiles to the container with the given identity
      */
-    Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener);
+    Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener);
 
     /**
      * Remove profiles from the container with the given identity
      */
-    Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionListener listener);
+    Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener);
 
     /**
      * Get failures from the container with the given identity

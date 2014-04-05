@@ -22,28 +22,11 @@ package io.fabric8.api;
 
 
 /**
- * A provisioning event
+ * A provision event listener
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-@SuppressWarnings("serial")
-public class ProvisionEvent extends FabricEvent<Container, ProvisionEvent.Type> {
+public interface ProvisionEventListener extends FabricEventListener<ProvisionEvent> {
 
-    public enum Type {
-        PROVISIONING, PROVISIONED, REMOVING, REMOVED, ERROR
-    }
-
-    public ProvisionEvent(Container source, Type type, Profile profile) {
-        this(source, type, profile, null);
-    }
-
-    public ProvisionEvent(Container source, Type type, Profile profile, Throwable error) {
-        super(source, type, profile, error);
-    }
-
-    @Override
-    public String toString() {
-        return "ProvisionEvent[source=" + getSource().getIdentity() + ",profile=" + getProfile().getIdentity() + ",type=" + getType() + "]";
-    }
 }

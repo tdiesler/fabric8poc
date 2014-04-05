@@ -28,9 +28,9 @@ import java.util.Map;
 
 final class DefaultConfigurationItem extends AbstractProfileItem implements ConfigurationItem {
 
-    private final Map<String, String> configuration = new HashMap<String, String>();
+    private final Map<String, Object> configuration = new HashMap<String, Object>();
 
-    DefaultConfigurationItem(String identity, Map<String, String> config) {
+    DefaultConfigurationItem(String identity, Map<String, Object> config) {
         super(identity);
         if (config != null) {
             configuration.putAll(config);
@@ -38,7 +38,12 @@ final class DefaultConfigurationItem extends AbstractProfileItem implements Conf
     }
 
     @Override
-    public Map<String, String> getConfiguration() {
+    public Map<String, Object> getConfiguration() {
         return Collections.unmodifiableMap(configuration);
+    }
+
+    @Override
+    public String toString() {
+        return "ConfigurationItem[id=" + getIdentity() + ",config=" + configuration + "]";
     }
 }

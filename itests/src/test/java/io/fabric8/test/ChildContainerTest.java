@@ -19,14 +19,10 @@
  */
 package io.fabric8.test;
 
-import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
@@ -37,9 +33,14 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
-import io.fabric8.api.ProvisionListener;
+import io.fabric8.api.ProvisionEvent.Type;
+import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.support.AbstractEmbeddedTest;
+
+import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.resource.Version;
 import org.junit.Assert;
@@ -73,28 +74,6 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
         Assert.assertEquals(1, cntParent.getProfileIds().size());
         Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
 
-        // Create child container
-        builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
-        options = builder.addIdentity("cntB").getCreateOptions();
-        Container cntChild = cntManager.createContainer(idParent, options, null);
-
-        // Verify child identity
-        ContainerIdentity idChild = cntChild.getIdentity();
-        Assert.assertEquals("cntA:cntB", idChild.getSymbolicName());
-
-        // Verify that the child has the default profile assigned
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
-        Assert.assertEquals(1, cntChild.getProfileIds().size());
-        Assert.assertTrue(cntChild.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
-
-        // Verify that the parent cannot be destroyed
-        try {
-            cntManager.destroy(idParent);
-            Assert.fail("IllegalStateException expected");
-        } catch (IllegalStateException ex) {
-            // expected
-        }
-
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
         ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create();
@@ -122,17 +101,17 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
         }
 
         // Build a new profile and associated it with 2.0
-        ProfileBuilder pbuilder = ProfileBuilder.Factory.create();
-        Profile default20 = pbuilder.addIdentity("default").createProfile();
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
+        Profile default20 = profileBuilder.addIdentity("default").createProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
         final CountDownLatch latchA = new CountDownLatch(1);
-        ProvisionListener listener = new ProvisionListener() {
+        ProvisionEventListener listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == EventType.PROVISIONED && "default".equals(symbolicName)) {
+                if (event.getType() == Type.PROVISIONED && "default".equals(symbolicName)) {
                     latchA.countDown();
                 }
             }
@@ -146,10 +125,16 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
         Assert.assertEquals(1, cntParent.getProfileIds().size());
 
         // Create profile foo
-        pbuilder = ProfileBuilder.Factory.create();
-        Profile fooProfile = pbuilder.addIdentity("foo").createProfile();
+        profileBuilder = ProfileBuilder.Factory.create();
+        profileBuilder = profileBuilder.addIdentity("foo");
+        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
+        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
+        profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
+        Profile fooProfile = profileBuilder.createProfile();
 
         // Verify that the profile cannot be added
+        // because the profile version does not yet exist
         try {
             cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), null);
             Assert.fail("IllegalStateException expected");
@@ -171,23 +156,38 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
 
         // Setup the provision listener
         final CountDownLatch latchB = new CountDownLatch(1);
-        listener = new ProvisionListener() {
+        listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == EventType.PROVISIONED && "foo".equals(symbolicName)) {
+                if (event.getType() == Type.PROVISIONED && "foo".equals(symbolicName)) {
                     latchB.countDown();
                 }
             }
         };
 
-        // Add profile foo to container
+        // Add profile foo to parent container
         cntParent = cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
         Assert.assertTrue("ProvisionEvent received", latchB.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
         Assert.assertTrue(cntParent.getProfileIds().contains(fooProfile.getIdentity()));
         Assert.assertEquals(2, cntParent.getProfileIds().size());
+
+        // Create child container
+        builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+        options = builder.addIdentity("cntB").getCreateOptions();
+        Container cntChild = cntManager.createContainer(idParent, options, null);
+
+        // Verify child identity
+        ContainerIdentity idChild = cntChild.getIdentity();
+        Assert.assertEquals("cntA:cntB", idChild.getSymbolicName());
+        //Assert.assertEquals("bar", cntChild.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+
+        // Verify that the child has the default profile assigned
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
+        Assert.assertEquals(1, cntChild.getProfileIds().size());
+        Assert.assertTrue(cntChild.getProfileIds().contains(Constants.DEFAULT_PROFILE_IDENTITY));
 
         // Verify that the profile cannot be removed
         // because it is still used by a container
@@ -198,13 +198,21 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
             // expected
         }
 
+        // Verify that the parent cannot be destroyed
+        try {
+            cntManager.destroy(idParent);
+            Assert.fail("IllegalStateException expected");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+
         // Setup the provision listener
         final CountDownLatch latchC = new CountDownLatch(1);
-        listener = new ProvisionListener() {
+        listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
-                if (event.getType() == EventType.REMOVED && "foo".equals(symbolicName)) {
+                if (event.getType() == Type.REMOVED && "foo".equals(symbolicName)) {
                     latchC.countDown();
                 }
             }
@@ -232,16 +240,16 @@ public class ChildContainerTest extends AbstractEmbeddedTest {
 
         // Setup the provision listener
         final CountDownLatch latchD = new CountDownLatch(2);
-        listener = new ProvisionListener() {
+        listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 Profile profile = event.getProfile();
                 String version = profile.getProfileVersion().toString();
                 String symbolicName = profile.getIdentity().getSymbolicName();
-                if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
+                if (event.getType() == Type.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
                 }
-                if (event.getType() == EventType.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
+                if (event.getType() == Type.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
                 }
             }

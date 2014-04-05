@@ -22,16 +22,16 @@ package io.fabric8.api;
 
 
 /**
- * A provision listener
+ * A fabric event listener
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProvisionListener {
+public interface FabricEventListener<T extends FabricEvent<?, ?>> {
 
     /**
-     * Process a provisioning event
+     * Process an event
      */
-    void processEvent(ProvisionEvent event);
+    void processEvent(T event);
 
 }

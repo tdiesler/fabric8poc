@@ -22,7 +22,6 @@ package io.fabric8.core;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
@@ -30,6 +29,8 @@ import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
+import io.fabric8.api.ProfileEvent;
+import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
@@ -54,7 +55,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.jboss.gravia.resource.Version;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -95,9 +95,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
-    private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
-    private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
+    private final ValidatingReference<EventDispatcher> eventDispatcher = new ValidatingReference<EventDispatcher>();
     private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
+    private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
 
     private Map<Version, ProfileVersionState> profileVersions = new ConcurrentHashMap<Version, ProfileVersionState>();
     private Map<Version, ReentrantReadWriteLock> profileVersionLocks = new HashMap<Version, ReentrantReadWriteLock>();
@@ -125,7 +125,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         profileBuilder.addIdentity(DEFAULT_PROFILE_IDENTITY.getSymbolicName());
         ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
         configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
-        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, "default"));
+        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
         profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
         Profile defaultProfile = profileBuilder.createProfile();
 
@@ -397,19 +397,25 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, boolean apply) {
+    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, ProfileEventListener listener) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileState profileState = versionState.getRequiredProfile(identity);
             LOGGER.info("Update profile: {}", profileState);
-            profileState.updateProfileItems(items);
-            if (apply) {
-                Set<ConfigurationItem> configItems = profileState.getProfileItems(ConfigurationItem.class);
-                ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
+            try {
+                profileState.updateProfileItems(items);
+                Profile profile = new ImmutableProfile(profileState);
+                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.Type.UPDATED);
+                eventDispatcher.get().dispatchProfileEvent(event, listener);
+                return profile;
+            } catch (RuntimeException ex) {
+                Profile profile = new ImmutableProfile(profileState);
+                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.Type.ERROR, ex);
+                eventDispatcher.get().dispatchProfileEvent(event, listener);
+                throw ex;
             }
-            return new ImmutableProfile(profileState);
         } finally {
             writeLock.unlock();
         }
@@ -474,6 +480,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Reference
+    void bindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.bind(service);
+    }
+
+    void unbindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.unbind(service);
+    }
+
+    @Reference
     void bindPermitManager(PermitManager stateService) {
         this.permitManager.bind(stateService);
     }
@@ -483,12 +498,12 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Reference
-    void bindConfigurationAdmin(ConfigurationAdmin service) {
-        this.configAdmin.bind(service);
+    void bindProfileBuilderFactory(ProfileBuilderFactory service) {
+        this.profileBuilderFactory.bind(service);
     }
 
-    void unbindConfigurationAdmin(ConfigurationAdmin service) {
-        this.configAdmin.unbind(service);
+    void unbindProfileBuilderFactory(ProfileBuilderFactory service) {
+        this.profileBuilderFactory.unbind(service);
     }
 
     @Reference
@@ -498,15 +513,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     void unbindProfileVersionBuilderFactory(ProfileVersionBuilderFactory service) {
         this.versionBuilderFactory.unbind(service);
-    }
-
-    @Reference
-    void bindProfileBuilderFactory(ProfileBuilderFactory service) {
-        this.profileBuilderFactory.bind(service);
-    }
-
-    void unbindProfileBuilderFactory(ProfileBuilderFactory service) {
-        this.profileBuilderFactory.unbind(service);
     }
 
     static class ProfileVersionState {
@@ -683,7 +689,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         @Override
         public String toString() {
-            return "Profile[version=" + versionState.getIdentity() + ",name=" + identity + "]";
+            return "Profile[version=" + versionState.getIdentity() + ",id=" + identity + "]";
         }
     }
 }
