@@ -61,8 +61,8 @@
         	<include name="org.apache.karaf.shell.console-*"/>
         </fileset-->
         <fileset dir="${deploy.artifacts.lib}">
-        	<include name="fabric8-api-*"/>
-        	<include name="fabric8-spi-*"/>
+        	<include name="fabric8-core-api-*"/>
+        	<include name="fabric8-core-spi-*"/>
         </fileset>
     </copy>
     <copy tofile="${tomcat.patch.dir}/webapps/fabric.war" overwrite="true">

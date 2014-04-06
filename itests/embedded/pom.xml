@@ -37,14 +37,14 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-api</artifactId>
+            <artifactId>fabric8-core-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         
         <!-- Runtime Dependencies -->
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-core</artifactId>
+            <artifactId>fabric8-core-service</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -88,17 +88,17 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-api</artifactId>
+                                    <artifactId>fabric8-core-api</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-spi</artifactId>
+                                    <artifactId>fabric8-core-spi</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-core</artifactId>
+                                    <artifactId>fabric8-core-service</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
                             </artifactItems>

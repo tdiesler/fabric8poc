@@ -22,7 +22,7 @@
 
 package org.wildfly.extension.fabric.service;
 
-import io.fabric8.spi.SystemProperties;
+import io.fabric8.core.spi.SystemProperties;
 
 import java.io.File;
 import java.util.Properties;

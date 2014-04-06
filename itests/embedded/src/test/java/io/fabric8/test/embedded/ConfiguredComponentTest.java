@@ -19,16 +19,16 @@
  */
 package io.fabric8.test.embedded;
 
-import io.fabric8.api.Container;
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ComponentEvent;
-import io.fabric8.api.ComponentEventListener;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.ContainerManager;
-import io.fabric8.api.CreateOptions;
-import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.ContainerService;
+import io.fabric8.core.api.ComponentEvent;
+import io.fabric8.core.api.ComponentEventListener;
+import io.fabric8.core.api.Container;
+import io.fabric8.core.api.ContainerBuilder;
+import io.fabric8.core.api.ContainerIdentity;
+import io.fabric8.core.api.ContainerManager;
+import io.fabric8.core.api.CreateOptions;
+import io.fabric8.core.api.ServiceLocator;
+import io.fabric8.core.api.Container.State;
+import io.fabric8.core.spi.ContainerService;
 import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -92,7 +92,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         // Modify the service configuration
         ServiceRegistration<ConfigurationListener> sreg = syscontext.registerService(ConfigurationListener.class, listener, null);
         try {
-            Module module = runtime.getModules("fabric8-core", null).iterator().next();
+            Module module = runtime.getModules("fabric8-core-service", null).iterator().next();
             ModuleContext moduleContext = module.getModuleContext();
 
             ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);

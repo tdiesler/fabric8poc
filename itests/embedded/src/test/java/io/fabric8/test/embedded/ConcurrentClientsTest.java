@@ -19,13 +19,13 @@
  */
 package io.fabric8.test.embedded;
 
-import io.fabric8.api.Container;
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.ContainerManager;
-import io.fabric8.api.CreateOptions;
-import io.fabric8.api.ServiceLocator;
+import io.fabric8.core.api.Container;
+import io.fabric8.core.api.ContainerBuilder;
+import io.fabric8.core.api.ContainerIdentity;
+import io.fabric8.core.api.ContainerManager;
+import io.fabric8.core.api.CreateOptions;
+import io.fabric8.core.api.ServiceLocator;
+import io.fabric8.core.api.Container.State;
 import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;

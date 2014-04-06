@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-api</artifactId>
+            <artifactId>fabric8-core-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

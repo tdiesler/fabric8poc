@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-core</artifactId>
+            <artifactId>fabric8-core-service</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -74,13 +74,13 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-api</artifactId>
+            <artifactId>fabric8-core-api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-spi</artifactId>
+            <artifactId>fabric8-core-spi</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -132,13 +132,13 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-core</artifactId>
+                                    <artifactId>fabric8-core-service</artifactId>
                                     <version>${project.version}</version>
                                     <includes>OSGI-INF/io.fabric8.**</includes>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-spi</artifactId>
+                                    <artifactId>fabric8-core-spi</artifactId>
                                     <version>${project.version}</version>
                                     <includes>OSGI-INF/io.fabric8.**</includes>
                                 </artifactItem>
@@ -154,8 +154,7 @@
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/io.fabric8.core.BootstrapComplete.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.ProfileBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileVersionBuilderService.xml
-                            </Service-Component>
+                            <Service-Component>OSGI-INF/io.fabric8.core.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.core.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.core.spi.permit.PermitManagerImpl.xml,OSGI-INF/io.fabric8.core.service.BootstrapComplete.xml,OSGI-INF/io.fabric8.core.service.BootstrapService.xml,OSGI-INF/io.fabric8.core.service.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.service.ContainerBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.service.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.service.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.service.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.service.ProfileBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.service.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.service.ProfileVersionBuilderService.xml</Service-Component>
                         </manifestEntries>
                     </archive>
                     <webResources>

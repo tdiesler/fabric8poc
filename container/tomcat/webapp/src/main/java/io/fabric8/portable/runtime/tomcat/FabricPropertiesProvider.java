@@ -21,7 +21,7 @@
  */
 package io.fabric8.portable.runtime.tomcat;
 
-import io.fabric8.spi.SystemProperties;
+import io.fabric8.core.spi.SystemProperties;
 
 import java.io.File;
 import java.util.Properties;

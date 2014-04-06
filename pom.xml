@@ -31,6 +31,7 @@
     <version>2.0.0-SNAPSHOT</version>
 
     <name>Fabric8</name>
+    
     <url>http://www.jboss.org/products/fuse</url>
 
     <organization>
@@ -462,20 +463,12 @@
 
     <!-- Modules -->
     <modules>
-        <module>api</module>
-        <module>core</module>
-        <module>spi</module>
+        <module>fabric</module>
         <module>itests</module>
     </modules>
 
     <!-- Profiles -->
     <profiles>
-        <!-- 
-            The -Pdistro profile, which generated aggregated javadoc
-            cannot be run together with the -Pall profile
-            
-            [TODO] Figure out how to build all & generate the javadoc in one go  
-        -->
         <profile>
             <id>distro</id>
             <build>
@@ -491,7 +484,7 @@
                                 </goals>
                                 <phase>install</phase>
                                 <configuration>
-                                   <excludePackageNames>io.fabric8.spi.*:io.fabric8.core:io.fabric8.runtime*</excludePackageNames>
+                                   <excludePackageNames>io.fabric8.core.spi.*:io.fabric8.core.service:io.fabric8.portable.*:io.fabric8.runtime.*:org.wildfly</excludePackageNames>
                                 </configuration>
                             </execution>
                         </executions>

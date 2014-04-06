@@ -22,8 +22,8 @@
 
 package org.wildfly.extension.fabric.service;
 
-import io.fabric8.api.ContainerManager;
-import io.fabric8.spi.SystemProperties;
+import io.fabric8.core.api.ContainerManager;
+import io.fabric8.core.spi.SystemProperties;
 
 import java.io.File;
 import java.io.FileInputStream;
