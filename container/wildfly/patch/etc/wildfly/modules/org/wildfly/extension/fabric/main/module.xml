@@ -7,11 +7,12 @@
     </properties>
 
     <resources>
-        <resource-root path="fabric-runtime-container-wildfly-extension-@project.version@.jar"/>
+        <resource-root path="fabric8-container-wildfly-extension-@project.version@.jar"/>
     </resources>
 
     <dependencies>
         <module name="io.fabric8.api"/>
+        <module name="io.fabric8.spi"/>
         <module name="io.fabric8.impl"/>
         <module name="org.jboss.as.controller"/>
         <module name="org.jboss.as.security"/>

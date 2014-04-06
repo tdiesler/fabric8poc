@@ -21,24 +21,25 @@
     
     <parent>
         <groupId>io.fabric8.poc</groupId>
-        <artifactId>fabric8-container-tomcat</artifactId>
+        <artifactId>fabric8-container-wildfly</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fabric8-tomcat</artifactId>
+    <artifactId>fabric8-wildfly</artifactId>
     <packaging>pom</packaging>
     
-    <name>Fabric8 :: Container :: Tomcat :: Distro</name>
+    <name>Fabric8 :: Container :: WildFly :: Distro</name>
 
     <!-- Properties -->    
     <properties>
+        <wildfly.distro>${project.build.directory}/${project.artifactId}-${project.version}</wildfly.distro>
     </properties>
     
     <!-- Dependencies -->
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-tomcat-patch</artifactId>
+            <artifactId>fabric8-container-wildfly-patch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
             <type>pom</type>
@@ -52,7 +53,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>unpack-karaf</id>
+                        <id>unpack-wildfly</id>
                         <phase>process-test-resources</phase>
                         <goals>
                             <goal>unpack</goal>
@@ -60,18 +61,18 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.apache.tomcat</groupId>
-                                    <artifactId>tomcat</artifactId>
-                                    <version>${version.apache.tomcat}</version>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>${version.jboss.wildfly}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-container-tomcat-patch</artifactId>
+                                    <artifactId>fabric8-container-wildfly-patch</artifactId>
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
-                                    <outputDirectory>${project.build.directory}/apache-tomcat-${version.apache.tomcat}</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/wildfly-${version.jboss.wildfly}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -91,7 +92,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-tomcat-distro.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/scripts/antrun-wildfly-distro.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

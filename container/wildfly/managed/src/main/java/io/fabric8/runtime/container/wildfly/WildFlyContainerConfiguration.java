@@ -53,7 +53,7 @@ public final class WildFlyContainerConfiguration extends ContainerConfiguration 
             String wildflyVersion = properties.getProperty("wildfly.version");
             String projectVersion = properties.getProperty("project.version");
             addMavenCoordinates(MavenCoordinates.create("org.wildfly", "wildfly-dist", wildflyVersion, "zip", null));
-            addMavenCoordinates(MavenCoordinates.create("io.fabric8.runtime", "fabric-runtime-container-wildfly-patch", projectVersion, "zip", null));
+            addMavenCoordinates(MavenCoordinates.create("io.fabric8.runtime", "fabric8-container-wildfly-patch", projectVersion, "zip", null));
         }
         super.validate();
     }

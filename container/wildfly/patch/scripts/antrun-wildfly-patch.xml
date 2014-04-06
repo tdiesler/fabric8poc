@@ -55,6 +55,9 @@
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/api/main" overwrite="true">
         <fileset file="${deploy.artifacts.lib}/fabric8-api-*.jar" />
     </copy>
+    <copy todir="${wildfly.patch.dir}/modules/io/fabric8/spi/main" overwrite="true">
+        <fileset file="${deploy.artifacts.lib}/fabric8-spi-*.jar" />
+    </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/impl/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
         	<include name="fabric8-core-*"/>

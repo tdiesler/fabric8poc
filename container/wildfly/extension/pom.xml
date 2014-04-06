@@ -104,20 +104,7 @@
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>
-OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,
-OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,
-OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,
-OSGI-INF/io.fabric8.core.BootstrapComplete.xml,
-OSGI-INF/io.fabric8.core.BootstrapService.xml,
-OSGI-INF/io.fabric8.core.ConfigurationManager.xml,
-OSGI-INF/io.fabric8.core.ContainerBuilderFactoryService.xml,
-OSGI-INF/io.fabric8.core.ContainerRegistry.xml,
-OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,
-OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,
-OSGI-INF/io.fabric8.core.ProfileBuilderFactoryService.xml,
-OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,
-OSGI-INF/io.fabric8.core.ProfileVersionBuilderService.xml,
+                            <Service-Component>OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/io.fabric8.core.BootstrapComplete.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.ProfileBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileVersionBuilderService.xml,
                             </Service-Component>
                         </manifestEntries>
                     </archive>
