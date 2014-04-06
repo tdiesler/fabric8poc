@@ -27,17 +27,17 @@ package io.fabric8.api;
  * @since 14-Mar-2014
  */
 @SuppressWarnings("serial")
-public class ComponentEvent extends FabricEvent<String, ComponentEvent.EventType> {
+public class ComponentEvent extends FabricEvent<Class<?>, ComponentEvent.EventType> {
 
     public enum EventType {
-        ACTIVATING, ACTIVATED, DEACTIVATING, DEACTIVATED, ERROR
+        ACTIVATED, DEACTIVATED, ERROR
     }
 
-    public ComponentEvent(String serviceName, EventType type) {
-        this(serviceName, type, null);
+    public ComponentEvent(Class<?> compType, EventType type) {
+        this(compType, type, null);
     }
 
-    public ComponentEvent(String serviceName, EventType type, Throwable error) {
-        super(serviceName, type, error);
+    public ComponentEvent(Class<?> compType, EventType type, Throwable error) {
+        super(compType, type, error);
     }
 }

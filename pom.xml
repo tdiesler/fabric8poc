@@ -56,7 +56,7 @@
         <version.apache.felix.scr.ds.annotations>1.2.4</version.apache.felix.scr.ds.annotations>
         <version.apache.felix.scr.generator>1.8.0</version.apache.felix.scr.generator>
         <version.jboss.arquillian.core>1.1.2.Final</version.jboss.arquillian.core>
-        <version.jboss.gravia>1.1.0.Beta12</version.jboss.gravia>
+        <version.jboss.gravia>1.1.0.Beta13</version.jboss.gravia>
         <version.junit>4.11</version.junit>
         <version.log4j>1.2.16</version.log4j>
         <version.mockito>1.8.4</version.mockito>

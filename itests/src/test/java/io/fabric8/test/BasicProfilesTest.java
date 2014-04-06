@@ -54,7 +54,6 @@ import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -66,7 +65,6 @@ import org.junit.Test;
 public class BasicProfilesTest extends AbstractEmbeddedTest {
 
     @Test
-    @Ignore
     public void testProfileAddRemove() throws Exception {
 
         // Verify the default profile
@@ -117,7 +115,6 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
     }
 
     @Test
-    @Ignore
     public void testProfileUpdate() throws Exception {
 
         Version version = Version.parseVersion("1.2");
@@ -231,12 +228,15 @@ public class BasicProfilesTest extends AbstractEmbeddedTest {
         syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         // Setup the provision listener
-        final CountDownLatch latchC = new CountDownLatch(1);
+        final CountDownLatch latchC = new CountDownLatch(2);
         ComponentEventListener componentListener = new ComponentEventListener() {
             @Override
             public void processEvent(ComponentEvent event) {
-                String serviceName = event.getSource();
-                if (event.getType() == ComponentEvent.EventType.DEACTIVATED && serviceName.equals(ContainerService.class.getName())) {
+                Class<?> compType = event.getSource();
+                if (event.getType() == ComponentEvent.EventType.DEACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
+                    latchC.countDown();
+                }
+                if (event.getType() == ComponentEvent.EventType.ACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
                     latchC.countDown();
                 }
             }

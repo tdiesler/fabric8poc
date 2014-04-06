@@ -32,30 +32,26 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
     protected final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
 
     protected void activateComponent(PermitKey<T> key, T instance) {
-        ComponentEvent event = new ComponentEvent(key.getName(), EventType.ACTIVATING);
-        eventDispatcher.get().dispatchComponentEvent(event);
         try {
             super.activateComponent();
             permitManager.get().activate(key, instance);
-            event = new ComponentEvent(key.getName(), EventType.ACTIVATED);
+            ComponentEvent event = new ComponentEvent(key.getType(), EventType.ACTIVATED);
             eventDispatcher.get().dispatchComponentEvent(event);
         } catch (RuntimeException ex) {
-            event = new ComponentEvent(key.getName(), EventType.ERROR, ex);
+            ComponentEvent event = new ComponentEvent(key.getType(), EventType.ERROR, ex);
             eventDispatcher.get().dispatchComponentEvent(event);
             throw ex;
         }
     }
 
     protected void deactivateComponent(PermitKey<T> key) {
-        ComponentEvent event = new ComponentEvent(key.getName(), EventType.DEACTIVATING);
-        eventDispatcher.get().dispatchComponentEvent(event);
         try {
             permitManager.get().deactivate(key);
             super.deactivateComponent();
-            event = new ComponentEvent(key.getName(), EventType.DEACTIVATED);
+            ComponentEvent event = new ComponentEvent(key.getType(), EventType.DEACTIVATED);
             eventDispatcher.get().dispatchComponentEvent(event);
         } catch (RuntimeException ex) {
-            event = new ComponentEvent(key.getName(), EventType.ERROR, ex);
+            ComponentEvent event = new ComponentEvent(key.getType(), EventType.ERROR, ex);
             eventDispatcher.get().dispatchComponentEvent(event);
             throw ex;
         }
