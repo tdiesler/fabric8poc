@@ -26,7 +26,7 @@ import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ContainerServiceImpl.ContainerState;
-import io.fabric8.spi.internal.AttributeSupport;
+import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;

@@ -107,8 +107,24 @@ public class ProfileUpdateTest extends AbstractEmbeddedTest {
             }
         };
 
+        // An update on a profile that is not in use by a container does not trigger profile provisioning
+        final CountDownLatch latchB = new CountDownLatch(1);
+        ProvisionEventListener provisionListener = new ProvisionEventListener() {
+            @Override
+            public void processEvent(ProvisionEvent event) {
+                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
+                    latchB.countDown();
+                }
+            }
+        };
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        ModuleContext syscontext = runtime.getModuleContext();
+        syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
+
         profile = prfManager.updateProfile(version, profile.getIdentity(), items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertFalse("ProvisionEvent not received", latchB.await(100, TimeUnit.MILLISECONDS));
 
         // Verify profile
         items = profile.getProfileItems(ConfigurationItem.class);

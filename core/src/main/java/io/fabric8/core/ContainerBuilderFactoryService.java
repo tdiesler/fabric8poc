@@ -21,7 +21,7 @@ package io.fabric8.core;
 
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerBuilderFactory;
-import io.fabric8.spi.internal.DefaultContainerBuilder;
+import io.fabric8.spi.DefaultContainerBuilder;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.osgi.service.component.annotations.Activate;

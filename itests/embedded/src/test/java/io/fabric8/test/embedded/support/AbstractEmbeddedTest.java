@@ -21,17 +21,13 @@
  */
 package io.fabric8.test.embedded.support;
 
-import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ServiceLocator;
+import io.fabric8.core.BootstrapComplete;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.RuntimeLocator;
-import org.jboss.gravia.runtime.ServiceEvent;
-import org.jboss.gravia.runtime.ServiceListener;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 
 /**
@@ -46,18 +42,6 @@ public abstract class AbstractEmbeddedTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        ModuleContext syscontext = EmbeddedUtils.getEmbeddedRuntime().getModuleContext();
-
-        // Start listening on the {@link ContainerManager} service
-        final CountDownLatch latch = new CountDownLatch(1);
-        ServiceListener listener = new ServiceListener() {
-            @Override
-            public void serviceChanged(ServiceEvent event) {
-                if (event.getType() == ServiceEvent.REGISTERED)
-                    latch.countDown();
-            }
-        };
-        syscontext.addServiceListener(listener, "(objectClass=" + ContainerManager.class.getName() + ")");
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
@@ -65,11 +49,16 @@ public abstract class AbstractEmbeddedTest {
             EmbeddedUtils.installAndStartModule(classLoader, name);
         }
 
-        Assert.assertTrue("ContainerManager registered", latch.await(20, TimeUnit.SECONDS));
+        // Wait for the {@link BootstrapComplete} service
+        ServiceLocator.awaitService(BootstrapComplete.class, 20, TimeUnit.SECONDS);
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
+
+        // Wait for the system to stabilize after possible reconfiguration
+        ServiceLocator.awaitService(BootstrapComplete.class, 20, TimeUnit.SECONDS);
+
         RuntimeLocator.releaseRuntime();
     }
 }

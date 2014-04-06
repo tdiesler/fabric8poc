@@ -22,7 +22,11 @@ package io.fabric8.test.embedded;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Constants;
-import io.fabric8.api.Profile;
+import io.fabric8.api.Container;
+import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ContainerManager;
+import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
@@ -33,6 +37,7 @@ import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +47,8 @@ import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.Assert;
 import org.junit.Test;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Test profile items functionality.
@@ -57,8 +64,20 @@ public class ProfileItemsTest extends AbstractEmbeddedTest {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
 
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
+        // Create container A
+        ContainerBuilder cntBuilder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+        CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
+        Container cntA = cntManager.createContainer(options);
+
+        // Verify parent identity
+        ContainerIdentity idA = cntA.getIdentity();
+        Assert.assertEquals("cntA", idA.getSymbolicName());
+        Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+
+        // Build a profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
         ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
         configBuilder.addIdentity("some.pid");
@@ -94,8 +113,20 @@ public class ProfileItemsTest extends AbstractEmbeddedTest {
         };
         syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
+        // Verify that the configuration does not exist
+        ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
+        Configuration config = configAdmin.getConfiguration("some.pid");
+        Assert.assertNull("Configuration null", config.getProperties());
+
+        // Update the default profile
         prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, Constants.DEFAULT_PROFILE_IDENTITY, items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
+
+        // Verify the configuration
+        config = configAdmin.getConfiguration("some.pid");
+        Dictionary<String, Object> props = config.getProperties();
+        Assert.assertEquals("bar", props.get("foo"));
+        config.delete();
     }
 }

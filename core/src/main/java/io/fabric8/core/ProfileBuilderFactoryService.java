@@ -21,7 +21,7 @@ package io.fabric8.core;
 
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
-import io.fabric8.spi.internal.DefaultProfileBuilder;
+import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.osgi.service.component.annotations.Activate;
