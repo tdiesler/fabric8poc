@@ -15,11 +15,6 @@
   limitations under the License.
   -->
 
-<!--
-    Set these VM properties in your IDE debugger
-     
-    -Dlog4j.configuration=file://${workspace_loc:fabric8-itests}/src/test/resources/logging.properties
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -30,90 +25,11 @@
     </parent>
 
     <artifactId>fabric8-itests</artifactId>
-
+    <packaging>pom</packaging>
+    
     <name>Fabric8 :: Testsuite</name>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>fabric8-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <!-- Runtime Dependencies -->
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>fabric8-core</artifactId>
-            <version>${project.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-runtime-embedded</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/modules</outputDirectory>
-                            <stripVersion>true</stripVersion>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>io.fabric8</groupId>
-                                    <artifactId>fabric8-api</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>io.fabric8</groupId>
-                                    <artifactId>fabric8-spi</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>io.fabric8</groupId>
-                                    <artifactId>fabric8-core</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <basedir>${basedir}</basedir>
-                        <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>embedded</module>
+    </modules>
 </project>

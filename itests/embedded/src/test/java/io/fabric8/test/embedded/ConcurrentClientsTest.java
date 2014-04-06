@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.embedded;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
@@ -26,7 +26,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.test.support.AbstractEmbeddedTest;
+import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
 import java.util.Hashtable;

@@ -19,7 +19,7 @@
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
  */
-package io.fabric8.test.support;
+package io.fabric8.test.embedded.support;
 
 import io.fabric8.api.ContainerManager;
 

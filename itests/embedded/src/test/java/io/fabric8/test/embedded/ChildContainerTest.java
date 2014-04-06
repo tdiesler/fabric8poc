@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.embedded;
 
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Constants;
@@ -36,7 +36,7 @@ import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.test.support.AbstractEmbeddedTest;
+import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
