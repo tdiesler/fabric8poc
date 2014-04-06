@@ -21,11 +21,14 @@ package io.fabric8.test.embedded;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ComponentEvent;
+import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
+import io.fabric8.spi.ContainerService;
 import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
 
 import java.util.Dictionary;
@@ -68,9 +71,25 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
             }
         };
 
-        // Modify the service configuration
+        // Setup the component listener
+        final CountDownLatch latchA = new CountDownLatch(2);
+        ComponentEventListener componentListener = new ComponentEventListener() {
+            @Override
+            public void processEvent(ComponentEvent event) {
+                Class<?> compType = event.getSource();
+                if (event.getType() == ComponentEvent.EventType.DEACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
+                    latchA.countDown();
+                }
+                if (event.getType() == ComponentEvent.EventType.ACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
+                    latchA.countDown();
+                }
+            }
+        };
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
+        syscontext.registerService(ComponentEventListener.class, componentListener, null);
+
+        // Modify the service configuration
         ServiceRegistration<ConfigurationListener> sreg = syscontext.registerService(ConfigurationListener.class, listener, null);
         try {
             Module module = runtime.getModules("fabric8-core", null).iterator().next();
@@ -88,7 +107,7 @@ public class ConfiguredComponentTest extends AbstractEmbeddedTest {
         }
 
         // Wait a little for the component to get updated
-        Thread.sleep(100);
+        Assert.assertTrue("ComponentEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
 
         ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();

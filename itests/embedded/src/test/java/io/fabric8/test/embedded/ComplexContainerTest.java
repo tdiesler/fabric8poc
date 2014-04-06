@@ -47,15 +47,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Test child container functionality.
+ * Test container/profile functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ChildContainerTest extends AbstractEmbeddedTest {
+public class ComplexContainerTest extends AbstractEmbeddedTest {
 
     @Test
-    public void testChildContainers() throws Exception {
+    public void testContainersAndProfiles() throws Exception {
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
