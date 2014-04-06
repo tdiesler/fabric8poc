@@ -31,6 +31,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-container-common</artifactId>
         </dependency>
@@ -59,11 +64,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.proxy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- Provided Dependencies -->        
@@ -105,21 +105,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.enterprise</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-        
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -161,20 +154,7 @@
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>
-OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,
-OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,
-OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,
-OSGI-INF/io.fabric8.core.BootstrapComplete.xml,
-OSGI-INF/io.fabric8.core.BootstrapService.xml,
-OSGI-INF/io.fabric8.core.ConfigurationManager.xml,
-OSGI-INF/io.fabric8.core.ContainerBuilderFactoryService.xml,
-OSGI-INF/io.fabric8.core.ContainerRegistry.xml,
-OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,
-OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,
-OSGI-INF/io.fabric8.core.ProfileBuilderFactoryService.xml,
-OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,
-OSGI-INF/io.fabric8.core.ProfileVersionBuilderService.xml,
+                            <Service-Component>OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/io.fabric8.core.BootstrapComplete.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.ProfileBuilderFactoryService.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileVersionBuilderService.xml
                             </Service-Component>
                         </manifestEntries>
                     </archive>

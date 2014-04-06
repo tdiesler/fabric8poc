@@ -42,6 +42,11 @@
       	</filterset>
     </copy>
 
+	<!-- Copy to conf -->
+	<copy todir="${tomcat.patch.dir}" overwrite="true">
+        <fileset dir="${etc.dir}/tomcat"/>
+	</copy>
+  	
   	<!-- Copy gravia patch -->
     <copy todir="${tomcat.patch.dir}" overwrite="true">
         <fileset dir="${output.dir}/gravia-tomcat-patch">

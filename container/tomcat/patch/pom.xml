@@ -26,8 +26,9 @@
     </parent>
 
     <artifactId>fabric8-container-tomcat-patch</artifactId>
-    <name>Fabric8 :: Container :: Tomcat :: Patch</name>
     <packaging>pom</packaging>
+
+    <name>Fabric8 :: Container :: Tomcat :: Patch</name>
 
     <!-- Properties -->
     <properties>

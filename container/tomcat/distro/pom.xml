@@ -21,14 +21,14 @@
     
     <parent>
         <groupId>io.fabric8.poc</groupId>
-        <artifactId>fabric8-container-karaf</artifactId>
+        <artifactId>fabric8-container-tomcat</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fabric8-karaf</artifactId>
+    <artifactId>fabric8-tomcat</artifactId>
     <packaging>pom</packaging>
     
-    <name>Fabric8 :: Container :: Karaf :: Distro</name>
+    <name>Fabric8 :: Container :: Tomcat :: Distro</name>
 
     <!-- Properties -->    
     <properties>
@@ -39,7 +39,7 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-karaf-patch</artifactId>
+            <artifactId>fabric8-container-tomcat-patch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
             <type>pom</type>
@@ -61,19 +61,18 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.apache.karaf</groupId>
-                                    <artifactId>apache-karaf</artifactId>
-                                    <version>${version.apache.karaf}</version>
-                                    <classifier>minimal</classifier>
-                                    <type>tar.gz</type>
+                                    <groupId>org.apache.tomcat</groupId>
+                                    <artifactId>tomcat</artifactId>
+                                    <version>${version.apache.tomcat}</version>
+                                    <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-container-karaf-patch</artifactId>
+                                    <artifactId>fabric8-container-tomcat-patch</artifactId>
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
-                                    <outputDirectory>${project.build.directory}/apache-karaf-${version.apache.karaf}</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/apache-tomcat-${version.apache.tomcat}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -93,7 +92,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-karaf-distro.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/scripts/antrun-tomcat-distro.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

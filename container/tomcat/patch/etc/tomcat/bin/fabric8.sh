@@ -36,4 +36,11 @@ if [ "x$FABRIC8_ZOOKEEPER_URL" = "x" ]; then
   fi
 fi
 
+CATALINA_BASE=`cd "$DIRNAME/.." >/dev/null; pwd`
+export LOGGING_CONFIG="-Dlog4j.debug=true -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties"
+export LOGGING_MANAGER="-Dnoop"
+
+echo "Using LOGGING_CONFIG: $LOGGING_CONFIG"
+echo "Using LOGGING_MANAGER: $LOGGING_MANAGER"
+
 exec "${DIRNAME}/catalina.sh" "$@"
