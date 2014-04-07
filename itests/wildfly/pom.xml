@@ -47,16 +47,10 @@
             <artifactId>fabric8-container-wildfly-patch</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
-            <type>zip</type>
+            <type>tar.gz</type>
         </dependency>
         
         <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-wildfly-managed</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.junit</groupId>
             <artifactId>arquillian-junit-container</artifactId>
@@ -65,6 +59,11 @@
         <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-arquillian-container-managed</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.testenricher</groupId>
+            <artifactId>arquillian-testenricher-osgi</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -136,7 +135,7 @@
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
                     <reportNameSuffix>wildfly</reportNameSuffix>
                     <dependenciesToScan>
-                        <dependency>io.fabric8:fabric8-itests-common</dependency>
+                        <dependency>io.fabric8.poc:fabric8-itests-common</dependency>
                     </dependenciesToScan>
                     <systemPropertyVariables>
                         <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>

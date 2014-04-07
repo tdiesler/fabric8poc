@@ -30,7 +30,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>distro</module>
         <module>extension</module>
         <module>managed</module>
         <module>patch</module>
