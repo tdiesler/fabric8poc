@@ -111,21 +111,23 @@ public class ConfiguredComponent {
         ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
-        ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
-        Container cnt = manager.createContainer(options);
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        Container cntA = cntManager.createContainer(options);
 
-        ContainerIdentity cntId = cnt.getIdentity();
+        ContainerIdentity cntId = cntA.getIdentity();
         Assert.assertEquals("cntA", cntId.getSymbolicName());
-        Assert.assertEquals("foo", cnt.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
-        Assert.assertSame(State.CREATED, cnt.getState());
+        Assert.assertEquals("foo", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+        Assert.assertSame(State.CREATED, cntA.getState());
 
-        cnt = manager.start(cntId);
-        Assert.assertSame(State.STARTED, cnt.getState());
+        cntA = cntManager.start(cntId);
+        Assert.assertSame(State.STARTED, cntA.getState());
 
-        cnt = manager.stop(cntId);
-        Assert.assertSame(State.STOPPED, cnt.getState());
+        cntA = cntManager.stop(cntId);
+        Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cnt = manager.destroy(cntId);
-        Assert.assertSame(State.DESTROYED, cnt.getState());
+        cntA = cntManager.destroy(cntId);
+        Assert.assertSame(State.DESTROYED, cntA.getState());
+
+        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
 }

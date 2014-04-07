@@ -22,6 +22,7 @@ package io.fabric8.test;
 import io.fabric8.core.api.ConfigurationItem;
 import io.fabric8.core.api.ConfigurationItemBuilder;
 import io.fabric8.core.api.Constants;
+import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileBuilder;
 import io.fabric8.core.api.ProfileIdentity;
@@ -48,8 +49,10 @@ public class BasicProfiles {
     @Test
     public void testProfileAddRemove() throws Exception {
 
-        // Verify the default profile
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+
+        // Verify the default profile
         Profile defaultProfile = prfManager.getDefaultProfile();
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, defaultProfile.getProfileVersion());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, defaultProfile.getIdentity());
@@ -93,5 +96,7 @@ public class BasicProfiles {
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version);
         Assert.assertEquals(0, profileVersion.getProfileIds().size());
+
+        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
 }

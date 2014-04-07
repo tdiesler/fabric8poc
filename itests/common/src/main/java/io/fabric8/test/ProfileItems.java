@@ -34,6 +34,7 @@ import io.fabric8.core.api.ProfileManager;
 import io.fabric8.core.api.ProvisionEvent;
 import io.fabric8.core.api.ProvisionEventListener;
 import io.fabric8.core.api.ServiceLocator;
+import io.fabric8.core.api.Container.State;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -127,5 +128,10 @@ public class ProfileItems {
         Dictionary<String, Object> props = config.getProperties();
         Assert.assertEquals("bar", props.get("foo"));
         config.delete();
+
+        cntA = cntManager.destroy(idA);
+        Assert.assertSame(State.DESTROYED, cntA.getState());
+
+        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
 }

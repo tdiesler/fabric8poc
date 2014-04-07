@@ -46,29 +46,31 @@ public class BasicContainerLifecycle {
         ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
-        ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
-        Container cnt = manager.createContainer(options);
-        ContainerIdentity cntId = cnt.getIdentity();
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        Container cntA = cntManager.createContainer(options);
+        ContainerIdentity idA = cntA.getIdentity();
 
-        Assert.assertEquals("cntA", cntId.getSymbolicName());
-        Assert.assertEquals("default", cnt.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
-        Assert.assertSame(State.CREATED, cnt.getState());
-        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cnt.getProfileVersion());
+        Assert.assertEquals("cntA", idA.getSymbolicName());
+        Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+        Assert.assertSame(State.CREATED, cntA.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
-        cnt = manager.start(cntId);
-        Assert.assertSame(State.STARTED, cnt.getState());
+        cntA = cntManager.start(idA);
+        Assert.assertSame(State.STARTED, cntA.getState());
 
-        cnt = manager.stop(cntId);
-        Assert.assertSame(State.STOPPED, cnt.getState());
+        cntA = cntManager.stop(idA);
+        Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cnt = manager.destroy(cntId);
-        Assert.assertSame(State.DESTROYED, cnt.getState());
+        cntA = cntManager.destroy(idA);
+        Assert.assertSame(State.DESTROYED, cntA.getState());
 
         try {
-            manager.start(cntId);
+            cntManager.start(idA);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
             // expected
         }
-    }
+
+        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
+   }
 }

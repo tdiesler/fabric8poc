@@ -65,10 +65,10 @@ public class ProfileUpdate {
     @Test
     public void testProfileUpdate() throws Exception {
 
-        Version version = Version.parseVersion("1.2");
+        Version version12 = Version.parseVersion("1.2");
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profileVersion = versionBuilder.addIdentity(version).createProfileVersion();
+        ProfileVersion profileVersion = versionBuilder.addIdentity(version12).createProfileVersion();
 
         // Add a profile version
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
@@ -84,8 +84,8 @@ public class ProfileUpdate {
         Profile profile = profileBuilder.createProfile();
 
         // Add the profile to the given version
-        profile = prfManager.addProfile(version, profile);
-        Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
+        profile = prfManager.addProfile(version12, profile);
+        Assert.assertEquals(1, prfManager.getProfiles(version12, null).size());
 
         // Update the profile item
         profileBuilder = ProfileBuilder.Factory.create();
@@ -121,7 +121,7 @@ public class ProfileUpdate {
         ModuleContext syscontext = runtime.getModuleContext();
         syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
-        profile = prfManager.updateProfile(version, profile.getIdentity(), items, profileListener);
+        profile = prfManager.updateProfile(version12, profile.getIdentity(), items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertFalse("ProvisionEvent not received", latchB.await(100, TimeUnit.MILLISECONDS));
 
@@ -133,7 +133,7 @@ public class ProfileUpdate {
         Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
 
         // Remove profile version
-        profileVersion = prfManager.removeProfileVersion(version);
+        profileVersion = prfManager.removeProfileVersion(version12);
         Assert.assertEquals(0, profileVersion.getProfileIds().size());
     }
 
