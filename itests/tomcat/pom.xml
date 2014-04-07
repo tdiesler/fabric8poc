@@ -37,7 +37,7 @@
     <!-- Properties -->
     <properties>
         <arquillian-core-version>1.0.0.Final</arquillian-core-version>
-        <tomcat.home>${project.build.directory}/apache-tomcat-${version.apache.tomcat}</tomcat.home>
+        <tomcat.home>${project.build.directory}/fabric8-tomcat-${project.version}</tomcat.home>
         <karaf.base>${tomcat.home}/work/karaf-base</karaf.base>
     </properties>
     
@@ -61,19 +61,13 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-tomcat-patch</artifactId>
+            <artifactId>fabric8-tomcat</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
-            <type>zip</type>
+            <type>tar.gz</type>
         </dependency>
         
         <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-tomcat-managed</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
             <artifactId>arquillian-tomcat-managed-7</artifactId>
@@ -103,26 +97,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>unpack-tomcat</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.tomcat</groupId>
-                                    <artifactId>tomcat</artifactId>
-                                    <version>${version.apache.tomcat}</version>
-                                    <type>zip</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>unpack-tomcat-patch</id>
+                        <id>unpack-tomcat-distro</id>
                         <phase>process-test-resources</phase>
                         <goals>
                             <goal>unpack</goal>
@@ -131,9 +106,9 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-container-tomcat-patch</artifactId>
+                                    <artifactId>fabric8-tomcat</artifactId>
                                     <version>${project.version}</version>
-                                    <type>zip</type>
+                                    <type>tar.gz</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${tomcat.home}</outputDirectory>
                                 </artifactItem>
@@ -142,7 +117,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
+            <!--  plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <inherited>false</inherited>
                 <executions>
@@ -156,21 +131,20 @@
                                 <copy file="src/test/resources/tomcat-users.xml" todir="${tomcat.home}/conf" overwrite="true" />
                                 <copy file="src/test/resources/jaas.config" todir="${tomcat.home}/conf" overwrite="true" />
                                 <copy file="src/test/resources/users.properties" todir="${karaf.base}/etc" overwrite="true" />
-                                <chmod dir="${tomcat.home}/bin" perm="ugo+rx" includes="**/*.sh" verbose="true"/>
                             </target>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>${surefire.system.args}</argLine>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
                     <reportNameSuffix>tomcat</reportNameSuffix>
-                    <dependenciesToScan>
-                        <dependency>io.fabric8:fabric8-itests-common</dependency>
-                    </dependenciesToScan>
+                    <!--  dependenciesToScan>
+                        <dependency>io.fabric8.poc:fabric8-itests-common</dependency>
+                    </dependenciesToScan -->
                     <systemPropertyVariables>
                         <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
                         <target.container>tomcat</target.container>

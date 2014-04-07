@@ -22,13 +22,11 @@
 package io.fabric8.test.embedded.support;
 
 import io.fabric8.core.api.ServiceLocator;
-import io.fabric8.core.service.BootstrapComplete;
+import io.fabric8.core.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.runtime.RuntimeLocator;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 /**
  * Test fabric-core servies
@@ -36,16 +34,15 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 21-Oct-2013
  */
-public abstract class AbstractEmbeddedTest {
+public abstract class EmbeddedTestSupport {
 
     private static String[] moduleNames = new String[] { "fabric8-core-api", "fabric8-core-spi", "fabric8-core-service" };
 
-    @BeforeClass
     public static void beforeClass() throws Exception {
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
-            ClassLoader classLoader = AbstractEmbeddedTest.class.getClassLoader();
+            ClassLoader classLoader = EmbeddedTestSupport.class.getClassLoader();
             EmbeddedUtils.installAndStartModule(classLoader, name);
         }
 
@@ -53,7 +50,6 @@ public abstract class AbstractEmbeddedTest {
         ServiceLocator.awaitService(BootstrapComplete.class, 20, TimeUnit.SECONDS);
     }
 
-    @AfterClass
     public static void afterClass() throws Exception {
 
         // Wait for the system to stabilize after possible reconfiguration

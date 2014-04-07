@@ -22,6 +22,7 @@ package io.fabric8.core.service;
 import io.fabric8.core.api.ContainerBuilderFactory;
 import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.ProfileManager;
+import io.fabric8.core.spi.BootstrapComplete;
 import io.fabric8.core.spi.ContainerService;
 import io.fabric8.core.spi.scr.AbstractComponent;
 
@@ -32,7 +33,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(service = { BootstrapComplete.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class BootstrapComplete extends AbstractComponent {
+public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
 
     @Activate
     void activate() throws Exception {

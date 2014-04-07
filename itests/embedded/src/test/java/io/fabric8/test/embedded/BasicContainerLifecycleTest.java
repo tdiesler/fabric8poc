@@ -19,18 +19,11 @@
  */
 package io.fabric8.test.embedded;
 
-import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
-import io.fabric8.core.api.Container;
-import io.fabric8.core.api.ContainerBuilder;
-import io.fabric8.core.api.ContainerIdentity;
-import io.fabric8.core.api.ContainerManager;
-import io.fabric8.core.api.CreateOptions;
-import io.fabric8.core.api.ServiceLocator;
-import io.fabric8.core.api.Container.State;
-import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
+import io.fabric8.test.BasicContainerLifecycle;
+import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * Test basic container functionality.
@@ -38,37 +31,15 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class BasicContainerLifecycleTest extends AbstractEmbeddedTest {
+public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
 
-    @Test
-    public void testContainerLifecycle() throws Exception {
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        EmbeddedTestSupport.beforeClass();
+    }
 
-        ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
-        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
-
-        ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
-        Container cnt = manager.createContainer(options);
-        ContainerIdentity cntId = cnt.getIdentity();
-
-        Assert.assertEquals("cntA", cntId.getSymbolicName());
-        Assert.assertEquals("default", cnt.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
-        Assert.assertSame(State.CREATED, cnt.getState());
-        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cnt.getProfileVersion());
-
-        cnt = manager.start(cntId);
-        Assert.assertSame(State.STARTED, cnt.getState());
-
-        cnt = manager.stop(cntId);
-        Assert.assertSame(State.STOPPED, cnt.getState());
-
-        cnt = manager.destroy(cntId);
-        Assert.assertSame(State.DESTROYED, cnt.getState());
-
-        try {
-            manager.start(cntId);
-            Assert.fail("IllegalStateException expected");
-        } catch (IllegalStateException e) {
-            // expected
-        }
+    @AfterClass
+    public static void afterClass() throws Exception {
+        EmbeddedTestSupport.afterClass();
     }
 }

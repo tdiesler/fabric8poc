@@ -26,7 +26,7 @@ import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.CreateOptions;
 import io.fabric8.core.api.ServiceLocator;
 import io.fabric8.core.api.Container.State;
-import io.fabric8.test.embedded.support.AbstractEmbeddedTest;
+import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -40,7 +40,9 @@ import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -53,12 +55,22 @@ import org.slf4j.LoggerFactory;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ConcurrentClientsTest extends AbstractEmbeddedTest {
+public class ConcurrentClientsTest extends EmbeddedTestSupport {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ConcurrentClientsTest.class);
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Exception lastException;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        EmbeddedTestSupport.beforeClass();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        EmbeddedTestSupport.afterClass();
+    }
 
     @After
     public void tearDown() throws Exception {
