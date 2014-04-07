@@ -51,6 +51,7 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -119,11 +120,12 @@ public class ProfileUpdate {
         };
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
-        syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
+        ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         profile = prfManager.updateProfile(version12, profile.getIdentity(), items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertFalse("ProvisionEvent not received", latchB.await(100, TimeUnit.MILLISECONDS));
+        sregB.unregister();
 
         // Verify profile
         items = profile.getProfileItems(ConfigurationItem.class);
@@ -189,7 +191,7 @@ public class ProfileUpdate {
                 }
             }
         };
-        syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
+        ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         // Setup the component listener
         final CountDownLatch latchC = new CountDownLatch(2);
@@ -205,12 +207,14 @@ public class ProfileUpdate {
                 }
             }
         };
-        syscontext.registerService(ComponentEventListener.class, componentListener, null);
+        ServiceRegistration<ComponentEventListener> sregC = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
         Profile profile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, Constants.DEFAULT_PROFILE_IDENTITY, items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ComponentEvent received", latchC.await(200, TimeUnit.MILLISECONDS));
+        sregB.unregister();
+        sregC.unregister();
 
         // Verify profile
         items = profile.getProfileItems(ConfigurationItem.class);

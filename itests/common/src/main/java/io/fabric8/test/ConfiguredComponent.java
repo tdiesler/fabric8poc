@@ -86,10 +86,10 @@ public class ConfiguredComponent {
         };
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
-        syscontext.registerService(ComponentEventListener.class, componentListener, null);
+        ServiceRegistration<ComponentEventListener> sregA = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
         // Modify the service configuration
-        ServiceRegistration<ConfigurationListener> sreg = syscontext.registerService(ConfigurationListener.class, listener, null);
+        ServiceRegistration<ConfigurationListener> sregB = syscontext.registerService(ConfigurationListener.class, listener, null);
         try {
             Module module = runtime.getModules("fabric8-core-service", null).iterator().next();
             ModuleContext moduleContext = module.getModuleContext();
@@ -102,11 +102,12 @@ public class ConfiguredComponent {
 
             Assert.assertTrue("Config updated", updateLatch.await(2, TimeUnit.SECONDS));
         } finally {
-            sreg.unregister();
+            sregB.unregister();
         }
 
         // Wait a little for the component to get updated
         Assert.assertTrue("ComponentEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
+        sregA.unregister();
 
         ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();

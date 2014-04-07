@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
@@ -111,7 +112,7 @@ public class ProfileItems {
                 }
             }
         };
-        syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
+        ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         // Verify that the configuration does not exist
         ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
@@ -122,6 +123,7 @@ public class ProfileItems {
         prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, Constants.DEFAULT_PROFILE_IDENTITY, items, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
+        sregB.unregister();
 
         // Verify the configuration
         config = configAdmin.getConfiguration("some.pid");
