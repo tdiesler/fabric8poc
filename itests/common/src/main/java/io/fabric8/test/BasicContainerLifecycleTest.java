@@ -51,6 +51,7 @@ public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("basic-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
+        archive.addClasses(BasicContainerLifecycle.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

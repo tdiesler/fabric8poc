@@ -36,7 +36,7 @@
 
     <!-- Properties -->
     <properties>
-        <arquillian-core-version>1.0.0.Final</arquillian-core-version>
+        <version.jboss.arquillian.core>1.0.0.Final</version.jboss.arquillian.core>
         <tomcat.home>${project.build.directory}/fabric8-tomcat-${project.version}</tomcat.home>
         <karaf.base>${tomcat.home}/work/karaf-base</karaf.base>
     </properties>
@@ -110,7 +110,7 @@
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${tomcat.home}</outputDirectory>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -142,9 +142,9 @@
                     <argLine>${surefire.system.args}</argLine>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
                     <reportNameSuffix>tomcat</reportNameSuffix>
-                    <!--  dependenciesToScan>
+                    <dependenciesToScan>
                         <dependency>io.fabric8.poc:fabric8-itests-common</dependency>
-                    </dependenciesToScan -->
+                    </dependenciesToScan>
                     <systemPropertyVariables>
                         <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
                         <target.container>tomcat</target.container>

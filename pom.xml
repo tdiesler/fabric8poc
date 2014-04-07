@@ -65,7 +65,7 @@
         <version.javax.servlet30.api>3.0.1</version.javax.servlet30.api>
         <version.jboss.arquillian.core>1.1.2.Final</version.jboss.arquillian.core>
         <version.jboss.arquillian.osgi>2.1.0.CR10</version.jboss.arquillian.osgi>
-        <version.jboss.arquillian.tomcat>1.0.0.CR5</version.jboss.arquillian.tomcat>
+        <version.jboss.arquillian.tomcat>1.0.0.CR6</version.jboss.arquillian.tomcat>
         <version.jboss.gravia>1.1.0.Beta13</version.jboss.gravia>
         <version.jboss.shrinkwrap>1.1.2</version.jboss.shrinkwrap>
         <version.jboss.shrinkwrap.resolver>2.0.0</version.jboss.shrinkwrap.resolver>

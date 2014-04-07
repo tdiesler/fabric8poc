@@ -21,10 +21,13 @@
  */
 package io.fabric8.portable.runtime.tomcat;
 
+import io.fabric8.portable.runtime.tomcat.FabricTomcatActivator.BoostrapLatch;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -38,18 +41,18 @@ public class FabricBootstrapCompleteListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent event) {
 
         ServletContext servletContext = event.getServletContext();
-        FabricTomcatActivator.BoostrapLatch latch = (FabricTomcatActivator.BoostrapLatch) servletContext.getAttribute(FabricTomcatActivator.BoostrapLatch.class.getName());
+        BoostrapLatch latch = (BoostrapLatch) servletContext.getAttribute(BoostrapLatch.class.getName());
         try {
-            // Wait for the {@link ZooKeeperClusterBootstrap} to come up
+            // Wait for the {@link BootstrapComplete} to come up
             try {
                 if (!latch.await(60, TimeUnit.SECONDS)) {
-                    throw new IllegalStateException("Cannot obtain ZooKeeperClusterBootstrap");
+                    throw new IllegalStateException("Cannot obtain BootstrapComplete");
                 }
             } catch (InterruptedException ex) {
                 // ignore
             }
         } finally {
-            servletContext.removeAttribute(FabricTomcatActivator.BoostrapLatch.class.getName());
+            servletContext.removeAttribute(BoostrapLatch.class.getName());
         }
 
         // Print banner message
