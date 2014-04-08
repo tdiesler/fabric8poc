@@ -20,6 +20,7 @@
 package io.fabric8.test;
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.spi.ContainerService;
 
 import java.io.InputStream;
 
@@ -35,7 +36,6 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -46,7 +46,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-@Ignore
 public class ConfiguredComponentTest extends ConfiguredComponent {
 
     @Deployment
@@ -63,13 +62,13 @@ public class ConfiguredComponentTest extends ConfiguredComponent {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
-                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class, ContainerService.class);
                     builder.addImportPackages(ConfigurationAdmin.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,org.osgi.enterprise,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,org.osgi.enterprise,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

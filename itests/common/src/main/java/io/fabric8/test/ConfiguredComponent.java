@@ -35,7 +35,6 @@ import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -59,7 +58,7 @@ public class ConfiguredComponent {
     public void testModifyService() throws Exception {
 
         final CountDownLatch updateLatch = new CountDownLatch(1);
-        ConfigurationListener listener = new ConfigurationListener() {
+        ConfigurationListener configListener = new ConfigurationListener() {
             @Override
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
@@ -89,13 +88,10 @@ public class ConfiguredComponent {
         ServiceRegistration<ComponentEventListener> sregA = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
         // Modify the service configuration
-        ServiceRegistration<ConfigurationListener> sregB = syscontext.registerService(ConfigurationListener.class, listener, null);
+        ServiceRegistration<ConfigurationListener> sregB = syscontext.registerService(ConfigurationListener.class, configListener, null);
         try {
-            Module module = runtime.getModules("fabric8-core-service", null).iterator().next();
-            ModuleContext moduleContext = module.getModuleContext();
-
-            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(moduleContext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID);
+            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
+            Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
             Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(Container.CNFKEY_CONFIG_TOKEN, "foo");
             config.update(props);

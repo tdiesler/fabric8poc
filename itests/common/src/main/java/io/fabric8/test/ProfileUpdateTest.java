@@ -20,6 +20,7 @@
 package io.fabric8.test;
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.spi.ContainerService;
 
 import java.io.InputStream;
 
@@ -61,12 +62,12 @@ public class ProfileUpdateTest extends ProfileUpdate {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
-                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class, ContainerService.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

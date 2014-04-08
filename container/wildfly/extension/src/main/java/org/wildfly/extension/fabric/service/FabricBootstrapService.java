@@ -23,6 +23,7 @@
 package org.wildfly.extension.fabric.service;
 
 import io.fabric8.core.api.ContainerManager;
+import io.fabric8.core.spi.BootstrapComplete;
 import io.fabric8.core.spi.SystemProperties;
 
 import java.io.File;
@@ -97,7 +98,7 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
         Runtime runtime = injectedRuntime.getValue();
         initConfigurationAdmin(runtime);
 
-        // Start listening on the {@link ZooKeeperClusterBootstrap}
+        // Start listening on the {@link BootstrapComplete}
         final CountDownLatch latch = new CountDownLatch(1);
         final ModuleContext syscontext = injectedModuleContext.getValue();
         ServiceListener listener = new ServiceListener() {
@@ -111,7 +112,7 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
                 }
             }
         };
-        syscontext.addServiceListener(listener, "(objectClass=" + ContainerManager.class.getName() + ")");
+        syscontext.addServiceListener(listener, "(objectClass=" + BootstrapComplete.class.getName() + ")");
 
         // Install and start this as a {@link Module}
         ModuleClassLoader classLoader = (ModuleClassLoader) getClass().getClassLoader();
@@ -135,10 +136,10 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
             throw new StartException(ex);
         }
 
-        // Wait for the {@link ZooKeeperClusterBootstrap} to come up
+        // Wait for the {@link BootstrapComplete} to come up
         try {
             if (!latch.await(5, TimeUnit.SECONDS)) {
-                throw new StartException("Cannot obtain ZooKeeperClusterBootstrap");
+                throw new StartException("Cannot obtain BootstrapComplete");
             }
         } catch (InterruptedException ex) {
             // ignore

@@ -47,9 +47,13 @@ import org.jboss.gravia.utils.NotNullException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(service = { EventDispatcher.class }, immediate = true)
 public final class EventDispatcherImpl extends AbstractComponent implements EventDispatcher {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcherImpl.class);
 
     private final Map<Class<?>, Set<FabricEventListener<?>>> listenerMapping = new HashMap<Class<?>, Set<FabricEventListener<?>>>();
     private ServiceTracker<ProvisionEventListener, ProvisionEventListener> provisionTracker;
@@ -83,7 +87,11 @@ public final class EventDispatcherImpl extends AbstractComponent implements Even
             for (final ProvisionEventListener aux : listeners) {
                 Runnable task = new Runnable() {
                     public void run() {
-                        aux.processEvent(event);
+                        try {
+                            aux.processEvent(event);
+                        } catch (Throwable th) {
+                            LOGGER.error("Error delivering event: " + event, th);
+                        }
                     }
                 };
                 executor.submit(task);
@@ -99,7 +107,11 @@ public final class EventDispatcherImpl extends AbstractComponent implements Even
             for (final ProfileEventListener aux : listeners) {
                 Runnable task = new Runnable() {
                     public void run() {
-                        aux.processEvent(event);
+                        try {
+                            aux.processEvent(event);
+                        } catch (Throwable th) {
+                            LOGGER.error("Error delivering event: " + event, th);
+                        }
                     }
                 };
                 executor.submit(task);
