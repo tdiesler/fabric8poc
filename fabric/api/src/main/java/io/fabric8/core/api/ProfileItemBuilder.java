@@ -32,5 +32,5 @@ public interface ProfileItemBuilder<T extends ProfileItem> {
 
     ProfileItemBuilder<T> addIdentity(String identity);
 
-    T getConfigurationItem();
+    T getProfileItem();
 }

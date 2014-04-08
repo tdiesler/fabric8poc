@@ -19,30 +19,30 @@
  */
 package io.fabric8.core.spi;
 
-import io.fabric8.core.api.ConfigurationItem;
+import io.fabric8.core.api.ConfigurationProfileItem;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-final class DefaultConfigurationItem extends AbstractProfileItem implements ConfigurationItem {
+public final class DefaultConfigurationProfileItemBuilder implements ConfigurationProfileItemBuilder {
 
-    private final Map<String, Object> configuration = new HashMap<String, Object>();
+    private String identity;
+    private Map<String, Object> config;
 
-    DefaultConfigurationItem(String identity, Map<String, Object> config) {
-        super(identity);
-        if (config != null) {
-            configuration.putAll(config);
-        }
+    @Override
+    public ConfigurationProfileItemBuilder addIdentity(String identity) {
+        this.identity = identity;
+        return this;
     }
 
     @Override
-    public Map<String, Object> getConfiguration() {
-        return Collections.unmodifiableMap(configuration);
+    public ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config) {
+        this.config = config;
+        return this;
     }
 
     @Override
-    public String toString() {
-        return "ConfigurationItem[id=" + getIdentity() + ",config=" + configuration + "]";
+    public ConfigurationProfileItem getProfileItem() {
+        return new DefaultConfigurationProfileItem(identity, config);
     }
 }

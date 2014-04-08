@@ -20,7 +20,7 @@
 package io.fabric8.core.service;
 
 import io.fabric8.core.api.AttributeKey;
-import io.fabric8.core.api.ConfigurationItem;
+import io.fabric8.core.api.ConfigurationProfileItem;
 import io.fabric8.core.api.Container;
 import io.fabric8.core.api.ContainerIdentity;
 import io.fabric8.core.api.CreateOptions;
@@ -413,7 +413,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Do the provisioning
-        Set<ConfigurationItem> configItems = profile.getProfileItems(ConfigurationItem.class);
+        Set<ConfigurationProfileItem> configItems = profile.getProfileItems(ConfigurationProfileItem.class);
         configManager.get().applyConfigurationItems(configItems);
 
         // Associate the profile with the container

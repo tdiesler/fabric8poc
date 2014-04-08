@@ -17,11 +17,16 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.spi;
+package io.fabric8.core.api;
 
-public final class NullProfileItem extends AbstractProfileItem {
 
-    public NullProfileItem(String identity) {
-        super(identity);
-    }
+
+
+/**
+ * A profile item used for item removal.
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
+public interface NullProfileItem extends ProfileItem {
 }

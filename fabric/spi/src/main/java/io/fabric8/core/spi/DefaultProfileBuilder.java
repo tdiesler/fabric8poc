@@ -19,8 +19,9 @@
  */
 package io.fabric8.core.spi;
 
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.ContainerIdentity;
+import io.fabric8.core.api.NullProfileItemBuilder;
 import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileBuilder;
 import io.fabric8.core.api.ProfileIdentity;
@@ -48,8 +49,10 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends ProfileItemBuilder<?>> T getItemBuilder(Class<T> type) {
-        if (ConfigurationItemBuilder.class.isAssignableFrom(type)) {
-            return (T) new DefaultConfigurationItemBuilder();
+        if (ConfigurationProfileItemBuilder.class.isAssignableFrom(type)) {
+            return (T) new DefaultConfigurationProfileItemBuilder();
+        } else if (NullProfileItemBuilder.class.isAssignableFrom(type)) {
+            return (T) new DefaultNullProfileItemBuilder();
         } else {
             throw new IllegalArgumentException("Unsupported type: " + type);
         }
@@ -67,7 +70,7 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
     }
 
     @Override
-    public Profile createProfile() {
+    public Profile getProfile() {
         return new ProfileImpl();
     }
 

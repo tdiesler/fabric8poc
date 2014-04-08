@@ -21,17 +21,15 @@ package io.fabric8.core.api;
 
 import java.util.Map;
 
-
-
 /**
  * A configuration item builder
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ConfigurationItemBuilder extends ProfileItemBuilder<ConfigurationItem> {
+public interface ConfigurationProfileItemBuilder extends ProfileItemBuilder<ConfigurationProfileItem> {
 
-    ConfigurationItemBuilder addIdentity(String identity);
+    ConfigurationProfileItemBuilder addIdentity(String identity);
 
-    ConfigurationItemBuilder setConfiguration(Map<String, Object> config);
+    ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config);
 }

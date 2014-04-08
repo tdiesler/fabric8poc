@@ -19,29 +19,17 @@
  */
 package io.fabric8.core.api;
 
-import org.jboss.gravia.resource.Version;
+import java.util.Map;
+
+
 
 /**
- * A builder for a profile version
+ * A configuration item targeted to {@link ConfigurationAdmin}
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileVersionBuilder {
+public interface ConfigurationProfileItem extends ProfileItem {
 
-    ProfileVersionBuilder addIdentity(Version version);
-
-    ProfileVersion getProfileVersion();
-
-    final class Factory {
-
-        public static ProfileVersionBuilder create() {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.create();
-        }
-
-        // Hide ctor
-        private Factory() {
-        }
-    }
+    Map<String, Object> getConfiguration();
 }

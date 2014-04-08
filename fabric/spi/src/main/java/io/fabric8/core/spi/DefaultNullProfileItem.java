@@ -17,31 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.api;
+package io.fabric8.core.spi;
 
-import org.jboss.gravia.resource.Version;
+import io.fabric8.core.api.NullProfileItem;
 
-/**
- * A builder for a profile version
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ProfileVersionBuilder {
 
-    ProfileVersionBuilder addIdentity(Version version);
+public final class DefaultNullProfileItem extends AbstractProfileItem implements NullProfileItem {
 
-    ProfileVersion getProfileVersion();
-
-    final class Factory {
-
-        public static ProfileVersionBuilder create() {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.create();
-        }
-
-        // Hide ctor
-        private Factory() {
-        }
+    public DefaultNullProfileItem(String identity) {
+        super(identity);
     }
 }

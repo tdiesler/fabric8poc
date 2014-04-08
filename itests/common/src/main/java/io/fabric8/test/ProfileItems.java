@@ -19,28 +19,30 @@
  */
 package io.fabric8.test;
 
-import io.fabric8.core.api.ConfigurationItem;
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.Container;
+import io.fabric8.core.api.Container.State;
 import io.fabric8.core.api.ContainerBuilder;
 import io.fabric8.core.api.ContainerIdentity;
 import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.CreateOptions;
+import io.fabric8.core.api.NullProfileItemBuilder;
+import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileBuilder;
 import io.fabric8.core.api.ProfileEvent;
 import io.fabric8.core.api.ProfileEventListener;
+import io.fabric8.core.api.ProfileItemBuilder;
 import io.fabric8.core.api.ProfileManager;
 import io.fabric8.core.api.ProvisionEvent;
 import io.fabric8.core.api.ProvisionEventListener;
 import io.fabric8.core.api.ServiceLocator;
-import io.fabric8.core.api.Container.State;
 
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
@@ -78,37 +80,38 @@ public class ProfileItems {
         Assert.assertEquals("cntA", idA.getSymbolicName());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
-        // Build a profile
+        // Build an update profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        profileBuilder.addIdentity("default");
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity("some.pid");
         configBuilder.setConfiguration(Collections.singletonMap("foo", (Object) "bar"));
-        ConfigurationItem item = configBuilder.getConfigurationItem();
-        Set<ConfigurationItem> items = Collections.singleton(item);
+        profileBuilder.addProfileItem(configBuilder.getProfileItem());
+        Profile updateProfile = profileBuilder.getProfile();
 
         // Setup the profile listener
-        final CountDownLatch latchA = new CountDownLatch(1);
+        final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
                 String symbolicName = event.getSource().getIdentity().getSymbolicName();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
-                    latchA.countDown();
+                    latchA.get().countDown();
                 }
             }
         };
 
         // Setup the provision listener
-        final CountDownLatch latchB = new CountDownLatch(2);
+        final AtomicReference<CountDownLatch> latchB = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
-                    latchB.countDown();
+                    latchB.get().countDown();
                 }
                 if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(symbolicName)) {
-                    latchB.countDown();
+                    latchB.get().countDown();
                 }
             }
         };
@@ -120,16 +123,32 @@ public class ProfileItems {
         Assert.assertNull("Configuration null", config.getProperties());
 
         // Update the default profile
-        prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, Constants.DEFAULT_PROFILE_IDENTITY, items, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
-        sregB.unregister();
+        Profile defaultProfile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertEquals("One item", 2, defaultProfile.getProfileItems(null).size());
 
         // Verify the configuration
         config = configAdmin.getConfiguration("some.pid");
         Dictionary<String, Object> props = config.getProperties();
         Assert.assertEquals("bar", props.get("foo"));
-        config.delete();
+
+        // Build an update profile
+        profileBuilder = ProfileBuilder.Factory.create();
+        profileBuilder.addIdentity("default");
+        ProfileItemBuilder<?> itemBuilder = profileBuilder.getItemBuilder(NullProfileItemBuilder.class);
+        profileBuilder.addProfileItem(itemBuilder.addIdentity("some.pid").getProfileItem());
+        updateProfile = profileBuilder.getProfile();
+
+        // Update the default profile
+        latchA.set(new CountDownLatch(1));
+        latchB.set(new CountDownLatch(2));
+        defaultProfile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertEquals("One item", 1, defaultProfile.getProfileItems(null).size());
+
+        sregB.unregister();
 
         cntA = cntManager.destroy(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());

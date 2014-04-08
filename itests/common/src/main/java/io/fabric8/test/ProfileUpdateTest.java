@@ -36,7 +36,6 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 /**
@@ -73,10 +72,5 @@ public class ProfileUpdateTest extends ProfileUpdate {
             }
         });
         return archive.getArchive();
-    }
-
-    @Override
-    @Ignore
-    public void testProfileUpdateInUse() throws Exception {
     }
 }

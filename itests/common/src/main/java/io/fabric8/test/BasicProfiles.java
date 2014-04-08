@@ -19,8 +19,8 @@
  */
 package io.fabric8.test;
 
-import io.fabric8.core.api.ConfigurationItem;
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItem;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.Profile;
@@ -68,7 +68,7 @@ public class BasicProfiles {
         Version version = Version.parseVersion("1.1");
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profileVersion = versionBuilder.addIdentity(version).createProfileVersion();
+        ProfileVersion profileVersion = versionBuilder.addIdentity(version).getProfileVersion();
 
         // Add a profile version
         prfManager.addProfileVersion(profileVersion);
@@ -77,15 +77,15 @@ public class BasicProfiles {
         // Build a profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
         profileBuilder.addIdentity("foo");
-        ConfigurationItemBuilder ibuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ConfigurationProfileItemBuilder ibuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         ibuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
-        profileBuilder.addProfileItem(ibuilder.getConfigurationItem());
-        Profile profile = profileBuilder.createProfile();
+        profileBuilder.addProfileItem(ibuilder.getProfileItem());
+        Profile profile = profileBuilder.getProfile();
 
         // Verify profile
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationItem citem = items.iterator().next();
+        ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
         Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
 

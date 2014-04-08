@@ -23,7 +23,6 @@ import io.fabric8.core.api.LockHandle;
 import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileEventListener;
 import io.fabric8.core.api.ProfileIdentity;
-import io.fabric8.core.api.ProfileItem;
 import io.fabric8.core.api.ProfileManager;
 import io.fabric8.core.api.ProfileVersion;
 import io.fabric8.core.spi.ProfileService;
@@ -193,11 +192,11 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> profileItems, ProfileEventListener listener) {
+    public Profile updateProfile(Version version, Profile profile, ProfileEventListener listener) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
-            return service.updateProfile(version, identity, profileItems, listener);
+            return service.updateProfile(version, profile, listener);
         } finally {
             permit.release();
         }

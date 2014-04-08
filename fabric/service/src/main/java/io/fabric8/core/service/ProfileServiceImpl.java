@@ -22,10 +22,11 @@ package io.fabric8.core.service;
 import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.core.api.AttributeKey;
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Container;
 import io.fabric8.core.api.ContainerIdentity;
 import io.fabric8.core.api.LockHandle;
+import io.fabric8.core.api.NullProfileItem;
 import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileBuilder;
 import io.fabric8.core.api.ProfileBuilderFactory;
@@ -38,7 +39,6 @@ import io.fabric8.core.api.ProfileVersionBuilder;
 import io.fabric8.core.api.ProfileVersionBuilderFactory;
 import io.fabric8.core.spi.AttributeSupport;
 import io.fabric8.core.spi.EventDispatcher;
-import io.fabric8.core.spi.NullProfileItem;
 import io.fabric8.core.spi.ProfileService;
 import io.fabric8.core.spi.permit.PermitManager;
 import io.fabric8.core.spi.scr.AbstractProtectedComponent;
@@ -117,17 +117,17 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         // Add the default profile version
         ProfileVersionBuilder versionBuilder = versionBuilderFactory.get().create();
-        ProfileVersion profileVersion = versionBuilder.addIdentity(DEFAULT_PROFILE_VERSION).createProfileVersion();
+        ProfileVersion profileVersion = versionBuilder.addIdentity(DEFAULT_PROFILE_VERSION).getProfileVersion();
         addProfileVersionInternal(profileVersion);
 
         // Build the default profile
         ProfileBuilder profileBuilder = profileBuilderFactory.get().create();
         profileBuilder.addIdentity(DEFAULT_PROFILE_IDENTITY.getSymbolicName());
-        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
-        profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
-        Profile defaultProfile = profileBuilder.createProfile();
+        profileBuilder.addProfileItem(configBuilder.getProfileItem());
+        Profile defaultProfile = profileBuilder.getProfile();
 
         // Add the default profile
         LockHandle writeLock = aquireWriteLock(DEFAULT_PROFILE_VERSION);
@@ -397,22 +397,23 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, ProfileEventListener listener) {
+    public Profile updateProfile(Version version, Profile profile, ProfileEventListener listener) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
-            ProfileState profileState = versionState.getRequiredProfile(identity);
+            ProfileState profileState = versionState.getRequiredProfile(profile.getIdentity());
             LOGGER.info("Update profile: {}", profileState);
             try {
-                profileState.updateProfileItems(items);
-                Profile profile = new ImmutableProfile(profileState);
-                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.EventType.UPDATED);
+                Set<ProfileItem> profileItems = profile.getProfileItems(null);
+                profileState.updateProfileItems(profileItems);
+                Profile updated = new ImmutableProfile(profileState);
+                ProfileEvent event = new ProfileEvent(updated, ProfileEvent.EventType.UPDATED);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
-                return profile;
+                return updated;
             } catch (RuntimeException ex) {
-                Profile profile = new ImmutableProfile(profileState);
-                ProfileEvent event = new ProfileEvent(profile, ProfileEvent.EventType.ERROR, ex);
+                Profile result = new ImmutableProfile(profileState);
+                ProfileEvent event = new ProfileEvent(result, ProfileEvent.EventType.ERROR, ex);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
                 throw ex;
             }
@@ -420,7 +421,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             writeLock.unlock();
         }
     }
-
 
     @Override
     public void addContainerToProfileVersion(Version version, ContainerIdentity containerId) {

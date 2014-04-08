@@ -40,7 +40,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     }
 
     @Override
-    public ProfileVersion createProfileVersion() {
+    public ProfileVersion getProfileVersion() {
         return new ProfileVersionImpl();
     }
 

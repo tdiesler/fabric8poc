@@ -17,19 +17,23 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.api;
+package io.fabric8.core.spi;
 
-import java.util.Map;
+import io.fabric8.core.api.NullProfileItem;
+import io.fabric8.core.api.NullProfileItemBuilder;
 
+public final class DefaultNullProfileItemBuilder implements NullProfileItemBuilder {
 
+    private String identity;
 
-/**
- * A configuration item targeted to {@link ConfigurationAdmin}
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ConfigurationItem extends ProfileItem {
+    @Override
+    public NullProfileItemBuilder addIdentity(String identity) {
+        this.identity = identity;
+        return this;
+    }
 
-    Map<String, Object> getConfiguration();
+    @Override
+    public NullProfileItem getProfileItem() {
+        return new DefaultNullProfileItem(identity);
+    }
 }

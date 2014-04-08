@@ -19,7 +19,7 @@
  */
 package io.fabric8.core.service;
 
-import io.fabric8.core.api.ConfigurationItem;
+import io.fabric8.core.api.ConfigurationProfileItem;
 import io.fabric8.core.spi.scr.AbstractComponent;
 import io.fabric8.core.spi.scr.ValidatingReference;
 
@@ -48,7 +48,7 @@ public final class ConfigurationManager extends AbstractComponent {
         deactivateComponent();
     }
 
-    void applyConfigurationItems(Set<ConfigurationItem> configItems) {
+    void applyConfigurationItems(Set<ConfigurationProfileItem> configItems) {
         assertValid();
         ProfileSupport.applyConfigurationItems(configAdmin.get(), configItems);
     }

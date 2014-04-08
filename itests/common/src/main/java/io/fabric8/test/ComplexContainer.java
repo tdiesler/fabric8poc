@@ -19,7 +19,7 @@
  */
 package io.fabric8.test;
 
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.Container;
 import io.fabric8.core.api.Container.State;
@@ -76,7 +76,7 @@ public class ComplexContainer {
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
         ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profVersion20 = pvbuilder.addIdentity(version20).createProfileVersion();
+        ProfileVersion profVersion20 = pvbuilder.addIdentity(version20).getProfileVersion();
 
         // Verify that the version cannot be set
         // because it is not registered with the {@link ProfileManager}
@@ -101,7 +101,7 @@ public class ComplexContainer {
 
         // Build a new profile and associated it with 2.0
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        Profile default20 = profileBuilder.addIdentity("default").createProfile();
+        Profile default20 = profileBuilder.addIdentity("default").getProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
@@ -126,11 +126,11 @@ public class ComplexContainer {
         // Create profile foo
         profileBuilder = ProfileBuilder.Factory.create();
         profileBuilder = profileBuilder.addIdentity("foo");
-        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
-        profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
-        Profile fooProfile = profileBuilder.createProfile();
+        profileBuilder.addProfileItem(configBuilder.getProfileItem());
+        Profile fooProfile = profileBuilder.getProfile();
 
         // Verify that the profile cannot be added
         // because the profile version does not yet exist

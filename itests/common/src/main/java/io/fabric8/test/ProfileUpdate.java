@@ -21,8 +21,8 @@ package io.fabric8.test;
 
 import io.fabric8.core.api.ComponentEvent;
 import io.fabric8.core.api.ComponentEventListener;
-import io.fabric8.core.api.ConfigurationItem;
-import io.fabric8.core.api.ConfigurationItemBuilder;
+import io.fabric8.core.api.ConfigurationProfileItem;
+import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.Container;
 import io.fabric8.core.api.Container.State;
@@ -69,7 +69,7 @@ public class ProfileUpdate {
         Version version12 = Version.parseVersion("1.2");
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profileVersion = versionBuilder.addIdentity(version12).createProfileVersion();
+        ProfileVersion profileVersion = versionBuilder.addIdentity(version12).getProfileVersion();
 
         // Add a profile version
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
@@ -79,10 +79,10 @@ public class ProfileUpdate {
         // Build a profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
         profileBuilder.addIdentity("foo");
-        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
-        profileBuilder.addProfileItem(configBuilder.getConfigurationItem());
-        Profile profile = profileBuilder.createProfile();
+        profileBuilder.addProfileItem(configBuilder.getProfileItem());
+        Profile profile = profileBuilder.getProfile();
 
         // Add the profile to the given version
         profile = prfManager.addProfile(version12, profile);
@@ -90,10 +90,10 @@ public class ProfileUpdate {
 
         // Update the profile item
         profileBuilder = ProfileBuilder.Factory.create();
-        configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        profileBuilder.addIdentity("foo");
+        configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", (Object) "zzz"));
-        ConfigurationItem item = configBuilder.getConfigurationItem();
-        Set<ConfigurationItem> items = Collections.singleton(item);
+        Profile updateProfile = profileBuilder.addProfileItem(configBuilder.getProfileItem()).getProfile();
 
         // Setup the profile listener
         final CountDownLatch latchA = new CountDownLatch(1);
@@ -122,15 +122,15 @@ public class ProfileUpdate {
         ModuleContext syscontext = runtime.getModuleContext();
         ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
-        profile = prfManager.updateProfile(version12, profile.getIdentity(), items, profileListener);
+        profile = prfManager.updateProfile(version12, updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertFalse("ProvisionEvent not received", latchB.await(100, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
         // Verify profile
-        items = profile.getProfileItems(ConfigurationItem.class);
+        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationItem citem = items.iterator().next();
+        ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
         Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
 
@@ -148,22 +148,22 @@ public class ProfileUpdate {
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
-        // Create container A
+        // Create container cntA
         ContainerBuilder cntBuilder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
 
-        // Verify parent identity
+        // Verify cntA identity
         ContainerIdentity idA = cntA.getIdentity();
         Assert.assertEquals("cntA", idA.getSymbolicName());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        ConfigurationItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationItemBuilder.class);
+        profileBuilder.addIdentity("default");
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
         configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
-        ConfigurationItem item = configBuilder.getConfigurationItem();
-        Set<ConfigurationItem> items = Collections.singleton(item);
+        Profile updateProfile = profileBuilder.addProfileItem(configBuilder.getProfileItem()).getProfile();
 
         // Setup the profile listener
         final CountDownLatch latchA = new CountDownLatch(1);
@@ -209,7 +209,7 @@ public class ProfileUpdate {
         };
         ServiceRegistration<ComponentEventListener> sregC = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
-        Profile profile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, Constants.DEFAULT_PROFILE_IDENTITY, items, profileListener);
+        Profile profile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ComponentEvent received", latchC.await(200, TimeUnit.MILLISECONDS));
@@ -217,9 +217,9 @@ public class ProfileUpdate {
         sregC.unregister();
 
         // Verify profile
-        items = profile.getProfileItems(ConfigurationItem.class);
+        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationItem citem = items.iterator().next();
+        ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());
         Assert.assertEquals("bar", citem.getConfiguration().get(Container.CNFKEY_CONFIG_TOKEN));
 

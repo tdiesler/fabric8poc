@@ -97,7 +97,7 @@ public interface ProfileManager {
     Profile removeProfile(Version version, ProfileIdentity identity);
 
     /**
-     * Update profile items in the given profile
+     * Update the given profile
      */
-    Profile updateProfile(Version version, ProfileIdentity identity, Set<? extends ProfileItem> items, ProfileEventListener listener);
+    Profile updateProfile(Version version, Profile profile, ProfileEventListener listener);
 }

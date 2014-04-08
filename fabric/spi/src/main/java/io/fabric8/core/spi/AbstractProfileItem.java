@@ -28,6 +28,7 @@ import org.jboss.gravia.utils.NotNullException;
 
 public abstract class AbstractProfileItem implements ProfileItem {
 
+    private final AttributeSupport attributes = new AttributeSupport();
     private final String identity;
 
     protected AbstractProfileItem(String identity) {
@@ -37,17 +38,17 @@ public abstract class AbstractProfileItem implements ProfileItem {
 
     @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
-        throw new UnsupportedOperationException();
+        return attributes.getAttributeKeys();
     }
 
     @Override
     public <T> T getAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.getAttribute(key);
     }
 
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
-        throw new UnsupportedOperationException();
+        return attributes.hasAttribute(key);
     }
 
     @Override

@@ -38,7 +38,7 @@ public interface ProfileBuilder {
 
     ProfileBuilder importProfile(InputStream input);
 
-    Profile createProfile();
+    Profile getProfile();
 
     final class Factory {
 

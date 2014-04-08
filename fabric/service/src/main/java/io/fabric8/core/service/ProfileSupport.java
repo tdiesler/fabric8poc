@@ -19,7 +19,7 @@
  */
 package io.fabric8.core.service;
 
-import io.fabric8.core.api.ConfigurationItem;
+import io.fabric8.core.api.ConfigurationProfileItem;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -44,8 +44,8 @@ final class ProfileSupport {
     private ProfileSupport() {
     }
 
-    static void applyConfigurationItems(ConfigurationAdmin configAdmin, Set<ConfigurationItem> items) {
-        for (ConfigurationItem item : items) {
+    static void applyConfigurationItems(ConfigurationAdmin configAdmin, Set<ConfigurationProfileItem> items) {
+        for (ConfigurationProfileItem item : items) {
             LOGGER.info("Apply configuration item: {}", item);
             try {
                 Configuration config = configAdmin.getConfiguration(item.getIdentity(), null);
