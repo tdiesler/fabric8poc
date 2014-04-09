@@ -1,5 +1,5 @@
-Fabric8 BlueService API
-=======================
+Fabric8 BlueService
+===================
 
 This is a POC project for a major Fabric8 upgrade  
 
@@ -31,6 +31,6 @@ To achieve container portability, Fabric8 build on top of the [Fuse Portable Run
 Links
 -----
 
-* [Fabric8 API](http://174.129.32.31:8080/job/tdi-fabric8-poc/javadoc)
+* [Javadoc](http://174.129.32.31:8080/job/tdi-fabric8-poc/javadoc)
 * [User Guide](../../wiki/User-Guide)
 * [Developer Guide](../../wiki/Developer-Guide)

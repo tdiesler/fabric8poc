@@ -484,7 +484,7 @@
                                 </goals>
                                 <phase>install</phase>
                                 <configuration>
-                                   <excludePackageNames>io.fabric8.core.spi.*:io.fabric8.core.service:io.fabric8.portable.*:io.fabric8.runtime.*:org.wildfly</excludePackageNames>
+                                    <excludePackageNames>io.fabric8.core.spi.*:io.fabric8.core.service:io.fabric8.portable.*:io.fabric8.runtime.*:io.fabric8.test*:org.wildfly</excludePackageNames>
                                 </configuration>
                             </execution>
                         </executions>
