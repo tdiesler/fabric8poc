@@ -1,7 +1,7 @@
 Fabric8 BlueService
 ===================
 
-This is a POC project for a major Fabric8 upgrade  
+This is a POC project for the next major Fabric8 upgrade  
 
 BlueService Goals
 -----------------
@@ -22,7 +22,7 @@ Supported Target Containers
 
 The set of supported target containers includes but is not limited to 
 
-* [Karaf](http://karaf.apache.org/)
+* [Apache Karaf](http://karaf.apache.org/)
 * [Apache Tomcat](http://tomcat.apache.org/)
 * [JBoss WildFly](http://www.wildfly.org/)
 
