@@ -45,7 +45,7 @@ public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
     /**
      * Get the associated list of containers
      */
-    Set<ContainerIdentity> getContainerIds();
+    Set<ContainerIdentity> getContainers();
 
     /**
      * Get the profile parents

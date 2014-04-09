@@ -42,7 +42,7 @@ public interface ProfileManager {
     /**
      * Get the set of profile version identities in the cluster
      */
-    Set<Version> getProfileVersionIds();
+    Set<Version> getProfileVersionIdentities();
 
     /**
      * Get the set of profile versions for the given identities
@@ -73,7 +73,7 @@ public interface ProfileManager {
     /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version identity);
+    Set<ProfileIdentity> getProfileIdentities(Version identity);
 
     /**
      * Get the profiles for a given version and identities

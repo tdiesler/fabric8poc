@@ -17,9 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.test.PortableTestConditions;
+import io.fabric8.test.ProfileItems;
 
 import java.io.InputStream;
 
@@ -52,7 +55,7 @@ public class ProfileItemsTest extends ProfileItems {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("profile-items-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileItems.class);
+        archive.addClasses(ProfileItems.class, PortableTestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -62,12 +65,13 @@ public class ProfileItemsTest extends ProfileItems {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     builder.addImportPackages(ConfigurationAdmin.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,org.osgi.enterprise,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,org.osgi.enterprise,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

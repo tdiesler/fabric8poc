@@ -53,7 +53,7 @@ import org.osgi.service.cm.ConfigurationListener;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ConfiguredComponent {
+public class ConfiguredComponent extends PortableTestConditions {
 
     @Test
     public void testModifyService() throws Exception {
@@ -132,7 +132,5 @@ public class ConfiguredComponent {
         // Wait a little for the component to get updated
         Assert.assertTrue("ConfigurationEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
         sregA.unregister();
-
-        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
 }

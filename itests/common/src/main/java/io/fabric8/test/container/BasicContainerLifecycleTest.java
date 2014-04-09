@@ -17,10 +17,13 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.container;
 
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.test.BasicContainerLifecycle;
+import io.fabric8.test.PortableTestConditions;
 
 import java.io.InputStream;
 
@@ -28,6 +31,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.osgi.StartLevelAware;
 import org.jboss.gravia.resource.ManifestBuilder;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
@@ -51,7 +55,7 @@ public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("basic-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(BasicContainerLifecycle.class);
+        archive.addClasses(BasicContainerLifecycle.class, PortableTestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -60,12 +64,13 @@ public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
-                    builder.addImportPackages(RuntimeLocator.class, Container.class);
+                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

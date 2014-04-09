@@ -17,9 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.test.ComplexContainer;
+import io.fabric8.test.PortableTestConditions;
 
 import java.io.InputStream;
 
@@ -38,20 +41,20 @@ import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.junit.runner.RunWith;
 
 /**
- * Test basic profiles functionality.
+ * Test container/profile functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class BasicProfilesTest extends BasicProfiles {
+public class ComplexContainerTest extends ComplexContainer {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
-        final ArchiveBuilder archive = new ArchiveBuilder("basic-profiles-test");
+        final ArchiveBuilder archive = new ArchiveBuilder("complex-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(BasicProfiles.class);
+        archive.addClasses(ComplexContainer.class, PortableTestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -61,11 +64,12 @@ public class BasicProfilesTest extends BasicProfiles {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

@@ -17,10 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
-import io.fabric8.core.spi.ContainerService;
+import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.test.ConfiguredComponent;
+import io.fabric8.test.PortableTestConditions;
 
 import java.io.InputStream;
 
@@ -53,7 +55,7 @@ public class ConfiguredComponentTest extends ConfiguredComponent {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("configured-component-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ConfiguredComponent.class);
+        archive.addClasses(ConfiguredComponent.class, PortableTestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -62,7 +64,8 @@ public class ConfiguredComponentTest extends ConfiguredComponent {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
-                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class, ContainerService.class);
+                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     builder.addImportPackages(ConfigurationAdmin.class);
                     return builder.openStream();
                 } else {

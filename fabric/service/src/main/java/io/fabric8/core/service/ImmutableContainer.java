@@ -85,7 +85,7 @@ final class ImmutableContainer implements Container {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIds() {
+    public Set<ProfileIdentity> getProfiles() {
         return Collections.unmodifiableSet(profiles);
     }
 

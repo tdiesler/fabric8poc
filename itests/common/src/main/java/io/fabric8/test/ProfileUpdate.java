@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
@@ -61,7 +62,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ProfileUpdate {
+public class ProfileUpdate extends PortableTestConditions {
 
     @Test
     public void testProfileUpdate() throws Exception {
@@ -136,7 +137,7 @@ public class ProfileUpdate {
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version12);
-        Assert.assertEquals(0, profileVersion.getProfileIds().size());
+        Assert.assertEquals(0, profileVersion.getProfiles().size());
     }
 
     @Test
@@ -166,53 +167,54 @@ public class ProfileUpdate {
         Profile updateProfile = profileBuilder.addProfileItem(configBuilder.getProfileItem()).getProfile();
 
         // Setup the profile listener
-        final CountDownLatch latchA = new CountDownLatch(1);
+        final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
                 String symbolicName = event.getSource().getIdentity().getSymbolicName();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
-                    latchA.countDown();
+                    latchA.get().countDown();
                 }
             }
         };
 
         // Setup the provision listener
-        final CountDownLatch latchB = new CountDownLatch(2);
+        final AtomicReference<CountDownLatch> latchB = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String symbolicName = event.getProfile().getIdentity().getSymbolicName();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
-                    latchB.countDown();
+                    latchB.get().countDown();
                 }
                 if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(symbolicName)) {
-                    latchB.countDown();
+                    latchB.get().countDown();
                 }
             }
         };
         ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         // Setup the component listener
-        final CountDownLatch latchC = new CountDownLatch(2);
+        final AtomicReference<CountDownLatch> latchC = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
         ComponentEventListener componentListener = new ComponentEventListener() {
             @Override
             public void processEvent(ComponentEvent event) {
                 Class<?> compType = event.getSource();
                 if (event.getType() == ComponentEvent.EventType.DEACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
-                    latchC.countDown();
+                    latchC.get().countDown();
                 }
                 if (event.getType() == ComponentEvent.EventType.ACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
-                    latchC.countDown();
+                    latchC.get().countDown();
                 }
             }
         };
         ServiceRegistration<ComponentEventListener> sregC = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
+        // Update the default profile
         Profile profile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ComponentEvent received", latchC.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ComponentEvent received", latchC.get().await(200, TimeUnit.MILLISECONDS));
         sregB.unregister();
         sregC.unregister();
 
@@ -238,6 +240,16 @@ public class ProfileUpdate {
         cntA = cntManager.destroy(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
-        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
+        // Build an update profile
+        profileBuilder = ProfileBuilder.Factory.create();
+        profileBuilder.addIdentity("default");
+        configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
+        configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
+        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
+        updateProfile = profileBuilder.addProfileItem(configBuilder.getProfileItem()).getProfile();
+
+        latchA.set(new CountDownLatch(1));
+        prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
     }
 }

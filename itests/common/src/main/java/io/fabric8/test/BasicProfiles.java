@@ -22,7 +22,6 @@ package io.fabric8.test;
 import io.fabric8.core.api.ConfigurationProfileItem;
 import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
-import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileBuilder;
 import io.fabric8.core.api.ProfileIdentity;
@@ -44,12 +43,11 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class BasicProfiles {
+public class BasicProfiles extends PortableTestConditions {
 
     @Test
     public void testProfileAddRemove() throws Exception {
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Verify the default profile
@@ -61,7 +59,7 @@ public class BasicProfiles {
         Assert.assertEquals("One version", 1, versions.size());
 
         ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
-        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIds();
+        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfiles();
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
@@ -95,8 +93,6 @@ public class BasicProfiles {
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version);
-        Assert.assertEquals(0, profileVersion.getProfileIds().size());
-
-        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
+        Assert.assertEquals(0, profileVersion.getProfiles().size());
     }
 }

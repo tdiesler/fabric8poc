@@ -44,7 +44,7 @@ final class ImmutableProfileVersion implements ProfileVersion {
     ImmutableProfileVersion(ProfileVersionState versionState) {
         NotNullException.assertValue(versionState, "versionState");
         identity = versionState.getIdentity();
-        containers.addAll(versionState.getContainerIds());
+        containers.addAll(versionState.getContainerIdentities());
         profiles.addAll(versionState.getProfileIdentities());
         attributes = new AttributeSupport(versionState.getAttributes());
         tostring = versionState.toString();
@@ -56,7 +56,7 @@ final class ImmutableProfileVersion implements ProfileVersion {
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIds() {
+    public Set<ContainerIdentity> getContainers() {
         return Collections.unmodifiableSet(containers);
     }
 
@@ -76,7 +76,7 @@ final class ImmutableProfileVersion implements ProfileVersion {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIds() {
+    public Set<ProfileIdentity> getProfiles() {
         return Collections.unmodifiableSet(profiles);
     }
 

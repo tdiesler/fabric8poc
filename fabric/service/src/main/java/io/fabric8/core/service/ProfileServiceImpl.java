@@ -199,7 +199,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Version> getProfileVersionIds() {
+    public Set<Version> getProfileVersionIdentities() {
         assertValid();
         return Collections.unmodifiableSet(profileVersions.keySet());
     }
@@ -275,7 +275,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            Set<ContainerIdentity> containers = getRequiredProfileVersion(version).getContainerIds();
+            Set<ContainerIdentity> containers = getRequiredProfileVersion(version).getContainerIdentities();
             if (!containers.isEmpty())
                 throw new IllegalStateException("Cannot remove profile version used by: " + containers);
 
@@ -292,7 +292,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIds(Version version) {
+    public Set<ProfileIdentity> getProfileIdentities(Version version) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {
@@ -384,7 +384,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
-            Set<ContainerIdentity> containers = versionState.getRequiredProfile(identity).getContainerIds();
+            Set<ContainerIdentity> containers = versionState.getRequiredProfile(identity).getContainers();
             if (!containers.isEmpty())
                 throw new IllegalStateException("Cannot remove profile used by: " + containers);
 
@@ -530,7 +530,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return identity;
         }
 
-        Set<ContainerIdentity> getContainerIds() {
+        Set<ContainerIdentity> getContainerIdentities() {
             HashSet<ContainerIdentity> snapshot = new HashSet<ContainerIdentity>(containers);
             return Collections.unmodifiableSet(snapshot);
         }
@@ -626,7 +626,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return identity;
         }
 
-        Set<ContainerIdentity> getContainerIds() {
+        Set<ContainerIdentity> getContainers() {
             HashSet<ContainerIdentity> snapshot = new HashSet<ContainerIdentity>(containers);
             return Collections.unmodifiableSet(snapshot);
         }

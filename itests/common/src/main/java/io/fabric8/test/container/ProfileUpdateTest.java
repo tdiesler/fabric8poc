@@ -17,10 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test;
+package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
-import io.fabric8.core.spi.ContainerService;
+import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.test.PortableTestConditions;
+import io.fabric8.test.ProfileUpdate;
 
 import java.io.InputStream;
 
@@ -52,7 +54,7 @@ public class ProfileUpdateTest extends ProfileUpdate {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("profile-update-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileUpdate.class);
+        archive.addClasses(ProfileUpdate.class, PortableTestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -61,7 +63,8 @@ public class ProfileUpdateTest extends ProfileUpdate {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
-                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class, ContainerService.class);
+                    builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();

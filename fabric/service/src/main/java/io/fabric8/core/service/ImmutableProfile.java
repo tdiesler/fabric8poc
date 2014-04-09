@@ -49,7 +49,7 @@ final class ImmutableProfile implements Profile {
         NotNullException.assertValue(profileState, "profileState");
         version = profileState.getProfileVersion();
         identity = profileState.getIdentity();
-        containers.addAll(profileState.getContainerIds());
+        containers.addAll(profileState.getContainers());
         profileItems.addAll(profileState.getProfileItems(null));
         attributes = new AttributeSupport(profileState.getAttributes());
         tostring = profileState.toString();
@@ -71,7 +71,7 @@ final class ImmutableProfile implements Profile {
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIds() {
+    public Set<ContainerIdentity> getContainers() {
         return Collections.unmodifiableSet(containers);
     }
 

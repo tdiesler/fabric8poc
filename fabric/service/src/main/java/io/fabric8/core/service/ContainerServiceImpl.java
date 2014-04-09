@@ -130,7 +130,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             @Override
             public void processEvent(ProfileEvent event) {
                 Profile profile = event.getSource();
-                Set<ContainerIdentity> identities = profile.getContainerIds();
+                Set<ContainerIdentity> identities = profile.getContainers();
 
                 LOGGER.info("Profile updated: {} => {}", profile, identities);
                 if (identities.isEmpty() || event.getType() != ProfileEvent.EventType.UPDATED)
@@ -261,6 +261,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (!cntState.getChildContainers().isEmpty())
                 throw new IllegalStateException("Cannot destroy a container that has active child containers: " + identity);
 
+            // Unprovision the associated profiles
+            Version profileVersion = cntState.getProfileVersion();
+            Set<ProfileIdentity> profiles = cntState.getProfiles();
+            for (Profile profile : profileService.get().getProfiles(profileVersion, profiles)) {
+                unprovisionProfile(cntState, profile, null);
+            }
+
             synchronized (containerRegistry) {
                 LOGGER.info("Destroy container: {}", cntState);
                 containerRegistry.get().removeContainer(identity);
@@ -273,9 +280,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIds() {
+    public Set<ContainerIdentity> getContainerIdentities() {
         assertValid();
-        return containerRegistry.get().getContainerIds();
+        return containerRegistry.get().getContainerIdentities();
     }
 
     @Override

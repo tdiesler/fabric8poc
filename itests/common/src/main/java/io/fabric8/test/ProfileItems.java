@@ -59,7 +59,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ProfileItems {
+public class ProfileItems extends PortableTestConditions {
 
     @Test
     public void testConfigurationItem() throws Exception {
@@ -152,7 +152,5 @@ public class ProfileItems {
 
         cntA = cntManager.destroy(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
-
-        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
 }

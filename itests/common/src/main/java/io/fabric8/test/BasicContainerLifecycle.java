@@ -38,7 +38,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class BasicContainerLifecycle {
+public class BasicContainerLifecycle extends PortableTestConditions {
 
     @Test
     public void testContainerLifecycle() throws Exception {
@@ -70,7 +70,5 @@ public class BasicContainerLifecycle {
         } catch (IllegalStateException e) {
             // expected
         }
-
-        Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
    }
 }

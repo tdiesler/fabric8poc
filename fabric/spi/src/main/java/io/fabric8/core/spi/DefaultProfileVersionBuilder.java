@@ -52,12 +52,12 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
 
         @Override
-        public Set<ContainerIdentity> getContainerIds() {
+        public Set<ContainerIdentity> getContainers() {
             return Collections.emptySet();
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIds() {
+        public Set<ProfileIdentity> getProfiles() {
             return Collections.emptySet();
         }
     }

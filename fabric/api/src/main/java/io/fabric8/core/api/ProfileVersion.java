@@ -35,10 +35,10 @@ public interface ProfileVersion extends Attributable, Identifiable<Version> {
     /**
      * Get the associated list of containers
      */
-    Set<ContainerIdentity> getContainerIds();
+    Set<ContainerIdentity> getContainers();
 
     /**
      * Get the associated list of profiles
      */
-    Set<ProfileIdentity> getProfileIds();
+    Set<ProfileIdentity> getProfiles();
 }

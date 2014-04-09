@@ -92,7 +92,7 @@ public final class DefaultProfileBuilder implements ProfileBuilder {
         }
 
         @Override
-        public Set<ContainerIdentity> getContainerIds() {
+        public Set<ContainerIdentity> getContainers() {
             return Collections.emptySet();
         }
 

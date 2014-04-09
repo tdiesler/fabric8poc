@@ -133,7 +133,7 @@ public final class ContainerRegistry extends AbstractComponent {
         };
     }
 
-    Set<ContainerIdentity> getContainerIds() {
+    Set<ContainerIdentity> getContainerIdentities() {
         assertValid();
         return Collections.unmodifiableSet(containers.keySet());
     }

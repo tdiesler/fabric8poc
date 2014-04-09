@@ -47,13 +47,15 @@ public interface ContainerManager {
 
     /**
      * Create a container with the given options
+     *
+     * [TODO] Are the profiles provisioned on start?
      */
     Container createContainer(ContainerIdentity parentId, CreateOptions options, ProvisionEventListener listener);
 
     /**
      * Get the set of container identities in the cluster
      */
-    Set<ContainerIdentity> getContainerIds();
+    Set<ContainerIdentity> getContainerIdentities();
 
     /**
      * Get the set of containers for the given identities
@@ -73,16 +75,22 @@ public interface ContainerManager {
 
     /**
      * Start the container with the given identity
+     *
+     * [TODO] Add ProvisionEventListener ?
      */
     Container start(ContainerIdentity identity);
 
     /**
      * Stop the container with the given identity
+     *
+     * [TODO] Add ProvisionEventListener ?
      */
     Container stop(ContainerIdentity identity);
 
     /**
      * Destroy the container with the given identity
+     *
+     * [TODO] Add ProvisionEventListener ?
      */
     Container destroy(ContainerIdentity identity);
 
