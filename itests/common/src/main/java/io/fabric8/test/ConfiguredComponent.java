@@ -34,6 +34,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
@@ -57,53 +58,49 @@ public class ConfiguredComponent {
     @Test
     public void testModifyService() throws Exception {
 
-        final CountDownLatch updateLatch = new CountDownLatch(1);
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        ModuleContext syscontext = runtime.getModuleContext();
+
+        final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
         ConfigurationListener configListener = new ConfigurationListener() {
             @Override
             public void configurationEvent(ConfigurationEvent event) {
                 String pid = event.getPid();
                 int type = event.getType();
                 if (Container.CONTAINER_SERVICE_PID.equals(pid) && type == ConfigurationEvent.CM_UPDATED) {
-                    updateLatch.countDown();
+                    latchA.get().countDown();
                 }
             }
         };
+        ServiceRegistration<ConfigurationListener> sregA = syscontext.registerService(ConfigurationListener.class, configListener, null);
 
         // Setup the component listener
-        final CountDownLatch latchA = new CountDownLatch(2);
+        final AtomicReference<CountDownLatch> latchB = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
         ComponentEventListener componentListener = new ComponentEventListener() {
             @Override
             public void processEvent(ComponentEvent event) {
                 Class<?> compType = event.getSource();
                 if (event.getType() == ComponentEvent.EventType.DEACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
-                    latchA.countDown();
+                    latchB.get().countDown();
                 }
                 if (event.getType() == ComponentEvent.EventType.ACTIVATED && ContainerService.class.isAssignableFrom(compType)) {
-                    latchA.countDown();
+                    latchB.get().countDown();
                 }
             }
         };
-        Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        ModuleContext syscontext = runtime.getModuleContext();
-        ServiceRegistration<ComponentEventListener> sregA = syscontext.registerService(ComponentEventListener.class, componentListener, null);
+        ServiceRegistration<ComponentEventListener> sregB = syscontext.registerService(ComponentEventListener.class, componentListener, null);
 
         // Modify the service configuration
-        ServiceRegistration<ConfigurationListener> sregB = syscontext.registerService(ConfigurationListener.class, configListener, null);
-        try {
-            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
-            Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
-            Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(Container.CNFKEY_CONFIG_TOKEN, "foo");
-            config.update(props);
-
-            Assert.assertTrue("Config updated", updateLatch.await(2, TimeUnit.SECONDS));
-        } finally {
-            sregB.unregister();
-        }
+        ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
+        Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Container.CNFKEY_CONFIG_TOKEN, "foo");
+        config.update(props);
 
         // Wait a little for the component to get updated
-        Assert.assertTrue("ComponentEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
-        sregA.unregister();
+        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ComponentEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        sregB.unregister();
 
         ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
@@ -124,6 +121,17 @@ public class ConfiguredComponent {
 
         cntA = cntManager.destroy(cntId);
         Assert.assertSame(State.DESTROYED, cntA.getState());
+
+        // Reset the default configuration
+        latchA.set(new CountDownLatch(1));
+        config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
+        props = new Hashtable<String, Object>();
+        props.put(Container.CNFKEY_CONFIG_TOKEN, "default");
+        config.update(props);
+
+        // Wait a little for the component to get updated
+        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        sregA.unregister();
 
         Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
     }
