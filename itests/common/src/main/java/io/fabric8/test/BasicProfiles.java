@@ -80,16 +80,16 @@ public class BasicProfiles extends PortableTestConditions {
         profileBuilder.addProfileItem(ibuilder.getProfileItem());
         Profile profile = profileBuilder.getProfile();
 
+        // Add the profile to the given version
+        profile = prfManager.addProfile(version, profile);
+        Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
+
         // Verify profile
         Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
         Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
-
-        // Add the profile to the given version
-        profile = prfManager.addProfile(version, profile);
-        Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version);

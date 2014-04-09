@@ -84,8 +84,8 @@ import org.slf4j.LoggerFactory;
  * The mutable {@link ProfileVersionState} and {@link ProfileState} must synchronize concurrent read operations,
  * write operations are synchronized by the lock on {@link ProfileVersion}
  *
- * A client may explicitly aquire a write lock for a {@link ProfileVersion}. This is necessary when
- * exclusive acccess to {@link ProfileVersion} content is required.
+ * A client may explicitly acquire a write lock for a {@link ProfileVersion}. This is necessary when
+ * exclusive access to {@link ProfileVersion} content is required.
  * For example when provisioning a container - while doing so the {@link ProfileVersion} must be locked and cannot change.
  *
  * @author Thomas.Diesler@jboss.com

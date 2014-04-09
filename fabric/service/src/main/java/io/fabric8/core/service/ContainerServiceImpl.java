@@ -85,9 +85,9 @@ import org.slf4j.LoggerFactory;
  * Each {@link Container} instance is associated with a {@link ReentrantReadWriteLock}
  * The mutable {@link ContainerState} must synchronize concurrent read operations, write operations are synchronized by the lock on {@link Container}
  *
- * A client may explicitly aquire a write lock for a {@link Container}.
+ * A client may explicitly acquire a write lock for a {@link Container}.
  * Obtaining a write lock for a {@link Container} also obtains a write lock on the associated {@link ProfileVersion}.
- * This is necessary when exclusive acccess to {@link Container} content is required. For example when making multiple calls
+ * This is necessary when exclusive access to {@link Container} content is required. For example when making multiple calls
  * as part of one operation - while doing so the {@link Container} and its associated {@link ProfileVersion} must be locked and cannot change.
  *
  * @author Thomas.Diesler@jboss.com
