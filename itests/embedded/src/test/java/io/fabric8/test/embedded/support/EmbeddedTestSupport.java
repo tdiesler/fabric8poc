@@ -36,7 +36,7 @@ import org.jboss.gravia.runtime.RuntimeLocator;
  */
 public abstract class EmbeddedTestSupport {
 
-    private static String[] moduleNames = new String[] { "fabric8-core-api", "fabric8-core-spi", "fabric8-core-service" };
+    private static String[] moduleNames = new String[] { "fabric8-core-api", "fabric8-core-spi", "fabric8-core-impl" };
 
     public static void beforeClass() throws Exception {
 

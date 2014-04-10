@@ -199,7 +199,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Version> getProfileVersionIdentities() {
+    public Set<Version> getProfileVersionIds() {
         assertValid();
         return Collections.unmodifiableSet(profileVersions.keySet());
     }
@@ -292,7 +292,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities(Version version) {
+    public Set<ProfileIdentity> getProfileIds(Version version) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {

@@ -61,7 +61,7 @@ public abstract class PortableTestConditions {
         Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
 
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
-        Set<Version> profileVersions = prfManager.getProfileVersionIdentities();
+        Set<Version> profileVersions = prfManager.getProfileVersionIds();
         Assert.assertEquals("One profile version", 1, profileVersions.size());
         Version defaultVersion = profileVersions.iterator().next();
         Assert.assertEquals("1.0.0", defaultVersion.toString());

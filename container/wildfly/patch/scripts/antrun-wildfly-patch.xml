@@ -60,7 +60,7 @@
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/service/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
-        	<include name="fabric8-core-service-*"/>
+        	<include name="fabric8-core-impl-*"/>
         </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/org/wildfly/extension/fabric/main" overwrite="true">

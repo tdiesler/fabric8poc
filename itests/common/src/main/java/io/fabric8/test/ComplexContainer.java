@@ -149,7 +149,7 @@ public class ComplexContainer extends PortableTestConditions {
 
         // Add profile foo to 2.0
         prfManager.addProfile(version20, fooProfile);
-        Assert.assertEquals(2, prfManager.getProfileIdentities(version20).size());
+        Assert.assertEquals(2, prfManager.getProfileIds(version20).size());
 
         // Verify that the profile cannot be added again
         try {
@@ -236,7 +236,7 @@ public class ComplexContainer extends PortableTestConditions {
 
         // Remove profile foo from 2.0
         prfManager.removeProfile(version20, fooProfile.getIdentity());
-        Assert.assertEquals(1, prfManager.getProfileIdentities(version20).size());
+        Assert.assertEquals(1, prfManager.getProfileIds(version20).size());
 
         // Verify that the profile version cannot be removed
         // because it is still used by a container

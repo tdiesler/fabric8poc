@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-core-service</artifactId>
+            <artifactId>fabric8-core-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -132,7 +132,7 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-core-service</artifactId>
+                                    <artifactId>fabric8-core-impl</artifactId>
                                     <version>${project.version}</version>
                                     <includes>OSGI-INF/io.fabric8.**</includes>
                                 </artifactItem>

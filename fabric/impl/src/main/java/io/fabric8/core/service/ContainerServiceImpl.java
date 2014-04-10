@@ -275,9 +275,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
+    public Set<ContainerIdentity> getContainerIds() {
         assertValid();
-        return containerRegistry.get().getContainerIdentities();
+        return containerRegistry.get().getContainerIds();
     }
 
     @Override

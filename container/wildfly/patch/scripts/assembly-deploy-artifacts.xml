@@ -18,7 +18,7 @@
             <includes>
                 <include>*:fabric8-core-api:jar</include>
                 <include>*:fabric8-core-spi:jar</include>
-                <include>*:fabric8-core-service:jar</include>
+                <include>*:fabric8-core-impl:jar</include>
                 <include>*:fabric8-container-wildfly-extension:jar</include>
             </includes>
             <scope>provided</scope>

@@ -37,7 +37,7 @@
             <includes>
                 <include>*:fabric8-core-api:jar</include>
                 <include>*:fabric8-core-spi:jar</include>
-                <include>*:fabric8-core-service:jar</include>
+                <include>*:fabric8-core-impl:jar</include>
                 <include>*:gravia-provision:jar</include>
                 <include>*:gravia-repository:jar</include>
                 <include>*:gravia-resolver:jar</include>

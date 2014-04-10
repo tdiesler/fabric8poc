@@ -7,7 +7,7 @@
     </properties>
 
     <resources>
-        <resource-root path="fabric8-core-service-@project.version@.jar"/>
+        <resource-root path="fabric8-core-impl-@project.version@.jar"/>
     </resources>
 
     <dependencies>

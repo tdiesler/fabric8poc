@@ -33,7 +33,7 @@
     <modules>
         <module>api</module>
         <module>spi</module>
-        <module>service</module>
+        <module>impl</module>
     </modules>
     
 </project>

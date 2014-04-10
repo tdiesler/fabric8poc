@@ -130,11 +130,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
+    public Set<ContainerIdentity> getContainerIds() {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.getContainerIdentities();
+            return service.getContainerIds();
         } finally {
             permit.release();
         }

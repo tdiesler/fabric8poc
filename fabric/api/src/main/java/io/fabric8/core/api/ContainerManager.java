@@ -53,7 +53,7 @@ public interface ContainerManager {
     /**
      * Get the set of container identities in the cluster
      */
-    Set<ContainerIdentity> getContainerIdentities();
+    Set<ContainerIdentity> getContainerIds();
 
     /**
      * Get the set of containers for the given identities
