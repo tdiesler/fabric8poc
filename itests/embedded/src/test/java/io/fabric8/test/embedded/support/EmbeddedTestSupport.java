@@ -51,10 +51,6 @@ public abstract class EmbeddedTestSupport {
     }
 
     public static void afterClass() throws Exception {
-
-        // Wait for the system to stabilize after possible reconfiguration
-        ServiceLocator.awaitService(BootstrapComplete.class, 20, TimeUnit.SECONDS);
-
         RuntimeLocator.releaseRuntime();
     }
 }

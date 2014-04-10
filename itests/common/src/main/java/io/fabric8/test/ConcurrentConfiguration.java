@@ -17,16 +17,16 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test.embedded;
+package io.fabric8.test;
 
 import io.fabric8.core.api.Container;
+import io.fabric8.core.api.Container.State;
 import io.fabric8.core.api.ContainerBuilder;
 import io.fabric8.core.api.ContainerIdentity;
 import io.fabric8.core.api.ContainerManager;
 import io.fabric8.core.api.CreateOptions;
 import io.fabric8.core.api.ServiceLocator;
-import io.fabric8.core.api.Container.State;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
+import io.fabric8.core.spi.ContainerService;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -36,41 +36,28 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.gravia.runtime.ModuleContext;
-import org.jboss.gravia.runtime.Runtime;
-import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Test concurrent access to container functionality.
+ * Test concurrent access to {@link ContainerManager}
+ *
+ * One thread continuesly modifies the configuration of
+ * the {@link ContainerService}, which causes the component to deactivate/active
+ *
+ * Three other threads use {@link ContainerManager} to create/start/stop/destroy
+ * containers based on the current configuration
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ConcurrentClientsTest extends EmbeddedTestSupport {
-
-    private static Logger LOGGER = LoggerFactory.getLogger(ConcurrentClientsTest.class);
+public class ConcurrentConfiguration extends PortableTestConditions {
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Exception lastException;
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @After
     public void tearDown() throws Exception {
@@ -81,7 +68,7 @@ public class ConcurrentClientsTest extends EmbeddedTestSupport {
     @Test
     public void testConcurrentClients() throws Exception {
 
-        Future<Boolean> modifyFuture = executor.submit(new ModifyClient());
+        Future<Boolean> modifyFuture = executor.submit(new ConfigAdminClient());
         Future<Boolean> clientA = executor.submit(new ContainerClient("cntA"));
         Future<Boolean> clientB = executor.submit(new ContainerClient("cntB"));
         Future<Boolean> clientC = executor.submit(new ContainerClient("cntC"));
@@ -92,14 +79,12 @@ public class ConcurrentClientsTest extends EmbeddedTestSupport {
         Assert.assertTrue("ClientC ok", clientC.get());
     }
 
-    class ModifyClient implements Callable<Boolean> {
+    class ConfigAdminClient implements Callable<Boolean> {
 
         @Override
         public Boolean call() throws Exception {
-            Runtime runtime = RuntimeLocator.getRequiredRuntime();
-            ModuleContext syscontext = runtime.getModuleContext();
+            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
             for (int i = 0; lastException == null && i < 20; i++) {
-                ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
                 Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
                 props.put(Container.CNFKEY_CONFIG_TOKEN, "config#" + i);
@@ -129,7 +114,6 @@ public class ConcurrentClientsTest extends EmbeddedTestSupport {
                     Thread.sleep(10);
                 } catch (Exception ex) {
                     lastException = ex;
-                    LOGGER.error(ex.getMessage(), ex);
                     throw ex;
                 }
             }
