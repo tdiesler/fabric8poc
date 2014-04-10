@@ -19,6 +19,7 @@
  */
 package io.fabric8.test;
 
+import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.core.api.ComponentEvent;
 import io.fabric8.core.api.ComponentEventListener;
 import io.fabric8.core.api.ConfigurationProfileItem;
@@ -159,6 +160,11 @@ public class ProfileUpdate extends PortableTestConditions {
         Assert.assertEquals("cntA", idA.getSymbolicName());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
+        // Start container cntA
+        cntA = cntManager.startContainer(idA, null);
+        Assert.assertSame(State.STARTED, cntA.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
+
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
         profileBuilder.addIdentity("default");
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
@@ -235,9 +241,9 @@ public class ProfileUpdate extends PortableTestConditions {
         Assert.assertEquals("cntB", idB.getSymbolicName());
         Assert.assertEquals("bar", cntB.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
-        cntB = cntManager.destroy(idB);
+        cntB = cntManager.destroyContainer(idB);
         Assert.assertSame(State.DESTROYED, cntB.getState());
-        cntA = cntManager.destroy(idA);
+        cntA = cntManager.destroyContainer(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Build an update profile

@@ -19,6 +19,7 @@
  */
 package io.fabric8.test;
 
+import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.Container;
@@ -68,6 +69,11 @@ public class ComplexContainer extends PortableTestConditions {
         ContainerIdentity idParent = cntParent.getIdentity();
         Assert.assertEquals("cntA", idParent.getSymbolicName());
 
+        // Start the parent container
+        cntParent = cntManager.startContainer(idParent, null);
+        Assert.assertSame(State.STARTED, cntParent.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
+
         // Verify that the parent has the default profile assigned
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
         Assert.assertEquals(1, cntParent.getProfiles().size());
@@ -81,7 +87,7 @@ public class ComplexContainer extends PortableTestConditions {
         // Verify that the version cannot be set
         // because it is not registered with the {@link ProfileManager}
         try {
-            cntManager.setVersion(idParent, version20, null);
+            cntManager.setProfileVersion(idParent, version20, null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException ex) {
             // expected
@@ -93,7 +99,7 @@ public class ComplexContainer extends PortableTestConditions {
         // because the contaier uses the default profile
         // which is not yet part of profile 2.0
         try {
-            cntManager.setVersion(idParent, version20, null);
+            cntManager.setProfileVersion(idParent, version20, null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException ex) {
             // expected
@@ -117,7 +123,7 @@ public class ComplexContainer extends PortableTestConditions {
         };
 
         // Switch the container to version 2.0
-        cntParent = cntManager.setVersion(idParent, version20, listener);
+        cntParent = cntManager.setProfileVersion(idParent, version20, listener);
         Assert.assertTrue("ProvisionEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
@@ -176,12 +182,16 @@ public class ComplexContainer extends PortableTestConditions {
         // Create child container
         builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
         options = builder.addIdentity("cntB").getCreateOptions();
-        Container cntChild = cntManager.createContainer(idParent, options, null);
+        Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity
         ContainerIdentity idChild = cntChild.getIdentity();
         Assert.assertEquals("cntA:cntB", idChild.getSymbolicName());
-        //Assert.assertEquals("bar", cntChild.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+
+        // Start the child container
+        cntChild = cntManager.startContainer(idChild, null);
+        Assert.assertSame(State.STARTED, cntChild.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
 
         // Verify that the child has the default profile assigned
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
@@ -199,7 +209,7 @@ public class ComplexContainer extends PortableTestConditions {
 
         // Verify that the parent cannot be destroyed
         try {
-            cntManager.destroy(idParent);
+            cntManager.destroyContainer(idParent);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException ex) {
             // expected
@@ -255,7 +265,7 @@ public class ComplexContainer extends PortableTestConditions {
         };
 
         // Set the default profile version
-        cntParent = cntManager.setVersion(idParent, Constants.DEFAULT_PROFILE_VERSION, listener);
+        cntParent = cntManager.setProfileVersion(idParent, Constants.DEFAULT_PROFILE_VERSION, listener);
         Assert.assertTrue("ProvisionEvent received", latchD.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
@@ -264,9 +274,9 @@ public class ComplexContainer extends PortableTestConditions {
         // Remove profile version 2.0
         prfManager.removeProfileVersion(version20);
 
-        cntChild = cntManager.destroy(idChild);
+        cntChild = cntManager.destroyContainer(idChild);
         Assert.assertSame(State.DESTROYED, cntChild.getState());
-        cntParent = cntManager.destroy(idParent);
+        cntParent = cntManager.destroyContainer(idParent);
         Assert.assertSame(State.DESTROYED, cntParent.getState());
     }
 }

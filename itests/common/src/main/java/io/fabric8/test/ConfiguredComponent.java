@@ -113,13 +113,13 @@ public class ConfiguredComponent extends PortableTestConditions {
         Assert.assertEquals("foo", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        cntA = cntManager.start(cntId);
+        cntA = cntManager.startContainer(cntId, null);
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        cntA = cntManager.stop(cntId);
+        cntA = cntManager.stopContainer(cntId);
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = cntManager.destroy(cntId);
+        cntA = cntManager.destroyContainer(cntId);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Reset the default configuration

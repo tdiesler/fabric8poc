@@ -154,7 +154,7 @@ public final class ContainerRegistry extends AbstractComponent {
         return getContainerInternal(identity);
     }
 
-    ContainerState addContainer(ContainerState parentState, ContainerState cntState) {
+    void addContainer(ContainerState parentState, ContainerState cntState) {
         assertValid();
         synchronized (containers) {
             ContainerIdentity identity = cntState.getIdentity();
@@ -166,7 +166,6 @@ public final class ContainerRegistry extends AbstractComponent {
             }
             containerLocks.put(identity, new ReentrantReadWriteLock());
             containers.put(identity, cntState);
-            return cntState;
         }
     }
 

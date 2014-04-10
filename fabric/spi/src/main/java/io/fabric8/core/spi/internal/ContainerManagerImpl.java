@@ -86,44 +86,44 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container createContainer(ContainerIdentity identity, CreateOptions options, ProvisionEventListener listener) {
+    public Container createContainer(ContainerIdentity identity, CreateOptions options) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.createContainer(identity, options, null);
+            return service.createContainer(identity, options);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Container start(ContainerIdentity identity) {
+    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.start(identity);
+            return service.startContainer(identity, listener);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Container stop(ContainerIdentity identity) {
+    public Container stopContainer(ContainerIdentity identity) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.stop(identity);
+            return service.stopContainer(identity);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public Container destroy(ContainerIdentity identity) {
+    public Container destroyContainer(ContainerIdentity identity) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.destroy(identity);
+            return service.destroyContainer(identity);
         } finally {
             permit.release();
         }
@@ -174,22 +174,22 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container setVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
+    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.setVersion(identity, version, listener);
+            return service.setProfileVersion(identity, version, listener);
         } finally {
             permit.release();
         }
     }
 
     @Override
-    public boolean ping(ContainerIdentity identity) {
+    public boolean pingContainer(ContainerIdentity identity) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.ping(identity);
+            return service.pingContainer(identity);
         } finally {
             permit.release();
         }

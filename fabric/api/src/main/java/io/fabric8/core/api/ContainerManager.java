@@ -47,10 +47,8 @@ public interface ContainerManager {
 
     /**
      * Create a container with the given options
-     *
-     * [TODO] Are the profiles provisioned on start?
      */
-    Container createContainer(ContainerIdentity parentId, CreateOptions options, ProvisionEventListener listener);
+    Container createContainer(ContainerIdentity parentId, CreateOptions options);
 
     /**
      * Get the set of container identities in the cluster
@@ -75,49 +73,41 @@ public interface ContainerManager {
 
     /**
      * Start the container with the given identity
-     *
-     * [TODO] Add ProvisionEventListener ?
      */
-    Container start(ContainerIdentity identity);
+    Container startContainer(ContainerIdentity identity, ProvisionEventListener listener);
 
     /**
      * Stop the container with the given identity
-     *
-     * [TODO] Add ProvisionEventListener ?
      */
-    Container stop(ContainerIdentity identity);
+    Container stopContainer(ContainerIdentity identity);
 
     /**
      * Destroy the container with the given identity
-     *
-     * [TODO] Add ProvisionEventListener ?
      */
-    Container destroy(ContainerIdentity identity);
+    Container destroyContainer(ContainerIdentity identity);
 
     /**
      * Ping the container with the given identity
      */
-    boolean ping(ContainerIdentity identity);
+    boolean pingContainer(ContainerIdentity identity);
 
     /**
      * Join fabric for the container with the given identity
-     * [TODO]
-     * <ol>
-     * <li> How does this relate to states?
-     * <li> Does this need to be queried?
-     * </ol>
+     * [TODO] How does join relate to states?
+     * [TODO] Do we need a listener for join?
      */
     Container joinFabric(ContainerIdentity identity, JoinOptions options);
 
     /**
      * Leave fabric for the container with the given identity
+     * [TODO] Do we need a listener for leave?
      */
     Container leaveFabric(ContainerIdentity identity);
 
     /**
-     * Set the version for the container with the given identity
+     * Set the profile version for the container with the given identity
      */
-    Container setVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener);
+    Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener);
 
     /**
      * Add profiles to the container with the given identity

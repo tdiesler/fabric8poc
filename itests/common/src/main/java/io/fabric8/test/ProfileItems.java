@@ -19,6 +19,7 @@
  */
 package io.fabric8.test;
 
+import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.core.api.ConfigurationProfileItemBuilder;
 import io.fabric8.core.api.Constants;
 import io.fabric8.core.api.Container;
@@ -79,6 +80,11 @@ public class ProfileItems extends PortableTestConditions {
         ContainerIdentity idA = cntA.getIdentity();
         Assert.assertEquals("cntA", idA.getSymbolicName());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+
+        // Start container A
+        cntA = cntManager.startContainer(idA, null);
+        Assert.assertSame(State.STARTED, cntA.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         // Build an update profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
@@ -150,7 +156,7 @@ public class ProfileItems extends PortableTestConditions {
 
         sregB.unregister();
 
-        cntA = cntManager.destroy(idA);
+        cntA = cntManager.destroyContainer(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }

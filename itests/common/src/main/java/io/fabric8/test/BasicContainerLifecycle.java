@@ -51,21 +51,22 @@ public class BasicContainerLifecycle extends PortableTestConditions {
         ContainerIdentity idA = cntA.getIdentity();
 
         Assert.assertEquals("cntA", idA.getSymbolicName());
-        Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cntA.getState());
+        Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+        Assert.assertNull("Null profile version", cntA.getProfileVersion());
+
+        cntA = cntManager.startContainer(idA, null);
+        Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
-        cntA = cntManager.start(idA);
-        Assert.assertSame(State.STARTED, cntA.getState());
-
-        cntA = cntManager.stop(idA);
+        cntA = cntManager.stopContainer(idA);
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = cntManager.destroy(idA);
+        cntA = cntManager.destroyContainer(idA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         try {
-            cntManager.start(idA);
+            cntManager.startContainer(idA, null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
             // expected

@@ -128,7 +128,7 @@ public class ConcurrentConfiguration extends PortableTestConditions {
             //System.out.println(cnt);
             Assert.assertSame(State.CREATED, cnt.getState());
             Thread.sleep(10);
-            cnt = manager.start(cntId);
+            cnt = manager.startContainer(cntId, null);
             //System.out.println(cnt);
             Assert.assertSame(State.STARTED, cnt.getState());
             return cntId;
@@ -136,11 +136,11 @@ public class ConcurrentConfiguration extends PortableTestConditions {
 
 
         private void stopAndDestroy(ContainerManager manager, ContainerIdentity cntId) throws InterruptedException {
-            Container cnt = manager.stop(cntId);
+            Container cnt = manager.stopContainer(cntId);
             //System.out.println(cnt);
             Assert.assertSame(State.STOPPED, cnt.getState());
             Thread.sleep(10);
-            cnt = manager.destroy(cntId);
+            cnt = manager.destroyContainer(cntId);
             //System.out.println(cnt);
             Assert.assertSame(State.DESTROYED, cnt.getState());
         }
