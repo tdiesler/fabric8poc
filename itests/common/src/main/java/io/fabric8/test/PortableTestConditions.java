@@ -46,7 +46,7 @@ public abstract class PortableTestConditions {
 
     @Before
     public void preConditions() {
-        ServiceLocator.awaitService(BootstrapComplete.class);
+        ServiceLocator.getRequiredService(BootstrapComplete.class);
         assertConditions();
     }
 

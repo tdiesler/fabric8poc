@@ -22,7 +22,7 @@ package io.fabric8.core.spi.permit;
 import java.util.concurrent.TimeUnit;
 
 /**
-* A service that allows controlled transitions from one key to another.
+* A service that allows controlled transitions from one state to another.
 *
 * @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
