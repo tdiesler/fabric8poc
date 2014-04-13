@@ -21,8 +21,8 @@ package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
 import io.fabric8.core.spi.BootstrapComplete;
-import io.fabric8.test.ConfiguredComponent;
-import io.fabric8.test.PortableTestConditions;
+import io.fabric8.test.ConfiguredComponentTests;
+import io.fabric8.test.PortableTestConditionsTests;
 
 import java.io.InputStream;
 
@@ -48,14 +48,14 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class ConfiguredComponentTest extends ConfiguredComponent {
+public class ConfiguredComponentTest extends ConfiguredComponentTests {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("configured-component-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ConfiguredComponent.class, PortableTestConditions.class);
+        archive.addClasses(ConfiguredComponentTests.class, PortableTestConditionsTests.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

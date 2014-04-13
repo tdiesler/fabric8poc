@@ -21,8 +21,8 @@ package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
 import io.fabric8.core.spi.BootstrapComplete;
-import io.fabric8.test.ComplexContainer;
-import io.fabric8.test.PortableTestConditions;
+import io.fabric8.test.ComplexContainerTests;
+import io.fabric8.test.PortableTestConditionsTests;
 
 import java.io.InputStream;
 
@@ -47,14 +47,14 @@ import org.junit.runner.RunWith;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class ComplexContainerTest extends ComplexContainer {
+public class ComplexContainerTest extends ComplexContainerTests {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("complex-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ComplexContainer.class, PortableTestConditions.class);
+        archive.addClasses(ComplexContainerTests.class, PortableTestConditionsTests.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

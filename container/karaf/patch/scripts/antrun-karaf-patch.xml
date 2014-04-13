@@ -49,6 +49,9 @@
 	</copy>
   	
   	<!-- Copy to system -->
+    <copy todir="${karaf.patch.dir}/system/org/apache/commons/commons-compress/${version.apache.commons.compress}" overwrite="true">
+        <fileset file="${deploy.artifacts.lib}/commons-compress-*.jar" />
+    </copy>
     <copy todir="${karaf.patch.dir}/system/org/apache/felix/org.apache.felix.eventadmin/${version.apache.felix.eventadmin}" overwrite="true">
         <fileset file="${deploy.artifacts.lib}/org.apache.felix.eventadmin-*.jar" />
     </copy>
@@ -82,6 +85,7 @@ org/apache/felix/org.apache.felix.eventadmin/${version.apache.felix.eventadmin}/
 org/apache/felix/org.apache.felix.http/${version.apache.felix.http}/org.apache.felix.http.bundle-${version.apache.felix.http}.jar=40
 org/apache/felix/org.apache.felix.metatype/${version.apache.felix.metatype}/org.apache.felix.metatype-${version.apache.felix.metatype}.jar=40
 org/apache/felix/org.apache.felix.scr/${version.apache.felix.scr}/org.apache.felix.scr-${version.apache.felix.scr}.jar=40
+org/apache/commons/commons-compress/${version.apache.commons.compress}/commons-compress-${version.apache.commons.compress}.jar=40
 org/jboss/gravia/${version.jboss.gravia}/gravia-resource-${version.jboss.gravia}.jar=40
 org/jboss/gravia/${version.jboss.gravia}/gravia-runtime-api-${version.jboss.gravia}.jar=40
 org/jboss/gravia/${version.jboss.gravia}/gravia-runtime-osgi-${version.jboss.gravia}.jar=40

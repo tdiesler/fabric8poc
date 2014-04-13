@@ -30,10 +30,6 @@
     
     <name>Fabric8 :: Container</name>
 
-    <modules>
-        <module>common</module>
-    </modules>
-
     <profiles>
         <profile>
             <id>all</id>

@@ -21,8 +21,8 @@ package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
 import io.fabric8.core.spi.BootstrapComplete;
-import io.fabric8.test.PortableTestConditions;
-import io.fabric8.test.ProfileUpdate;
+import io.fabric8.test.PortableTestConditionsTests;
+import io.fabric8.test.ProfileUpdateTests;
 
 import java.io.InputStream;
 
@@ -47,14 +47,14 @@ import org.junit.runner.RunWith;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class ProfileUpdateTest extends ProfileUpdate {
+public class ProfileUpdateTest extends ProfileUpdateTests {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("profile-update-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileUpdate.class, PortableTestConditions.class);
+        archive.addClasses(ProfileUpdateTests.class, PortableTestConditionsTests.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

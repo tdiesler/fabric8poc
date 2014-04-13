@@ -19,19 +19,19 @@
  */
 package io.fabric8.test.embedded;
 
-import io.fabric8.test.ConcurrentConfiguration;
+import io.fabric8.test.ConcurrentConfigurationTests;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 /**
- * See {@link ConcurrentConfiguration}
+ * See {@link ConcurrentConfigurationTests}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ConcurrentConfigurationTest extends ConcurrentConfiguration {
+public class ConcurrentConfigurationTest extends ConcurrentConfigurationTests {
 
     @BeforeClass
     public static void beforeClass() throws Exception {

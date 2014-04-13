@@ -19,7 +19,7 @@
  */
 package io.fabric8.test.embedded;
 
-import io.fabric8.test.BasicContainerLifecycle;
+import io.fabric8.test.BasicContainerLifecycleTests;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import org.junit.AfterClass;
@@ -31,7 +31,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
+public class BasicContainerLifecycleTest extends BasicContainerLifecycleTests {
 
     @BeforeClass
     public static void beforeClass() throws Exception {

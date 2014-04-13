@@ -22,8 +22,8 @@ package io.fabric8.test.container;
 
 import io.fabric8.core.api.Container;
 import io.fabric8.core.spi.BootstrapComplete;
-import io.fabric8.test.BasicContainerLifecycle;
-import io.fabric8.test.PortableTestConditions;
+import io.fabric8.test.BasicContainerLifecycleTests;
+import io.fabric8.test.PortableTestConditionsTests;
 
 import java.io.InputStream;
 
@@ -48,14 +48,14 @@ import org.junit.runner.RunWith;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class BasicContainerLifecycleTest extends BasicContainerLifecycle {
+public class BasicContainerLifecycleTest extends BasicContainerLifecycleTests {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("basic-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(BasicContainerLifecycle.class, PortableTestConditions.class);
+        archive.addClasses(BasicContainerLifecycleTests.class, PortableTestConditionsTests.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

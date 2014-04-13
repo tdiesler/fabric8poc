@@ -35,6 +35,7 @@
             <outputDirectory>lib</outputDirectory>
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
+                <include>*:commons-compress:jar</include>
                 <include>*:fabric8-core-api:jar</include>
                 <include>*:fabric8-core-spi:jar</include>
                 <include>*:fabric8-core-impl:jar</include>

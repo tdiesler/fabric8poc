@@ -26,7 +26,9 @@ import io.fabric8.core.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.junit.Assert;
 
 /**
  * Test fabric-core servies
@@ -51,6 +53,8 @@ public abstract class EmbeddedTestSupport {
     }
 
     public static void afterClass() throws Exception {
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
     }
 }

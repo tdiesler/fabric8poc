@@ -19,11 +19,17 @@
  */
 package io.fabric8.core.api.management;
 
+import io.fabric8.core.api.Constants;
+import io.fabric8.core.api.Profile;
 import io.fabric8.core.api.ProfileIdentity;
+import io.fabric8.core.api.ProfileVersion;
 
 import java.util.Set;
 
+import javax.management.ObjectName;
+
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
  * The profile management interface
@@ -34,12 +40,27 @@ import org.jboss.gravia.resource.Version;
 public interface ProfileManagement {
 
     /**
+     * The ObjectName: fabric8:type=ProfileManagement
+     */
+    ObjectName OBJECT_NAME = ObjectNameFactory.create(Constants.MANAGEMENT_DOMAIN + ":type=" + ProfileManagement.class.getSimpleName());
+
+    /**
      * Get the set of profile version identities in the cluster
      */
     Set<Version> getProfileVersionIds();
 
     /**
+     * Get the profile versions for the given identity
+     */
+    ProfileVersion getProfileVersion(Version identity);
+
+    /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version identity);
+    Set<ProfileIdentity> getProfileIds(Version version);
+
+    /**
+     * Get the profile for a given identity and version
+     */
+    Profile getProfile(Version version, ProfileIdentity identity);
 }

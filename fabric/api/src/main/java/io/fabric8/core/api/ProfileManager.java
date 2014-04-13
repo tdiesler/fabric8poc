@@ -73,7 +73,7 @@ public interface ProfileManager {
     /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version identity);
+    Set<ProfileIdentity> getProfileIds(Version version);
 
     /**
      * Get the profiles for a given version and identities

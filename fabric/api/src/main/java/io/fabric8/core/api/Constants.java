@@ -38,4 +38,19 @@ public interface Constants {
      * The default profile name
      */
     ProfileIdentity DEFAULT_PROFILE_IDENTITY = ProfileIdentity.create("default");
+
+    /**
+     * The management domain
+     */
+    String MANAGEMENT_DOMAIN = "fabric8";
+
+    /**
+     * The attribute key for the Http port
+     */
+    AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create(Integer.class);
+
+    /**
+     * The attribute key for JMX server URL
+     */
+    AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create(String.class);
 }
