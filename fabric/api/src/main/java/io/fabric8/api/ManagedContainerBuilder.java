@@ -19,14 +19,27 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.repository.MavenCoordinates;
+
+import io.fabric8.api.container.ManagedContainer;
 
 /**
- * A container builder factory
+ * A builder for a fabric container
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilderFactory<T extends ContainerBuilder> {
+public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends ManagedCreateOptions> extends ContainerBuilder<B, C> {
 
-    T create();
+    B setTargetDirectory(String target);
+
+    B setJavaVmArguments(String javaVmArguments);
+
+    B addMavenCoordinates(MavenCoordinates coordinates);
+
+    B setOutputToConsole(boolean outputToConsole);
+
+    ManagedContainer<C> getManagedContainer();
+
+    C getCreateOptions();
 }

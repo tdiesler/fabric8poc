@@ -30,17 +30,17 @@ import java.util.List;
  *
  * @since 26-Feb-2014
  */
-public final class TomcatManagedContainer extends AbstractManagedContainer<TomcatContainerConfiguration> {
+public final class TomcatManagedContainer extends AbstractManagedContainer<TomcatCreateOptions> {
 
     @Override
-    protected void doConfigure(TomcatContainerConfiguration config) throws Exception {
-        int jmxPort = config.getJmxPort();
+    protected void doConfigure(TomcatCreateOptions options) throws Exception {
+        int jmxPort = options.getJmxPort();
         String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
         putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
-    protected void doStart(TomcatContainerConfiguration config) throws Exception {
+    protected void doStart(TomcatCreateOptions options) throws Exception {
 
         File catalinaHome = getContainerHome();
         if (!catalinaHome.isDirectory())
@@ -50,11 +50,11 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        cmd.add("-Dcom.sun.management.jmxremote.port=" + config.getJmxPort());
+        cmd.add("-Dcom.sun.management.jmxremote.port=" + options.getJmxPort());
         cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
         cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
 
-        String javaArgs = config.getJavaVmArguments();
+        String javaArgs = options.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         String absolutePath = catalinaHome.getAbsolutePath();
@@ -74,6 +74,6 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
-        startProcess(processBuilder, config);
+        startProcess(processBuilder, options);
     }
 }

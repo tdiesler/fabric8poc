@@ -17,8 +17,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.Constants;
-import io.fabric8.api.container.ContainerConfiguration;
+import io.fabric8.api.ManagedCreateOptions;
 import io.fabric8.api.container.LifecycleException;
 import io.fabric8.api.container.ManagedContainer;
 
@@ -26,17 +25,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -55,11 +46,11 @@ import org.jboss.gravia.runtime.spi.DefaultPropertiesProvider;
  *
  * @since 26-Feb-2014
  */
-public abstract class AbstractManagedContainer<C extends ContainerConfiguration> implements ManagedContainer<C> {
+public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {
 
     private final AttributeSupport attributeSupport = new AttributeSupport();
     private final MavenDelegateRepository mavenRepository;
-    private C configuration;
+    private C options;
     private File containerHome;
     private State state;
     private Process process;
@@ -92,16 +83,16 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
     }
 
     @Override
-    public final synchronized void create(C configuration) throws LifecycleException {
-        this.configuration = configuration;
+    public final synchronized void create(C options) throws LifecycleException {
+        this.options = options;
         if (state != null)
             throw new IllegalStateException("Cannot create container in state: " + state);
 
-        File targetdir = configuration.getTargetDirectory();
+        File targetdir = options.getTargetDirectory();
         if (!targetdir.isDirectory() && !targetdir.mkdirs())
             throw new IllegalStateException("Cannot create target dir: " + targetdir);
 
-        for (MavenCoordinates artefact : configuration.getMavenCoordinates()) {
+        for (MavenCoordinates artefact : options.getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
             if (resource == null)
                 throw new IllegalStateException("Cannot find maven resource: " + artefact);
@@ -155,7 +146,7 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
         state = State.CREATED;
 
         try {
-            doConfigure(configuration);
+            doConfigure(options);
         } catch (Exception ex) {
             throw new LifecycleException("Cannot configure container", ex);
         }
@@ -176,7 +167,7 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
         assertNotDestroyed();
         try {
             if (state == State.CREATED || state == State.STOPPED) {
-                doStart(configuration);
+                doStart(options);
                 state = State.STARTED;
             }
         } catch (Exception ex) {
@@ -189,7 +180,7 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
         assertNotDestroyed();
         try {
             if (state == State.STARTED) {
-                doStop(configuration);
+                doStop(options);
                 destroyProcess();
                 state = State.STOPPED;
             }
@@ -209,7 +200,7 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
             }
         }
         try {
-            doDestroy(configuration);
+            doDestroy(options);
         } catch (Exception ex) {
             throw new LifecycleException("Cannot destroy container", ex);
         } finally {
@@ -222,21 +213,21 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
             throw new IllegalStateException("Cannot start container in state: " + state);
     }
 
-    protected void doConfigure(C configuration) throws Exception {
+    protected void doConfigure(C options) throws Exception {
     }
 
-    protected void doStart(C configuration) throws Exception {
+    protected void doStart(C options) throws Exception {
     }
 
-    protected void doStop(C configuration) throws Exception {
+    protected void doStop(C options) throws Exception {
     }
 
-    protected void doDestroy(C configuration) throws Exception {
+    protected void doDestroy(C options) throws Exception {
     }
 
-    protected void startProcess(ProcessBuilder processBuilder, ContainerConfiguration config) throws IOException {
+    protected void startProcess(ProcessBuilder processBuilder, ManagedCreateOptions options) throws IOException {
         process = processBuilder.start();
-        new Thread(new ConsoleConsumer(process, config)).start();
+        new Thread(new ConsoleConsumer(process, options)).start();
     }
 
     protected void destroyProcess() throws Exception {
@@ -246,46 +237,9 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
         }
     }
 
-    @Override
-    public JMXConnector getJMXConnector(String username, String password, long timeout, TimeUnit unit) {
-        assertNotDestroyed();
-
-        String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        if (jmxServiceURL == null)
-            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
-
-        JMXServiceURL serviceURL;
-        try {
-            serviceURL = new JMXServiceURL(jmxServiceURL);
-        } catch (MalformedURLException ex) {
-            throw new IllegalStateException(ex);
-        }
-
-        Map<String, Object> env = new HashMap<String, Object>();
-        if (username != null && password != null) {
-            String[] credentials = new String[] { username, password };
-            env.put(JMXConnector.CREDENTIALS, credentials);
-        }
-
-        Exception lastException = null;
-        JMXConnector connector = null;
-        long end = System.currentTimeMillis() + unit.toMillis(timeout);
-        while (connector == null && System.currentTimeMillis() < end) {
-            try {
-                connector = JMXConnectorFactory.connect(serviceURL, env);
-            } catch (Exception ioex) {
-                lastException = ioex;
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    break;
-                }
-            }
-        }
-        if (connector == null) {
-            throw new IllegalStateException("Cannot obtain JMXConnector", lastException);
-        }
-        return connector;
+    // [TODO] compute next free port value
+    protected int freePortValue(int confPortValue) {
+        return confPortValue + 1;
     }
 
     /**
@@ -295,11 +249,11 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
     public static class ConsoleConsumer implements Runnable {
 
         private final Process process;
-        private final ContainerConfiguration config;
+        private final ManagedCreateOptions options;
 
-        public ConsoleConsumer(Process process, ContainerConfiguration config) {
+        public ConsoleConsumer(Process process, ManagedCreateOptions options) {
             this.process = process;
-            this.config = config;
+            this.options = options;
         }
 
         @Override
@@ -310,7 +264,7 @@ public abstract class AbstractManagedContainer<C extends ContainerConfiguration>
                 int num;
                 // Do not try reading a line cos it considers '\r' end of line
                 while ((num = stream.read(buf)) != -1) {
-                    if (config.isOutputToConsole())
+                    if (options.isOutputToConsole())
                         System.out.write(buf, 0, num);
                 }
             } catch (IOException e) {

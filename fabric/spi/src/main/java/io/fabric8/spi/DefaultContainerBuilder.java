@@ -19,52 +19,11 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.CreateOptions;
 
-import java.util.Map;
-import java.util.Set;
 
-public final class DefaultContainerBuilder implements ContainerBuilder {
+public final class DefaultContainerBuilder extends AbstractContainerBuilder<DefaultContainerBuilder, DefaultCreateOptions> {
 
-    private final AttributeSupport attributes = new AttributeSupport();
-    private String symbolicName;
-
-    @Override
-    public ContainerBuilder addIdentity(String symbolicName) {
-        this.symbolicName = symbolicName;
-        return this;
-    }
-
-    @Override
-    public CreateOptions getCreateOptions() {
-        return new CreateOptions() {
-
-            @Override
-            public Map<AttributeKey<?>, Object> getAttributes() {
-                return attributes.getAttributes();
-            }
-
-            @Override
-            public <T> boolean hasAttribute(AttributeKey<T> key) {
-                return attributes.hasAttribute(key);
-            }
-
-            @Override
-            public Set<AttributeKey<?>> getAttributeKeys() {
-                return attributes.getAttributeKeys();
-            }
-
-            @Override
-            public <T> T getAttribute(AttributeKey<T> key) {
-                return attributes.getAttribute(key);
-            }
-
-            @Override
-            public String getSymbolicName() {
-                return symbolicName;
-            }
-        };
+    public DefaultContainerBuilder() {
+        super(new DefaultCreateOptions());
     }
 }

@@ -22,14 +22,13 @@ package io.fabric8.test;
 import io.fabric8.api.ComponentEvent;
 import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.ContainerBuilderFactory;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.Container.State;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -103,8 +102,7 @@ public abstract class ConfiguredComponentTests extends PortableTestConditionsTes
         Assert.assertTrue("ComponentEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
-        ContainerBuilderFactory<?> cntBuilderFactory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
-        ContainerBuilder builder = cntBuilderFactory.create();
+        DefaultContainerBuilder builder = new DefaultContainerBuilder();
         CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);

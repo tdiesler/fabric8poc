@@ -33,11 +33,10 @@ import java.util.Properties;
  *
  * @since 26-Feb-2014
  */
-public class KarafManagedContainer extends AbstractManagedContainer<KarafContainerConfiguration> {
+public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateOptions> {
 
     @Override
-    protected void doConfigure(KarafContainerConfiguration config) throws Exception {
-        int portOffset = config.getPortOffset();
+    protected void doConfigure(KarafCreateOptions options) throws Exception {
         File karafHome = getContainerHome();
         String comment = "Modified by " + getClass().getName();
 
@@ -47,10 +46,10 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
             String propertyKey = "org.osgi.service.http.port";
-            int httpPortValue = Integer.parseInt((String) props.get(propertyKey));
-            if (portOffset != 0) {
-                httpPortValue += portOffset;
-                props.setProperty(propertyKey, new Integer(httpPortValue).toString());
+            int confHttpPort = Integer.parseInt((String) props.get(propertyKey));
+            int httpPort = freePortValue(confHttpPort);
+            if (confHttpPort != httpPort) {
+                props.setProperty(propertyKey, new Integer(httpPort).toString());
                 FileWriter fileWriter = new FileWriter(paxwebFile);
                 try {
                     props.store(fileWriter, comment);
@@ -58,7 +57,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
                     fileWriter.close();
                 }
             }
-            putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPortValue);
+            putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
         }
 
         // etc/org.apache.karaf.management.cfg
@@ -66,13 +65,13 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
         if (managementFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(managementFile));
-            int registryPortValue = Integer.parseInt((String) props.get("rmiRegistryPort"));
-            int serverPortValue = Integer.parseInt((String) props.get("rmiServerPort"));
-            if (portOffset != 0) {
-                registryPortValue += portOffset;
-                props.setProperty("rmiRegistryPort", new Integer(registryPortValue).toString());
-                serverPortValue += portOffset;
-                props.setProperty("rmiServerPort", new Integer(serverPortValue).toString());
+            int confRegistryPort = Integer.parseInt((String) props.get("rmiRegistryPort"));
+            int registryPort = freePortValue(confRegistryPort);
+            int confServerPort = Integer.parseInt((String) props.get("rmiServerPort"));
+            int serverPort = freePortValue(confServerPort);
+            if (confRegistryPort != registryPort || confServerPort != serverPort) {
+                props.setProperty("rmiRegistryPort", new Integer(registryPort).toString());
+                props.setProperty("rmiServerPort", new Integer(serverPort).toString());
                 FileWriter fileWriter = new FileWriter(managementFile);
                 try {
                     props.store(fileWriter, comment);
@@ -80,13 +79,13 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
                     fileWriter.close();
                 }
             }
-            String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + serverPortValue + "/jndi/rmi://127.0.0.1:" + registryPortValue + "/karaf-root";
+            String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + serverPort + "/jndi/rmi://127.0.0.1:" + registryPort + "/karaf-root";
             putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
         }
     }
 
     @Override
-    protected void doStart(KarafContainerConfiguration config) throws Exception {
+    protected void doStart(KarafCreateOptions options) throws Exception {
 
         File karafHome = getContainerHome();
         if (!karafHome.isDirectory())
@@ -96,7 +95,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
         cmd.add("java");
 
         // JavaVM args
-        String javaArgs = config.getJavaVmArguments();
+        String javaArgs = options.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         // Karaf properties
@@ -141,6 +140,6 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.directory(karafHome);
         processBuilder.redirectErrorStream(true);
-        startProcess(processBuilder, config);
+        startProcess(processBuilder, options);
     }
 }

@@ -16,26 +16,27 @@
  */
 package io.fabric8.container.wildfly;
 
-import io.fabric8.api.container.ContainerConfiguration;
+import io.fabric8.spi.AbstractManagedContainerBuilder;
 
 /**
- * The WildFly container configuration
+ * The WildFly managed container builder
  *
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
-public final class WildFlyContainerConfiguration extends ContainerConfiguration {
+public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> {
 
-    public static final String DEFAULT_SERVER_CONFIG = "standalone-fabric.xml";
-    public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx1024m";
-
-    private String serverConfig = WildFlyContainerConfiguration.DEFAULT_SERVER_CONFIG;
-
-    public String getServerConfig() {
-        return serverConfig;
+    public WildFlyContainerBuilder() {
+        super(new WildFlyCreateOptions());
     }
 
-    void setServerConfig(String serverConfig) {
-        assertMutable();
-        this.serverConfig = serverConfig;
+    @Override
+    public WildFlyManagedContainer getManagedContainer() {
+        return new WildFlyManagedContainer();
+    }
+
+    public WildFlyContainerBuilder setServerConfig(String serverConfig) {
+        options.setServerConfig(serverConfig);
+        return this;
     }
 }

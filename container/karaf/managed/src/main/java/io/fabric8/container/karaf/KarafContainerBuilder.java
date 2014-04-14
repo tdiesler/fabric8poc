@@ -16,17 +16,25 @@
  */
 package io.fabric8.container.karaf;
 
-import io.fabric8.api.container.ContainerConfiguration;
+import io.fabric8.api.container.ManagedContainer;
+import io.fabric8.spi.AbstractManagedContainerBuilder;
 
 
 
 /**
  * The managed container configuration builder
  *
- * @since 26-Feb-2014
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Apr-2014
  */
-public class KarafContainerConfiguration extends ContainerConfiguration {
+public final class KarafContainerBuilder extends AbstractManagedContainerBuilder<KarafContainerBuilder, KarafCreateOptions> {
 
-    public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
+    public KarafContainerBuilder() {
+        super(new KarafCreateOptions());
+    }
 
+    @Override
+    public ManagedContainer<KarafCreateOptions> getManagedContainer() {
+        return new KarafManagedContainer();
+    }
 }

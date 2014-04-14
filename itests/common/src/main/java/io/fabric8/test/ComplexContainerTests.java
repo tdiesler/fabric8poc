@@ -23,8 +23,7 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.ContainerBuilderFactory;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -34,10 +33,10 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ProvisionEvent.EventType;
+import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
@@ -58,13 +57,12 @@ public abstract class ComplexContainerTests extends PortableTestConditionsTests 
     @Test
     public void testContainersAndProfiles() throws Exception {
 
-        ContainerBuilderFactory<?> factory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create parent container
-        ContainerBuilder builder = factory.create();
-        CreateOptions options = factory.create().addIdentity("cntA").getCreateOptions();
+        DefaultContainerBuilder builder = new DefaultContainerBuilder();
+        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
@@ -182,7 +180,7 @@ public abstract class ComplexContainerTests extends PortableTestConditionsTests 
         Assert.assertEquals(2, cntParent.getProfiles().size());
 
         // Create child container
-        builder = factory.create();
+        builder = new DefaultContainerBuilder();
         options = builder.addIdentity("cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 

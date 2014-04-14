@@ -16,25 +16,28 @@
  */
 package io.fabric8.container.tomcat;
 
-import io.fabric8.api.container.ContainerConfiguration;
+import io.fabric8.spi.AbstractManagedContainerBuilder;
 
 
 /**
- * The Tomcat container configuration
+ * The Tomcat managed container builder
  *
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
-public final class TomcatContainerConfiguration extends ContainerConfiguration {
+public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<TomcatContainerBuilder, TomcatCreateOptions> {
 
-    public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m -XX:MaxPermSize=128m";
-
-    private int jmxPort = 8089;
-
-    public int getJmxPort() {
-        return jmxPort;
+    public TomcatContainerBuilder() {
+        super(new TomcatCreateOptions());
     }
 
-    void setJmxPort(int jmxPort) {
-        this.jmxPort = jmxPort;
+    @Override
+    public TomcatManagedContainer getManagedContainer() {
+        return new TomcatManagedContainer();
+    }
+
+    public TomcatContainerBuilder setJmxPort(int jmxPort) {
+        options.setJmxPort(jmxPort);
+        return this;
     }
 }

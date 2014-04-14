@@ -19,7 +19,6 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
@@ -64,13 +63,6 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     }
 
     void unbindContainerService(ContainerService service) {
-    }
-
-    @Reference
-    void bindContainerBuilderFactory(ContainerBuilderFactory<?> service) {
-    }
-
-    void unbindContainerBuilderFactory(ContainerBuilderFactory<?> service) {
     }
 
     @Reference

@@ -18,8 +18,7 @@ package io.fabric8.test.wildfly;
 
 
 import io.fabric8.api.container.ManagedContainer;
-import io.fabric8.api.container.ManagedContainerBuilder;
-import io.fabric8.container.wildfly.WildFlyManagedContainerBuilder;
+import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.test.container.ManagedContainerTests;
 
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class WildFlyManagedContainerTest extends ManagedContainerTests {
 
     @Test
     public void testContainerKaraf() throws Exception {
-        ManagedContainerBuilder<?, ?> builder = ManagedContainerBuilder.create(WildFlyManagedContainerBuilder.class);
+        WildFlyContainerBuilder builder = new WildFlyContainerBuilder().addIdentity("cntA");
         verifyContainer(builder, null, null);
     }
 }

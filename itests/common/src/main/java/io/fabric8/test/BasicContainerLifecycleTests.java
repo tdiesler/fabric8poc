@@ -23,11 +23,11 @@ package io.fabric8.test;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
+import io.fabric8.spi.DefaultContainerBuilder;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,8 +43,8 @@ public abstract class BasicContainerLifecycleTests extends PortableTestCondition
     @Test
     public void testContainerLifecycle() throws Exception {
 
-        ContainerBuilderFactory<?> cntBuilderFactory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
-        CreateOptions options = cntBuilderFactory.create().addIdentity("cntA").getCreateOptions();
+        DefaultContainerBuilder builder = new DefaultContainerBuilder();
+        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cntA = cntManager.createContainer(options);

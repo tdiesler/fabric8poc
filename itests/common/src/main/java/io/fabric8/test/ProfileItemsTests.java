@@ -23,8 +23,7 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerBuilder;
-import io.fabric8.api.ContainerBuilderFactory;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -38,7 +37,7 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.Container.State;
+import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -73,8 +72,7 @@ public abstract class ProfileItemsTests extends PortableTestConditionsTests {
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create container A
-        ContainerBuilderFactory<?> cntBuilderFactory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
-        ContainerBuilder cntBuilder = cntBuilderFactory.create();
+        DefaultContainerBuilder cntBuilder = new DefaultContainerBuilder();
         CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
 

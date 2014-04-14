@@ -17,18 +17,8 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
 
-/**
- * A builder for a fabric container
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> {
-
-    B addIdentity(String symbolicName);
-
-    C getCreateOptions();
+public final class DefaultCreateOptions extends AbstractCreateOptions {
 }

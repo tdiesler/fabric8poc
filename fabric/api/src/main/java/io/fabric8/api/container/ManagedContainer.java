@@ -17,19 +17,18 @@
 package io.fabric8.api.container;
 
 import io.fabric8.api.Attributable;
+import io.fabric8.api.ManagedCreateOptions;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.remote.JMXConnector;
 
 
 /**
  * The managed root container
  *
+ * @author Thomas.Diesler@jboss.com
  * @since 26-Feb-2014
  */
-public interface ManagedContainer<C extends ContainerConfiguration> extends Attributable {
+public interface ManagedContainer<C extends ManagedCreateOptions> extends Attributable {
 
     enum State {
         CREATED,
@@ -42,13 +41,11 @@ public interface ManagedContainer<C extends ContainerConfiguration> extends Attr
 
     State getState();
 
-    void create(C configuration) throws LifecycleException;
+    void create(C options) throws LifecycleException;
 
     void start() throws LifecycleException;
 
     void stop() throws LifecycleException;
 
     void destroy() throws LifecycleException;
-
-    JMXConnector getJMXConnector(String username, String password, long timeout, TimeUnit unit);
 }

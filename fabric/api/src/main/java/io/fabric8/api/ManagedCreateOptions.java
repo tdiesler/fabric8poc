@@ -19,16 +19,30 @@
  */
 package io.fabric8.api;
 
+import io.fabric8.api.container.ManagedContainer;
+
+import java.io.File;
+import java.util.List;
+
+import org.jboss.gravia.repository.MavenCoordinates;
 
 /**
- * A builder for a fabric container
+ * Managed container create options
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> {
+public interface ManagedCreateOptions extends CreateOptions {
 
-    B addIdentity(String symbolicName);
+    /**
+     * Get the array of maven artefacts that are getting unpacked
+     * during {@link ManagedContainer#create(ContainerConfiguration)}
+     */
+    List<MavenCoordinates> getMavenCoordinates();
 
-    C getCreateOptions();
+    File getTargetDirectory();
+
+    String getJavaVmArguments();
+
+    boolean isOutputToConsole();
 }
