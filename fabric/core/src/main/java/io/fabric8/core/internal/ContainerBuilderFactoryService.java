@@ -19,7 +19,6 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.spi.DefaultContainerBuilder;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -30,7 +29,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 
 @Component(service = { ContainerBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class ContainerBuilderFactoryService extends AbstractComponent implements ContainerBuilderFactory {
+public final class ContainerBuilderFactoryService extends AbstractComponent implements ContainerBuilderFactory<DefaultContainerBuilder> {
 
     @Activate
     void activate() throws Exception {
@@ -43,9 +42,8 @@ public final class ContainerBuilderFactoryService extends AbstractComponent impl
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ContainerBuilder> T create(Class<T> type) {
+    public DefaultContainerBuilder create() {
         assertValid();
-        return (T) new DefaultContainerBuilder();
+        return new DefaultContainerBuilder();
     }
 }

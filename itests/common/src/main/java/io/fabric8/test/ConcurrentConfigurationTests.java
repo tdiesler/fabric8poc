@@ -21,6 +21,7 @@ package io.fabric8.test;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -121,7 +122,8 @@ public abstract class ConcurrentConfigurationTests extends PortableTestCondition
         }
 
         private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
-            ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+            ContainerBuilderFactory<?> cntBuilderFactory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
+            ContainerBuilder builder = cntBuilderFactory.create();
             CreateOptions options = builder.addIdentity(prefix + "#" + index).getCreateOptions();
             Container cnt = manager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();

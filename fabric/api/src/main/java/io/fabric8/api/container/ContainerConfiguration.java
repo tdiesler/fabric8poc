@@ -39,10 +39,6 @@ public abstract class ContainerConfiguration {
 
     private boolean immutable;
 
-    protected ContainerConfiguration() {
-        portOffset = 1;
-    }
-
     /**
      * Get the array of maven artefacts that are getting unpacked
      * during {@link ManagedContainer#create(ContainerConfiguration)}

@@ -26,7 +26,7 @@ package io.fabric8.api;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilderFactory {
+public interface ContainerBuilderFactory<T extends ContainerBuilder> {
 
-    <T extends ContainerBuilder> T create(Class<T> type);
+    T create();
 }

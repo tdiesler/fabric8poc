@@ -27,6 +27,7 @@ import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -151,7 +152,8 @@ public abstract class ProfileUpdateTests extends PortableTestConditionsTests {
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create container cntA
-        ContainerBuilder cntBuilder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+        ContainerBuilderFactory<?> cntBuilderFactory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
+        ContainerBuilder cntBuilder = cntBuilderFactory.create();
         CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
 
@@ -232,7 +234,7 @@ public abstract class ProfileUpdateTests extends PortableTestConditionsTests {
         Assert.assertEquals("bar", citem.getConfiguration().get(Container.CNFKEY_CONFIG_TOKEN));
 
         // Create container B
-        cntBuilder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+        cntBuilder = cntBuilderFactory.create();
         options = cntBuilder.addIdentity("cntB").getCreateOptions();
         Container cntB = cntManager.createContainer(options);
 

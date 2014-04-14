@@ -24,6 +24,7 @@ import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerBuilderFactory;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
@@ -57,12 +58,13 @@ public abstract class ComplexContainerTests extends PortableTestConditionsTests 
     @Test
     public void testContainersAndProfiles() throws Exception {
 
+        ContainerBuilderFactory<?> factory = ServiceLocator.getRequiredService(ContainerBuilderFactory.class);
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create parent container
-        ContainerBuilder builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
-        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
+        ContainerBuilder builder = factory.create();
+        CreateOptions options = factory.create().addIdentity("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
@@ -180,7 +182,7 @@ public abstract class ComplexContainerTests extends PortableTestConditionsTests 
         Assert.assertEquals(2, cntParent.getProfiles().size());
 
         // Create child container
-        builder = ContainerBuilder.Factory.create(ContainerBuilder.class);
+        builder = factory.create();
         options = builder.addIdentity("cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 

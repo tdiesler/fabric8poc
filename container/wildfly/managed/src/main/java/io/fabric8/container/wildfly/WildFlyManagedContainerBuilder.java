@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.repository.MavenCoordinates;
-import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * The WildFly managed container builder
@@ -31,11 +30,6 @@ import org.jboss.gravia.runtime.RuntimeType;
  * @since 26-Feb-2014
  */
 public class WildFlyManagedContainerBuilder extends ManagedContainerBuilder<WildFlyContainerConfiguration, WildFlyManagedContainer> {
-
-    @Override
-    public RuntimeType getRuntimeType() {
-        return RuntimeType.WILDFLY;
-    }
 
     @Override
     public WildFlyManagedContainer getManagedContainer() {

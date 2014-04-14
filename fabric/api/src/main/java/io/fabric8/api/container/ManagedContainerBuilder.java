@@ -24,7 +24,6 @@ import org.jboss.gravia.repository.MavenCoordinates;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
-import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.utils.NotNullException;
 
@@ -68,8 +67,6 @@ public abstract class ManagedContainerBuilder<C extends ContainerConfiguration, 
         builder.configuration = builder.createConfiguration();
         return (T) builder;
     }
-
-    public abstract RuntimeType getRuntimeType();
 
     public abstract T getManagedContainer();
 

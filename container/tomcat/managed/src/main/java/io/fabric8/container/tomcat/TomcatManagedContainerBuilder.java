@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.repository.MavenCoordinates;
-import org.jboss.gravia.runtime.RuntimeType;
 
 
 /**
@@ -32,11 +31,6 @@ import org.jboss.gravia.runtime.RuntimeType;
  * @since 26-Feb-2014
  */
 public class TomcatManagedContainerBuilder extends ManagedContainerBuilder<TomcatContainerConfiguration, TomcatManagedContainer> {
-
-    @Override
-    public RuntimeType getRuntimeType() {
-        return RuntimeType.TOMCAT;
-    }
 
     @Override
     public TomcatManagedContainer getManagedContainer() {

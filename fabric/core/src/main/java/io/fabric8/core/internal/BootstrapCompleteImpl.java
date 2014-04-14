@@ -67,10 +67,10 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     }
 
     @Reference
-    void bindContainerBuilderFactory(ContainerBuilderFactory service) {
+    void bindContainerBuilderFactory(ContainerBuilderFactory<?> service) {
     }
 
-    void unbindContainerBuilderFactory(ContainerBuilderFactory service) {
+    void unbindContainerBuilderFactory(ContainerBuilderFactory<?> service) {
     }
 
     @Reference

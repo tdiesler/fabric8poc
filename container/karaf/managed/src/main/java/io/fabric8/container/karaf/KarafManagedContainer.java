@@ -47,13 +47,16 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
             String propertyKey = "org.osgi.service.http.port";
-            int httpPortValue = Integer.parseInt((String) props.get(propertyKey)) + portOffset;
-            props.setProperty(propertyKey, new Integer(httpPortValue).toString());
-            FileWriter fileWriter = new FileWriter(paxwebFile);
-            try {
-                props.store(fileWriter, comment);
-            } finally {
-                fileWriter.close();
+            int httpPortValue = Integer.parseInt((String) props.get(propertyKey));
+            if (portOffset != 0) {
+                httpPortValue += portOffset;
+                props.setProperty(propertyKey, new Integer(httpPortValue).toString());
+                FileWriter fileWriter = new FileWriter(paxwebFile);
+                try {
+                    props.store(fileWriter, comment);
+                } finally {
+                    fileWriter.close();
+                }
             }
             putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPortValue);
         }
@@ -63,17 +66,19 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafContain
         if (managementFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(managementFile));
-            String propertyKey = "rmiRegistryPort";
-            int registryPortValue = Integer.parseInt((String) props.get(propertyKey)) + portOffset;
-            props.setProperty(propertyKey, new Integer(registryPortValue).toString());
-            propertyKey = "rmiServerPort";
-            int serverPortValue = Integer.parseInt((String) props.get(propertyKey)) + portOffset;
-            props.setProperty(propertyKey, new Integer(serverPortValue).toString());
-            FileWriter fileWriter = new FileWriter(managementFile);
-            try {
-                props.store(fileWriter, comment);
-            } finally {
-                fileWriter.close();
+            int registryPortValue = Integer.parseInt((String) props.get("rmiRegistryPort"));
+            int serverPortValue = Integer.parseInt((String) props.get("rmiServerPort"));
+            if (portOffset != 0) {
+                registryPortValue += portOffset;
+                props.setProperty("rmiRegistryPort", new Integer(registryPortValue).toString());
+                serverPortValue += portOffset;
+                props.setProperty("rmiServerPort", new Integer(serverPortValue).toString());
+                FileWriter fileWriter = new FileWriter(managementFile);
+                try {
+                    props.store(fileWriter, comment);
+                } finally {
+                    fileWriter.close();
+                }
             }
             String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + serverPortValue + "/jndi/rmi://127.0.0.1:" + registryPortValue + "/karaf-root";
             putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);

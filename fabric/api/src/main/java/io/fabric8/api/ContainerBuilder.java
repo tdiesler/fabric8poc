@@ -31,16 +31,4 @@ public interface ContainerBuilder {
     ContainerBuilder addIdentity(String symbolicName);
 
     CreateOptions getCreateOptions();
-
-    final class Factory {
-
-        public static <T extends ContainerBuilder> T create(Class<T> type) {
-            ContainerBuilderFactory factory = ServiceLocator.awaitService(ContainerBuilderFactory.class);
-            return factory.create(type);
-        }
-
-        // Hide ctor
-        private Factory() {
-        }
-    }
 }

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.repository.MavenCoordinates;
-import org.jboss.gravia.runtime.RuntimeType;
 
 
 
@@ -33,11 +32,6 @@ import org.jboss.gravia.runtime.RuntimeType;
  * @since 26-Feb-2014
  */
 public class KarafManagedContainerBuilder extends ManagedContainerBuilder<KarafContainerConfiguration, KarafManagedContainer> {
-
-    @Override
-    public RuntimeType getRuntimeType() {
-        return RuntimeType.KARAF;
-    }
 
     @Override
     protected KarafContainerConfiguration createConfiguration() {
