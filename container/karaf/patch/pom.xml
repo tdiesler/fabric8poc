@@ -40,7 +40,7 @@
         <!-- Provided Dependencies -->
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-core-impl</artifactId>
+            <artifactId>fabric8-core</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

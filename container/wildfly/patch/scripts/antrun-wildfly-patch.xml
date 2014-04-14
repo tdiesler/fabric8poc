@@ -53,14 +53,14 @@
         </fileset>
     </copy-->
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/api/main" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-core-api-*.jar" />
+        <fileset file="${deploy.artifacts.lib}/fabric8-api-*.jar" />
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/spi/main" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-core-spi-*.jar" />
+        <fileset file="${deploy.artifacts.lib}/fabric8-spi-*.jar" />
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/service/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
-        	<include name="fabric8-core-impl-*"/>
+        	<include name="fabric8-core-*"/>
         </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/org/wildfly/extension/fabric/main" overwrite="true">

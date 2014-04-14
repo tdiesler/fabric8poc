@@ -16,7 +16,7 @@
  */
 package io.fabric8.container.wildfly;
 
-import io.fabric8.core.api.container.ManagedContainerBuilder;
+import io.fabric8.api.container.ManagedContainerBuilder;
 
 import java.io.IOException;
 import java.util.Properties;

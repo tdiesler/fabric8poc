@@ -17,9 +17,9 @@
 package io.fabric8.test.tomcat;
 
 
+import io.fabric8.api.container.ManagedContainer;
+import io.fabric8.api.container.ManagedContainerBuilder;
 import io.fabric8.container.tomcat.TomcatManagedContainerBuilder;
-import io.fabric8.core.api.container.ManagedContainer;
-import io.fabric8.core.api.container.ManagedContainerBuilder;
 import io.fabric8.test.container.ManagedContainerTests;
 
 import org.junit.Test;

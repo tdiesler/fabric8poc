@@ -7,7 +7,7 @@
     </properties>
 
     <resources>
-        <resource-root path="fabric8-core-spi-@project.version@.jar"/>
+        <resource-root path="fabric8-spi-@project.version@.jar"/>
     </resources>
 
     <exports>

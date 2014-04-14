@@ -21,8 +21,8 @@
  */
 package io.fabric8.test.embedded.support;
 
-import io.fabric8.core.api.ServiceLocator;
-import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.api.ServiceLocator;
+import io.fabric8.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +38,7 @@ import org.junit.Assert;
  */
 public abstract class EmbeddedTestSupport {
 
-    private static String[] moduleNames = new String[] { "fabric8-core-api", "fabric8-core-spi", "fabric8-core-impl" };
+    private static String[] moduleNames = new String[] { "fabric8-api", "fabric8-spi", "fabric8-core" };
 
     public static void beforeClass() throws Exception {
 

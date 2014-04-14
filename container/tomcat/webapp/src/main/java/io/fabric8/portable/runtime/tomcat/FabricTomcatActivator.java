@@ -21,7 +21,7 @@
  */
 package io.fabric8.portable.runtime.tomcat;
 
-import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.spi.BootstrapComplete;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;

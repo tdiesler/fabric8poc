@@ -17,11 +17,11 @@
 package io.fabric8.test.container;
 
 
-import io.fabric8.core.api.container.ContainerConfiguration;
-import io.fabric8.core.api.container.ManagedContainer;
-import io.fabric8.core.api.container.ManagedContainerBuilder;
-import io.fabric8.core.api.management.ContainerManagement;
-import io.fabric8.core.api.management.ProfileManagement;
+import io.fabric8.api.container.ContainerConfiguration;
+import io.fabric8.api.container.ManagedContainer;
+import io.fabric8.api.container.ManagedContainerBuilder;
+import io.fabric8.api.management.ContainerManagement;
+import io.fabric8.api.management.ProfileManagement;
 
 import java.io.File;
 import java.io.IOException;

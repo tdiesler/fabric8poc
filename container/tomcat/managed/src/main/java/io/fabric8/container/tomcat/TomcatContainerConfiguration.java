@@ -16,7 +16,7 @@
  */
 package io.fabric8.container.tomcat;
 
-import io.fabric8.core.api.container.ContainerConfiguration;
+import io.fabric8.api.container.ContainerConfiguration;
 
 
 /**

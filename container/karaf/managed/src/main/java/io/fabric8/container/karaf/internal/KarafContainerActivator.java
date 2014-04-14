@@ -19,8 +19,8 @@
  */
 package io.fabric8.container.karaf.internal;
 
+import io.fabric8.api.container.ManagedContainerBuilder;
 import io.fabric8.container.karaf.KarafManagedContainerBuilder;
-import io.fabric8.core.api.container.ManagedContainerBuilder;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;

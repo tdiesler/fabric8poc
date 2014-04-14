@@ -19,11 +19,11 @@
  */
 package io.fabric8.api;
 
-import io.fabric8.core.spi.permit.DefaultPermitManager;
-import io.fabric8.core.spi.permit.PermitKey;
-import io.fabric8.core.spi.permit.PermitManager;
-import io.fabric8.core.spi.permit.PermitStateTimeoutException;
-import io.fabric8.core.spi.permit.PermitManager.Permit;
+import io.fabric8.spi.permit.DefaultPermitManager;
+import io.fabric8.spi.permit.PermitKey;
+import io.fabric8.spi.permit.PermitManager;
+import io.fabric8.spi.permit.PermitStateTimeoutException;
+import io.fabric8.spi.permit.PermitManager.Permit;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

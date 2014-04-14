@@ -16,8 +16,8 @@
             <outputDirectory>lib</outputDirectory>
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
-                <include>*:fabric8-core-api:jar</include>
-                <include>*:fabric8-core-spi:jar</include>
+                <include>*:fabric8-api:jar</include>
+                <include>*:fabric8-spi:jar</include>
                 <include>*:fabric8-container-tomcat-webapp:war</include>
             </includes>
             <scope>provided</scope>

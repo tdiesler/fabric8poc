@@ -16,8 +16,8 @@
  */
 package io.fabric8.container.wildfly;
 
-import io.fabric8.core.api.Constants;
-import io.fabric8.core.spi.AbstractManagedContainer;
+import io.fabric8.api.Constants;
+import io.fabric8.spi.AbstractManagedContainer;
 
 import java.io.File;
 import java.util.ArrayList;

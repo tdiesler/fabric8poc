@@ -73,7 +73,7 @@
         <fileset file="${deploy.artifacts.lib}/gravia-runtime-osgi-*.jar" />
     </copy>
     <copy todir="${karaf.patch.dir}/system/io/fabric8/poc/${project.version}" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-core-*.jar" />
+        <fileset file="${deploy.artifacts.lib}/fabric8-*.jar" />
     </copy>
   	
     <copy file="${karaf.source.dir}/etc/startup.properties" todir="${karaf.patch.dir}/etc" overwrite="true"/>
@@ -96,9 +96,9 @@ org/jboss/gravia/${version.jboss.gravia}/gravia-provision-${version.jboss.gravia
 #
 # Fabric8 Integration
 # 
-io/fabric8/poc/${project.version}/fabric8-core-api-${project.version}.jar=43
-io/fabric8/poc/${project.version}/fabric8-core-spi-${project.version}.jar=43
-io/fabric8/poc/${project.version}/fabric8-core-impl-${project.version}.jar=43
+io/fabric8/poc/${project.version}/fabric8-api-${project.version}.jar=43
+io/fabric8/poc/${project.version}/fabric8-spi-${project.version}.jar=43
+io/fabric8/poc/${project.version}/fabric8-core-${project.version}.jar=43
     </echo>
   	
     <copy file="${karaf.source.dir}/etc/custom.properties" todir="${karaf.patch.dir}/etc" overwrite="true"/>

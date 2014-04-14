@@ -19,25 +19,25 @@
  */
 package io.fabric8.test;
 
-import static io.fabric8.core.api.Constants.DEFAULT_PROFILE_VERSION;
-import io.fabric8.core.api.ConfigurationProfileItemBuilder;
-import io.fabric8.core.api.Constants;
-import io.fabric8.core.api.Container;
-import io.fabric8.core.api.Container.State;
-import io.fabric8.core.api.ContainerBuilder;
-import io.fabric8.core.api.ContainerIdentity;
-import io.fabric8.core.api.ContainerManager;
-import io.fabric8.core.api.CreateOptions;
-import io.fabric8.core.api.NullProfileItemBuilder;
-import io.fabric8.core.api.Profile;
-import io.fabric8.core.api.ProfileBuilder;
-import io.fabric8.core.api.ProfileEvent;
-import io.fabric8.core.api.ProfileEventListener;
-import io.fabric8.core.api.ProfileItemBuilder;
-import io.fabric8.core.api.ProfileManager;
-import io.fabric8.core.api.ProvisionEvent;
-import io.fabric8.core.api.ProvisionEventListener;
-import io.fabric8.core.api.ServiceLocator;
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
+import io.fabric8.api.ConfigurationProfileItemBuilder;
+import io.fabric8.api.Constants;
+import io.fabric8.api.Container;
+import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ContainerManager;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.NullProfileItemBuilder;
+import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileEvent;
+import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileItemBuilder;
+import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProvisionEvent;
+import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.ServiceLocator;
+import io.fabric8.api.Container.State;
 
 import java.util.Collections;
 import java.util.Dictionary;

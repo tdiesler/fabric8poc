@@ -19,8 +19,8 @@
  */
 package io.fabric8.test.container;
 
-import io.fabric8.core.api.Container;
-import io.fabric8.core.spi.BootstrapComplete;
+import io.fabric8.api.Container;
+import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.ConcurrentConfigurationTests;
 import io.fabric8.test.PortableTestConditionsTests;
 

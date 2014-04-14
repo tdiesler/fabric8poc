@@ -19,16 +19,16 @@
  */
 package io.fabric8.test;
 
-import io.fabric8.core.api.ConfigurationProfileItem;
-import io.fabric8.core.api.ConfigurationProfileItemBuilder;
-import io.fabric8.core.api.Constants;
-import io.fabric8.core.api.Profile;
-import io.fabric8.core.api.ProfileBuilder;
-import io.fabric8.core.api.ProfileIdentity;
-import io.fabric8.core.api.ProfileManager;
-import io.fabric8.core.api.ProfileVersion;
-import io.fabric8.core.api.ProfileVersionBuilder;
-import io.fabric8.core.api.ServiceLocator;
+import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationProfileItemBuilder;
+import io.fabric8.api.Constants;
+import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.ServiceLocator;
 
 import java.util.Collections;
 import java.util.Set;
