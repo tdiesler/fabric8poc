@@ -15,30 +15,24 @@
   limitations under the License.
   -->
 
+<!--
+    Set these VM properties in your IDE debugger
+     
+    -Dlog4j.configuration=file://${workspace_loc:fabric8-itests-embedded}/src/test/resources/logging.properties
+    -Dbasedir=${workspace_loc:fabric8-itests-embedded}
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.fabric8.poc</groupId>
-        <artifactId>fabric8</artifactId>
+        <artifactId>fabric8-itests-basic</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fabric8-itests</artifactId>
+    <artifactId>fabric8-itests-basic-wildfly</artifactId>
     <packaging>pom</packaging>
-    
-    <name>Fabric8 :: Testsuite</name>
 
-    <modules>
-        <module>smoke</module>
-    </modules>
+    <name>Fabric8 :: Testsuite :: Basic :: WildFly</name>
 
-    <profiles>
-        <profile>
-            <id>all</id>
-            <modules>
-                <module>basic</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>

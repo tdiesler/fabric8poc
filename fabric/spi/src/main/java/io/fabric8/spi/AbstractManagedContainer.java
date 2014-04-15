@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -88,9 +87,9 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         if (state != null)
             throw new IllegalStateException("Cannot create container in state: " + state);
 
-        File targetdir = options.getTargetDirectory();
-        if (!targetdir.isDirectory() && !targetdir.mkdirs())
-            throw new IllegalStateException("Cannot create target dir: " + targetdir);
+        File targetDir = options.getTargetDirectory();
+        if (!targetDir.isDirectory() && !targetDir.mkdirs())
+            throw new IllegalStateException("Cannot create target dir: " + targetDir);
 
         for (MavenCoordinates artefact : options.getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
@@ -111,22 +110,31 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
                     ais = new ArchiveStreamFactory().createArchiveInputStream(artefact.getType(), inputStream);
                 }
                 ArchiveEntry entry = null;
+                boolean needContainerHome = containerHome == null;
                 while ((entry = ais.getNextEntry()) != null) {
                     File targetFile;
-                    if (containerHome == null) {
-                        targetFile = new File(targetdir, entry.getName());
+                    if (needContainerHome) {
+                        targetFile = new File(targetDir, entry.getName());
                     } else {
                         targetFile = new File(containerHome, entry.getName());
                     }
                     if (!entry.isDirectory()) {
-                        File targetDir = targetFile.getParentFile();
-                        if (!targetDir.exists() && !targetDir.mkdirs()) {
-                            throw new IllegalStateException("Cannot create target directory: " + targetDir);
+                        File parentDir = targetFile.getParentFile();
+                        if (!parentDir.exists() && !parentDir.mkdirs()) {
+                            throw new IllegalStateException("Cannot create target directory: " + parentDir);
                         }
 
                         FileOutputStream fos = new FileOutputStream(targetFile);
                         IOUtils.copy(ais, fos);
                         fos.close();
+
+                        if (needContainerHome && containerHome == null) {
+                            File homeDir = parentDir;
+                            while (!homeDir.getParentFile().equals(targetDir)) {
+                                homeDir = homeDir.getParentFile();
+                            }
+                            containerHome = homeDir;
+                        }
                     }
                 }
                 ais.close();
@@ -134,12 +142,6 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
                 throw rte;
             } catch (Exception ex) {
                 throw new IllegalStateException("Cannot extract artefact: " + artefact, ex);
-            }
-            if (containerHome == null) {
-                File[] childDirs = targetdir.listFiles();
-                if (childDirs.length != 1)
-                    throw new IllegalStateException("Expected one child directory, but was: " + Arrays.asList(childDirs));
-                containerHome = childDirs[0];
             }
         }
 

@@ -149,7 +149,7 @@
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
                     <reportNameSuffix>tomcat</reportNameSuffix>
                     <dependenciesToScan>
-                        <dependency>io.fabric8.poc:fabric8-itests-common</dependency>
+                        <dependency>io.fabric8.poc:fabric8-itests-smoke-common</dependency>
                     </dependenciesToScan>
                     <systemPropertyVariables>
                         <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
