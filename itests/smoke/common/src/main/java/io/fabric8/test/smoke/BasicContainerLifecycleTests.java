@@ -35,7 +35,7 @@ import org.junit.Test;
 /**
  * Test basic container functionality.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class BasicContainerLifecycleTests extends PortableTestConditionsTests {

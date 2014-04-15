@@ -21,7 +21,7 @@ import io.fabric8.spi.AbstractManagedContainerBuilder;
 /**
  * The WildFly managed container builder
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 26-Feb-2014
  */
 public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> {

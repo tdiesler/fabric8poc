@@ -60,7 +60,7 @@ import org.junit.Test;
 /**
  * Test profile update functionality.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class ProfileUpdateTests extends PortableTestConditionsTests {

@@ -490,7 +490,7 @@
                                 </goals>
                                 <phase>install</phase>
                                 <configuration>
-                                    <excludePackageNames>io.fabric8.spi.*:io.fabric8.core.*:io.fabric8.test*:org.wildfly</excludePackageNames>
+                                    <excludePackageNames>io.fabric8.spi.*:io.fabric8.core.*:io.fabric8.container.tomcat.webapp:io.fabric8.test*:org.wildfly</excludePackageNames>
                                 </configuration>
                             </execution>
                         </executions>

@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 /**
  * Test profile update functionality.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public class ProfileUpdateTest extends ProfileUpdateTests {

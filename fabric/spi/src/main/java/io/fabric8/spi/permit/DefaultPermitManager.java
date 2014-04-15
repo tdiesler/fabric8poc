@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
 * The default implementation of a {@link PermitManager}
 *
-* @author thomas.diesler@jboss.com
+* @author Thomas.Diesler@jboss.com
 * @since 05-Mar-2014
 */
 public final class DefaultPermitManager implements PermitManager {

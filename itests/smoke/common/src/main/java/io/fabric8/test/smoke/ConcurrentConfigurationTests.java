@@ -51,7 +51,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * Three other threads use {@link ContainerManager} to create/start/stop/destroy
  * containers based on the current configuration
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class ConcurrentConfigurationTests extends PortableTestConditionsTests {

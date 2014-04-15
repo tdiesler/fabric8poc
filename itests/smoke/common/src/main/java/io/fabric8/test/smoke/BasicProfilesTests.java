@@ -40,7 +40,7 @@ import org.junit.Test;
 /**
  * Test basic profiles functionality.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class BasicProfilesTests extends PortableTestConditionsTests {

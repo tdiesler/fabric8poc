@@ -17,6 +17,7 @@
 package io.fabric8.test.basic.embedded;
 
 import io.fabric8.api.Constants;
+import io.fabric8.api.ManagedContainerBuilder;
 import io.fabric8.api.ManagedCreateOptions;
 import io.fabric8.api.container.ManagedContainer;
 import io.fabric8.api.management.ContainerManagement;
@@ -45,6 +46,7 @@ import org.junit.Test;
 /**
  * Test basic {@link ManagedContainer} functionality
  *
+ * @author Thomas.Diesler@jboss.com
  * @since 26-Feb-2014
  */
 public class ManagedContainerTest {
@@ -53,7 +55,7 @@ public class ManagedContainerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testManagedKaraf() throws Exception {
         KarafContainerBuilder builder = new KarafContainerBuilder().addIdentity("cntKaraf");
-        ManagedCreateOptions options = builder.setTargetDirectory("target/managed-container").getCreateOptions();
+        ManagedCreateOptions options = buildCreateOptions(builder);
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create(options);
@@ -67,7 +69,7 @@ public class ManagedContainerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testManagedTomcat() throws Exception {
         TomcatContainerBuilder builder = new TomcatContainerBuilder().addIdentity("cntTomcat");
-        ManagedCreateOptions options = builder.setTargetDirectory("target/managed-container").getCreateOptions();
+        ManagedCreateOptions options = buildCreateOptions(builder);
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create(options);
@@ -81,7 +83,7 @@ public class ManagedContainerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testManagedWildFly() throws Exception {
         WildFlyContainerBuilder builder = new WildFlyContainerBuilder().addIdentity("cntWildFly");
-        ManagedCreateOptions options = builder.setTargetDirectory("target/managed-container").getCreateOptions();
+        ManagedCreateOptions options = buildCreateOptions(builder);
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create(options);
@@ -89,6 +91,10 @@ public class ManagedContainerTest {
         } finally {
             container.destroy();
         }
+    }
+
+    private ManagedCreateOptions buildCreateOptions(ManagedContainerBuilder<?, ?> builder) {
+        return builder.setTargetDirectory("target/managed-container").setOutputToConsole(true).getCreateOptions();
     }
 
     @SuppressWarnings({ "rawtypes" })

@@ -44,7 +44,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Test configured container functionality.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)

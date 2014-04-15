@@ -36,7 +36,7 @@ import org.junit.Test;
 /**
  * Test the {@link PermitManager}.
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 05-Mar-2014
  */
 public class PermitManagerTestCase {

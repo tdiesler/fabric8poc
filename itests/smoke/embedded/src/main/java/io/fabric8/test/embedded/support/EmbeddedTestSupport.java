@@ -33,7 +33,7 @@ import org.junit.Assert;
 /**
  * Test fabric-core servies
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 21-Oct-2013
  */
 public abstract class EmbeddedTestSupport {

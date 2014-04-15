@@ -39,7 +39,7 @@ import org.junit.Before;
 /**
  * Portable test condition
  *
- * @author thomas.diesler@jboss.com
+ * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class PortableTestConditionsTests {
