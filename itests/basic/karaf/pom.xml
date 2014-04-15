@@ -18,8 +18,7 @@
 <!--
     Set these VM properties in your IDE debugger
      
-    -Dlog4j.configuration=file://${workspace_loc:fabric8-itests-embedded}/src/test/resources/logging.properties
-    -Dbasedir=${workspace_loc:fabric8-itests-embedded}
+    -Dlog4j.configuration=file://${workspace_loc:fabric8-itests-basic-karaf}/src/test/resources/logging.properties
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -31,8 +30,100 @@
     </parent>
 
     <artifactId>fabric8-itests-basic-karaf</artifactId>
-    <packaging>pom</packaging>
 
     <name>Fabric8 :: Testsuite :: Basic :: Karaf</name>
 
+    <!-- Properties -->
+    <properties>
+        <karaf.home>${project.build.directory}/fabric8-karaf-${project.version}</karaf.home>
+    </properties>
+    
+    <!-- Dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-itests-basic-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- Provided Dependencies -->
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-karaf</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <type>tar.gz</type>
+        </dependency>
+        
+        <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.jboss.arquillian.container</groupId>
+            <artifactId>arquillian-container-karaf-managed</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.osgi</groupId>
+            <artifactId>arquillian-osgi-bundle</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-karaf</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>io.fabric8.poc</groupId>
+                                    <artifactId>fabric8-karaf</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>tar.gz</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>${surefire.system.args}</argLine>
+                    <redirectTestOutputToFile>false</redirectTestOutputToFile>
+                    <reportNameSuffix>karaf</reportNameSuffix>
+                    <dependenciesToScan>
+                        <dependency>io.fabric8.poc:fabric8-itests-basic-common</dependency>
+                    </dependenciesToScan>
+                    <systemPropertyVariables>
+                        <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
+                        <target.container>karaf</target.container>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

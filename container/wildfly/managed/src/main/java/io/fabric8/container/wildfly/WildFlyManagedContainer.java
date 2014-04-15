@@ -32,14 +32,18 @@ import java.util.List;
  */
 public final class WildFlyManagedContainer extends AbstractManagedContainer<WildFlyCreateOptions> {
 
+    WildFlyManagedContainer(WildFlyCreateOptions options) {
+        super(options);
+    }
+
     @Override
-    protected void doConfigure(WildFlyCreateOptions options) throws Exception {
+    protected void doConfigure() throws Exception {
         String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:9990";
         putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
-    protected void doStart(WildFlyCreateOptions options) throws Exception {
+    protected void doStart() throws Exception {
 
         File jbossHome = getContainerHome();
         if (!jbossHome.isDirectory())
@@ -53,7 +57,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        String javaArgs = options.getJavaVmArguments();
+        String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         cmd.add("-Djboss.home.dir=" + jbossHome);
@@ -63,10 +67,10 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         cmd.add(modulesPath.getAbsolutePath());
         cmd.add("org.jboss.as.standalone");
         cmd.add("-server-config");
-        cmd.add(options.getServerConfig());
+        cmd.add(getCreateOptions().getServerConfig());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
-        startProcess(processBuilder, options);
+        startProcess(processBuilder);
     }
 }

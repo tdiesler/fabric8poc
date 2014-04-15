@@ -20,19 +20,17 @@
 package io.fabric8.api.management;
 
 import io.fabric8.api.Constants;
-import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ProfileVersion;
 
 import java.util.Set;
 
 import javax.management.ObjectName;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
  * The profile management interface
+ *
+ * [TODO] Use openmbean types for complete coverage
  *
  * @author Thomas.Diesler@jboss.com
  * @since 10-Apr-2014
@@ -47,20 +45,10 @@ public interface ProfileManagement {
     /**
      * Get the set of profile version identities in the cluster
      */
-    Set<Version> getProfileVersionIds();
-
-    /**
-     * Get the profile versions for the given identity
-     */
-    ProfileVersion getProfileVersion(Version identity);
+    Set<String> getProfileVersionIds();
 
     /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version version);
-
-    /**
-     * Get the profile for a given identity and version
-     */
-    Profile getProfile(Version version, ProfileIdentity identity);
+    Set<String> getProfileIds(String version);
 }

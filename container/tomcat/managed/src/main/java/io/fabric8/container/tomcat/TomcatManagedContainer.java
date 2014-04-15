@@ -32,15 +32,19 @@ import java.util.List;
  */
 public final class TomcatManagedContainer extends AbstractManagedContainer<TomcatCreateOptions> {
 
+    TomcatManagedContainer(TomcatCreateOptions options) {
+        super(options);
+    }
+
     @Override
-    protected void doConfigure(TomcatCreateOptions options) throws Exception {
-        int jmxPort = options.getJmxPort();
+    protected void doConfigure() throws Exception {
+        int jmxPort = getCreateOptions().getJmxPort();
         String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
         putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
-    protected void doStart(TomcatCreateOptions options) throws Exception {
+    protected void doStart() throws Exception {
 
         File catalinaHome = getContainerHome();
         if (!catalinaHome.isDirectory())
@@ -50,11 +54,11 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        cmd.add("-Dcom.sun.management.jmxremote.port=" + options.getJmxPort());
+        cmd.add("-Dcom.sun.management.jmxremote.port=" + getCreateOptions().getJmxPort());
         cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
         cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
 
-        String javaArgs = options.getJavaVmArguments();
+        String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         String absolutePath = catalinaHome.getAbsolutePath();
@@ -74,6 +78,6 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
-        startProcess(processBuilder, options);
+        startProcess(processBuilder);
     }
 }

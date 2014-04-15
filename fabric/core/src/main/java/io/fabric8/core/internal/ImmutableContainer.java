@@ -30,6 +30,7 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -102,6 +103,11 @@ final class ImmutableContainer implements Container {
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         return attributes.hasAttribute(key);
+    }
+
+    @Override
+    public Map<AttributeKey<?>, Object> getAttributes() {
+        return attributes.getAttributes();
     }
 
     @Override

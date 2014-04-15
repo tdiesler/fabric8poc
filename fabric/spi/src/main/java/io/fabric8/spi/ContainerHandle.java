@@ -17,29 +17,26 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
-import org.jboss.gravia.repository.MavenCoordinates;
+import io.fabric8.api.Attributable;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.LifecycleException;
 
-import io.fabric8.api.container.ManagedContainer;
 
 /**
- * A builder for a fabric container
+ * A handle to a container instance
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends ManagedCreateOptions> extends ContainerBuilder<B, C> {
+public interface ContainerHandle extends Attributable {
 
-    B setTargetDirectory(String target);
+    CreateOptions getCreateOptions();
 
-    B setJavaVmArguments(String javaVmArguments);
+    void start() throws LifecycleException;
 
-    B addMavenCoordinates(MavenCoordinates coordinates);
+    void stop() throws LifecycleException;
 
-    B setOutputToConsole(boolean outputToConsole);
-
-    ManagedContainer<C> getManagedContainer();
-
-    C getCreateOptions();
+    void destroy() throws LifecycleException;
 }

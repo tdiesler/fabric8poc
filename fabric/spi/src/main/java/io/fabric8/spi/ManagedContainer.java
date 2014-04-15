@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.api.container;
+package io.fabric8.spi;
 
 import io.fabric8.api.Attributable;
-import io.fabric8.api.ManagedCreateOptions;
+import io.fabric8.api.LifecycleException;
+import io.fabric8.api.Container.State;
 
 import java.io.File;
 
@@ -30,18 +31,13 @@ import java.io.File;
  */
 public interface ManagedContainer<C extends ManagedCreateOptions> extends Attributable {
 
-    enum State {
-        CREATED,
-        STARTED,
-        STOPPED,
-        DESTROYED
-    }
-
     File getContainerHome();
 
     State getState();
 
-    void create(C options) throws LifecycleException;
+    C getCreateOptions();
+
+    void create() throws LifecycleException;
 
     void start() throws LifecycleException;
 

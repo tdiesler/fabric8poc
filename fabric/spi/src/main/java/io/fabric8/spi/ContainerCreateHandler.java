@@ -17,32 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
-import io.fabric8.api.container.ManagedContainer;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.LifecycleException;
 
-import java.io.File;
-import java.util.List;
-
-import org.jboss.gravia.repository.MavenCoordinates;
 
 /**
- * Managed container create options
+ * A fabric container
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ManagedCreateOptions extends CreateOptions {
+public interface ContainerCreateHandler {
 
-    /**
-     * Get the array of maven artefacts that are getting unpacked
-     * during {@link ManagedContainer#create(ContainerConfiguration)}
-     */
-    List<MavenCoordinates> getMavenCoordinates();
+    boolean accept(CreateOptions options);
 
-    File getTargetDirectory();
-
-    String getJavaVmArguments();
-
-    boolean isOutputToConsole();
+    ContainerHandle create(CreateOptions options) throws LifecycleException;
 }

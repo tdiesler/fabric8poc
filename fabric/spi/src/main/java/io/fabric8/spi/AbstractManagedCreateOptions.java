@@ -19,9 +19,6 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ManagedCreateOptions;
-import io.fabric8.api.container.ManagedContainer;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;

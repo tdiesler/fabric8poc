@@ -20,8 +20,6 @@
 package io.fabric8.api.management;
 
 import io.fabric8.api.Constants;
-import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 
 import java.util.Set;
 
@@ -31,6 +29,8 @@ import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
  * The container management interface
+ *
+ * [TODO] Use openmbean types for complete coverage
  *
  * @author Thomas.Diesler@jboss.com
  * @since 10-Apr-2014
@@ -45,10 +45,10 @@ public interface ContainerManagement {
     /**
      * Get the set of container identities in the cluster
      */
-    Set<ContainerIdentity> getContainerIds();
+    Set<String> getContainerIds();
 
     /**
-     * Get the container with the given identity
+     * Get the state for container with the given identity
      */
-    Container getContainer(ContainerIdentity identity);
+    String getContainerState(String identity);
 }

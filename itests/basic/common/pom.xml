@@ -32,6 +32,11 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-itests-smoke-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-karaf-managed</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -44,6 +49,10 @@
             <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-wildfly-managed</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-itests-common</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

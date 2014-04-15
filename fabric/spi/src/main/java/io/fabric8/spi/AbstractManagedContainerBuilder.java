@@ -19,8 +19,6 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ManagedContainerBuilder;
-
 import java.io.File;
 
 import org.jboss.gravia.repository.MavenCoordinates;

@@ -22,15 +22,15 @@ package io.fabric8.core.internal;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
-import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
-import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.management.JMException;
@@ -66,8 +66,10 @@ public final class MBeansProvider extends AbstractComponent {
     private void activateInternal() {
         MBeanServer server = mbeanServer.get();
         try {
-            server.registerMBean(new StandardMBean(new ContainerManagementMBean(), ContainerManagement.class, false), ContainerManagement.OBJECT_NAME);
-            server.registerMBean(new StandardMBean(new ProfileManagementMBean(), ProfileManagement.class, false), ProfileManagement.OBJECT_NAME);
+            ContainerManagementMBean containerManagement = new ContainerManagementMBean(containerManager.get());
+            server.registerMBean(new StandardMBean(containerManagement, ContainerManagement.class, false), ContainerManagement.OBJECT_NAME);
+            ProfileManagementMBean profileManagement = new ProfileManagementMBean(profileManager.get());
+            server.registerMBean(new StandardMBean(profileManagement, ProfileManagement.class, false), ProfileManagement.OBJECT_NAME);
         } catch (JMException ex) {
             throw new IllegalStateException(ex);
         }
@@ -106,44 +108,59 @@ public final class MBeansProvider extends AbstractComponent {
         this.profileManager.bind(service);
     }
 
-    @Reference
     void unbindProfileManager(ProfileManager service) {
         this.profileManager.unbind(service);
     }
 
-    class ContainerManagementMBean implements ContainerManagement {
+    static class ContainerManagementMBean implements ContainerManagement {
 
-        @Override
-        public Set<ContainerIdentity> getContainerIds() {
-            return containerManager.get().getContainerIds();
+        private final ContainerManager containerManager;
+
+        ContainerManagementMBean(ContainerManager containerManager) {
+            this.containerManager = containerManager;
         }
 
         @Override
-        public Container getContainer(ContainerIdentity identity) {
-            return containerManager.get().getContainer(identity);
+        public Set<String> getContainerIds() {
+            Set<String> result = new HashSet<String>();
+            for (ContainerIdentity cntid : containerManager.getContainerIds()) {
+                result.add(cntid.toString());
+            }
+            return Collections.unmodifiableSet(result);
+        }
+
+        @Override
+        public String getContainerState(String identity) {
+            ContainerIdentity cntid = ContainerIdentity.create(identity);
+            Container cnt = containerManager.getContainer(cntid);
+            return cnt != null ? cnt.getState().toString() : null;
         }
     }
 
-    class ProfileManagementMBean implements ProfileManagement {
+    static class ProfileManagementMBean implements ProfileManagement {
 
-        @Override
-        public Set<Version> getProfileVersionIds() {
-            return profileManager.get().getProfileVersionIds();
+        private final ProfileManager profileManager;
+
+        ProfileManagementMBean(ProfileManager profileManager) {
+            this.profileManager = profileManager;
         }
 
         @Override
-        public ProfileVersion getProfileVersion(Version identity) {
-            return profileManager.get().getProfileVersion(identity);
+        public Set<String> getProfileVersionIds() {
+            Set<String> result = new HashSet<String>();
+            for (Version version : profileManager.getProfileVersionIds()) {
+                result.add(version.toString());
+            }
+            return Collections.unmodifiableSet(result);
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIds(Version version) {
-            return profileManager.get().getProfileIds(version);
-        }
-
-        @Override
-        public Profile getProfile(Version version, ProfileIdentity identity) {
-            return profileManager.get().getProfile(version, identity);
+        public Set<String> getProfileIds(String version) {
+            Set<String> result = new HashSet<String>();
+            for (ProfileIdentity prfid : profileManager.getProfileIds(Version.parseVersion(version))) {
+                result.add(prfid.toString());
+            }
+            return Collections.unmodifiableSet(result);
         }
     }
 }

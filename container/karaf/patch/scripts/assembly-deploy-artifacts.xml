@@ -39,6 +39,7 @@
                 <include>*:fabric8-api:jar</include>
                 <include>*:fabric8-spi:jar</include>
                 <include>*:fabric8-core:jar</include>
+                <include>*:fabric8-container-karaf-managed:jar</include>
                 <include>*:gravia-provision:jar</include>
                 <include>*:gravia-repository:jar</include>
                 <include>*:gravia-resolver:jar</include>

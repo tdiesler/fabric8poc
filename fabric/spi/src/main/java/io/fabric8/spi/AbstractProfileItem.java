@@ -22,6 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileItem;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.utils.NotNullException;
@@ -49,6 +50,11 @@ public abstract class AbstractProfileItem implements ProfileItem {
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         return attributes.hasAttribute(key);
+    }
+
+    @Override
+    public Map<AttributeKey<?>, Object> getAttributes() {
+        return attributes.getAttributes();
     }
 
     @Override

@@ -22,11 +22,13 @@ package io.fabric8.core.internal;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Container;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
+import io.fabric8.api.LifecycleException;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
@@ -34,12 +36,14 @@ import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.api.Container.State;
-import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ContainerCreateHandler;
+import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.DefaultCreateOptions;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
@@ -47,6 +51,7 @@ import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +70,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,6 +107,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    private final Set<ContainerCreateHandler> lifecycleHandlers = new HashSet<ContainerCreateHandler>();
 
     private String configToken;
     private ServiceRegistration<?> listenerRegistration;
@@ -189,10 +196,29 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private Container createContainerInternal(ContainerState parentState, CreateOptions options) {
-        ContainerState cntState = new ContainerState(parentState, options, configToken);
+        List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
+        if (!(options instanceof DefaultCreateOptions)) {
+            for (ContainerCreateHandler handler : getContainerLifecycleHandlers()) {
+                if (handler.accept(options)) {
+                    ContainerHandle handle = handler.create(options);
+                    handles.add(handle);
+                }
+            }
+            if (handles.isEmpty())
+                throw new LifecycleException("Cannot find lifecycle handler for: " + options);
+        }
+        ContainerState cntState = new ContainerState(parentState, options, handles, configToken);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(parentState, cntState);
         return new ImmutableContainer(cntState);
+    }
+
+    private Set<ContainerCreateHandler> getContainerLifecycleHandlers() {
+        Set<ContainerCreateHandler> handlers;
+        synchronized (lifecycleHandlers) {
+            handlers = new HashSet<ContainerCreateHandler>(lifecycleHandlers);
+        }
+        return Collections.unmodifiableSet(handlers);
     }
 
     @Override
@@ -224,6 +250,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         try {
             ContainerState cntState = getRequiredContainer(identity);
             LOGGER.info("Start container: {}", cntState);
+            for (ContainerHandle handle : cntState.getContainerHandles()) {
+                handle.start();
+            }
             Profile defaultProfile = profileService.get().getDefaultProfile();
             setVersionInternal(cntState, defaultProfile.getProfileVersion(), listener);
             addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
@@ -240,6 +269,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         try {
             ContainerState cntState = getRequiredContainer(identity);
             LOGGER.info("Stop container: {}", cntState);
+            for (ContainerHandle handle : cntState.getContainerHandles()) {
+                handle.stop();
+            }
             return new ImmutableContainer(cntState.stop());
         } finally {
             writeLock.unlock();
@@ -263,8 +295,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                     unprovisionProfile(cntState, profile, null);
                 }
             }
+
+            LOGGER.info("Destroy container: {}", cntState);
+            for (ContainerHandle handle : cntState.getContainerHandles()) {
+                handle.destroy();
+            }
+
             synchronized (containerRegistry) {
-                LOGGER.info("Destroy container: {}", cntState);
                 containerRegistry.get().removeContainer(identity);
                 cntState.destroy();
             }
@@ -489,6 +526,19 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         this.configManager.unbind(service);
     }
 
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE)
+    void bindContainerLifecycleHandler(ContainerCreateHandler service) {
+        synchronized (lifecycleHandlers) {
+            lifecycleHandlers.add(service);
+        }
+    }
+
+    void unbindContainerLifecycleHandler(ContainerCreateHandler service) {
+        synchronized (lifecycleHandlers) {
+            lifecycleHandlers.remove(service);
+        }
+    }
+
     @Reference
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
@@ -530,18 +580,23 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerState parent;
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
+        private final List<ContainerHandle> handles;
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
         private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
         private Version profileVersion;
         private State state;
 
-        ContainerState(ContainerState parent, CreateOptions options, String configToken) {
+        ContainerState(ContainerState parent, CreateOptions options, List<ContainerHandle> handles, String configToken) {
             this.parent = parent;
+            this.handles = handles;
             this.state = State.CREATED;
             String parentName = parent != null ? parent.getIdentity().getSymbolicName() + ":" : "";
             this.identity = ContainerIdentity.create(parentName + options.getSymbolicName());
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
+            for (ContainerHandle handle : handles) {
+                attributes.putAllAttributes(handle.getAttributes());
+            }
         }
 
         ContainerIdentity getIdentity() {
@@ -598,6 +653,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // NOTE - Methods that mutate this objects should be private
         // Only the {@link ContainerService} is supposed to mutate the ContainerState
+
+        List<ContainerHandle> getContainerHandles() {
+            return Collections.unmodifiableList(handles);
+        }
 
         // Package protected. Adding/Removing a container and setting the parent/child relationship is an atomic operation
         void addChild(ContainerState childState) {

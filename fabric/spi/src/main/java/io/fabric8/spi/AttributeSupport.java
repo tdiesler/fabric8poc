@@ -60,8 +60,13 @@ public class AttributeSupport implements Attributable {
         return attributes.containsKey(key);
     }
 
+    @Override
     public Map<AttributeKey<?>, Object> getAttributes() {
         return Collections.unmodifiableMap(attributes);
+    }
+
+    public void putAllAttributes(Map<AttributeKey<?>, Object> atts) {
+        attributes.putAll(atts);
     }
 
     @SuppressWarnings("unchecked")

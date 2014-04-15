@@ -236,6 +236,11 @@
             </dependency>
             <dependency>
                 <groupId>org.jboss.gravia</groupId>
+                <artifactId>gravia-itests-common</artifactId>
+                <version>${version.jboss.gravia}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.gravia</groupId>
                 <artifactId>gravia-provision</artifactId>
                 <version>${version.jboss.gravia}</version>
             </dependency>

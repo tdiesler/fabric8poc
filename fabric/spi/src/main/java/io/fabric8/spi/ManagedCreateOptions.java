@@ -17,37 +17,32 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
-import java.util.Map;
-import java.util.Set;
+import io.fabric8.api.CreateOptions;
 
+import java.io.File;
+import java.util.List;
+
+import org.jboss.gravia.repository.MavenCoordinates;
 
 /**
- * Provide attribute support for a construct
+ * Managed container create options
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Attributable {
+public interface ManagedCreateOptions extends CreateOptions {
 
     /**
-     * Get the list of attribute keys
+     * Get the array of maven artefacts that are getting unpacked
+     * during {@link ManagedContainer#create(ContainerConfiguration)}
      */
-    Set<AttributeKey<?>> getAttributeKeys();
+    List<MavenCoordinates> getMavenCoordinates();
 
-    /**
-     * Get an attribute value
-     */
-    <T> T getAttribute(AttributeKey<T> key);
+    File getTargetDirectory();
 
-    /**
-     * True if the given attribute key exists
-     */
-    <T> boolean hasAttribute(AttributeKey<T> key);
+    String getJavaVmArguments();
 
-    /**
-     * Get the map of all attributes
-     */
-    Map<AttributeKey<?>, Object> getAttributes();
+    boolean isOutputToConsole();
 }

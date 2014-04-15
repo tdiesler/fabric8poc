@@ -32,7 +32,7 @@ public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<Wil
 
     @Override
     public WildFlyManagedContainer getManagedContainer() {
-        return new WildFlyManagedContainer();
+        return new WildFlyManagedContainer(getCreateOptions());
     }
 
     public WildFlyContainerBuilder setServerConfig(String serverConfig) {

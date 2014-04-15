@@ -17,14 +17,14 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ManagedCreateOptions;
-import io.fabric8.api.container.LifecycleException;
-import io.fabric8.api.container.ManagedContainer;
+import io.fabric8.api.LifecycleException;
+import io.fabric8.api.Container.State;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -39,59 +39,72 @@ import org.jboss.gravia.repository.MavenDelegateRepository;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.runtime.spi.DefaultPropertiesProvider;
+import org.jboss.gravia.utils.NotNullException;
 
 /**
  * The managed root container
  *
+ * @author Thomas.Diesler@jboss.com
  * @since 26-Feb-2014
  */
 public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {
 
-    private final AttributeSupport attributeSupport = new AttributeSupport();
+    private final AttributeSupport attributes = new AttributeSupport();
     private final MavenDelegateRepository mavenRepository;
-    private C options;
+    private final C createOptions;
     private File containerHome;
     private State state;
     private Process process;
 
-    protected AbstractManagedContainer() {
-        mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
+    protected AbstractManagedContainer(C options) {
+        NotNullException.assertValue(options, "options");
+        this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
+        this.createOptions = options;
+    }
+
+    @Override
+    public C getCreateOptions() {
+        return createOptions;
     }
 
     @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
-        return attributeSupport.getAttributeKeys();
+        return attributes.getAttributeKeys();
     }
 
     @Override
     public <T> T getAttribute(AttributeKey<T> key) {
-        return attributeSupport.getAttribute(key);
+        return attributes.getAttribute(key);
     }
 
     @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return attributeSupport.hasAttribute(key);
-    }
-
-    protected <T> T putAttribute(AttributeKey<T> key, T value) {
-        return attributeSupport.putAttribute(key, value);
-    }
-
-    protected <T> T removeAttribute(AttributeKey<T> key) {
-        return attributeSupport.removeAttribute(key);
+        return attributes.hasAttribute(key);
     }
 
     @Override
-    public final synchronized void create(C options) throws LifecycleException {
-        this.options = options;
+    public Map<AttributeKey<?>, Object> getAttributes() {
+        return attributes.getAttributes();
+    }
+
+    protected <T> T putAttribute(AttributeKey<T> key, T value) {
+        return attributes.putAttribute(key, value);
+    }
+
+    protected <T> T removeAttribute(AttributeKey<T> key) {
+        return attributes.removeAttribute(key);
+    }
+
+    @Override
+    public final synchronized void create() {
         if (state != null)
             throw new IllegalStateException("Cannot create container in state: " + state);
 
-        File targetDir = options.getTargetDirectory();
+        File targetDir = getCreateOptions().getTargetDirectory();
         if (!targetDir.isDirectory() && !targetDir.mkdirs())
             throw new IllegalStateException("Cannot create target dir: " + targetDir);
 
-        for (MavenCoordinates artefact : options.getMavenCoordinates()) {
+        for (MavenCoordinates artefact : getCreateOptions().getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
             if (resource == null)
                 throw new IllegalStateException("Cannot find maven resource: " + artefact);
@@ -148,7 +161,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         state = State.CREATED;
 
         try {
-            doConfigure(options);
+            doConfigure();
         } catch (Exception ex) {
             throw new LifecycleException("Cannot configure container", ex);
         }
@@ -165,11 +178,11 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     @Override
-    public final synchronized void start() throws LifecycleException {
+    public final synchronized void start() {
         assertNotDestroyed();
         try {
             if (state == State.CREATED || state == State.STOPPED) {
-                doStart(options);
+                doStart();
                 state = State.STARTED;
             }
         } catch (Exception ex) {
@@ -178,11 +191,11 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     @Override
-    public final synchronized void stop() throws LifecycleException {
+    public final synchronized void stop() {
         assertNotDestroyed();
         try {
             if (state == State.STARTED) {
-                doStop(options);
+                doStop();
                 destroyProcess();
                 state = State.STOPPED;
             }
@@ -192,7 +205,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     @Override
-    public final synchronized void destroy() throws LifecycleException {
+    public final synchronized void destroy() {
         assertNotDestroyed();
         if (state == State.STARTED) {
             try {
@@ -202,7 +215,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
             }
         }
         try {
-            doDestroy(options);
+            doDestroy();
         } catch (Exception ex) {
             throw new LifecycleException("Cannot destroy container", ex);
         } finally {
@@ -215,21 +228,21 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
             throw new IllegalStateException("Cannot start container in state: " + state);
     }
 
-    protected void doConfigure(C options) throws Exception {
+    protected void doConfigure() throws Exception {
     }
 
-    protected void doStart(C options) throws Exception {
+    protected void doStart() throws Exception {
     }
 
-    protected void doStop(C options) throws Exception {
+    protected void doStop() throws Exception {
     }
 
-    protected void doDestroy(C options) throws Exception {
+    protected void doDestroy() throws Exception {
     }
 
-    protected void startProcess(ProcessBuilder processBuilder, ManagedCreateOptions options) throws IOException {
+    protected void startProcess(ProcessBuilder processBuilder) throws IOException {
         process = processBuilder.start();
-        new Thread(new ConsoleConsumer(process, options)).start();
+        new Thread(new ConsoleConsumer(process, getCreateOptions())).start();
     }
 
     protected void destroyProcess() throws Exception {

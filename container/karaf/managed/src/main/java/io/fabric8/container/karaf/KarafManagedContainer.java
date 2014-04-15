@@ -35,8 +35,12 @@ import java.util.Properties;
  */
 public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateOptions> {
 
+    KarafManagedContainer(KarafCreateOptions options) {
+        super(options);
+    }
+
     @Override
-    protected void doConfigure(KarafCreateOptions options) throws Exception {
+    protected void doConfigure() throws Exception {
         File karafHome = getContainerHome();
         String comment = "Modified by " + getClass().getName();
 
@@ -85,7 +89,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
     }
 
     @Override
-    protected void doStart(KarafCreateOptions options) throws Exception {
+    protected void doStart() throws Exception {
 
         File karafHome = getContainerHome();
         if (!karafHome.isDirectory())
@@ -95,7 +99,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         cmd.add("java");
 
         // JavaVM args
-        String javaArgs = options.getJavaVmArguments();
+        String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         // Karaf properties
@@ -140,6 +144,6 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.directory(karafHome);
         processBuilder.redirectErrorStream(true);
-        startProcess(processBuilder, options);
+        startProcess(processBuilder);
     }
 }
