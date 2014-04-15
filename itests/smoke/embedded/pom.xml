@@ -26,23 +26,18 @@
 
     <parent>
         <groupId>io.fabric8.poc</groupId>
-        <artifactId>fabric8-itests</artifactId>
+        <artifactId>fabric8-itests-smoke</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fabric8-itests-embedded</artifactId>
+    <artifactId>fabric8-itests-smoke-embedded</artifactId>
 
-    <name>Fabric8 :: Testsuite :: Embedded</name>
+    <name>Fabric8 :: Testsuite :: Smoke :: Embedded</name>
 
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-itests-common</artifactId>
+            <artifactId>fabric8-itests-smoke-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         
