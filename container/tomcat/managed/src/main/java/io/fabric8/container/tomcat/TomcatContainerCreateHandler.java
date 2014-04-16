@@ -123,11 +123,6 @@ public final class TomcatContainerCreateHandler implements ContainerCreateHandle
                 public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
                     return container.getJMXConnector(jmxUsername, jmxPassword, timeout, unit);
                 }
-
-                @Override
-                public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-                    return container.getJMXConnector(env, timeout, unit);
-                }
             };
             return Collections.singleton(endpoint);
         }

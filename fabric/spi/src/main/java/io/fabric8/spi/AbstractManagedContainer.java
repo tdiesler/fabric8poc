@@ -242,7 +242,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     @Override
-    public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
+    public final JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
         Map<String, Object> env = new HashMap<String, Object>();
         if (jmxUsername != null && jmxPassword != null) {
             String[] credentials = new String[] { jmxUsername, jmxPassword };
@@ -251,8 +251,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         return getJMXConnector(env, timeout, unit);
     }
 
-    @Override
-    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
+    protected JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
         String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
         if (jmxServiceURL == null)
             throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");

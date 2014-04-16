@@ -17,12 +17,11 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.Attributable;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
-import io.fabric8.api.Container.State;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.remote.JMXConnector;
@@ -53,6 +52,4 @@ public interface ManagedContainer<C extends ManagedCreateOptions> extends Attrib
     void destroy() throws LifecycleException;
 
     JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit);
-
-    JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit);
 }

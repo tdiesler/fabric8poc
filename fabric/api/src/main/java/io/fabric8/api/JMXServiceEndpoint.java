@@ -20,7 +20,6 @@
 package io.fabric8.api;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
@@ -36,8 +35,6 @@ import javax.management.remote.JMXConnector;
 public interface JMXServiceEndpoint extends ServiceEndpoint {
 
     JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit);
-
-    JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit);
 
     <T> T getMBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException;
 }
