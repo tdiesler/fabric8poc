@@ -40,6 +40,8 @@ public interface ManagedCreateOptions extends CreateOptions {
      */
     List<MavenCoordinates> getMavenCoordinates();
 
+    Class<? extends ContainerCreateHandler> getPrimaryHandler();
+
     File getTargetDirectory();
 
     String getJavaVmArguments();

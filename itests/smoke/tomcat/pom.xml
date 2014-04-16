@@ -38,7 +38,6 @@
     <properties>
         <version.jboss.arquillian.core>1.0.0.Final</version.jboss.arquillian.core>
         <tomcat.home>${project.build.directory}/fabric8-tomcat-${project.version}</tomcat.home>
-        <karaf.base>${tomcat.home}/work/karaf-base</karaf.base>
     </properties>
     
     <dependencies>
@@ -68,12 +67,6 @@
         </dependency>
         
         <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-tomcat-managed</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
             <artifactId>arquillian-tomcat-managed-7</artifactId>
@@ -123,25 +116,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--  plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <inherited>false</inherited>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>process-test-resources</phase>
-                        <configuration>
-                            <target>
-                                <copy file="src/test/resources/tomcat-users.xml" todir="${tomcat.home}/conf" overwrite="true" />
-                                <copy file="src/test/resources/jaas.config" todir="${tomcat.home}/conf" overwrite="true" />
-                                <copy file="src/test/resources/users.properties" todir="${karaf.base}/etc" overwrite="true" />
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>

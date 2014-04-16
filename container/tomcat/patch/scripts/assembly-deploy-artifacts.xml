@@ -16,9 +16,14 @@
             <outputDirectory>lib</outputDirectory>
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
+                <include>*:commons-compress:jar</include>
                 <include>*:fabric8-api:jar</include>
                 <include>*:fabric8-spi:jar</include>
+                <include>*:fabric8-container-karaf-managed:jar</include>
+                <include>*:fabric8-container-tomcat-managed:jar</include>
                 <include>*:fabric8-container-tomcat-webapp:war</include>
+                <include>*:fabric8-container-wildfly-connector:jar</include>
+                <include>*:fabric8-container-wildfly-managed:jar</include>
             </includes>
             <scope>provided</scope>
             <unpack>false</unpack>

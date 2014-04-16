@@ -35,7 +35,6 @@ import javax.management.remote.JMXConnector;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.osgi.StartLevelAware;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -57,7 +56,6 @@ import org.junit.runner.RunWith;
 public class ManagedContainerLifecycleTest extends ManagedContainerLifecycleTests {
 
     @Deployment
-    @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("managed-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);

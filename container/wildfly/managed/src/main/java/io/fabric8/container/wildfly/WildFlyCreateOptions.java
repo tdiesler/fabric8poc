@@ -19,12 +19,13 @@
  */
 package io.fabric8.container.wildfly;
 
+import io.fabric8.spi.AbstractManagedCreateOptions;
+import io.fabric8.spi.ContainerCreateHandler;
+
 import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.repository.MavenCoordinates;
-
-import io.fabric8.spi.AbstractManagedCreateOptions;
 
 
 public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
@@ -33,6 +34,11 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx1024m";
 
     private String serverConfig = DEFAULT_SERVER_CONFIG;
+
+    @Override
+    public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
+        return WildFlyContainerCreateHandler.class;
+    }
 
     public String getServerConfig() {
         return serverConfig;

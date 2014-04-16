@@ -44,10 +44,34 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-karaf-managed</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-tomcat-managed</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-tomcat-webapp</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
             <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-wildfly-connector</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-wildfly-managed</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     

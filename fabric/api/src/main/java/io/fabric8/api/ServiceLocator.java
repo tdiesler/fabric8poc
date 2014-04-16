@@ -91,12 +91,12 @@ public final class ServiceLocator {
 
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<T> serviceRef = new AtomicReference<T>();
-        final Filter srvfilter = filterspec != null ? moduleContext.createFilter(filterspec) : null;
+        final Filter filter = filterspec != null ? moduleContext.createFilter(filterspec) : null;
         ServiceTracker<T, T> tracker = new ServiceTracker<T, T>(moduleContext, type, null) {
             @Override
             public T addingService(ServiceReference<T> sref) {
                 T service = super.addingService(sref);
-                if (srvfilter == null || srvfilter.match(sref)) {
+                if (filter == null || filter.match(sref)) {
                     serviceRef.set(moduleContext.getService(sref));
                     latch.countDown();
                 }
@@ -106,7 +106,8 @@ public final class ServiceLocator {
         tracker.open();
         try {
             if (!latch.await(timeout, unit)) {
-                throw new RuntimeException("Cannot obtain service: " + srvfilter);
+                String srvspec = (type != null ? type.getName() : "") + (filter != null ? filter : "");
+                throw new RuntimeException("Cannot obtain service: " + srvspec);
             }
             return serviceRef.get();
         } catch (InterruptedException ex) {

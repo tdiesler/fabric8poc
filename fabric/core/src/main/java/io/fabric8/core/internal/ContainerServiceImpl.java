@@ -39,12 +39,14 @@ import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultCreateOptions;
 import io.fabric8.spi.EventDispatcher;
+import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
@@ -58,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jboss.gravia.resource.Version;
@@ -198,10 +201,17 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private Container createContainerInternal(ContainerState parentState, CreateOptions options) {
         List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
         if (!(options instanceof DefaultCreateOptions)) {
-            for (ContainerCreateHandler handler : getContainerLifecycleHandlers()) {
+            Set<ContainerCreateHandler> handlers = getContainerLifecycleHandlers();
+            if (options instanceof ManagedCreateOptions) {
+                ManagedCreateOptions managedOptions = (ManagedCreateOptions) options;
+                Class<? extends ContainerCreateHandler> primaryType = managedOptions.getPrimaryHandler();
+                ContainerCreateHandler primary = ServiceLocator.awaitService(primaryType, 10, TimeUnit.SECONDS);
+                handles.add(primary.create(options));
+                handlers.remove(primary);
+            }
+            for (ContainerCreateHandler handler : handlers) {
                 if (handler.accept(options)) {
-                    ContainerHandle handle = handler.create(options);
-                    handles.add(handle);
+                    handles.add(handler.create(options));
                 }
             }
             if (handles.isEmpty())
@@ -218,7 +228,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         synchronized (lifecycleHandlers) {
             handlers = new HashSet<ContainerCreateHandler>(lifecycleHandlers);
         }
-        return Collections.unmodifiableSet(handlers);
+        return handlers;
     }
 
     @Override

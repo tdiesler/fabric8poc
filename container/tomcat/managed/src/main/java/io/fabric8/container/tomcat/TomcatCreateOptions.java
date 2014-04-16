@@ -19,19 +19,26 @@
  */
 package io.fabric8.container.tomcat;
 
+import io.fabric8.spi.AbstractManagedCreateOptions;
+import io.fabric8.spi.ContainerCreateHandler;
+
 import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.repository.MavenCoordinates;
 
-import io.fabric8.spi.AbstractManagedCreateOptions;
-
 
 public final class TomcatCreateOptions extends AbstractManagedCreateOptions {
 
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m -XX:MaxPermSize=128m";
+    public static final int DEFAULT_JMX_PORT = 8089;
 
-    private int jmxPort = 8089;
+    private int jmxPort = DEFAULT_JMX_PORT;
+
+    @Override
+    public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
+        return TomcatContainerCreateHandler.class;
+    }
 
     public int getJmxPort() {
         return jmxPort;

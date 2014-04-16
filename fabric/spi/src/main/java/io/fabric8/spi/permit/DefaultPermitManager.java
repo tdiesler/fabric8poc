@@ -118,7 +118,7 @@ public final class DefaultPermitManager implements PermitManager {
 
             final String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
             final String exclstr = exclusive ? " exclusive" : "";
-            LOGGER.debug("aquiring" + exclstr + timestr + ": {}", key);
+            LOGGER.trace("aquiring" + exclstr + timestr + ": {}", key);
 
             getSinglePermit(timeout, unit);
 
@@ -132,7 +132,7 @@ public final class DefaultPermitManager implements PermitManager {
                 semaphore.release(1);
             }
 
-            LOGGER.debug("aquired" + exclstr + ": {}", key);
+            LOGGER.trace("aquired" + exclstr + ": {}", key);
 
             return new Permit<T>() {
 
@@ -148,11 +148,11 @@ public final class DefaultPermitManager implements PermitManager {
 
                 @Override
                 public void release() {
-                    LOGGER.debug("releasing" + exclstr + ": {}", key);
+                    LOGGER.trace("releasing" + exclstr + ": {}", key);
                     deactivationLatch.get().countDown();
                     int usage = usageCount.decrementAndGet();
                     if (usage > 0) {
-                        LOGGER.debug("remaining: {} => [{}]", key, usage);
+                        LOGGER.trace("remaining: {} => [{}]", key, usage);
                     }
                     lock.unlock();
                 }
@@ -161,10 +161,10 @@ public final class DefaultPermitManager implements PermitManager {
 
         void deactivate(long timeout, TimeUnit unit) {
 
-            LOGGER.debug("deactivating: {}",  key);
+            LOGGER.trace("deactivating: {}",  key);
 
             if (!active.get()) {
-                LOGGER.debug("not active: {}",  key);
+                LOGGER.trace("not active: {}",  key);
                 return;
             }
 
@@ -180,7 +180,7 @@ public final class DefaultPermitManager implements PermitManager {
             try {
                 int usage = usageCount.get();
                 deactivationLatch.set(new CountDownLatch(usage));
-                LOGGER.debug("waiting: {} => [{}]",  key, usage);
+                LOGGER.trace("waiting: {} => [{}]",  key, usage);
                 success = deactivationLatch.get().await(timeout, unit);
             } catch (InterruptedException ex) {
                 success = false;

@@ -38,8 +38,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
 
     @Override
     protected void doConfigure() throws Exception {
-        int jmxPort = getCreateOptions().getJmxPort();
-        String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
+        String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + activeJMXPort() + "/jmxrmi";
         putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
@@ -54,7 +53,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        cmd.add("-Dcom.sun.management.jmxremote.port=" + getCreateOptions().getJmxPort());
+        cmd.add("-Dcom.sun.management.jmxremote.port=" + activeJMXPort());
         cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
         cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
 
@@ -79,5 +78,13 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
         startProcess(processBuilder);
+    }
+
+    private int activeJMXPort() {
+        int jmxPort = getCreateOptions().getJmxPort();
+        if (jmxPort == TomcatCreateOptions.DEFAULT_JMX_PORT) {
+            jmxPort = freePortValue(jmxPort);
+        }
+        return jmxPort;
     }
 }

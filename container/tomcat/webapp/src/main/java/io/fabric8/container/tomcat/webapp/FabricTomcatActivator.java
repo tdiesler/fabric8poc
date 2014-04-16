@@ -21,9 +21,15 @@
  */
 package io.fabric8.container.tomcat.webapp;
 
+import io.fabric8.container.karaf.KarafContainerCreateHandler;
+import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
+import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
 import io.fabric8.spi.BootstrapComplete;
+import io.fabric8.spi.ContainerCreateHandler;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletContext;
@@ -60,9 +66,8 @@ import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
  */
 public class FabricTomcatActivator implements ServletContextListener {
 
+    private final Set<ServiceRegistration<?>> serviceRegistrations = new HashSet<ServiceRegistration<?>>();
     private Registration repositoryRegistration;
-    private ServiceRegistration<Provisioner> provisionerRegistration;
-    private ServiceRegistration<Resolver> resolverRegistration;
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
@@ -107,6 +112,22 @@ public class FabricTomcatActivator implements ServletContextListener {
         Repository repository = registerRepositoryService(runtime);
         Resolver resolver = registerResolverService(runtime);
         registerProvisionerService(servletContext, runtime, repository, resolver);
+
+        // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
+        Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
+        handlers.add(new KarafContainerCreateHandler());
+        handlers.add(new TomcatContainerCreateHandler());
+        handlers.add(new WildFlyContainerCreateHandler());
+        registerContainerCreateHandlers(syscontext, handlers);
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
+        for (ServiceRegistration<?> sreg : serviceRegistrations) {
+            sreg.unregister();
+        }
+        if (repositoryRegistration != null)
+            repositoryRegistration.unregister();
     }
 
     private Provisioner registerProvisionerService(ServletContext servletContext, Runtime runtime, Repository repository, Resolver resolver) {
@@ -114,7 +135,7 @@ public class FabricTomcatActivator implements ServletContextListener {
         TomcatResourceInstaller installer = new TomcatResourceInstaller(environment);
         Provisioner provisioner = new DefaultProvisioner(environment, resolver, repository, installer);
         ModuleContext syscontext = runtime.getModuleContext();
-        provisionerRegistration = syscontext.registerService(Provisioner.class, provisioner, null);
+        serviceRegistrations.add(syscontext.registerService(Provisioner.class, provisioner, null));
         return provisioner;
     }
 
@@ -125,7 +146,7 @@ public class FabricTomcatActivator implements ServletContextListener {
     private Resolver registerResolverService(Runtime runtime) {
         Resolver resolver = new DefaultResolver();
         ModuleContext syscontext = runtime.getModuleContext();
-        resolverRegistration = syscontext.registerService(Resolver.class, resolver, null);
+        serviceRegistrations.add(syscontext.registerService(Resolver.class, resolver, null));
         return resolver;
     }
 
@@ -137,14 +158,11 @@ public class FabricTomcatActivator implements ServletContextListener {
         return repository;
     }
 
-    @Override
-    public void contextDestroyed(ServletContextEvent event) {
-        if (provisionerRegistration != null)
-            provisionerRegistration.unregister();
-        if (repositoryRegistration != null)
-            repositoryRegistration.unregister();
-        if (resolverRegistration != null)
-            resolverRegistration.unregister();
+    private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
+        for (ContainerCreateHandler handler : handlers) {
+            String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
+            serviceRegistrations.add(context.registerService(classes, handler, null));
+        }
     }
 
     static class BoostrapLatch extends CountDownLatch {

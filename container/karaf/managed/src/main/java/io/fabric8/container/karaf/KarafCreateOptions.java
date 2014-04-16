@@ -25,11 +25,17 @@ import java.util.Properties;
 import org.jboss.gravia.repository.MavenCoordinates;
 
 import io.fabric8.spi.AbstractManagedCreateOptions;
+import io.fabric8.spi.ContainerCreateHandler;
 
 
 public final class KarafCreateOptions extends AbstractManagedCreateOptions {
 
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
+
+    @Override
+    public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
+        return KarafContainerCreateHandler.class;
+    }
 
     @Override
     protected void validateConfiguration() {

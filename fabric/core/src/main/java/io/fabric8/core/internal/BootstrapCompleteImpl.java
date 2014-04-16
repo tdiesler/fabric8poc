@@ -47,28 +47,44 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     @Reference
     void bindContainerManager(ContainerManager service) {
     }
-
     void unbindContainerManager(ContainerManager service) {
-    }
-
-    @Reference
-    void bindProfileManager(ProfileManager service) {
-    }
-
-    void unbindProfileManager(ProfileManager service) {
     }
 
     @Reference
     void bindContainerService(ContainerService service) {
     }
-
     void unbindContainerService(ContainerService service) {
     }
 
     @Reference
     void bindMBeansProvider(MBeansProvider service) {
     }
-
     void unbindMBeansProvider(MBeansProvider service) {
     }
+
+    @Reference
+    void bindProfileManager(ProfileManager service) {
+    }
+    void unbindProfileManager(ProfileManager service) {
+    }
+
+    /*
+    @Reference
+    void bindProvisioner(Provisioner service) {
+    }
+    void unbindProvisioner(Provisioner service) {
+    }
+
+    @Reference
+    void bindResolver(Resolver service) {
+    }
+    void unbindResolver(Resolver service) {
+    }
+
+    @Reference
+    void bindRepository(Repository service) {
+    }
+    void unbindRepository(Repository service) {
+    }
+    */
 }
