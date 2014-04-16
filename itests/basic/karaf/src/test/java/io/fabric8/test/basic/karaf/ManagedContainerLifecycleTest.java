@@ -31,10 +31,12 @@ import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ManagementUtils;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
+import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.SystemProperties;
 import io.fabric8.test.smoke.PortableTestConditionsTests;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
@@ -82,7 +84,8 @@ public class ManagedContainerLifecycleTest extends PortableTestConditionsTests {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
-                    builder.addImportPackages(KarafContainerBuilder.class, ContainerManagement.class, JMXConnector.class);
+                    builder.addImportPackages(KarafContainerBuilder.class, TomcatContainerBuilder.class);
+                    builder.addImportPackages(ContainerManagement.class, JMXConnector.class);
                     builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
@@ -113,26 +116,53 @@ public class ManagedContainerLifecycleTest extends PortableTestConditionsTests {
             cnt = cntManager.startContainer(cntId, null);
             Assert.assertEquals(State.STARTED, cnt.getState());
 
-            JMXConnector connector = ManagementUtils.getJMXConnector(cnt, "karaf", "karaf", 10, TimeUnit.SECONDS);
-            try {
-                // Access containers through JMX
-                MBeanServerConnection server = connector.getMBeanServerConnection();
-                ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
-                Assert.assertNotNull("ContainerManagement not null", cntManagement);
-                Assert.assertTrue("No containers", cntManagement.getContainerIds().isEmpty());
-
-                // Access profiles through JMX
-                ProfileManagement prfManagement = ManagementUtils.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
-                Assert.assertNotNull("ProfileManagement not null", prfManagement);
-                Assert.assertEquals(1, prfManagement.getProfileVersionIds().size());
-                Assert.assertEquals("1.0.0", prfManagement.getProfileVersionIds().iterator().next());
-                Assert.assertEquals(1, prfManagement.getProfileIds("1.0").size());
-                Assert.assertEquals("default", prfManagement.getProfileIds("1.0").iterator().next());
-            } finally {
-                connector.close();
-            }
+            verifyContainer(cnt, "karaf", "karaf");
         } finally {
             cntManager.destroyContainer(cntId);
+        }
+    }
+
+    @Test
+    public void testManagedTomcat() throws Exception {
+
+        // Build the {@link CreateOptions}
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
+        ContainerBuilder<?, ?> builder = new TomcatContainerBuilder().setTargetDirectory(dataDir);
+        CreateOptions options = builder.addIdentity("cntKaraf").getCreateOptions();
+
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        Container cnt = cntManager.createContainer(options);
+        ContainerIdentity cntId = cnt.getIdentity();
+        try {
+            // Start the container
+            cnt = cntManager.startContainer(cntId, null);
+            Assert.assertEquals(State.STARTED, cnt.getState());
+
+            verifyContainer(cnt, "karaf", "karaf");
+        } finally {
+            cntManager.destroyContainer(cntId);
+        }
+    }
+
+    private void verifyContainer(Container container, String username, String password) throws IOException {
+        JMXConnector connector = ManagementUtils.getJMXConnector(container, username, password, 10, TimeUnit.SECONDS);
+        try {
+            // Access containers through JMX
+            MBeanServerConnection server = connector.getMBeanServerConnection();
+            ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
+            Assert.assertNotNull("ContainerManagement not null", cntManagement);
+            Assert.assertTrue("No containers", cntManagement.getContainerIds().isEmpty());
+
+            // Access profiles through JMX
+            ProfileManagement prfManagement = ManagementUtils.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
+            Assert.assertNotNull("ProfileManagement not null", prfManagement);
+            Assert.assertEquals(1, prfManagement.getProfileVersionIds().size());
+            Assert.assertEquals("1.0.0", prfManagement.getProfileVersionIds().iterator().next());
+            Assert.assertEquals(1, prfManagement.getProfileIds("1.0").size());
+            Assert.assertEquals("default", prfManagement.getProfileIds("1.0").iterator().next());
+        } finally {
+            connector.close();
         }
     }
 }

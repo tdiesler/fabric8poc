@@ -100,6 +100,7 @@ io/fabric8/poc/${project.version}/fabric8-api-${project.version}.jar=43
 io/fabric8/poc/${project.version}/fabric8-spi-${project.version}.jar=43
 io/fabric8/poc/${project.version}/fabric8-core-${project.version}.jar=43
 io/fabric8/poc/${project.version}/fabric8-container-karaf-managed-${project.version}.jar=43
+io/fabric8/poc/${project.version}/fabric8-container-tomcat-managed-${project.version}.jar=43
     </echo>
   	
     <copy file="${karaf.source.dir}/etc/custom.properties" todir="${karaf.patch.dir}/etc" overwrite="true"/>

@@ -26,6 +26,8 @@
     </parent>
 
     <artifactId>fabric8-container-tomcat-managed</artifactId>
+    <packaging>bundle</packaging>
+    
     <name>Fabric8 :: Container :: Tomcat :: Managed</name>
 
     <dependencies>
@@ -43,5 +45,18 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Activator>org.jboss.gravia.runtime.ModuleActivatorBridge</Bundle-Activator>
+                        <Module-Activator>io.fabric8.container.tomcat.internal.TomcatContainerActivator</Module-Activator>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

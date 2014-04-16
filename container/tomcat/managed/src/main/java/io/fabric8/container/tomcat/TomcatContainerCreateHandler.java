@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.container.karaf;
+package io.fabric8.container.tomcat;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.CreateOptions;
@@ -27,31 +27,31 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The Karaf container create handler
+ * The Tomcat container create handler
  *
  * @author Thomas.Diesler@jboss.com
- * @since 14-Apr-2014
+ * @since 16-Apr-2014
  */
-public final class KarafContainerCreateHandler implements ContainerCreateHandler {
+public final class TomcatContainerCreateHandler implements ContainerCreateHandler {
 
     @Override
     public boolean accept(CreateOptions options) {
-        return options instanceof KarafCreateOptions;
+        return options instanceof TomcatCreateOptions;
     }
 
     @Override
     public ContainerHandle create(final CreateOptions options) {
-        final KarafManagedContainer container = new KarafManagedContainer((KarafCreateOptions) options);
+        final TomcatManagedContainer container = new TomcatManagedContainer((TomcatCreateOptions) options);
         container.create();
-        return new KarafContainerHandle(container, options);
+        return new TomcatContainerHandle(container, options);
     }
 
-    static class KarafContainerHandle implements ContainerHandle {
+    static class TomcatContainerHandle implements ContainerHandle {
 
         private final ManagedContainer<?> container;
         private final CreateOptions options;
 
-        KarafContainerHandle(ManagedContainer<?> container, CreateOptions options) {
+        TomcatContainerHandle(ManagedContainer<?> container, CreateOptions options) {
             this.container = container;
             this.options = options;
         }
