@@ -1,58 +1,43 @@
-/**
- * Copyright (C) FuseSource, Inc.
- * http://fusesource.com
- *
+/*
+ * #%L
+ * Gravia :: Integration Tests :: Common
+ * %%
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
+ * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.Attributable;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.LifecycleException;
-import io.fabric8.api.Container.State;
-
-import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 
-
 /**
- * The managed root container
+ * A JMX service endpoint
  *
  * @author Thomas.Diesler@jboss.com
- * @since 26-Feb-2014
+ * @since 16-Apr-2014
  */
-public interface ManagedContainer<C extends ManagedCreateOptions> extends Attributable {
-
-    File getContainerHome();
-
-    State getState();
-
-    C getCreateOptions();
-
-    ContainerIdentity getIdentity();
-
-    void create() throws LifecycleException;
-
-    void start() throws LifecycleException;
-
-    void stop() throws LifecycleException;
-
-    void destroy() throws LifecycleException;
+public interface JMXServiceEndpoint extends ServiceEndpoint {
 
     JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit);
 
     JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit);
+
+    <T> T getMBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException;
 }

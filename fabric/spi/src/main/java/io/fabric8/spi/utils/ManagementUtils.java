@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.api.management;
+package io.fabric8.spi.utils;
 
 import io.fabric8.api.Attributable;
 import io.fabric8.api.Constants;
@@ -32,6 +32,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.jboss.gravia.utils.MBeanProxy;
+import org.jboss.gravia.utils.NotNullException;
 
 /**
  * A set of management utils
@@ -61,22 +62,29 @@ public final class ManagementUtils {
     }
 
     public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
-
         String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
         if (jmxServiceURL == null)
             throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
+        return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
+    }
+
+    public static JMXConnector getJMXConnector(String jmxServiceURL, String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
+        NotNullException.assertValue(jmxServiceURL, "jmxServiceURL");
+        Map<String, Object> env = new HashMap<String, Object>();
+        if (jmxUsername != null && jmxPassword != null) {
+            String[] credentials = new String[] { jmxUsername, jmxPassword };
+            env.put(JMXConnector.CREDENTIALS, credentials);
+        }
+        return getJMXConnector(jmxServiceURL, env, timeout, unit);
+    }
+
+    public static JMXConnector getJMXConnector(String jmxServiceURL, Map<String, Object> env, long timeout, TimeUnit unit) {
 
         JMXServiceURL serviceURL;
         try {
             serviceURL = new JMXServiceURL(jmxServiceURL);
         } catch (MalformedURLException ex) {
             throw new IllegalStateException(ex);
-        }
-
-        Map<String, Object> env = new HashMap<String, Object>();
-        if (username != null && password != null) {
-            String[] credentials = new String[] { username, password };
-            env.put(JMXConnector.CREDENTIALS, credentials);
         }
 
         Exception lastException = null;

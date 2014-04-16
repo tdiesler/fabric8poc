@@ -75,13 +75,20 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
 
     /**
      * Get the set of provided management domains
+     * [TODO] Should management domains go to {@link JMXServiceEndpoint}?
      */
     Set<String> getManagementDomains();
 
     /**
-     * Get the set of available service endpoints
+     * Get the set of available service endpoints for the given type
+     * @param type null for all types
      */
-    Set<ServiceEndpointIdentity> getServiceEndpoints();
+    <T extends ServiceEndpoint> Set<ServiceEndpointIdentity> getServiceEndpoints(Class<T> type);
+
+    /**
+     * Get the service endpoint for the given identity and type
+     */
+    <T extends ServiceEndpoint> T getServiceEndpoint(ServiceEndpointIdentity identity, Class<T> type);
 
     /**
      * Get the profile version

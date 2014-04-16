@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.fabric8.container.karaf;
+package io.fabric8.container.wildfly;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.CreateOptions;
@@ -35,31 +35,31 @@ import java.util.concurrent.TimeUnit;
 import javax.management.remote.JMXConnector;
 
 /**
- * The Karaf container create handler
+ * The WildFly container create handler
  *
  * @author Thomas.Diesler@jboss.com
- * @since 14-Apr-2014
+ * @since 16-Apr-2014
  */
-public final class KarafContainerCreateHandler implements ContainerCreateHandler {
+public final class WildFlyContainerCreateHandler implements ContainerCreateHandler {
 
     @Override
     public boolean accept(CreateOptions options) {
-        return options instanceof KarafCreateOptions;
+        return options instanceof WildFlyCreateOptions;
     }
 
     @Override
     public ContainerHandle create(final CreateOptions options) {
-        final KarafManagedContainer container = new KarafManagedContainer((KarafCreateOptions) options);
+        final WildFlyManagedContainer container = new WildFlyManagedContainer((WildFlyCreateOptions) options);
         container.create();
-        return new KarafContainerHandle(container, options);
+        return new WildFlyContainerHandle(container, options);
     }
 
-    static class KarafContainerHandle implements ContainerHandle {
+    static class WildFlyContainerHandle implements ContainerHandle {
 
         private final ManagedContainer<?> container;
         private final CreateOptions options;
 
-        KarafContainerHandle(ManagedContainer<?> container, CreateOptions options) {
+        WildFlyContainerHandle(ManagedContainer<?> container, CreateOptions options) {
             this.container = container;
             this.options = options;
         }

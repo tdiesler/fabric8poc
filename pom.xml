@@ -365,6 +365,12 @@
             </dependency>
             <dependency>
                 <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-cli</artifactId>
+                <classifier>client</classifier>
+                <version>${version.jboss.wildfly}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-server</artifactId>
                 <version>${version.jboss.wildfly}</version>
             </dependency>

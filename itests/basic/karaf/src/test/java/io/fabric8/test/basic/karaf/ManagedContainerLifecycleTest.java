@@ -26,18 +26,21 @@ import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.JMXServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.management.ContainerManagement;
-import io.fabric8.api.management.ManagementUtils;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
+import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.SystemProperties;
 import io.fabric8.test.smoke.PortableTestConditionsTests;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
@@ -84,7 +87,7 @@ public class ManagedContainerLifecycleTest extends PortableTestConditionsTests {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
-                    builder.addImportPackages(KarafContainerBuilder.class, TomcatContainerBuilder.class);
+                    builder.addImportPackages(KarafContainerBuilder.class, TomcatContainerBuilder.class, WildFlyContainerBuilder.class);
                     builder.addImportPackages(ContainerManagement.class, JMXConnector.class);
                     builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
@@ -129,7 +132,7 @@ public class ManagedContainerLifecycleTest extends PortableTestConditionsTests {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
         ContainerBuilder<?, ?> builder = new TomcatContainerBuilder().setTargetDirectory(dataDir);
-        CreateOptions options = builder.addIdentity("cntKaraf").getCreateOptions();
+        CreateOptions options = builder.addIdentity("cntTomcat").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cnt = cntManager.createContainer(options);
@@ -139,23 +142,55 @@ public class ManagedContainerLifecycleTest extends PortableTestConditionsTests {
             cnt = cntManager.startContainer(cntId, null);
             Assert.assertEquals(State.STARTED, cnt.getState());
 
-            verifyContainer(cnt, "karaf", "karaf");
+            verifyContainer(cnt, null, null);
+        } finally {
+            cntManager.destroyContainer(cntId);
+        }
+    }
+
+    @Test
+    public void testManagedWildFly() throws Exception {
+
+        // Build the {@link CreateOptions}
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
+        ContainerBuilder<?, ?> builder = new WildFlyContainerBuilder().setTargetDirectory(dataDir);
+        CreateOptions options = builder.addIdentity("cntWildFly").getCreateOptions();
+
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        Container cnt = cntManager.createContainer(options);
+        ContainerIdentity cntId = cnt.getIdentity();
+        try {
+            // Start the container
+            cnt = cntManager.startContainer(cntId, null);
+            Assert.assertEquals(State.STARTED, cnt.getState());
+
+            verifyContainer(cnt, null, null);
         } finally {
             cntManager.destroyContainer(cntId);
         }
     }
 
     private void verifyContainer(Container container, String username, String password) throws IOException {
-        JMXConnector connector = ManagementUtils.getJMXConnector(container, username, password, 10, TimeUnit.SECONDS);
+
+        // Assert that there is one {@link JMXServiceEndpoint}
+        Set<ServiceEndpointIdentity> endpointIds = container.getServiceEndpoints(JMXServiceEndpoint.class);
+        Assert.assertEquals(1, endpointIds.size());
+
+        // Get the JMX connector through the endpoint
+        ServiceEndpointIdentity jmxEndpointId = endpointIds.iterator().next();
+        JMXServiceEndpoint jmxEndpoint = container.getServiceEndpoint(jmxEndpointId, JMXServiceEndpoint.class);
+        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 10, TimeUnit.SECONDS);
+
         try {
             // Access containers through JMX
             MBeanServerConnection server = connector.getMBeanServerConnection();
-            ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
+            ContainerManagement cntManagement = jmxEndpoint.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
             Assert.assertNotNull("ContainerManagement not null", cntManagement);
             Assert.assertTrue("No containers", cntManagement.getContainerIds().isEmpty());
 
             // Access profiles through JMX
-            ProfileManagement prfManagement = ManagementUtils.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
+            ProfileManagement prfManagement = jmxEndpoint.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
             Assert.assertNotNull("ProfileManagement not null", prfManagement);
             Assert.assertEquals(1, prfManagement.getProfileVersionIds().size());
             Assert.assertEquals("1.0.0", prfManagement.getProfileVersionIds().iterator().next());

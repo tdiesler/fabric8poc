@@ -24,6 +24,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ProfileIdentity;
+import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.AttributeSupport;
@@ -42,6 +43,7 @@ final class ImmutableContainer implements Container {
     private final Version profileVersion;
     private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
+    private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>();
     private final AttributeSupport attributes;
     private final ContainerIdentity parent;
     private final String tostring;
@@ -56,6 +58,7 @@ final class ImmutableContainer implements Container {
         state = cntState.getState();
         children.addAll(cntState.getChildContainers());
         profiles.addAll(cntState.getProfiles());
+        endpoints.addAll(cntState.getServiceEndpoints());
         attributes = new AttributeSupport(cntState.getAttributes());
         tostring = cntState.toString();
     }
@@ -121,8 +124,27 @@ final class ImmutableContainer implements Container {
     }
 
     @Override
-    public Set<ServiceEndpointIdentity> getServiceEndpoints() {
-        throw new UnsupportedOperationException();
+    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity> getServiceEndpoints(Class<T> type) {
+        Set<ServiceEndpointIdentity> result = new HashSet<ServiceEndpointIdentity>();
+        for (ServiceEndpoint ep : endpoints) {
+            if (type == null || type.isAssignableFrom(ep.getClass())) {
+                result.add(ep.getIdentity());
+            }
+        }
+        return Collections.unmodifiableSet(result);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ServiceEndpointIdentity identity, Class<T> type) {
+        T result = null;
+        for (ServiceEndpoint ep : endpoints) {
+            if (ep.getIdentity().equals(identity) && (type == null || type.isAssignableFrom(ep.getClass()))) {
+                result = (T) ep;
+                break;
+            }
+        }
+        return result;
     }
 
     @Override

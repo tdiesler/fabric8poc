@@ -17,13 +17,13 @@
 package io.fabric8.test.basic.embedded;
 
 import io.fabric8.api.management.ContainerManagement;
-import io.fabric8.api.management.ManagementUtils;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.ManagedContainer;
 import io.fabric8.spi.ManagedContainerBuilder;
+import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +96,7 @@ public class StandaloneManagedContainerTest {
         // Start the container
         container.start();
 
-        JMXConnector connector = ManagementUtils.getJMXConnector(container, jmxUsername, jmxPassword, 20, TimeUnit.SECONDS);
+        JMXConnector connector = container.getJMXConnector(jmxUsername, jmxPassword, 20, TimeUnit.SECONDS);
         try {
             // Access containers through JMX
             MBeanServerConnection server = connector.getMBeanServerConnection();

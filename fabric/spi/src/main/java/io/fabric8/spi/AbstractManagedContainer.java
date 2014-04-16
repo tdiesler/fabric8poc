@@ -17,16 +17,24 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.api.Container.State;
+import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
+
+import javax.management.remote.JMXConnector;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -49,8 +57,12 @@ import org.jboss.gravia.utils.NotNullException;
  */
 public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {
 
+    // [TODO] provide better unique identity
+    private static final AtomicInteger instanceCount = new AtomicInteger();
+
     private final AttributeSupport attributes = new AttributeSupport();
     private final MavenDelegateRepository mavenRepository;
+    private final ContainerIdentity identity;
     private final C createOptions;
     private File containerHome;
     private State state;
@@ -59,7 +71,13 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     protected AbstractManagedContainer(C options) {
         NotNullException.assertValue(options, "options");
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
+        this.identity = ContainerIdentity.create(options.getSymbolicName() + "#" + instanceCount.incrementAndGet());
         this.createOptions = options;
+    }
+
+    @Override
+    public ContainerIdentity getIdentity() {
+        return identity;
     }
 
     @Override
@@ -221,6 +239,24 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         } finally {
             state = State.DESTROYED;
         }
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
+        Map<String, Object> env = new HashMap<String, Object>();
+        if (jmxUsername != null && jmxPassword != null) {
+            String[] credentials = new String[] { jmxUsername, jmxPassword };
+            env.put(JMXConnector.CREDENTIALS, credentials);
+        }
+        return getJMXConnector(env, timeout, unit);
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
+        String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        if (jmxServiceURL == null)
+            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
+        return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 
     private void assertNotDestroyed() {

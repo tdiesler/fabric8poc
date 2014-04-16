@@ -38,7 +38,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
@@ -583,6 +583,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final List<ContainerHandle> handles;
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
         private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
+        private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>();
         private Version profileVersion;
         private State state;
 
@@ -595,6 +596,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
             for (ContainerHandle handle : handles) {
+                endpoints.addAll(handle.getServiceEndpoints());
                 attributes.putAllAttributes(handle.getAttributes());
             }
         }
@@ -643,12 +645,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             throw new UnsupportedOperationException();
         }
 
-        Set<ServiceEndpointIdentity> getServiceEndpoints() {
-            throw new UnsupportedOperationException();
-        }
-
         Set<ProfileIdentity> getProfiles() {
             return Collections.unmodifiableSet(profiles);
+        }
+
+        Set<ServiceEndpoint> getServiceEndpoints() {
+            return Collections.unmodifiableSet(endpoints);
         }
 
         // NOTE - Methods that mutate this objects should be private

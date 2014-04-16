@@ -19,29 +19,18 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Attributable;
-import io.fabric8.api.CreateOptions;
-import io.fabric8.api.LifecycleException;
-import io.fabric8.api.ServiceEndpoint;
+import java.io.IOException;
 
-import java.util.Set;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 
+import io.fabric8.api.JMXServiceEndpoint;
+import io.fabric8.spi.utils.ManagementUtils;
 
-/**
- * A handle to a container instance
- *
- * @author Thomas.Diesler@jboss.com
- * @since 14-Mar-2014
- */
-public interface ContainerHandle extends Attributable {
+public abstract class AbstractJMXServiceEndpoint extends AttributeSupport implements JMXServiceEndpoint {
 
-    CreateOptions getCreateOptions();
-
-    void start() throws LifecycleException;
-
-    void stop() throws LifecycleException;
-
-    void destroy() throws LifecycleException;
-
-    Set<ServiceEndpoint> getServiceEndpoints();
+    @Override
+    public <T> T getMBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException {
+        return ManagementUtils.getMBeanProxy(server, oname, type);
+    }
 }

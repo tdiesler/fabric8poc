@@ -17,12 +17,17 @@
 package io.fabric8.container.wildfly;
 
 import io.fabric8.api.Constants;
+import io.fabric8.container.wildfly.connector.WildFlyManagementUtils;
 import io.fabric8.spi.AbstractManagedContainer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.remote.JMXConnector;
 
 
 /**
@@ -72,5 +77,13 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
+        String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        if (jmxServiceURL == null)
+            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
+        return WildFlyManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 }
