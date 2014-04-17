@@ -147,7 +147,7 @@ public class ManagedContainerLifecycleTests  {
         // Get the JMX connector through the endpoint
         ServiceEndpointIdentity jmxEndpointId = endpointIds.iterator().next();
         JMXServiceEndpoint jmxEndpoint = container.getServiceEndpoint(jmxEndpointId, JMXServiceEndpoint.class);
-        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 10, TimeUnit.SECONDS);
+        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 20, TimeUnit.SECONDS);
 
         try {
             // Access containers through JMX

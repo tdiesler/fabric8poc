@@ -96,7 +96,7 @@ public final class ManagementUtils {
             } catch (Exception ex) {
                 lastException = ex;
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 } catch (InterruptedException ie) {
                     break;
                 }
