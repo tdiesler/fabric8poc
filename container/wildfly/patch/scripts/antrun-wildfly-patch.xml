@@ -78,7 +78,6 @@
     </copy>
 	
   	<!-- Zip the wildfly patch -->
-  	<zip destfile="${output.dir}/${project.artifactId}-${project.version}.zip" basedir="${wildfly.patch.dir}"/>
   	<tar destfile="${output.dir}/${project.artifactId}-${project.version}.tar.gz" basedir="${wildfly.patch.dir}" compression="gzip"/>
   	
   </target>

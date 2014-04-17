@@ -64,7 +64,7 @@
                                     <groupId>org.apache.tomcat</groupId>
                                     <artifactId>tomcat</artifactId>
                                     <version>${version.apache.tomcat}</version>
-                                    <type>zip</type>
+                                    <type>tar.gz</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>

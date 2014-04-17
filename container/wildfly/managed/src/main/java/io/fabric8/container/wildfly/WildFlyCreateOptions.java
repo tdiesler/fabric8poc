@@ -61,7 +61,7 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
             String projectVersion = properties.getProperty("project.version");
             String wildflyVersion = properties.getProperty("wildfly.version");
             addMavenCoordinates(MavenCoordinates.create("org.wildfly", "wildfly-dist", wildflyVersion, "zip", null));
-            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-container-wildfly-patch", projectVersion, "zip", null));
+            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-container-wildfly-patch", projectVersion, "tar.gz", null));
         }
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);
