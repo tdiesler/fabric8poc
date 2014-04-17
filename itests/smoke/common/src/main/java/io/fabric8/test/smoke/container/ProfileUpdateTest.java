@@ -21,7 +21,7 @@ package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.test.smoke.PortableTestConditionsTests;
+import io.fabric8.test.smoke.TestConditions;
 import io.fabric8.test.smoke.ProfileUpdateTests;
 
 import java.io.InputStream;
@@ -54,7 +54,7 @@ public class ProfileUpdateTest extends ProfileUpdateTests {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("profile-update-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileUpdateTests.class, PortableTestConditionsTests.class);
+        archive.addClasses(ProfileUpdateTests.class, TestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

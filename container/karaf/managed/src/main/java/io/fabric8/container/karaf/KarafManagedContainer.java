@@ -26,7 +26,13 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.remote.JMXConnector;
+
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * The Karaf managed container
@@ -145,5 +151,22 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         processBuilder.directory(karafHome);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
+        JMXConnector connector;
+        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
+            ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(null);
+                connector = super.getJMXConnector(env, timeout, unit);
+            } finally {
+                Thread.currentThread().setContextClassLoader(contextLoader);
+            }
+        } else {
+            connector = super.getJMXConnector(env, timeout, unit);
+        }
+        return connector;
     }
 }

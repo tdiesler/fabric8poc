@@ -32,31 +32,27 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 
 /**
- * Portable test condition
+ * Pre/Post conditions for every test
  *
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class PortableTestConditionsTests {
+public final class TestConditions {
 
-    @Before
-    public void preConditions() {
+    public static void assertPreConditions() {
         ServiceLocator.awaitService(BootstrapComplete.class);
         assertConditions();
     }
 
-    @After
-    public void postConditions() {
+    public static void assertPostConditions() {
         assertConditions();
         ServiceLocator.awaitService(BootstrapComplete.class);
     }
 
-    private void assertConditions() {
+    private static void assertConditions() {
 
         // No registered containers
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);

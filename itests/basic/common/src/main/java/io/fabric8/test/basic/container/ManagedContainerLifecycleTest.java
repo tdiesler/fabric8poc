@@ -17,7 +17,8 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test.basic.karaf;
+package io.fabric8.test.basic.container;
+
 
 
 import io.fabric8.api.Container;
@@ -27,7 +28,7 @@ import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.basic.ManagedContainerLifecycleTests;
-import io.fabric8.test.smoke.PortableTestConditionsTests;
+import io.fabric8.test.smoke.TestConditions;
 
 import java.io.InputStream;
 
@@ -61,7 +62,7 @@ public class ManagedContainerLifecycleTest extends ManagedContainerLifecycleTest
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("managed-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ManagedContainerLifecycleTests.class, PortableTestConditionsTests.class);
+        archive.addClasses(ManagedContainerLifecycleTests.class, TestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

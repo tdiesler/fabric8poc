@@ -43,7 +43,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.resource.Version;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -52,7 +54,17 @@ import org.junit.Test;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ComplexContainerTests extends PortableTestConditionsTests {
+public abstract class ComplexContainerTests  {
+
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        TestConditions.assertPostConditions();
+    }
 
     @Test
     public void testContainersAndProfiles() throws Exception {

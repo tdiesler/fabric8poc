@@ -26,8 +26,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.remote.JMXConnector;
+
+import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 
 
 /**
@@ -37,13 +43,19 @@ import javax.management.remote.JMXConnector;
  */
 public final class WildFlyManagedContainer extends AbstractManagedContainer<WildFlyCreateOptions> {
 
+    // [TODO] provide better wildfly port offset
+    private static final AtomicInteger portOffset = new AtomicInteger();
+
+    private int currentPortOffset;
+
     WildFlyManagedContainer(WildFlyCreateOptions options) {
         super(options);
     }
 
     @Override
     protected void doConfigure() throws Exception {
-        String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:9990";
+        currentPortOffset = portOffset.incrementAndGet();
+        String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + (9990 + currentPortOffset);
         putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
@@ -61,6 +73,8 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
+
+        cmd.add("-Djboss.socket.binding.port-offset=" + currentPortOffset);
 
         String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
@@ -81,9 +95,33 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
 
     @Override
     public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-        String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        if (jmxServiceURL == null)
-            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
-        return WildFlyManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
+        JMXConnector connector;
+        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
+            JmxEnvironmentEnhancer.addClassLoader(env);
+            connector = super.getJMXConnector(env, timeout, unit);
+        } else {
+            String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+            return WildFlyManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
+        }
+        return connector;
+    }
+
+    // Confine the usage of jboss-modules to an additional class - this prevents
+    // NoClassDefFoundError: org/jboss/modules/ModuleLoadException
+    static class JmxEnvironmentEnhancer {
+
+        static void addClassLoader(Map<String, Object> env) {
+            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
+            if (env.get(classLoaderKey) == null) {
+                ClassLoader classLoader;
+                try {
+                    ModuleIdentifier moduleid = ModuleIdentifier.fromString("org.jboss.remoting-jmx");
+                    classLoader = Module.getBootModuleLoader().loadModule(moduleid).getClassLoader();
+                } catch (ModuleLoadException ex) {
+                    throw new IllegalStateException(ex);
+                }
+                env.put(classLoaderKey, classLoader);
+            }
+        }
     }
 }

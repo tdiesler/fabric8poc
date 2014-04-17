@@ -8,16 +8,24 @@
 
     <resources>
         <resource-root path="fabric8-spi-@project.version@.jar"/>
+        <resource-root path="fabric8-container-karaf-managed-@project.version@.jar"/>
+        <resource-root path="fabric8-container-tomcat-managed-@project.version@.jar"/>
+        <resource-root path="fabric8-container-wildfly-managed-@project.version@.jar"/>
     </resources>
 
     <exports>
         <include path="io/fabric8/spi"/>
+        <include path="io/fabric8/container/karaf"/>
+        <include path="io/fabric8/container/tomcat"/>
+        <include path="io/fabric8/container/wildfly"/>
     </exports>
     
     <dependencies>
         <module name="javax.api"/>
         <module name="io.fabric8.api"/>
+        <module name="org.apache.commons.compress"/>
         <module name="org.jboss.gravia"/>
+        <module name="org.jboss.modules"/>
         <module name="org.osgi.core"/>
         <module name="org.osgi.enterprise"/>
         <module name="org.slf4j"/>

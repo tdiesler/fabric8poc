@@ -23,6 +23,12 @@
 package org.wildfly.extension.fabric.service;
 
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ServiceLocator;
+import io.fabric8.container.karaf.KarafContainerCreateHandler;
+import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
+import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
+import io.fabric8.spi.BootstrapComplete;
+import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.SystemProperties;
 
 import java.io.File;
@@ -31,9 +37,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -43,9 +50,7 @@ import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
-import org.jboss.gravia.runtime.ServiceEvent;
-import org.jboss.gravia.runtime.ServiceListener;
-import org.jboss.gravia.runtime.ServiceReference;
+import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.runtime.spi.AbstractModule;
 import org.jboss.gravia.runtime.spi.ClassLoaderEntriesProvider;
 import org.jboss.gravia.runtime.spi.ManifestHeadersProvider;
@@ -75,6 +80,7 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
 
     static final Logger LOGGER = LoggerFactory.getLogger(FabricConstants.class.getPackage().getName());
 
+    private final Set<ServiceRegistration<?>> serviceRegistrations = new HashSet<ServiceRegistration<?>>();
     private final InjectedValue<ModuleContext> injectedModuleContext = new InjectedValue<ModuleContext>();
     private final InjectedValue<Runtime> injectedRuntime = new InjectedValue<Runtime>();
 
@@ -95,23 +101,8 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
 
         // Initialize ConfigurationAdmin content
         Runtime runtime = injectedRuntime.getValue();
+        ModuleContext syscontext = runtime.getModuleContext();
         initConfigurationAdmin(runtime);
-
-        // Start listening on the {@link ContainerManager}
-        final CountDownLatch latch = new CountDownLatch(1);
-        final ModuleContext syscontext = injectedModuleContext.getValue();
-        ServiceListener listener = new ServiceListener() {
-            @Override
-            public void serviceChanged(ServiceEvent event) {
-                if (event.getType() == ServiceEvent.REGISTERED) {
-                    ServiceReference<?> sref = event.getServiceReference();
-                    containerManager = (ContainerManager) syscontext.getService(sref);
-                    syscontext.removeServiceListener(this);
-                    latch.countDown();
-                }
-            }
-        };
-        syscontext.addServiceListener(listener, "(objectClass=" + ContainerManager.class.getName() + ")");
 
         // Install and start this as a {@link Module}
         ModuleClassLoader classLoader = (ModuleClassLoader) getClass().getClassLoader();
@@ -135,14 +126,16 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
             throw new StartException(ex);
         }
 
+        // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
+        Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
+        handlers.add(new KarafContainerCreateHandler());
+        handlers.add(new TomcatContainerCreateHandler());
+        handlers.add(new WildFlyContainerCreateHandler());
+        registerContainerCreateHandlers(syscontext, handlers);
+
         // Wait for the {@link ContainerManager} to come up
-        try {
-            if (!latch.await(5, TimeUnit.SECONDS)) {
-                throw new StartException("Cannot obtain ContainerManager");
-            }
-        } catch (InterruptedException ex) {
-            // ignore
-        }
+        ServiceLocator.awaitService(BootstrapComplete.class, 10, TimeUnit.SECONDS);
+        containerManager = ServiceLocator.getRequiredService(ContainerManager.class);
 
         // FuseFabric banner message
         Properties brandingProperties = new Properties();
@@ -158,6 +151,10 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
 
     @Override
     public void stop(StopContext context) {
+        // Unregister system services
+        for (ServiceRegistration<?> sreg : serviceRegistrations) {
+            sreg.unregister();
+        }
         // Uninstall the bootstrap module
         if (module != null) {
             module.uninstall();
@@ -167,6 +164,13 @@ public class FabricBootstrapService extends AbstractService<ContainerManager> {
     @Override
     public ContainerManager getValue() throws IllegalStateException {
         return containerManager;
+    }
+
+    private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
+        for (ContainerCreateHandler handler : handlers) {
+            String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
+            serviceRegistrations.add(context.registerService(classes, handler, null));
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

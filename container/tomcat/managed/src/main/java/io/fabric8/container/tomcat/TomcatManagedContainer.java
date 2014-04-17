@@ -23,6 +23,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.remote.JMXConnector;
+
+import org.jboss.gravia.runtime.RuntimeType;
 
 
 /**
@@ -78,6 +84,23 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
         startProcess(processBuilder);
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
+        JMXConnector connector;
+        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
+            ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(null);
+                connector = super.getJMXConnector(env, timeout, unit);
+            } finally {
+                Thread.currentThread().setContextClassLoader(contextLoader);
+            }
+        } else {
+            connector = super.getJMXConnector(env, timeout, unit);
+        }
+        return connector;
     }
 
     private int activeJMXPort() {

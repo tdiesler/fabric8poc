@@ -23,7 +23,7 @@ package io.fabric8.test.smoke.container;
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.smoke.BasicContainerLifecycleTests;
-import io.fabric8.test.smoke.PortableTestConditionsTests;
+import io.fabric8.test.smoke.TestConditions;
 
 import java.io.InputStream;
 
@@ -55,7 +55,7 @@ public class BasicContainerLifecycleTest extends BasicContainerLifecycleTests {
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("basic-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(BasicContainerLifecycleTests.class, PortableTestConditionsTests.class);
+        archive.addClasses(BasicContainerLifecycleTests.class, TestConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

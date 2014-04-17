@@ -35,7 +35,7 @@ import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.SystemProperties;
-import io.fabric8.test.smoke.PortableTestConditionsTests;
+import io.fabric8.test.smoke.TestConditions;
 
 import java.io.IOException;
 import java.util.Set;
@@ -46,7 +46,9 @@ import javax.management.remote.JMXConnector;
 
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -55,7 +57,17 @@ import org.junit.Test;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ManagedContainerLifecycleTests extends PortableTestConditionsTests {
+public class ManagedContainerLifecycleTests  {
+
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        TestConditions.assertPostConditions();
+    }
 
     @Test
     public void testManagedKaraf() throws Exception {
@@ -63,7 +75,7 @@ public class ManagedContainerLifecycleTests extends PortableTestConditionsTests 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new KarafContainerBuilder().setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = new KarafContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.addIdentity("cntKaraf").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
@@ -86,7 +98,7 @@ public class ManagedContainerLifecycleTests extends PortableTestConditionsTests 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new TomcatContainerBuilder().setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = new TomcatContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.addIdentity("cntTomcat").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
@@ -109,7 +121,7 @@ public class ManagedContainerLifecycleTests extends PortableTestConditionsTests 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new WildFlyContainerBuilder().setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = new WildFlyContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.addIdentity("cntWildFly").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);

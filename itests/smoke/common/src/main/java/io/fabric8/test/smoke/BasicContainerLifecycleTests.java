@@ -29,7 +29,9 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.DefaultContainerBuilder;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -38,7 +40,17 @@ import org.junit.Test;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class BasicContainerLifecycleTests extends PortableTestConditionsTests {
+public abstract class BasicContainerLifecycleTests  {
+
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        TestConditions.assertPostConditions();
+    }
 
     @Test
     public void testContainerLifecycle() throws Exception {

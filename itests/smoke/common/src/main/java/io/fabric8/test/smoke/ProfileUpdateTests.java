@@ -54,7 +54,9 @@ import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -63,7 +65,17 @@ import org.junit.Test;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileUpdateTests extends PortableTestConditionsTests {
+public abstract class ProfileUpdateTests  {
+
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        TestConditions.assertPostConditions();
+    }
 
     @Test
     public void testProfileUpdate() throws Exception {

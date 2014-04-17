@@ -41,6 +41,12 @@
             <artifactId>fabric8-container-wildfly-connector</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- Provided Dependencies -->
+        <dependency>
+            <groupId>org.jboss.modules</groupId>
+            <artifactId>jboss-modules</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -59,6 +65,10 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Activator>org.jboss.gravia.runtime.ModuleActivatorBridge</Bundle-Activator>
                         <Module-Activator>io.fabric8.container.wildfly.internal.WildFlyContainerActivator</Module-Activator>
+                        <Import-Package>
+                            !org.jboss.modules,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

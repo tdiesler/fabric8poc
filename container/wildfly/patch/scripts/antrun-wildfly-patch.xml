@@ -38,7 +38,7 @@
         <fileset dir="${etc.dir}/wildfly" />
 		<filterset>
 	        <filter token="project.version" value="${project.version}" />
-	        <filter token="karaf.version" value="${karaf-version}" />
+	        <filter token="compress.version" value="${version.apache.commons.compress}" />
       	</filterset>
     </copy>
   	
@@ -48,15 +48,23 @@
     </copy>
   	
   	<!-- Copy module resources -->
-    <!--copy todir="${wildfly.patch.dir}/modules/org/apache/karaf/main" overwrite="true">
+    <copy todir="${wildfly.patch.dir}/modules/org/apache/commons/compress/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
+        	<include name="commons-compress-*"/>
         </fileset>
-    </copy-->
+    </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/api/main" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-api-*.jar" />
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="fabric8-api-*"/>
+        </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/spi/main" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-spi-*.jar" />
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="fabric8-spi-*"/>
+        	<include name="fabric8-container-karaf-managed-*"/>
+        	<include name="fabric8-container-tomcat-managed-*"/>
+            <include name="fabric8-container-wildfly-managed-*"/>
+        </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/service/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
@@ -64,7 +72,9 @@
         </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/org/wildfly/extension/fabric/main" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-container-wildfly-extension-${project.version}.jar" />
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="fabric8-container-wildfly-extension-*"/>
+        </fileset>
     </copy>
 	
   	<!-- Zip the wildfly patch -->

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -54,13 +55,19 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ConcurrentConfigurationTests extends PortableTestConditionsTests {
+public abstract class ConcurrentConfigurationTests  {
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Exception lastException;
 
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
     @After
-    public void tearDown() throws Exception {
+    public void postConditions() throws Exception {
+        TestConditions.assertPostConditions();
         executor.shutdown();
         Assert.assertTrue("Terminated in time", executor.awaitTermination(10, TimeUnit.SECONDS));
     }

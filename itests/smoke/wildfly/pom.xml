@@ -29,6 +29,12 @@
 
     <name>Fabric8 :: Testsuite :: Smoke :: WildFly</name>
 
+    <!-- Properties -->
+    <properties>
+        <jboss.home>${project.build.directory}/wildfly-${version.jboss.wildfly}</jboss.home>
+    </properties>
+    
+    <!-- Dependencies -->
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
@@ -52,9 +58,8 @@
         
         <!-- Test Dependencies -->
         <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-wildfly-managed</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -63,18 +68,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-arquillian-container-managed</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.arquillian.testenricher</groupId>
             <artifactId>arquillian-testenricher-osgi</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -104,6 +99,14 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>${version.jboss.wildfly}</version>
+                                    <type>zip</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
                                     <artifactId>fabric8-container-wildfly-patch</artifactId>
                                     <version>${project.version}</version>
@@ -112,24 +115,6 @@
                                     <outputDirectory>${jboss.home}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <inherited>false</inherited>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>process-test-resources</phase>
-                        <configuration>
-                            <target>
-                                <copy file="src/test/resources/application-users.properties" todir="${jboss.home}/standalone/configuration" overwrite="true" />
-                                <copy file="src/test/resources/application-roles.properties" todir="${jboss.home}/standalone/configuration" overwrite="true" />
-                            </target>
                         </configuration>
                     </execution>
                 </executions>
@@ -151,58 +136,4 @@
             </plugin>
         </plugins>
     </build>
-    
-    <!-- Profiles -->
-    <profiles>
-        <profile>
-            <id>wildfly-stable</id>
-            <activation>
-                <property>
-                    <name>!wfsnap</name>
-                </property>
-            </activation>
-            <properties>
-                <jboss.home>${project.build.directory}/wildfly-${version.jboss.wildfly}</jboss.home>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>unpack-wildfly</id>
-                                <phase>process-test-resources</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>org.wildfly</groupId>
-                                            <artifactId>wildfly-dist</artifactId>
-                                            <version>${version.jboss.wildfly}</version>
-                                            <type>zip</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>wildfly-snapshot</id>
-            <activation>
-                <property>
-                    <name>wfsnap</name>
-                </property>
-            </activation>
-            <properties>
-                <jboss.home>${basedir}/../../../../wildfly/build/target/wildfly-${version.jboss.wildfly}</jboss.home>
-            </properties>
-        </profile>
-    </profiles>
 </project>

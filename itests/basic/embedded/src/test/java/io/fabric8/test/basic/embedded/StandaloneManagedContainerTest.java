@@ -24,6 +24,7 @@ import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.ManagedContainer;
 import io.fabric8.spi.ManagedContainerBuilder;
 import io.fabric8.spi.utils.ManagementUtils;
+import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,9 @@ import java.util.concurrent.TimeUnit;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -41,6 +44,16 @@ import org.junit.Test;
  * @since 26-Feb-2014
  */
 public class StandaloneManagedContainerTest {
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        EmbeddedTestSupport.beforeClass();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        EmbeddedTestSupport.afterClass();
+    }
 
     @Test
     @SuppressWarnings({ "rawtypes" })

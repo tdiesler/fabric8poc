@@ -123,6 +123,7 @@ public class FabricTomcatActivator implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
+        // Unregister system services
         for (ServiceRegistration<?> sreg : serviceRegistrations) {
             sreg.unregister();
         }

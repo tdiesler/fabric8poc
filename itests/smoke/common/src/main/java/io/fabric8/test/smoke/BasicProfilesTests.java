@@ -34,7 +34,9 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -43,7 +45,17 @@ import org.junit.Test;
  * @author Thomas.Diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class BasicProfilesTests extends PortableTestConditionsTests {
+public abstract class BasicProfilesTests  {
+
+    @Before
+    public void preConditions() {
+        TestConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        TestConditions.assertPostConditions();
+    }
 
     @Test
     public void testProfileAddRemove() throws Exception {
