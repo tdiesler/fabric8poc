@@ -146,7 +146,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 if (identities.isEmpty() || event.getType() != ProfileEvent.EventType.UPDATED)
                     return;
 
-                Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+                PermitManager permitManager = ServiceLocator.getRequiredService(PermitManager.class);
+                Permit<ContainerService> permit = permitManager.aquirePermit(ContainerService.PERMIT, false);
                 try {
                     ContainerServiceImpl service = (ContainerServiceImpl) permit.getInstance();
                     ProfileIdentity profileId = profile.getIdentity();

@@ -21,11 +21,9 @@ package io.fabric8.spi.permit;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -91,10 +89,8 @@ public final class DefaultPermitManager implements PermitManager {
 
         private final Semaphore semaphore = new Semaphore(0);
         private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock(true);
-        private final AtomicReference<CountDownLatch> deactivationLatch = new AtomicReference<CountDownLatch>();
         private final AtomicReference<T> activeInstance = new AtomicReference<T>();
         private final AtomicBoolean exclusiveLock = new AtomicBoolean();
-        private final AtomicInteger usageCount = new AtomicInteger();
         private final AtomicBoolean active = new AtomicBoolean();
         private final PermitKey<T> key;
 
@@ -108,27 +104,42 @@ public final class DefaultPermitManager implements PermitManager {
 
             LOGGER.debug("activating: {}",  key);
 
-            deactivationLatch.set(new CountDownLatch(0));
             activeInstance.set(instance);
-            exclusiveLock.set(false);
             semaphore.release(1);
         }
 
-        Permit<T> acquire(boolean exclusive, long timeout, TimeUnit unit) {
+        Permit<T> acquire(final boolean exclusive, long timeout, TimeUnit unit) {
 
-            final String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
             final String exclstr = exclusive ? " exclusive" : "";
-            LOGGER.trace("aquiring" + exclstr + timestr + ": {}", key);
+            if (LOGGER.isTraceEnabled()) {
+                String timestr = unit != null ? " in " + unit.toMillis(timeout) + "ms" : "";
+                LOGGER.trace("aquiring" + exclstr + timestr + ": {}", key);
+            }
 
+            // A Permit has a single semaphore permit - get it
+            // Once we pass this, no other thread can get passed here
+            // Same happens in deactivate, so no two threads can activate/deactivate at the same time
             getSinglePermit(timeout, unit);
+
+            // Get a reference to the instance that is currently
+            // associated with this Permit
+            final T instance = activeInstance.get();
 
             final Lock lock;
             if (exclusive) {
+                // For an exclusive Permit we aquire a write-lock
+                // This will block until all readers/writers have returned their locks
+                // We do not release the semaphore permit, this will get done when the exclusive Permit is released
                 lock = writeLock(timeout, unit);
                 exclusiveLock.set(true);
             } else {
+                // For an non-exclusive Permit we aquire a read-lock
+                // This will block until a writer returns its lock
+                // Multiple readers can get passed this
+                // We do release the semaphore permit
                 lock = readLock(timeout, unit);
-                usageCount.incrementAndGet();
+
+                // Release the single semahore permit
                 semaphore.release(1);
             }
 
@@ -143,18 +154,21 @@ public final class DefaultPermitManager implements PermitManager {
 
                 @Override
                 public T getInstance() {
-                    return activeInstance.get();
+                    return instance;
                 }
 
                 @Override
                 public void release() {
                     LOGGER.trace("releasing" + exclstr + ": {}", key);
-                    deactivationLatch.get().countDown();
-                    int usage = usageCount.decrementAndGet();
-                    if (usage > 0) {
-                        LOGGER.trace("remaining: {} => [{}]", key, usage);
-                    }
+
+                    // Always unlock the read/write lock
                     lock.unlock();
+
+                    // Release the semaphore permit for a writer
+                    if (exclusive) {
+                        exclusiveLock.set(false);
+                        semaphore.release(1);
+                    }
                 }
             };
         }
@@ -163,33 +177,31 @@ public final class DefaultPermitManager implements PermitManager {
 
             LOGGER.trace("deactivating: {}",  key);
 
+            // Deactivate on an already inactive Permit has no effect
             if (!active.get()) {
                 LOGGER.trace("not active: {}",  key);
                 return;
             }
 
+            // Deactivating while holding an exclusive lock
             if (exclusiveLock.get()) {
-                LOGGER.debug("deactivated: {}",  key);
+                LOGGER.debug("deactivated (exclusive): {}",  key);
                 active.set(false);
                 return;
             }
 
+            // A Permit has a single semaphore permit - get it
+            // Once we pass this, no other thread can get passed here
+            // Same happens in aquire, so no two threads can activate/deactivate at the same time
             getSinglePermit(timeout, unit);
 
-            boolean success;
+            // Deactivation requires a write-lock
+            // We do not release the semaphore permit - this happens in activate
             try {
-                int usage = usageCount.get();
-                deactivationLatch.set(new CountDownLatch(usage));
-                LOGGER.trace("waiting: {} => [{}]",  key, usage);
-                success = deactivationLatch.get().await(timeout, unit);
-            } catch (InterruptedException ex) {
-                success = false;
-            }
-
-            if (success) {
+                writeLock(timeout, unit).unlock();
                 LOGGER.debug("deactivated: {}",  key);
                 active.set(false);
-            } else {
+            } catch (PermitStateTimeoutException ex) {
                 semaphore.release(1);
                 throw new PermitStateTimeoutException("Cannot deactivate state [" + key.getName() + "] in time", key, timeout, unit);
             }
