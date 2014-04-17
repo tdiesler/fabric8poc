@@ -33,34 +33,9 @@
     <modules>
         <module>common</module>
         <module>embedded</module>
+        <module>karaf</module>
+        <module>tomcat</module>
+        <module>wildfly</module>
     </modules>
     
-    <profiles>
-        <profile>
-            <id>all</id>
-            <modules>
-                <module>karaf</module>
-                <module>tomcat</module>
-                <module>wildfly</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>karaf</id>
-            <modules>
-                <module>karaf</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>tomcat</id>
-            <modules>
-                <module>tomcat</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>wildfly</id>
-            <modules>
-                <module>wildfly</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>

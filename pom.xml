@@ -486,6 +486,7 @@
 
     <!-- Modules -->
     <modules>
+        <module>container</module>
         <module>fabric</module>
         <module>itests</module>
     </modules>
@@ -514,30 +515,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>all</id>
-            <modules>
-                <module>container</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>karaf</id>
-            <modules>
-                <module>container</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>tomcat</id>
-            <modules>
-                <module>container</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>wildfly</id>
-            <modules>
-                <module>container</module>
-            </modules>
         </profile>
     </profiles>
 </project>
