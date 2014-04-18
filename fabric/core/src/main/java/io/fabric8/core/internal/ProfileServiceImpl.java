@@ -43,6 +43,7 @@ import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -148,8 +149,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         final WriteLock writeLock;
         synchronized (profileVersions) {
             ReentrantReadWriteLock lock = profileVersionLocks.get(version);
-            if (lock == null)
-                throw new IllegalStateException("Cannot obtain write lock for: " + version);
+            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain write lock for: " + version);
 
             writeLock = lock.writeLock();
         }
@@ -160,8 +160,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         } catch (InterruptedException ex) {
             success = false;
         }
-        if (!success)
-            throw new IllegalStateException("Cannot obtain write lock in time for: " + version);
+        IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + version);
 
         return new LockHandle() {
             @Override
@@ -175,8 +174,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         final ReadLock readLock;
         synchronized (profileVersions) {
             ReentrantReadWriteLock lock = profileVersionLocks.get(version);
-            if (lock == null)
-                throw new IllegalStateException("Cannot obtain read lock for: " + version);
+            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain read lock for: " + version);
 
             readLock = lock.readLock();
         }
@@ -187,8 +185,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         } catch (InterruptedException ex) {
             success = false;
         }
-        if (!success)
-            throw new IllegalStateException("Cannot obtain read lock in time for: " + version);
+        IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + version);
 
         return new LockHandle() {
             @Override
@@ -261,8 +258,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LOGGER.info("Add profile version: {}", versionState);
         synchronized (profileVersions) {
             Version identity = version.getIdentity();
-            if (profileVersions.get(identity) != null)
-                throw new IllegalStateException("ProfileVersion already exists: " + identity);
+            IllegalStateAssertion.assertTrue(profileVersions.get(identity) == null, "ProfileVersion already exists: " + identity);
 
             profileVersionLocks.put(identity, new ReentrantReadWriteLock());
             profileVersions.put(identity, versionState);
@@ -276,8 +272,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle writeLock = aquireWriteLock(version);
         try {
             Set<ContainerIdentity> containers = getRequiredProfileVersion(version).getContainerIdentities();
-            if (!containers.isEmpty())
-                throw new IllegalStateException("Cannot remove profile version used by: " + containers);
+            IllegalStateAssertion.assertTrue(containers.isEmpty(), "Cannot remove profile version used by: " + containers);
 
             synchronized (profileVersions) {
                 ProfileVersionState versionState = profileVersions.remove(version);
@@ -337,9 +332,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         } finally {
             readLock.unlock();
         }
-        if (identities != null && result.size() != identities.size()) {
-            throw new IllegalStateException("Cannot obtain the full set of given profiles: " + identities);
-        }
+        IllegalStateAssertion.assertTrue(identities == null || result.size() == identities.size(), "Cannot obtain the full set of given profiles: " + identities);
         return Collections.unmodifiableSet(result);
     }
 
@@ -354,8 +347,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             ProfileIdentity identity = profile.getIdentity();
-            if (versionState.getProfileState(identity) != null)
-                throw new IllegalStateException("Profile already exists: " + identity);
+            IllegalStateAssertion.assertTrue(versionState.getProfileState(identity) == null, "Profile already exists: " + identity);
 
             Set<ProfileState> profileParents = getProfileParents(versionState, profile);
             ProfileState profileState = new ProfileState(versionState, profile, profileParents);
@@ -371,8 +363,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Set<ProfileState> result = new HashSet<ProfileState>();
         for (ProfileIdentity profid : profile.getParents()) {
             ProfileState pstate = versionState.getRequiredProfile(profid);
-            if (pstate == null)
-                throw new IllegalStateException("Cannot obtain parent profile: " + profid);
+            IllegalStateAssertion.assertNotNull(pstate, "Cannot obtain parent profile: " + profid);
             result.add(pstate);
         }
         return Collections.unmodifiableSet(result);
@@ -385,8 +376,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             ProfileVersionState versionState = getRequiredProfileVersion(version);
             Set<ContainerIdentity> containers = versionState.getRequiredProfile(identity).getContainers();
-            if (!containers.isEmpty())
-                throw new IllegalStateException("Cannot remove profile used by: " + containers);
+            IllegalStateAssertion.assertTrue(containers.isEmpty(), "Cannot remove profile used by: " + containers);
 
             LOGGER.info("Remove profile from version: {} => {}", versionState, identity);
             ProfileState profileState = versionState.removeProfile(identity);
@@ -474,8 +464,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private ProfileVersionState getRequiredProfileVersion(Version version) {
         ProfileVersionState versionState = profileVersions.get(version);
-        if (versionState == null)
-            throw new IllegalStateException("Cannot obtain profile version: " + version);
+        IllegalStateAssertion.assertNotNull(versionState, "Cannot obtain profile version: " + version);
         return versionState;
     }
 
@@ -567,8 +556,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         ProfileState getRequiredProfile(ProfileIdentity profid) {
             ProfileState profileState = getProfileState(profid);
-            if (profileState == null)
-                throw new IllegalStateException("Cannot obtain profile state: " + identity + "/" + profid);
+            IllegalStateAssertion.assertNotNull(profileState, "Cannot obtain profile state: " + identity + "/" + profid);
             return profileState;
         }
 

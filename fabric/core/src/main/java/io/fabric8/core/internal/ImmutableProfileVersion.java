@@ -34,6 +34,14 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
+/**
+ * An immutable profile version
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 18-Mar-2014
+ *
+ * @Immutable
+ */
 final class ImmutableProfileVersion implements ProfileVersion {
 
     private final Version identity;

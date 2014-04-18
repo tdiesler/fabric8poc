@@ -35,6 +35,10 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
 
     private String serverConfig = DEFAULT_SERVER_CONFIG;
 
+    WildFlyCreateOptions() {
+        setIdentityPrefix("WildFlyManagedContainer");
+    }
+
     @Override
     public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
         return WildFlyContainerCreateHandler.class;

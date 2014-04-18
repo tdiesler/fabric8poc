@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi.permit;
 
+import io.fabric8.spi.utils.IllegalStateAssertion;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -99,8 +101,8 @@ public final class DefaultPermitManager implements PermitManager {
         }
 
         void activate(T instance) {
-            if (!active.compareAndSet(false, true))
-                throw new IllegalStateException("Cannot activate an already active state");
+            boolean nowactive = active.compareAndSet(false, true);
+            IllegalStateAssertion.assertTrue(nowactive, "Cannot activate an already active state");
 
             LOGGER.debug("activating: {}",  key);
 

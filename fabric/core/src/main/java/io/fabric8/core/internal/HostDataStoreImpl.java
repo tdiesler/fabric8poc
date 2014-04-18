@@ -19,27 +19,32 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ProfileVersionBuilderFactory;
-import io.fabric8.spi.DefaultProfileVersionBuilder;
+import java.util.concurrent.atomic.AtomicLong;
+
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.spi.HostDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
 
+import org.jboss.gravia.utils.NotNullException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 
 /**
- * A provider service for the {@link ProfileVersionBuilderFactory}
+ * A host wide data store
  *
  * @author Thomas.Diesler@jboss.com
- * @since 18-Mar-2014
+ * @since 18-Apr-2014
  */
-@Component(service = { ProfileVersionBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class ProfileVersionBuilderService extends AbstractComponent implements ProfileVersionBuilderFactory {
+@Component(service = { HostDataStore.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+public final class HostDataStoreImpl extends AbstractComponent implements HostDataStore {
+
+    // [TODO] Real host wide identities
+    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
 
     @Activate
-    void activate() throws Exception {
+    void activate() {
         activateComponent();
     }
 
@@ -49,8 +54,8 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
     }
 
     @Override
-    public ProfileVersionBuilder create() {
-        assertValid();
-        return new DefaultProfileVersionBuilder();
+    public ContainerIdentity createManagedContainerIdentity(String prefix) {
+        NotNullException.assertValue(prefix, "prefix");
+        return ContainerIdentity.create(prefix + "#" + uniqueTokenGenerator.incrementAndGet());
     }
 }

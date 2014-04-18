@@ -18,9 +18,11 @@ package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Constants;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
-import io.fabric8.api.Container.State;
+import io.fabric8.api.ServiceLocator;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
@@ -31,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 
 import javax.management.remote.JMXConnector;
@@ -57,9 +58,6 @@ import org.jboss.gravia.utils.NotNullException;
  */
 public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {
 
-    // [TODO] provide better unique identity
-    private static final AtomicInteger instanceCount = new AtomicInteger();
-
     private final AttributeSupport attributes = new AttributeSupport();
     private final MavenDelegateRepository mavenRepository;
     private final ContainerIdentity identity;
@@ -71,7 +69,8 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     protected AbstractManagedContainer(C options) {
         NotNullException.assertValue(options, "options");
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
-        this.identity = ContainerIdentity.create(options.getSymbolicName() + "#" + instanceCount.incrementAndGet());
+        HostDataStore dataStore = ServiceLocator.getRequiredService(HostDataStore.class);
+        this.identity = dataStore.createManagedContainerIdentity(options.getIdentityPrefix());
         this.createOptions = options;
     }
 
@@ -115,21 +114,17 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     @Override
     public final synchronized void create() {
-        if (state != null)
-            throw new IllegalStateException("Cannot create container in state: " + state);
+        IllegalStateAssertion.assertTrue(state == null, "Cannot create container in state: " + state);
 
         File targetDir = getCreateOptions().getTargetDirectory();
-        if (!targetDir.isDirectory() && !targetDir.mkdirs())
-            throw new IllegalStateException("Cannot create target dir: " + targetDir);
+        IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create target dir: " + targetDir);
 
         for (MavenCoordinates artefact : getCreateOptions().getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
-            if (resource == null)
-                throw new IllegalStateException("Cannot find maven resource: " + artefact);
+            IllegalStateAssertion.assertNotNull(resource, "Cannot find maven resource: " + artefact);
 
             ResourceContent resourceContent = resource.adapt(ResourceContent.class);
-            if (resourceContent == null)
-                throw new IllegalStateException("Cannot obtain resource content for: " + artefact);
+            IllegalStateAssertion.assertNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
 
             try {
                 ArchiveInputStream ais;
@@ -151,9 +146,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
                     }
                     if (!entry.isDirectory()) {
                         File parentDir = targetFile.getParentFile();
-                        if (!parentDir.exists() && !parentDir.mkdirs()) {
-                            throw new IllegalStateException("Cannot create target directory: " + parentDir);
-                        }
+                        IllegalStateAssertion.assertTrue(parentDir.exists() || parentDir.mkdirs(), "Cannot create target directory: " + parentDir);
 
                         FileOutputStream fos = new FileOutputStream(targetFile);
                         IOUtils.copy(ais, fos);
@@ -253,14 +246,12 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     protected JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
         String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        if (jmxServiceURL == null)
-            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 
     private void assertNotDestroyed() {
-        if (state == State.DESTROYED)
-            throw new IllegalStateException("Cannot start container in state: " + state);
+        IllegalStateAssertion.assertFalse(state == State.DESTROYED, "Cannot start container in state: " + state);
     }
 
     protected void doConfigure() throws Exception {

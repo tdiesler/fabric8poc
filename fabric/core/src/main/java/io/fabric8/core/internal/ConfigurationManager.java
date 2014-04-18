@@ -43,6 +43,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Provides an abstraction and convenience around {@link ConfigurationAdmin}
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 @Component(service = { ConfigurationManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class ConfigurationManager extends AbstractComponent {
 
@@ -60,16 +66,12 @@ public final class ConfigurationManager extends AbstractComponent {
         deactivateComponent();
     }
 
-    void applyConfigurationItems(Set<ConfigurationProfileItem> configItems) {
+    void applyConfigurationItems(Set<ConfigurationProfileItem> items) {
         assertValid();
-        applyConfigurationItems(configAdmin.get(), configItems);
-    }
-
-    private void applyConfigurationItems(ConfigurationAdmin configAdmin, Set<ConfigurationProfileItem> items) {
         for (ConfigurationProfileItem item : items) {
             LOGGER.info("Apply configuration item: {}", item);
             try {
-                Configuration config = configAdmin.getConfiguration(item.getIdentity(), null);
+                Configuration config = configAdmin.get().getConfiguration(item.getIdentity(), null);
                 Map<String, Object> prevConfig = toMap(config.getProperties());
                 Map<String, Object> nextConfig = item.getConfiguration();
                 if (needsUpdate(prevConfig, nextConfig)) {

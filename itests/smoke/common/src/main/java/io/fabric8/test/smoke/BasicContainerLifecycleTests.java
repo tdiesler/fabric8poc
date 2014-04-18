@@ -56,29 +56,29 @@ public abstract class BasicContainerLifecycleTests  {
     public void testContainerLifecycle() throws Exception {
 
         DefaultContainerBuilder builder = new DefaultContainerBuilder();
-        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
+        CreateOptions options = builder.getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cntA = cntManager.createContainer(options);
-        ContainerIdentity idA = cntA.getIdentity();
+        ContainerIdentity cntIdA = cntA.getIdentity();
 
-        Assert.assertEquals("cntA", idA.getSymbolicName());
+        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("Container#"));
         Assert.assertSame(State.CREATED, cntA.getState());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertNull("Null profile version", cntA.getProfileVersion());
 
-        cntA = cntManager.startContainer(idA, null);
+        cntA = cntManager.startContainer(cntIdA, null);
         Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
-        cntA = cntManager.stopContainer(idA);
+        cntA = cntManager.stopContainer(cntIdA);
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = cntManager.destroyContainer(idA);
+        cntA = cntManager.destroyContainer(cntIdA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         try {
-            cntManager.startContainer(idA, null);
+            cntManager.startContainer(cntIdA, null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
             // expected

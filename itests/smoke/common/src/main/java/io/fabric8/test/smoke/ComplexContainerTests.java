@@ -74,12 +74,12 @@ public abstract class ComplexContainerTests  {
 
         // Create parent container
         DefaultContainerBuilder builder = new DefaultContainerBuilder();
-        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
+        CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
         ContainerIdentity idParent = cntParent.getIdentity();
-        Assert.assertEquals("cntA", idParent.getSymbolicName());
+        Assert.assertTrue(idParent.getSymbolicName().startsWith("cntA#"));
 
         // Start the parent container
         cntParent = cntManager.startContainer(idParent, null);
@@ -193,12 +193,13 @@ public abstract class ComplexContainerTests  {
 
         // Create child container
         builder = new DefaultContainerBuilder();
-        options = builder.addIdentity("cntB").getCreateOptions();
+        options = builder.addIdentityPrefix("cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity
         ContainerIdentity idChild = cntChild.getIdentity();
-        Assert.assertEquals("cntA:cntB", idChild.getSymbolicName());
+        Assert.assertTrue(idChild.getSymbolicName().startsWith("cntA"));
+        Assert.assertTrue(idChild.getSymbolicName().indexOf(":cntB") > 0);
 
         // Start the child container
         cntChild = cntManager.startContainer(idChild, null);

@@ -26,16 +26,17 @@ import org.jboss.gravia.utils.NotNullException;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 public abstract class AbstractCreateOptions implements CreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
-    private String symbolicName;
+    private String identityPrefix = "Container";
     private boolean immutable;
 
     @Override
-    public String getSymbolicName() {
-        return symbolicName;
+    public String getIdentityPrefix() {
+        return identityPrefix;
     }
 
     @Override
@@ -59,26 +60,26 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     }
 
     protected void validateConfiguration() {
-        NotNullException.assertValue(symbolicName, "symbolicName");
+        IllegalStateAssertion.assertNotNull(identityPrefix, "Identity prefix cannot be null");
     }
 
-    // Setters are package protected
+    // Setters are protected
 
-    void setSymbolicName(String symbolicName) {
-        this.symbolicName = symbolicName;
+    protected void setIdentityPrefix(String prefix) {
+        NotNullException.assertValue(prefix, "prefix");
+        this.identityPrefix = prefix;
     }
 
-    <T> void putAttribute(AttributeKey<T> key, T value) {
+    protected <T> void putAttribute(AttributeKey<T> key, T value) {
         attributes.putAttribute(key, value);
+    }
+
+    protected void assertMutable() {
+        IllegalStateAssertion.assertFalse(immutable, "Configuration is immutable");
     }
 
     void makeImmutable() {
         assertMutable();
         immutable = true;
-    }
-
-    protected void assertMutable() {
-        if (immutable)
-            throw new IllegalStateException("Configuration is immutable");
     }
 }

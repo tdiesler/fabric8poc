@@ -47,24 +47,26 @@ public final class ManagementUtils {
     }
 
     public static <T> T getMBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException {
+        T mbeanProxy = null;
         long end = System.currentTimeMillis() + 10000L;
-        while (System.currentTimeMillis() < end) {
+        while (mbeanProxy == null && System.currentTimeMillis() < end) {
             if (server.isRegistered(oname)) {
-                return MBeanProxy.get(server, oname, type);
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                break;
+                mbeanProxy = MBeanProxy.get(server, oname, type);
+            } else {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    break;
+                }
             }
         }
-        throw new IllegalStateException("Cannot obtain MBean proxy for: " + oname);
+        IllegalStateAssertion.assertNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
+        return mbeanProxy;
     }
 
     public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
         String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        if (jmxServiceURL == null)
-            throw new IllegalStateException("Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
     }
 
@@ -102,9 +104,7 @@ public final class ManagementUtils {
                 }
             }
         }
-        if (connector == null) {
-            throw new IllegalStateException("Cannot obtain JMXConnector for: " + jmxServiceURL, lastException);
-        }
+        IllegalStateAssertion.assertNotNull(connector, "Cannot obtain JMXConnector for: " + jmxServiceURL, lastException);
         return connector;
     }
 }

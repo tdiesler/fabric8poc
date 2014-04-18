@@ -25,6 +25,7 @@ import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * A registry of stateful {@link Container} instances
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 18-Mar-2014
+ */
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
@@ -67,8 +74,7 @@ public final class ContainerRegistry extends AbstractComponent {
         synchronized (containers) {
             cntState = getRequiredContainer(identity);
             ReentrantReadWriteLock lock = containerLocks.get(identity);
-            if (lock == null)
-                throw new IllegalStateException("Cannot obtain write lock for: " + identity);
+            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain write lock for: " + identity);
 
             writeLock = lock.writeLock();
         }
@@ -79,8 +85,7 @@ public final class ContainerRegistry extends AbstractComponent {
         } catch (InterruptedException ex) {
             success = false;
         }
-        if (!success)
-            throw new IllegalStateException("Cannot obtain write lock in time for: " + identity);
+        IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + identity);
 
         final LockHandle versionLock;
         Version version = cntState.getProfileVersion();
@@ -110,8 +115,7 @@ public final class ContainerRegistry extends AbstractComponent {
         final ReadLock readLock;
         synchronized (containers) {
             ReentrantReadWriteLock lock = containerLocks.get(identity);
-            if (lock == null)
-                throw new IllegalStateException("Cannot obtain read lock for: " + identity);
+            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain read lock for: " + identity);
 
             readLock = lock.readLock();
         }
@@ -122,8 +126,7 @@ public final class ContainerRegistry extends AbstractComponent {
         } catch (InterruptedException ex) {
             success = false;
         }
-        if (!success)
-            throw new IllegalStateException("Cannot obtain read lock in time for: " + identity);
+        IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + identity);
 
         return new LockHandle() {
             @Override
@@ -158,8 +161,7 @@ public final class ContainerRegistry extends AbstractComponent {
         assertValid();
         synchronized (containers) {
             ContainerIdentity identity = cntState.getIdentity();
-            if (getContainerInternal(identity) != null)
-                throw new IllegalStateException("Container already exists: " + identity);
+            IllegalStateAssertion.assertTrue(getContainerInternal(identity) == null, "Container already exists: " + identity);
 
             if (parentState != null) {
                 parentState.addChild(cntState);
@@ -186,8 +188,7 @@ public final class ContainerRegistry extends AbstractComponent {
     ContainerState getRequiredContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState container = getContainerInternal(identity);
-        if (container == null)
-            throw new IllegalStateException("Container not registered: " + identity);
+        IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
         return container;
     }
 

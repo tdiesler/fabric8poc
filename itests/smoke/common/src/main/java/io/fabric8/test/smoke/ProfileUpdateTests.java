@@ -164,16 +164,16 @@ public abstract class ProfileUpdateTests  {
 
         // Create container cntA
         DefaultContainerBuilder cntBuilder = new DefaultContainerBuilder();
-        CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
+        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
 
         // Verify cntA identity
-        ContainerIdentity idA = cntA.getIdentity();
-        Assert.assertEquals("cntA", idA.getSymbolicName());
+        ContainerIdentity cntIdA = cntA.getIdentity();
+        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container cntA
-        cntA = cntManager.startContainer(idA, null);
+        cntA = cntManager.startContainer(cntIdA, null);
         Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
@@ -245,17 +245,17 @@ public abstract class ProfileUpdateTests  {
 
         // Create container B
         cntBuilder = new DefaultContainerBuilder();
-        options = cntBuilder.addIdentity("cntB").getCreateOptions();
+        options = cntBuilder.addIdentityPrefix("cntB").getCreateOptions();
         Container cntB = cntManager.createContainer(options);
 
         // Verify child identity
-        ContainerIdentity idB = cntB.getIdentity();
-        Assert.assertEquals("cntB", idB.getSymbolicName());
+        ContainerIdentity cntIdB = cntB.getIdentity();
+        Assert.assertTrue(cntIdB.getSymbolicName().startsWith("cntB#"));
         Assert.assertEquals("bar", cntB.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
-        cntB = cntManager.destroyContainer(idB);
+        cntB = cntManager.destroyContainer(cntIdB);
         Assert.assertSame(State.DESTROYED, cntB.getState());
-        cntA = cntManager.destroyContainer(idA);
+        cntA = cntManager.destroyContainer(cntIdA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Build an update profile

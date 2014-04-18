@@ -34,6 +34,12 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * Initial bootstrap of the system
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 @Component(service = { BootstrapService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class BootstrapService extends AbstractComponent {
 
@@ -52,6 +58,12 @@ public final class BootstrapService extends AbstractComponent {
     }
 
     private void activateInternal() throws IOException {
+
+        // Apply config items from the default profile
+        applyProfileConfigurationItems();
+    }
+
+    private void applyProfileConfigurationItems() {
         Profile profile = profileService.get().getDefaultProfile();
         Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         configManager.get().applyConfigurationItems(items);

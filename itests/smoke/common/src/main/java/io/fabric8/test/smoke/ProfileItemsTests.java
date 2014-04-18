@@ -85,16 +85,16 @@ public abstract class ProfileItemsTests  {
 
         // Create container A
         DefaultContainerBuilder cntBuilder = new DefaultContainerBuilder();
-        CreateOptions options = cntBuilder.addIdentity("cntA").getCreateOptions();
+        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
+        ContainerIdentity cntIdA = cntA.getIdentity();
 
         // Verify parent identity
-        ContainerIdentity idA = cntA.getIdentity();
-        Assert.assertEquals("cntA", idA.getSymbolicName());
+        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container A
-        cntA = cntManager.startContainer(idA, null);
+        cntA = cntManager.startContainer(cntIdA, null);
         Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
@@ -168,7 +168,7 @@ public abstract class ProfileItemsTests  {
 
         sregB.unregister();
 
-        cntA = cntManager.destroyContainer(idA);
+        cntA = cntManager.destroyContainer(cntIdA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }

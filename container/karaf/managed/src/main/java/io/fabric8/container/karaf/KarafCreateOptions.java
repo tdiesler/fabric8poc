@@ -32,6 +32,10 @@ public final class KarafCreateOptions extends AbstractManagedCreateOptions {
 
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
 
+    KarafCreateOptions() {
+        setIdentityPrefix("KarafManagedContainer");
+    }
+
     @Override
     public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
         return KarafContainerCreateHandler.class;

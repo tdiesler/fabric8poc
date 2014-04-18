@@ -21,6 +21,7 @@ package io.fabric8.core.internal;
 
 import io.fabric8.api.ComponentEvent;
 import io.fabric8.api.ComponentEventListener;
+import io.fabric8.api.FabricEvent;
 import io.fabric8.api.FabricEventListener;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
@@ -50,6 +51,12 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The event dispatcher
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 18-Mar-2014
+ */
 @Component(service = { EventDispatcher.class }, immediate = true)
 public final class EventDispatcherImpl extends AbstractComponent implements EventDispatcher {
 
@@ -81,30 +88,24 @@ public final class EventDispatcherImpl extends AbstractComponent implements Even
 
     @Override
     public void dispatchProvisionEvent(final ProvisionEvent event, final ProvisionEventListener listener) {
-        NotNullException.assertValue(event, "event");
-        Set<ProvisionEventListener> listeners = getEventListeners(ProvisionEventListener.class, listener);
-        if (listeners != null) {
-            for (final ProvisionEventListener aux : listeners) {
-                Runnable task = new Runnable() {
-                    public void run() {
-                        try {
-                            aux.processEvent(event);
-                        } catch (Throwable th) {
-                            LOGGER.error("Error delivering event: " + event, th);
-                        }
-                    }
-                };
-                executor.submit(task);
-            }
-        }
+        dispatchEvent(event, ProvisionEventListener.class, listener);
     }
 
     @Override
     public void dispatchProfileEvent(final ProfileEvent event, final ProfileEventListener listener) {
+        dispatchEvent(event, ProfileEventListener.class, listener);
+    }
+
+    @Override
+    public void dispatchComponentEvent(final ComponentEvent event) {
+        dispatchEvent(event, ComponentEventListener.class, null);
+    }
+
+    private <E extends FabricEvent<?, ?>, L extends FabricEventListener<E>> void dispatchEvent(final E event, Class<L> listenerType, L listener) {
         NotNullException.assertValue(event, "event");
-        Set<ProfileEventListener> listeners = getEventListeners(ProfileEventListener.class, listener);
+        Set<L> listeners = getEventListeners(listenerType, listener);
         if (listeners != null) {
-            for (final ProfileEventListener aux : listeners) {
+            for (final L aux : listeners) {
                 Runnable task = new Runnable() {
                     public void run() {
                         try {
@@ -112,22 +113,6 @@ public final class EventDispatcherImpl extends AbstractComponent implements Even
                         } catch (Throwable th) {
                             LOGGER.error("Error delivering event: " + event, th);
                         }
-                    }
-                };
-                executor.submit(task);
-            }
-        }
-    }
-
-    @Override
-    public void dispatchComponentEvent(final ComponentEvent event) {
-        NotNullException.assertValue(event, "event");
-        Set<ComponentEventListener> listeners = getEventListeners(ComponentEventListener.class, null);
-        if (listeners != null) {
-            for (final ComponentEventListener aux : listeners) {
-                Runnable task = new Runnable() {
-                    public void run() {
-                        aux.processEvent(event);
                     }
                 };
                 executor.submit(task);

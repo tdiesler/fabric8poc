@@ -44,6 +44,12 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * A provider of system MBeans
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 18-Mar-2014
+ */
 @Component(service = { MBeansProvider.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class MBeansProvider extends AbstractComponent {
 

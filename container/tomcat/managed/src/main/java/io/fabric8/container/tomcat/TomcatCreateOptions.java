@@ -35,6 +35,10 @@ public final class TomcatCreateOptions extends AbstractManagedCreateOptions {
 
     private int jmxPort = DEFAULT_JMX_PORT;
 
+    TomcatCreateOptions() {
+        setIdentityPrefix("TomcatManagedContainer");
+    }
+
     @Override
     public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
         return TomcatContainerCreateHandler.class;

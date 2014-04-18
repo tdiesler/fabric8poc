@@ -37,13 +37,21 @@ import java.util.Set;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
 
+/**
+ * An immutable container
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 18-Mar-2014
+ *
+ * @Immutable
+ */
 final class ImmutableContainer implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
     private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>();
+    private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>(); // [TODO] Remove mutable reference to ServiceEndpoints
     private final AttributeSupport attributes;
     private final ContainerIdentity parent;
     private final String tostring;

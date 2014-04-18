@@ -115,23 +115,23 @@ public abstract class ConfiguredComponentTests  {
         sregB.unregister();
 
         DefaultContainerBuilder builder = new DefaultContainerBuilder();
-        CreateOptions options = builder.addIdentity("cntA").getCreateOptions();
+        CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
         Container cntA = cntManager.createContainer(options);
+        ContainerIdentity cntIdA = cntA.getIdentity();
 
-        ContainerIdentity cntId = cntA.getIdentity();
-        Assert.assertEquals("cntA", cntId.getSymbolicName());
+        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
         Assert.assertEquals("foo", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cntA.getState());
 
-        cntA = cntManager.startContainer(cntId, null);
+        cntA = cntManager.startContainer(cntIdA, null);
         Assert.assertSame(State.STARTED, cntA.getState());
 
-        cntA = cntManager.stopContainer(cntId);
+        cntA = cntManager.stopContainer(cntIdA);
         Assert.assertSame(State.STOPPED, cntA.getState());
 
-        cntA = cntManager.destroyContainer(cntId);
+        cntA = cntManager.destroyContainer(cntIdA);
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Reset the default configuration

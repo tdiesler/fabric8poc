@@ -19,13 +19,14 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.spi.utils.IllegalStateAssertion;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.jboss.gravia.repository.MavenCoordinates;
-import org.jboss.gravia.utils.NotNullException;
 
 
 public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions implements ManagedCreateOptions {
@@ -80,7 +81,7 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
 
     @Override
     protected void validateConfiguration() {
+        IllegalStateAssertion.assertNotNull(targetDirectory, "targetDirectory");
         super.validateConfiguration();
-        NotNullException.assertValue(targetDirectory, "targetDirectory");
     }
 }

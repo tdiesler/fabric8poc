@@ -31,6 +31,12 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * Implementation of the the {@link BootstrapComplete} marker service
+ *
+ * @author Thomas.Diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 @Component(service = { BootstrapComplete.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
 public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
 

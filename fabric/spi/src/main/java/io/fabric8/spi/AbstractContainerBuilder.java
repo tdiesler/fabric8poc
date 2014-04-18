@@ -32,8 +32,8 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B addIdentity(String symbolicName) {
-        getMutableOptions().setSymbolicName(symbolicName);
+    public B addIdentityPrefix(String prefix) {
+        getMutableOptions().setIdentityPrefix(prefix);
         return (B) this;
     }
 

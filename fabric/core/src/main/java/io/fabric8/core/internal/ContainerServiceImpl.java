@@ -41,6 +41,7 @@ import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
@@ -52,6 +53,7 @@ import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,6 +109,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
+    private final ValidatingReference<ClusterDataStore> clusterData = new ValidatingReference<ClusterDataStore>();
     private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
@@ -200,6 +203,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private Container createContainerInternal(ContainerState parentState, CreateOptions options) {
+
+        // Every type of {@link CreateOptions}
         List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
         if (!(options instanceof DefaultCreateOptions)) {
             Set<ContainerCreateHandler> handlers = getContainerLifecycleHandlers();
@@ -216,9 +221,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 }
             }
             if (handles.isEmpty())
-                throw new LifecycleException("Cannot find lifecycle handler for: " + options);
+                throw new LifecycleException("Cannot find ContainerCreateHandler that accepts: " + options.getClass().getName());
         }
-        ContainerState cntState = new ContainerState(parentState, options, handles, configToken);
+        ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
+        ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
+        ContainerState cntState = new ContainerState(parentState, identity, options, handles, configToken);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(parentState, cntState);
         return new ImmutableContainer(cntState);
@@ -295,8 +302,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle writeLock = aquireWriteLock(identity);
         try {
             ContainerState cntState = getRequiredContainer(identity);
-            if (!cntState.getChildContainers().isEmpty())
-                throw new IllegalStateException("Cannot destroy a container that has active child containers: " + identity);
+            IllegalStateAssertion.assertTrue(cntState.getChildContainers().isEmpty(), "Cannot destroy a container that has active child containers: " + identity);
 
             // Unprovision the associated profiles
             Version profileVersion = cntState.getProfileVersion();
@@ -551,6 +557,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Reference
+    void bindClusterDataStore(ClusterDataStore service) {
+        clusterData.bind(service);
+    }
+
+    void unbindClusterDataStore(ClusterDataStore service) {
+        clusterData.unbind(service);
+    }
+
+    @Reference
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
@@ -598,12 +613,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private Version profileVersion;
         private State state;
 
-        ContainerState(ContainerState parent, CreateOptions options, List<ContainerHandle> handles, String configToken) {
+        private ContainerState(ContainerState parent, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles, String configToken) {
             this.parent = parent;
             this.handles = handles;
             this.state = State.CREATED;
-            String parentName = parent != null ? parent.getIdentity().getSymbolicName() + ":" : "";
-            this.identity = ContainerIdentity.create(parentName + options.getSymbolicName());
+            this.identity = identity;
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
             for (ContainerHandle handle : handles) {
@@ -717,8 +731,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         private void assertNotDestroyed() {
-            if (state == State.DESTROYED)
-                throw new IllegalStateException("Container already destroyed: " + this);
+            IllegalStateAssertion.assertFalse(state == State.DESTROYED, "Container already destroyed: " + this);
         }
 
         @Override
