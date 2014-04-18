@@ -35,7 +35,7 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-public final class DefaultProfileBuilder implements ProfileBuilder {
+public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
 
     private final Set<ProfileItem> items = new HashSet<ProfileItem>();
     private ProfileIdentity identity;

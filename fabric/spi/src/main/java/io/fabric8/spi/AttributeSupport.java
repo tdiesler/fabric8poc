@@ -23,9 +23,9 @@ import io.fabric8.api.Attributable;
 import io.fabric8.api.AttributeKey;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An implementation of {@link Attributable}.
@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AttributeSupport implements Attributable {
 
-    private Map<AttributeKey<?>, Object> attributes = new ConcurrentHashMap<AttributeKey<?>, Object>();
+    private Map<AttributeKey<?>, Object> attributes = Collections.synchronizedMap(new LinkedHashMap<AttributeKey<?>, Object>());
 
     public AttributeSupport() {
     }

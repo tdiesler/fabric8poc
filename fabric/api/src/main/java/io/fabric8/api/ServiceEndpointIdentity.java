@@ -32,6 +32,7 @@ import org.jboss.gravia.utils.NotNullException;
 public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Identity {
 
     private final Class<T> type;
+    private final String canonicalForm;
 
     public static <T extends ServiceEndpoint> ServiceEndpointIdentity<T> create(String symbolicNamen, Class<T> type) {
         return new ServiceEndpointIdentity<T>(symbolicNamen, type);
@@ -41,6 +42,7 @@ public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Id
         super(symbolicName);
         NotNullException.assertValue(type, "type");
         this.type = type;
+        this.canonicalForm = "[name=" + getSymbolicName() + ",type=" + type.getName() + "]";
     }
 
     public Class<T> getType() {
@@ -48,7 +50,12 @@ public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Id
     }
 
     @Override
+    public String getCanonicalForm() {
+        return canonicalForm;
+    }
+
+    @Override
     public String toString() {
-        return "ServiceEndpoint[name=" + getSymbolicName() + ",type=" + type.getName() + "]";
+        return "ServiceEndpoint" + canonicalForm;
     }
 }

@@ -21,28 +21,14 @@ package io.fabric8.api;
 
 
 
+
 /**
- * A profile identity
+ * A builder an attributable
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 18-Apr-2014
  */
-public final class ProfileIdentity extends Identity {
+public interface AttributableBuilder<B extends AttributableBuilder<B>> {
 
-    public static ProfileIdentity create(String symbolicNamen) {
-        return new ProfileIdentity(symbolicNamen);
-    }
-
-    public static ProfileIdentity createFrom(String canonicalForm) {
-        return new ProfileIdentity(canonicalForm);
-    }
-
-    private ProfileIdentity(String symbolicName) {
-        super(symbolicName);
-    }
-
-    @Override
-    public String getCanonicalForm() {
-        return getSymbolicName();
-    }
+    <T> B addAttribute(AttributeKey<T> key, T value);
 }

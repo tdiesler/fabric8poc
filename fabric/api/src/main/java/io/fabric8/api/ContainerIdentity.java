@@ -31,7 +31,16 @@ public final class ContainerIdentity extends Identity {
         return new ContainerIdentity(symbolicNamen);
     }
 
+    public static ContainerIdentity createFrom(String canonicalForm) {
+        return new ContainerIdentity(canonicalForm);
+    }
+
     private ContainerIdentity(String symbolicName) {
         super(symbolicName);
+    }
+
+    @Override
+    public String getCanonicalForm() {
+        return getSymbolicName();
     }
 }

@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.test.spi;
 
 import io.fabric8.spi.permit.DefaultPermitManager;
 import io.fabric8.spi.permit.PermitKey;

@@ -24,13 +24,14 @@ import io.fabric8.api.Constants;
 import java.util.Set;
 
 import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
 
 import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
  * The profile management interface
  *
- * [TODO] Use openmbean types for complete coverage
+ * [TODO] Complete ProfileManagement
  *
  * @author thomas.diesler@jboss.com
  * @since 10-Apr-2014
@@ -43,12 +44,13 @@ public interface ProfileManagement {
     ObjectName OBJECT_NAME = ObjectNameFactory.create(Constants.MANAGEMENT_DOMAIN + ":type=" + ProfileManagement.class.getSimpleName());
 
     /**
-     * Get the set of profile version identities in the cluster
-     */
-    Set<String> getProfileVersionIds();
-
-    /**
      * Get the profile idetities for a given version
      */
     Set<String> getProfileIds(String version);
+
+    /**
+     * Get profile details for the given identity
+     * @return composite data type defined by {@link ProfileOpenType}
+     */
+    CompositeData getProfile(String version, String identity);
 }

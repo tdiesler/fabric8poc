@@ -29,28 +29,28 @@ import javax.management.openmbean.CompositeData;
 import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
- * The container management interface
+ * The profile management interface
  *
- * [TODO] Complete ContainerManagement
+ * [TODO] Complete ProfileVersionManagement
  *
  * @author thomas.diesler@jboss.com
  * @since 10-Apr-2014
  */
-public interface ContainerManagement {
+public interface ProfileVersionManagement {
 
     /**
-     * The ObjectName: fabric8:type=ContainerManagement
+     * The ObjectName: fabric8:type=ProfileVersionManagement
      */
-    ObjectName OBJECT_NAME = ObjectNameFactory.create(Constants.MANAGEMENT_DOMAIN + ":type=" + ContainerManagement.class.getSimpleName());
+    ObjectName OBJECT_NAME = ObjectNameFactory.create(Constants.MANAGEMENT_DOMAIN + ":type=" + ProfileVersionManagement.class.getSimpleName());
 
     /**
-     * Get the set of container identities in the cluster
+     * Get the set of profile version identities in the cluster
      */
-    Set<String> getContainerIds();
+    Set<String> getProfileVersionIds();
 
     /**
-     * Get container details for the given identity
-     * @return composite data type defined by {@link ContainerOpenType}
+     * Get profile version details for the given identity
+     * @return composite data type defined by {@link ProfileVersionOpenType}
      */
     CompositeData getContainer(String identity);
 }

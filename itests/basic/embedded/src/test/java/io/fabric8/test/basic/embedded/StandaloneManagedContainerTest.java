@@ -18,6 +18,7 @@ package io.fabric8.test.basic.embedded;
 
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
+import io.fabric8.api.management.ProfileVersionManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
@@ -118,10 +119,11 @@ public class StandaloneManagedContainerTest {
             Assert.assertTrue("No containers", cntManagement.getContainerIds().isEmpty());
 
             // Access profiles through JMX
+            ProfileVersionManagement prvManagement = ManagementUtils.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);
             ProfileManagement prfManagement = ManagementUtils.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
             Assert.assertNotNull("ProfileManagement not null", prfManagement);
-            Assert.assertEquals(1, prfManagement.getProfileVersionIds().size());
-            Assert.assertEquals("1.0.0", prfManagement.getProfileVersionIds().iterator().next());
+            Assert.assertEquals(1, prvManagement.getProfileVersionIds().size());
+            Assert.assertEquals("1.0.0", prvManagement.getProfileVersionIds().iterator().next());
             Assert.assertEquals(1, prfManagement.getProfileIds("1.0").size());
             Assert.assertEquals("default", prfManagement.getProfileIds("1.0").iterator().next());
         } finally {

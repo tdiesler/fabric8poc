@@ -19,27 +19,84 @@
  */
 package io.fabric8.api;
 
-
+import org.jboss.gravia.utils.NotNullException;
 
 /**
  * A typed attribute key
+ *
+ * The identity of an attribute key is defined by its name
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class AttributeKey<T> {
 
-    private final Class<T> type;
+    /**
+     * A factory to create an attribute value
+     */
+    public interface Factory<T> {
 
-    public static <T> AttributeKey<T> create(Class<T> type) {
-        return new AttributeKey<T>(type);
+        /**
+         * Create the attribute value from the given source
+         * @throws IllegalArgumentException if value cannot be create from the given source
+         */
+        T createFrom(Object source);
     }
 
-    private AttributeKey(Class<T> type) {
+    private final Class<T> type;
+    private final String name;
+    private final Factory<T> factory;
+    private final String tostring;
+
+    public static <T> AttributeKey<T> create(Class<T> type) {
+        NotNullException.assertValue(type, "type");
+        return new AttributeKey<T>(type.getName(), type, null);
+    }
+
+    public static <T> AttributeKey<T> create(String name, Class<T> type) {
+        return new AttributeKey<T>(name, type, null);
+    }
+
+    public static <T> AttributeKey<T> create(String name, Class<T> type, Factory<T> factory) {
+        return new AttributeKey<T>(name, type, factory);
+    }
+
+    private AttributeKey(String name, Class<T> type, Factory<T> factory) {
+        NotNullException.assertValue(name, "name");
+        NotNullException.assertValue(type, "type");
+        this.name = name;
         this.type = type;
+        this.factory = factory;
+        this.tostring = "Key[name=" + name + ",type=" + (type != null ? type.getName() : null) + "]";
+
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Class<T> getType() {
         return type;
+    }
+
+    public Factory<T> getFactory() {
+        return factory;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AttributeKey)) return false;
+        AttributeKey<?> other = (AttributeKey<?>) obj;
+        return other.name.equals(name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return tostring;
     }
 }

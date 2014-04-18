@@ -22,10 +22,16 @@ package io.fabric8.core.internal;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
+import io.fabric8.api.management.ProfileVersionManagement;
+import io.fabric8.spi.management.ContainerOpenType;
+import io.fabric8.spi.management.ProfileOpenType;
+import io.fabric8.spi.management.ProfileVersionOpenType;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
@@ -36,6 +42,7 @@ import java.util.Set;
 import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.StandardMBean;
+import javax.management.openmbean.CompositeData;
 
 import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
@@ -72,10 +79,14 @@ public final class MBeansProvider extends AbstractComponent {
     private void activateInternal() {
         MBeanServer server = mbeanServer.get();
         try {
-            ContainerManagementMBean containerManagement = new ContainerManagementMBean(containerManager.get());
-            server.registerMBean(new StandardMBean(containerManagement, ContainerManagement.class, false), ContainerManagement.OBJECT_NAME);
-            ProfileManagementMBean profileManagement = new ProfileManagementMBean(profileManager.get());
-            server.registerMBean(new StandardMBean(profileManagement, ProfileManagement.class, false), ProfileManagement.OBJECT_NAME);
+            ContainerManagement cntManagement = new ContainerManagementMBean(containerManager.get());
+            server.registerMBean(new StandardMBean(cntManagement, ContainerManagement.class, false), ContainerManagement.OBJECT_NAME);
+
+            ProfileVersionManagement prvManagement = new ProfileVersionManagementMBean(profileManager.get());
+            server.registerMBean(new StandardMBean(prvManagement, ProfileVersionManagement.class, false), ProfileVersionManagement.OBJECT_NAME);
+
+            ProfileManagement prfManagement = new ProfileManagementMBean(profileManager.get());
+            server.registerMBean(new StandardMBean(prfManagement, ProfileManagement.class, false), ProfileManagement.OBJECT_NAME);
         } catch (JMException ex) {
             throw new IllegalStateException(ex);
         }
@@ -85,6 +96,7 @@ public final class MBeansProvider extends AbstractComponent {
         MBeanServer server = mbeanServer.get();
         try {
             server.unregisterMBean(ContainerManagement.OBJECT_NAME);
+            server.unregisterMBean(ProfileVersionManagementMBean.OBJECT_NAME);
             server.unregisterMBean(ProfileManagement.OBJECT_NAME);
         } catch (JMException ex) {
             throw new IllegalStateException(ex);
@@ -136,18 +148,18 @@ public final class MBeansProvider extends AbstractComponent {
         }
 
         @Override
-        public String getContainerState(String identity) {
-            ContainerIdentity cntid = ContainerIdentity.create(identity);
-            Container cnt = containerManager.getContainer(cntid);
-            return cnt != null ? cnt.getState().toString() : null;
+        public CompositeData getContainer(String identity) {
+            Container container = containerManager.getContainer(ContainerIdentity.create(identity));
+            return container != null ? ContainerOpenType.getCompositeData(container) : null;
         }
+
     }
 
-    static class ProfileManagementMBean implements ProfileManagement {
+    static class ProfileVersionManagementMBean implements ProfileVersionManagement {
 
         private final ProfileManager profileManager;
 
-        ProfileManagementMBean(ProfileManager profileManager) {
+        ProfileVersionManagementMBean(ProfileManager profileManager) {
             this.profileManager = profileManager;
         }
 
@@ -161,12 +173,33 @@ public final class MBeansProvider extends AbstractComponent {
         }
 
         @Override
+        public CompositeData getContainer(String identity) {
+            ProfileVersion pversion = profileManager.getProfileVersion(Version.parseVersion(identity));
+            return pversion != null ? ProfileVersionOpenType.getCompositeData(pversion) : null;
+        }
+    }
+
+    static class ProfileManagementMBean implements ProfileManagement {
+
+        private final ProfileManager profileManager;
+
+        ProfileManagementMBean(ProfileManager profileManager) {
+            this.profileManager = profileManager;
+        }
+
+        @Override
         public Set<String> getProfileIds(String version) {
             Set<String> result = new HashSet<String>();
             for (ProfileIdentity prfid : profileManager.getProfileIds(Version.parseVersion(version))) {
                 result.add(prfid.toString());
             }
             return Collections.unmodifiableSet(result);
+        }
+
+        @Override
+        public CompositeData getProfile(String version, String identity) {
+            Profile profile = profileManager.getProfile(Version.parseVersion(version), ProfileIdentity.create(identity));
+            return profile != null ? ProfileOpenType.getCompositeData(profile) : null;
         }
     }
 }

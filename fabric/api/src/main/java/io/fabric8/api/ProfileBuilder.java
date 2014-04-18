@@ -28,7 +28,7 @@ import java.io.InputStream;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder addIdentity(String symbolicName);
 

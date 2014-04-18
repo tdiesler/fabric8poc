@@ -17,32 +17,25 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
+import io.fabric8.api.AttributableBuilder;
+import io.fabric8.api.AttributeKey;
 
+import java.util.Map;
 
-/**
- * A profile identity
- *
- * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
- */
-public final class ProfileIdentity extends Identity {
+public class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
 
-    public static ProfileIdentity create(String symbolicNamen) {
-        return new ProfileIdentity(symbolicNamen);
-    }
-
-    public static ProfileIdentity createFrom(String canonicalForm) {
-        return new ProfileIdentity(canonicalForm);
-    }
-
-    private ProfileIdentity(String symbolicName) {
-        super(symbolicName);
-    }
+    private final AttributeSupport attributes = new AttributeSupport();
 
     @Override
-    public String getCanonicalForm() {
-        return getSymbolicName();
+    @SuppressWarnings("unchecked")
+    public <T> B addAttribute(AttributeKey<T> key, T value) {
+        attributes.putAttribute(key, value);
+        return (B) this;
+    }
+
+    protected Map<AttributeKey<?>, Object> getAttributes() {
+        return attributes.getAttributes();
     }
 }

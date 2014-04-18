@@ -36,4 +36,9 @@ public final class HostIdentity extends Identity {
     private HostIdentity(String symbolicName) {
         super(symbolicName);
     }
+
+    @Override
+    public String getCanonicalForm() {
+        return getSymbolicName();
+    }
 }

@@ -41,6 +41,8 @@ abstract class Identity {
         return symbolicName;
     }
 
+    public abstract String getCanonicalForm();
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Identity)) return false;

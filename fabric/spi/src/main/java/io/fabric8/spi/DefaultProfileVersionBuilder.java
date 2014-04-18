@@ -19,17 +19,19 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
+public final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<ProfileVersionBuilder> implements ProfileVersionBuilder {
 
     private Version identity;
 
@@ -41,10 +43,14 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     @Override
     public ProfileVersion getProfileVersion() {
-        return new ProfileVersionImpl();
+        return new ProfileVersionImpl(getAttributes());
     }
 
     class ProfileVersionImpl extends AttributeSupport implements ProfileVersion {
+
+        private ProfileVersionImpl(Map<AttributeKey<?>, Object> attributes) {
+            super(attributes);
+        }
 
         @Override
         public Version getIdentity() {

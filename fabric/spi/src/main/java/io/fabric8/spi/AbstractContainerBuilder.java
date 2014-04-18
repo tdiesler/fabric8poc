@@ -22,7 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> implements ContainerBuilder<B, C> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, C> {
 
     protected final C options;
 

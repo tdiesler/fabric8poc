@@ -27,7 +27,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileVersionBuilder {
+public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersionBuilder>{
 
     ProfileVersionBuilder addIdentity(Version version);
 
