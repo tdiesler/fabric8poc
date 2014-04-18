@@ -65,13 +65,13 @@
         <version.apache.tomcat>7.0.42</version.apache.tomcat>
         <version.javax.servlet30.api>3.0.1</version.javax.servlet30.api>
         <version.jboss.arquillian.core>1.1.2.Final</version.jboss.arquillian.core>
-        <version.jboss.arquillian.osgi>2.1.0.CR10</version.jboss.arquillian.osgi>
+        <version.jboss.arquillian.osgi>2.1.0.CR15</version.jboss.arquillian.osgi>
         <version.jboss.arquillian.tomcat>1.0.0.CR6</version.jboss.arquillian.tomcat>
         <version.jboss.gravia>1.1.0.Beta14</version.jboss.gravia>
         <version.jboss.modules>1.3.0.Final</version.jboss.modules>
         <version.jboss.shrinkwrap>1.1.2</version.jboss.shrinkwrap>
         <version.jboss.shrinkwrap.resolver>2.0.0</version.jboss.shrinkwrap.resolver>
-        <version.jboss.wildfly>8.0.0.CR1</version.jboss.wildfly>
+        <version.jboss.wildfly>8.1.0.CR1</version.jboss.wildfly>
         <version.junit>4.11</version.junit>
         <version.log4j>1.2.16</version.log4j>
         <version.mockito>1.8.4</version.mockito>

@@ -35,12 +35,7 @@
 
     <profiles>
         <profile>
-            <id>ts.all</id>
-            <activation>
-                <property>
-                    <name>ts.all</name>
-                </property>
-            </activation>
+            <id>all</id>
             <modules>
                 <module>basic</module>
             </modules>
