@@ -32,7 +32,7 @@ import org.jboss.gravia.resource.Version;
  * <li> How do container specific profiles work?
  * </ol>
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface Profile extends Attributable, Identifiable<ProfileIdentity> {

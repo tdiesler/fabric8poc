@@ -29,7 +29,7 @@ import javax.management.remote.JMXConnector;
 /**
  * A JMX service endpoint
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 16-Apr-2014
  */
 public interface JMXServiceEndpoint extends ServiceEndpoint {

@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Provides an abstraction and convenience around {@link ConfigurationAdmin}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(service = { ConfigurationManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

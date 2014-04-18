@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * A configuration item targeted to {@link ConfigurationAdmin}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ConfigurationProfileItem extends ProfileItem {

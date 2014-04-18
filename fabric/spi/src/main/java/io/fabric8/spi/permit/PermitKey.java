@@ -24,7 +24,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * Represents a system state
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  *
  * @Immutable

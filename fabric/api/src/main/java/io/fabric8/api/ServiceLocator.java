@@ -30,7 +30,7 @@ import org.jboss.gravia.runtime.ServiceTracker;
 /**
  * Locate a service in the {@link Runtime}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class ServiceLocator {

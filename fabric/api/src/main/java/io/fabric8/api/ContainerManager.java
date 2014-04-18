@@ -30,7 +30,7 @@ import org.jboss.gravia.runtime.Runtime;
  *
  * An instance of this service can be obtained from the gravia {@link Runtime}.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ContainerManager {
@@ -118,6 +118,18 @@ public interface ContainerManager {
      * Remove profiles from the container with the given identity
      */
     Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener);
+
+    /**
+     * Get the a service endpoint for the given type
+     * @return null if the endpoint does not exist or is not unique
+     */
+    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type);
+
+    /**
+     * Get the service endpoint for the given identity
+     * @return null if the endpoint does not exist
+     */
+    ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId);
 
     /**
      * Get failures from the container with the given identity

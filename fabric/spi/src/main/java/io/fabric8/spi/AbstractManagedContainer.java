@@ -53,7 +53,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * The managed root container
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
 public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {

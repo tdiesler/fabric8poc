@@ -25,7 +25,7 @@ import io.fabric8.spi.permit.PermitKey;
 /**
  * The internal fabric service
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ContainerService extends ContainerManager {

@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Deactivate;
 /**
  * A cluster wide data store
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
 @Component(service = { ClusterDataStore.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

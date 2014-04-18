@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * Implementation of the the {@link BootstrapComplete} marker service
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(service = { BootstrapComplete.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

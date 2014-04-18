@@ -22,7 +22,7 @@ import io.fabric8.spi.AbstractManagedContainerBuilder;
 /**
  * The Tomcat managed container builder
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
 public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<TomcatContainerBuilder, TomcatCreateOptions> {

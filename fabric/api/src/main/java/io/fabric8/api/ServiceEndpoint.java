@@ -22,9 +22,9 @@ package io.fabric8.api;
 /**
  * The abstraction of a service endpoint
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ServiceEndpoint extends Attributable, Identifiable<ServiceEndpointIdentity> {
+public interface ServiceEndpoint extends Attributable, Identifiable<ServiceEndpointIdentity<?>> {
 
 }

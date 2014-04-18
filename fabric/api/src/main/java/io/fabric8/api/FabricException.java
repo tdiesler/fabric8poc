@@ -16,6 +16,12 @@
  */
 package io.fabric8.api;
 
+/**
+ * A fabric runtime exception
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 public class FabricException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

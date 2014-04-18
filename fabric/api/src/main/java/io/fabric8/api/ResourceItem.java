@@ -24,7 +24,7 @@ import org.jboss.gravia.resource.Resource;
 /**
  * A resource item targeted for deployment
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ResourceItem extends ProfileItem {

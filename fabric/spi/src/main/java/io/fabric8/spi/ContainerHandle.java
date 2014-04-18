@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * A handle to a container instance
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ContainerHandle extends Attributable {

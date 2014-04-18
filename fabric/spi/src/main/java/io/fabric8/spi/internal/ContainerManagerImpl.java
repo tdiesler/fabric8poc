@@ -28,6 +28,8 @@ import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
@@ -234,6 +236,28 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         try {
             ContainerService service = permit.getInstance();
             return service.removeProfiles(identity, profiles, listener);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getServiceEndpoint(identity, type);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getServiceEndpoint(identity, endpointId);
         } finally {
             permit.release();
         }

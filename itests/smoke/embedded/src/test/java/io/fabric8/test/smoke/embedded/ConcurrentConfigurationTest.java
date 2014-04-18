@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 /**
  * See {@link ConcurrentConfigurationTests}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public class ConcurrentConfigurationTest extends ConcurrentConfigurationTests {

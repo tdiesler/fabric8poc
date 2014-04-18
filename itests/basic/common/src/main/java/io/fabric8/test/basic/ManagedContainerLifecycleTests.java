@@ -38,7 +38,6 @@ import io.fabric8.spi.SystemProperties;
 import io.fabric8.test.smoke.TestConditions;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
@@ -54,7 +53,7 @@ import org.junit.Test;
 /**
  * Test basic container functionality.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public class ManagedContainerLifecycleTests  {
@@ -138,17 +137,20 @@ public class ManagedContainerLifecycleTests  {
         }
     }
 
-    private void verifyContainer(Container container, String username, String password) throws IOException {
+    private void verifyContainer(Container cnt, String username, String password) throws IOException {
 
         // Assert that there is one {@link JMXServiceEndpoint}
-        Set<ServiceEndpointIdentity> endpointIds = container.getServiceEndpoints(JMXServiceEndpoint.class);
-        Assert.assertEquals(1, endpointIds.size());
+        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        Assert.assertEquals(1, cnt.getServiceEndpoints(JMXServiceEndpoint.class).size());
+        Assert.assertEquals(1, cnt.getServiceEndpoints(null).size());
 
         // Get the JMX connector through the endpoint
-        ServiceEndpointIdentity jmxEndpointId = endpointIds.iterator().next();
-        JMXServiceEndpoint jmxEndpoint = container.getServiceEndpoint(jmxEndpointId, JMXServiceEndpoint.class);
-        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 20, TimeUnit.SECONDS);
+        ServiceEndpointIdentity<?> endpointId = cnt.getServiceEndpoints(null).iterator().next();
+        JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(cnt.getIdentity(), JMXServiceEndpoint.class);
+        Assert.assertNotNull("JMXServiceEndpoint not null", jmxEndpoint);
+        Assert.assertSame(jmxEndpoint, cntManager.getServiceEndpoint(cnt.getIdentity(), endpointId));
 
+        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 20, TimeUnit.SECONDS);
         try {
             // Access containers through JMX
             MBeanServerConnection server = connector.getMBeanServerConnection();

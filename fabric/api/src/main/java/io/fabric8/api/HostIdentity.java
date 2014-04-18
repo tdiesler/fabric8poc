@@ -24,7 +24,7 @@ package io.fabric8.api;
 /**
  * A host identity
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class HostIdentity extends Identity {

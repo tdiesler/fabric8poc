@@ -39,6 +39,7 @@ import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ClusterDataStore;
@@ -70,6 +71,7 @@ import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
+import org.jboss.gravia.utils.NotNullException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -101,7 +103,7 @@ import org.slf4j.LoggerFactory;
  * This is necessary when exclusive access to {@link Container} content is required. For example when making multiple calls
  * as part of one operation - while doing so the {@link Container} and its associated {@link ProfileVersion} must be locked and cannot change.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
@@ -517,6 +519,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+        ContainerState containerState = getRequiredContainer(identity);
+        return containerState.getServiceEndpoint(type);
+    }
+
+    @Override
+    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+        ContainerState containerState = getRequiredContainer(identity);
+        return containerState.getServiceEndpoint(endpointId);
+    }
+
+    @Override
     public List<Failure> getFailures(ContainerIdentity identity) {
         throw new UnsupportedOperationException();
     }
@@ -607,9 +621,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
         private final List<ContainerHandle> handles;
-        private final Map<ContainerIdentity, ContainerState> children = new HashMap<ContainerIdentity, ContainerState>();
-        private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-        private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>();
+        private final Set<ProfileIdentity> profiles = new HashSet<>();
+        private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
+        private final Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
         private Version profileVersion;
         private State state;
 
@@ -621,7 +635,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
             for (ContainerHandle handle : handles) {
-                endpoints.addAll(handle.getServiceEndpoints());
+                for (ServiceEndpoint ep : handle.getServiceEndpoints()) {
+                    endpoints.put(ep.getIdentity(), ep);
+                }
                 attributes.putAllAttributes(handle.getAttributes());
             }
         }
@@ -674,8 +690,30 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             return Collections.unmodifiableSet(profiles);
         }
 
-        Set<ServiceEndpoint> getServiceEndpoints() {
-            return Collections.unmodifiableSet(endpoints);
+        Set<ServiceEndpointIdentity<?>> getServiceEndpointIdentities() {
+            return Collections.unmodifiableSet(new HashSet<>(endpoints.keySet()));
+        }
+
+        @SuppressWarnings("unchecked")
+        <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
+            NotNullException.assertValue(type, "type");
+            T endpoint = null;
+            for (ServiceEndpoint ep : endpoints.values()) {
+                if (type.isAssignableFrom(ep.getClass())) {
+                    if (endpoint == null) {
+                        endpoint = (T) ep;
+                    } else {
+                        LOGGER.warn("Multiple service endpoints of type {} for: {}", type.getName(), identity);
+                        endpoint = null;
+                        break;
+                    }
+                }
+            }
+            return endpoint;
+        }
+
+        ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity<?> identity) {
+            return endpoints.get(identity);
         }
 
         // NOTE - Methods that mutate this objects should be private

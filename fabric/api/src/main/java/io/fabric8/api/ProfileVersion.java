@@ -27,7 +27,7 @@ import org.jboss.gravia.resource.Version;
 /**
  * A profile version
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ProfileVersion extends Attributable, Identifiable<Version> {

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A reference that validates its content on {@link #get()}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 13-Sep-2013
  *
  * @ThreadSafe

@@ -23,7 +23,7 @@ package io.fabric8.api;
 /**
  * A profile version builder factory
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ProfileVersionBuilderFactory {

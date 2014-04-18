@@ -24,7 +24,7 @@ import io.fabric8.spi.ManagedContainer;
 /**
  * The managed container configuration builder
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Apr-2014
  */
 public final class KarafContainerBuilder extends AbstractManagedContainerBuilder<KarafContainerBuilder, KarafCreateOptions> {

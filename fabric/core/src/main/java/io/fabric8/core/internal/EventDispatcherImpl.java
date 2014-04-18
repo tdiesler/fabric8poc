@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The event dispatcher
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
 @Component(service = { EventDispatcher.class }, immediate = true)

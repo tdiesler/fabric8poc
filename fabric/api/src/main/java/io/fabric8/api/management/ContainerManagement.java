@@ -32,7 +32,7 @@ import org.jboss.gravia.utils.ObjectNameFactory;
  *
  * [TODO] Use openmbean types for complete coverage
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 10-Apr-2014
  */
 public interface ContainerManagement {

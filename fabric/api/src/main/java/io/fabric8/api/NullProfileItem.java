@@ -25,7 +25,7 @@ package io.fabric8.api;
 /**
  * A profile item used for item removal.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface NullProfileItem extends ProfileItem {

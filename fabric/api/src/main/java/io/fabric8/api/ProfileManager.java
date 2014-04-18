@@ -29,7 +29,7 @@ import org.jboss.gravia.runtime.Runtime;
  *
  * An instance of this service can be obtained from the gravia {@link Runtime}.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ProfileManager {

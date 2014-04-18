@@ -25,7 +25,7 @@ import java.io.InputStream;
 /**
  * A builder for a fabric profile
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ProfileBuilder {

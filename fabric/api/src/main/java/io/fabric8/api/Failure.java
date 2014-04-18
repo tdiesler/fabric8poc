@@ -18,6 +18,12 @@ package io.fabric8.api;
 
 import org.jboss.gravia.utils.NotNullException;
 
+/**
+ * A container failure abstraction.
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 14-Mar-2014
+ */
 public final class Failure {
 
     private final String message;

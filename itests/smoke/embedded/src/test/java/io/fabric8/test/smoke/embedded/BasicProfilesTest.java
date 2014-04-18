@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 /**
  * Test basic profiles functionality.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public class BasicProfilesTest extends BasicProfilesTests {

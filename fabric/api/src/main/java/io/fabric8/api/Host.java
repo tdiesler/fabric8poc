@@ -25,7 +25,7 @@ import java.util.Set;
 /**
  * The abstraction of a fabric host
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface Host extends Attributable, Identifiable<HostIdentity> {

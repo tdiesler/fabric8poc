@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Deactivate;
 /**
  * A provider service for the {@link ProfileBuilderFactory}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
 @Component(service = { ProfileBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

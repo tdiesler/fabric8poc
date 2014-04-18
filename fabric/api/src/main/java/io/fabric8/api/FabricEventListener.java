@@ -24,7 +24,7 @@ package io.fabric8.api;
 /**
  * A fabric event listener
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface FabricEventListener<T extends FabricEvent<?, ?>> {

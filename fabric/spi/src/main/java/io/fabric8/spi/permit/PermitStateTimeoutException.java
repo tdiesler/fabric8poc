@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 /**
 * An unchecked timeout exception
 *
-* @author Thomas.Diesler@jboss.com
+* @author thomas.diesler@jboss.com
 * @since 05-Mar-2014
 */
 public final class PermitStateTimeoutException extends RuntimeException {

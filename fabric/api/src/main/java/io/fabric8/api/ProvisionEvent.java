@@ -26,7 +26,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * A provisioning event
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @SuppressWarnings("serial")

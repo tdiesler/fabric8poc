@@ -27,7 +27,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * An abstract fabric event
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @SuppressWarnings("serial")

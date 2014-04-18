@@ -30,7 +30,7 @@ import javax.management.remote.JMXConnector;
 /**
  * The managed root container
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
 public interface ManagedContainer<C extends ManagedCreateOptions> extends Attributable {

@@ -24,7 +24,7 @@ package io.fabric8.api;
 /**
  * A profile event listener
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ProfileEventListener extends FabricEventListener<ProfileEvent> {

@@ -37,7 +37,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * A set of management utils
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 16-Apr-2014
  */
 public final class ManagementUtils {

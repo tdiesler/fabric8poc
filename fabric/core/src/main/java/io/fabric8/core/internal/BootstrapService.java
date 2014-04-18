@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * Initial bootstrap of the system
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(service = { BootstrapService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

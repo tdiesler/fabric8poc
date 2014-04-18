@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 /**
  * Test basic container functionality.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public class BasicContainerLifecycleTest extends BasicContainerLifecycleTests {

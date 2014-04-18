@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * A registry of stateful {@link Container} instances
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
 @Component(service = { ContainerRegistry.class }, immediate = true)

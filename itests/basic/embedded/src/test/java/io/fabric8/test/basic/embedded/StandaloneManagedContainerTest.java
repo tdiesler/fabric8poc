@@ -40,7 +40,7 @@ import org.junit.Test;
 /**
  * Test basic {@link ManagedContainer} functionality
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
 public class StandaloneManagedContainerTest {

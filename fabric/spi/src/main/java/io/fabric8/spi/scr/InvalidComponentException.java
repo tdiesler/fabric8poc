@@ -19,7 +19,7 @@ package io.fabric8.spi.scr;
 /**
  * A runtime exception thrown by invalid components.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 13-Sep-2013
  */
 public class InvalidComponentException extends RuntimeException {

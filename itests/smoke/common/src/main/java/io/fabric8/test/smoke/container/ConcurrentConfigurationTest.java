@@ -44,7 +44,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * See {@link ConcurrentConfigurationTests}
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)

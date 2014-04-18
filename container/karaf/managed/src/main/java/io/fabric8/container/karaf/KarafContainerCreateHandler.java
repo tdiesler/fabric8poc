@@ -37,7 +37,7 @@ import javax.management.remote.JMXConnector;
 /**
  * The Karaf container create handler
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Apr-2014
  */
 public final class KarafContainerCreateHandler implements ContainerCreateHandler {
@@ -108,14 +108,14 @@ public final class KarafContainerCreateHandler implements ContainerCreateHandler
         public Set<ServiceEndpoint> getServiceEndpoints() {
             ServiceEndpoint endpoint = new AbstractJMXServiceEndpoint() {
 
-                private final ServiceEndpointIdentity identity;
+                private final ServiceEndpointIdentity<JMXServiceEndpoint> identity;
                 {
                     String idspec = container.getIdentity().getSymbolicName() + "-" + JMXServiceEndpoint.class.getSimpleName();
-                    identity = ServiceEndpointIdentity.create(idspec);
+                    identity = ServiceEndpointIdentity.create(idspec, JMXServiceEndpoint.class);
                 }
 
                 @Override
-                public ServiceEndpointIdentity getIdentity() {
+                public ServiceEndpointIdentity<JMXServiceEndpoint> getIdentity() {
                     return identity;
                 }
 

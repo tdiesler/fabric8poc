@@ -26,7 +26,7 @@ import io.fabric8.api.ContainerBuilder;
 /**
  * A builder for a fabric container
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends ManagedCreateOptions> extends ContainerBuilder<B, C> {

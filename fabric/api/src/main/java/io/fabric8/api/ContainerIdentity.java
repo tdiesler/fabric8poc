@@ -22,7 +22,7 @@ package io.fabric8.api;
 /**
  * A container identity
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class ContainerIdentity extends Identity {

@@ -29,7 +29,7 @@ import org.jboss.gravia.repository.MavenCoordinates;
 /**
  * Managed container create options
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ManagedCreateOptions extends CreateOptions {

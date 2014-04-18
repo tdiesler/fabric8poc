@@ -26,7 +26,7 @@ import org.jboss.gravia.resource.Version;
 /**
  * A fabric container
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface Container extends Attributable, Identifiable<ContainerIdentity> {
@@ -83,12 +83,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
      * Get the set of available service endpoints for the given type
      * @param type null for all types
      */
-    <T extends ServiceEndpoint> Set<ServiceEndpointIdentity> getServiceEndpoints(Class<T> type);
-
-    /**
-     * Get the service endpoint for the given identity and type
-     */
-    <T extends ServiceEndpoint> T getServiceEndpoint(ServiceEndpointIdentity identity, Class<T> type);
+    <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getServiceEndpoints(Class<T> type);
 
     /**
      * Get the profile version

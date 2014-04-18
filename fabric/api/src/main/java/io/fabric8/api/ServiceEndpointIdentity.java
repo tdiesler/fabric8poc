@@ -19,21 +19,36 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.utils.NotNullException;
+
 
 
 /**
  * A service endpoint identity
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ServiceEndpointIdentity extends Identity {
+public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Identity {
 
-    public static ServiceEndpointIdentity create(String symbolicNamen) {
-        return new ServiceEndpointIdentity(symbolicNamen);
+    private final Class<T> type;
+
+    public static <T extends ServiceEndpoint> ServiceEndpointIdentity<T> create(String symbolicNamen, Class<T> type) {
+        return new ServiceEndpointIdentity<T>(symbolicNamen, type);
     }
 
-    private ServiceEndpointIdentity(String symbolicName) {
+    private ServiceEndpointIdentity(String symbolicName, Class<T> type) {
         super(symbolicName);
+        NotNullException.assertValue(type, "type");
+        this.type = type;
+    }
+
+    public Class<T> getType() {
+        return type;
+    }
+
+    @Override
+    public String toString() {
+        return "ServiceEndpoint[name=" + getSymbolicName() + ",type=" + type.getName() + "]";
     }
 }

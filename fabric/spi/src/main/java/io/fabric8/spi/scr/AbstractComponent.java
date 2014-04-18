@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An abstract base class for validatable components.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 13-Sep-2013
  *
  * @ThreadSafe

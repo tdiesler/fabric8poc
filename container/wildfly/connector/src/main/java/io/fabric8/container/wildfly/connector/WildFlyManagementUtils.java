@@ -27,7 +27,7 @@ import javax.management.remote.JMXConnector;
 /**
  * A set of management utils
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 16-Apr-2014
  */
 public final class WildFlyManagementUtils {

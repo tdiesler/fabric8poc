@@ -59,7 +59,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * Test profile items functionality.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public abstract class ProfileItemsTests  {

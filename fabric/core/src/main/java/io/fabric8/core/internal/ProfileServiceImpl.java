@@ -89,7 +89,7 @@ import org.slf4j.LoggerFactory;
  * exclusive access to {@link ProfileVersion} content is required.
  * For example when provisioning a container - while doing so the {@link ProfileVersion} must be locked and cannot change.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(service = { ProfileService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)

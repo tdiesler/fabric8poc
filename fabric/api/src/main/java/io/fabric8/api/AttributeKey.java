@@ -24,7 +24,7 @@ package io.fabric8.api;
 /**
  * A typed attribute key
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class AttributeKey<T> {

@@ -37,7 +37,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * An immutable profile version
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  *
  * @Immutable

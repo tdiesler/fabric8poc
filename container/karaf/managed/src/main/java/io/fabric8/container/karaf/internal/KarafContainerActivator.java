@@ -26,7 +26,7 @@ import org.jboss.gravia.runtime.ServiceRegistration;
 /**
  * The Karaf container activator
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Apr-2014
  */
 public final class KarafContainerActivator implements ModuleActivator {

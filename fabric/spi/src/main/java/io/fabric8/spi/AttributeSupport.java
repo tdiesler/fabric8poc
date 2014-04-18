@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * An implementation of {@link Attributable}.
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 03-Apr-2014
  */
 public class AttributeSupport implements Attributable {

@@ -37,7 +37,7 @@ import org.junit.Assert;
 /**
  * Pre/Post conditions for every test
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public final class TestConditions {

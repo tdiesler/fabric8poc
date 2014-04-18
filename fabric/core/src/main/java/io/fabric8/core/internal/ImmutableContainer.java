@@ -40,7 +40,7 @@ import org.jboss.gravia.utils.NotNullException;
 /**
  * An immutable container
  *
- * @author Thomas.Diesler@jboss.com
+ * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  *
  * @Immutable
@@ -49,9 +49,9 @@ final class ImmutableContainer implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
-    private final Set<ContainerIdentity> children = new HashSet<ContainerIdentity>();
-    private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final Set<ServiceEndpoint> endpoints = new HashSet<ServiceEndpoint>(); // [TODO] Remove mutable reference to ServiceEndpoints
+    private final Set<ContainerIdentity> children = new HashSet<>();
+    private final Set<ProfileIdentity> profiles = new HashSet<>();
+    private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
     private final AttributeSupport attributes;
     private final ContainerIdentity parent;
     private final String tostring;
@@ -66,7 +66,7 @@ final class ImmutableContainer implements Container {
         state = cntState.getState();
         children.addAll(cntState.getChildContainers());
         profiles.addAll(cntState.getProfiles());
-        endpoints.addAll(cntState.getServiceEndpoints());
+        endpoints.addAll(cntState.getServiceEndpointIdentities());
         attributes = new AttributeSupport(cntState.getAttributes());
         tostring = cntState.toString();
     }
@@ -132,27 +132,14 @@ final class ImmutableContainer implements Container {
     }
 
     @Override
-    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity> getServiceEndpoints(Class<T> type) {
-        Set<ServiceEndpointIdentity> result = new HashSet<ServiceEndpointIdentity>();
-        for (ServiceEndpoint ep : endpoints) {
-            if (type == null || type.isAssignableFrom(ep.getClass())) {
-                result.add(ep.getIdentity());
+    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getServiceEndpoints(Class<T> type) {
+        Set<ServiceEndpointIdentity<?>> result = new HashSet<>();
+        for (ServiceEndpointIdentity<?> epid : endpoints) {
+            if (type == null || type.isAssignableFrom(epid.getType())) {
+                result.add(epid);
             }
         }
         return Collections.unmodifiableSet(result);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ServiceEndpointIdentity identity, Class<T> type) {
-        T result = null;
-        for (ServiceEndpoint ep : endpoints) {
-            if (ep.getIdentity().equals(identity) && (type == null || type.isAssignableFrom(ep.getClass()))) {
-                result = (T) ep;
-                break;
-            }
-        }
-        return result;
     }
 
     @Override
