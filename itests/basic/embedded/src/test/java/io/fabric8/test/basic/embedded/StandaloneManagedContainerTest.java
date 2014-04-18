@@ -58,7 +58,7 @@ public class StandaloneManagedContainerTest {
     @Test
     @SuppressWarnings({ "rawtypes" })
     public void testManagedKaraf() throws Exception {
-        KarafContainerBuilder builder = buildCreateOptions(new KarafContainerBuilder(), "cntKaraf");
+        KarafContainerBuilder builder = buildCreateOptions(KarafContainerBuilder.create());
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create();
@@ -71,7 +71,7 @@ public class StandaloneManagedContainerTest {
     @Test
     @SuppressWarnings({ "rawtypes" })
     public void testManagedTomcat() throws Exception {
-        TomcatContainerBuilder builder = buildCreateOptions(new TomcatContainerBuilder(), "cntTomcat");
+        TomcatContainerBuilder builder = buildCreateOptions(TomcatContainerBuilder.create());
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create();
@@ -84,7 +84,7 @@ public class StandaloneManagedContainerTest {
     @Test
     @SuppressWarnings({ "rawtypes" })
     public void testManagedWildFly() throws Exception {
-        WildFlyContainerBuilder builder = buildCreateOptions(new WildFlyContainerBuilder(), "cntWildFly");
+        WildFlyContainerBuilder builder = buildCreateOptions(WildFlyContainerBuilder.create());
         ManagedContainer container = builder.getManagedContainer();
         try {
             container.create();
@@ -94,7 +94,7 @@ public class StandaloneManagedContainerTest {
         }
     }
 
-    private <B extends ManagedContainerBuilder<?, ?>> B buildCreateOptions(B builder, String symbolicName) {
+    private <B extends ManagedContainerBuilder<?, ?>> B buildCreateOptions(B builder) {
         builder.setTargetDirectory("target/managed-container").setOutputToConsole(true);
         return builder;
     }

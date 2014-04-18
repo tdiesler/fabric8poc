@@ -73,7 +73,7 @@ public abstract class ComplexContainerTests  {
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create parent container
-        DefaultContainerBuilder builder = new DefaultContainerBuilder();
+        DefaultContainerBuilder builder = DefaultContainerBuilder.create();
         CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
@@ -192,7 +192,7 @@ public abstract class ComplexContainerTests  {
         Assert.assertEquals(2, cntParent.getProfiles().size());
 
         // Create child container
-        builder = new DefaultContainerBuilder();
+        builder = DefaultContainerBuilder.create();
         options = builder.addIdentityPrefix("cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 

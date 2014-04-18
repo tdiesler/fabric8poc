@@ -163,7 +163,7 @@ public abstract class ProfileUpdateTests  {
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create container cntA
-        DefaultContainerBuilder cntBuilder = new DefaultContainerBuilder();
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
         CreateOptions options = cntBuilder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
 
@@ -244,7 +244,7 @@ public abstract class ProfileUpdateTests  {
         Assert.assertEquals("bar", citem.getConfiguration().get(Container.CNFKEY_CONFIG_TOKEN));
 
         // Create container B
-        cntBuilder = new DefaultContainerBuilder();
+        cntBuilder = DefaultContainerBuilder.create();
         options = cntBuilder.addIdentityPrefix("cntB").getCreateOptions();
         Container cntB = cntManager.createContainer(options);
 

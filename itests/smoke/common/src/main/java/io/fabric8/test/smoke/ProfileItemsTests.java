@@ -84,7 +84,7 @@ public abstract class ProfileItemsTests  {
         ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
 
         // Create container A
-        DefaultContainerBuilder cntBuilder = new DefaultContainerBuilder();
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
         CreateOptions options = cntBuilder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();

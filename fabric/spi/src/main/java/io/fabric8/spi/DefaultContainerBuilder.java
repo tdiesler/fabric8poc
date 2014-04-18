@@ -23,7 +23,11 @@ package io.fabric8.spi;
 
 public final class DefaultContainerBuilder extends AbstractContainerBuilder<DefaultContainerBuilder, DefaultCreateOptions> {
 
-    public DefaultContainerBuilder() {
+    public static DefaultContainerBuilder create() {
+        return new DefaultContainerBuilder();
+    }
+
+    private DefaultContainerBuilder() {
         super(new DefaultCreateOptions());
     }
 }

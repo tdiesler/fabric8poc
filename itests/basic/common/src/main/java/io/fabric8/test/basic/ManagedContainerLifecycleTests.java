@@ -75,7 +75,7 @@ public class ManagedContainerLifecycleTests  {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new KarafContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = KarafContainerBuilder.create().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
@@ -98,7 +98,7 @@ public class ManagedContainerLifecycleTests  {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new TomcatContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = TomcatContainerBuilder.create().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
@@ -121,7 +121,7 @@ public class ManagedContainerLifecycleTests  {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
-        ContainerBuilder<?, ?> builder = new WildFlyContainerBuilder().setOutputToConsole(true).setTargetDirectory(dataDir);
+        ContainerBuilder<?, ?> builder = WildFlyContainerBuilder.create().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.getCreateOptions();
 
         ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);

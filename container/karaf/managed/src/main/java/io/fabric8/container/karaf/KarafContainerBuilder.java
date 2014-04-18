@@ -29,7 +29,11 @@ import io.fabric8.spi.ManagedContainer;
  */
 public final class KarafContainerBuilder extends AbstractManagedContainerBuilder<KarafContainerBuilder, KarafCreateOptions> {
 
-    public KarafContainerBuilder() {
+    public static KarafContainerBuilder create() {
+        return new KarafContainerBuilder();
+    }
+
+    private KarafContainerBuilder() {
         super(new KarafCreateOptions());
     }
 

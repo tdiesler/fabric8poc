@@ -26,7 +26,11 @@ import io.fabric8.spi.AbstractManagedContainerBuilder;
  */
 public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> {
 
-    public WildFlyContainerBuilder() {
+    public static WildFlyContainerBuilder create() {
+        return new WildFlyContainerBuilder();
+    }
+
+    private WildFlyContainerBuilder() {
         super(new WildFlyCreateOptions());
     }
 
