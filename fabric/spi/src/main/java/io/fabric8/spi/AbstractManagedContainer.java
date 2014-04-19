@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +72,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
         HostDataStore dataStore = ServiceLocator.getRequiredService(HostDataStore.class);
         this.identity = dataStore.createManagedContainerIdentity(options.getIdentityPrefix());
+        this.attributes.putAllAttributes(options.getAttributes());
         this.createOptions = options;
     }
 
@@ -105,11 +107,8 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     protected <T> T putAttribute(AttributeKey<T> key, T value) {
+        IllegalStateAssertion.assertTrue(state == null || state == State.CREATED, "Cannot put attribute in state: " + state);
         return attributes.putAttribute(key, value);
-    }
-
-    protected <T> T removeAttribute(AttributeKey<T> key) {
-        return attributes.removeAttribute(key);
     }
 
     @Override
@@ -278,9 +277,13 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         }
     }
 
-    // [TODO] compute next free port value
-    protected int freePortValue(int confPortValue) {
-        return confPortValue + 1;
+    protected final int nextAvailablePort(int portValue) {
+        return nextAvailablePort(portValue, null);
+    }
+
+    protected int nextAvailablePort(int portValue, InetAddress bindAddr) {
+        PortManager portManager = ServiceLocator.getRequiredService(PortManager.class);
+        return portManager.nextAvailablePort(portValue, bindAddr);
     }
 
     /**

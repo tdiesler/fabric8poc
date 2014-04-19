@@ -67,7 +67,7 @@ public final class AttributeKey<T> {
         this.name = name;
         this.type = type;
         this.factory = factory;
-        this.tostring = "Key[name=" + name + ",type=" + (type != null ? type.getName() : null) + "]";
+        this.tostring = "Key[name=" + name + ",type=" + type + "]";
 
     }
 

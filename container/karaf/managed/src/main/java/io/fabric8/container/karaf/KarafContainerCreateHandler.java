@@ -16,23 +16,11 @@
  */
 package io.fabric8.container.karaf;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.LifecycleException;
-import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.AbstractJMXServiceEndpoint;
+import io.fabric8.spi.AbstractManagedContainerHandle;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ManagedContainer;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.remote.JMXConnector;
 
 /**
  * The Karaf container create handler
@@ -51,80 +39,12 @@ public final class KarafContainerCreateHandler implements ContainerCreateHandler
     public ContainerHandle create(final CreateOptions options) {
         final KarafManagedContainer container = new KarafManagedContainer((KarafCreateOptions) options);
         container.create();
-        return new KarafContainerHandle(container, options);
+        return new KarafContainerHandle(container);
     }
 
-    static class KarafContainerHandle implements ContainerHandle {
-
-        private final ManagedContainer<?> container;
-        private final CreateOptions options;
-
-        KarafContainerHandle(ManagedContainer<?> container, CreateOptions options) {
-            this.container = container;
-            this.options = options;
-        }
-
-        @Override
-        public Set<AttributeKey<?>> getAttributeKeys() {
-            return container.getAttributeKeys();
-        }
-
-        @Override
-        public <T> T getAttribute(AttributeKey<T> key) {
-            return container.getAttribute(key);
-        }
-
-        @Override
-        public <T> boolean hasAttribute(AttributeKey<T> key) {
-            return container.hasAttribute(key);
-        }
-
-        @Override
-        public Map<AttributeKey<?>, Object> getAttributes() {
-            return container.getAttributes();
-        }
-
-        @Override
-        public CreateOptions getCreateOptions() {
-            return options;
-        }
-
-        @Override
-        public void start() throws LifecycleException {
-            container.start();
-        }
-
-        @Override
-        public void stop() throws LifecycleException {
-            container.stop();
-        }
-
-        @Override
-        public void destroy() throws LifecycleException {
-            container.destroy();
-        }
-
-        @Override
-        public Set<ServiceEndpoint> getServiceEndpoints() {
-            ServiceEndpoint endpoint = new AbstractJMXServiceEndpoint() {
-
-                private final ServiceEndpointIdentity<JMXServiceEndpoint> identity;
-                {
-                    String idspec = container.getIdentity().getSymbolicName() + "-" + JMXServiceEndpoint.class.getSimpleName();
-                    identity = ServiceEndpointIdentity.create(idspec, JMXServiceEndpoint.class);
-                }
-
-                @Override
-                public ServiceEndpointIdentity<JMXServiceEndpoint> getIdentity() {
-                    return identity;
-                }
-
-                @Override
-                public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-                    return container.getJMXConnector(jmxUsername, jmxPassword, timeout, unit);
-                }
-            };
-            return Collections.singleton(endpoint);
+    static class KarafContainerHandle extends AbstractManagedContainerHandle {
+        KarafContainerHandle(ManagedContainer<?> container) {
+            super(container);
         }
     }
 }

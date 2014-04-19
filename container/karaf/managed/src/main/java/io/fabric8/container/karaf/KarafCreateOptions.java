@@ -32,6 +32,16 @@ public final class KarafCreateOptions extends AbstractManagedCreateOptions {
 
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
 
+    public static final int DEFAULT_RMI_SERVER_PORT = 44444;
+    public static final int DEFAULT_RMI_REGISTRY_PORT = 1099;
+    public static final int DEFAULT_HTTP_PORT = 8080;
+    public static final int DEFAULT_HTTPS_PORT = 8443;
+
+    private int rmiServerPort = DEFAULT_RMI_SERVER_PORT;
+    private int rmiRegistryPort = DEFAULT_RMI_REGISTRY_PORT;
+    private int httpPort = DEFAULT_HTTP_PORT;
+    private int httpsPort = DEFAULT_HTTPS_PORT;
+
     KarafCreateOptions() {
         setIdentityPrefix("KarafManagedContainer");
     }
@@ -39,6 +49,38 @@ public final class KarafCreateOptions extends AbstractManagedCreateOptions {
     @Override
     public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
         return KarafContainerCreateHandler.class;
+    }
+
+    public int getRmiServerPort() {
+        return rmiServerPort;
+    }
+
+    void setRmiServerPort(int rmiServerPort) {
+        this.rmiServerPort = rmiServerPort;
+    }
+
+    public int getRmiRegistryPort() {
+        return rmiRegistryPort;
+    }
+
+    void setRmiRegistryPort(int rmiRegistryPort) {
+        this.rmiRegistryPort = rmiRegistryPort;
+    }
+
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
+    }
+
+    public int getHttpsPort() {
+        return httpsPort;
+    }
+
+    void setHttpsPort(int httpsPort) {
+        this.httpsPort = httpsPort;
     }
 
     @Override

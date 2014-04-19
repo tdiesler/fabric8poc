@@ -47,10 +47,13 @@ public interface Constants {
     /**
      * The attribute key for the Http port
      */
-    AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create(Integer.class);
-
+    AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create("fabric8.http.port", Integer.class);
+    /**
+     * The attribute key for the Https port
+     */
+    AttributeKey<Integer> ATTRIBUTE_KEY_HTTPS_PORT = AttributeKey.create("fabric8.https.port", Integer.class);
     /**
      * The attribute key for JMX server URL
      */
-    AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create(String.class);
+    AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("fabric8.jmx.server.url", String.class);
 }

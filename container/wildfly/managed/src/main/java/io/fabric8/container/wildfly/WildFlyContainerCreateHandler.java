@@ -16,23 +16,11 @@
  */
 package io.fabric8.container.wildfly;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.LifecycleException;
-import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.AbstractJMXServiceEndpoint;
+import io.fabric8.spi.AbstractManagedContainerHandle;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ManagedContainer;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.remote.JMXConnector;
 
 /**
  * The WildFly container create handler
@@ -51,80 +39,12 @@ public final class WildFlyContainerCreateHandler implements ContainerCreateHandl
     public ContainerHandle create(final CreateOptions options) {
         final WildFlyManagedContainer container = new WildFlyManagedContainer((WildFlyCreateOptions) options);
         container.create();
-        return new WildFlyContainerHandle(container, options);
+        return new WildFlyContainerHandle(container);
     }
 
-    static class WildFlyContainerHandle implements ContainerHandle {
-
-        private final ManagedContainer<?> container;
-        private final CreateOptions options;
-
-        WildFlyContainerHandle(ManagedContainer<?> container, CreateOptions options) {
-            this.container = container;
-            this.options = options;
-        }
-
-        @Override
-        public Set<AttributeKey<?>> getAttributeKeys() {
-            return container.getAttributeKeys();
-        }
-
-        @Override
-        public <T> T getAttribute(AttributeKey<T> key) {
-            return container.getAttribute(key);
-        }
-
-        @Override
-        public <T> boolean hasAttribute(AttributeKey<T> key) {
-            return container.hasAttribute(key);
-        }
-
-        @Override
-        public Map<AttributeKey<?>, Object> getAttributes() {
-            return container.getAttributes();
-        }
-
-        @Override
-        public CreateOptions getCreateOptions() {
-            return options;
-        }
-
-        @Override
-        public void start() throws LifecycleException {
-            container.start();
-        }
-
-        @Override
-        public void stop() throws LifecycleException {
-            container.stop();
-        }
-
-        @Override
-        public void destroy() throws LifecycleException {
-            container.destroy();
-        }
-
-        @Override
-        public Set<ServiceEndpoint> getServiceEndpoints() {
-            ServiceEndpoint endpoint = new AbstractJMXServiceEndpoint() {
-
-                private final ServiceEndpointIdentity<JMXServiceEndpoint> identity;
-                {
-                    String idspec = container.getIdentity().getSymbolicName() + "-" + JMXServiceEndpoint.class.getSimpleName();
-                    identity = ServiceEndpointIdentity.create(idspec, JMXServiceEndpoint.class);
-                }
-
-                @Override
-                public ServiceEndpointIdentity<JMXServiceEndpoint> getIdentity() {
-                    return identity;
-                }
-
-                @Override
-                public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-                    return container.getJMXConnector(jmxUsername, jmxPassword, timeout, unit);
-                }
-            };
-            return Collections.singleton(endpoint);
+    static class WildFlyContainerHandle extends AbstractManagedContainerHandle {
+        WildFlyContainerHandle(ManagedContainer<?> container) {
+            super(container);
         }
     }
 }

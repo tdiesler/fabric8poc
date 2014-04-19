@@ -18,8 +18,11 @@ package io.fabric8.container.tomcat;
 
 import io.fabric8.api.Constants;
 import io.fabric8.spi.AbstractManagedContainer;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +30,21 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.remote.JMXConnector;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.jboss.gravia.runtime.RuntimeType;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 
 /**
@@ -44,28 +60,56 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
 
     @Override
     protected void doConfigure() throws Exception {
-        String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + activeJMXPort() + "/jmxrmi";
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+
+        File catalinaHome = getContainerHome();
+        IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
+
+        // conf/server.xml
+        File serverFile = new File(catalinaHome, "conf/server.xml");
+        IllegalStateAssertion.assertTrue(serverFile.exists(), "File does not exist: " + serverFile);
+
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = builderFactory.newDocumentBuilder();
+        FileInputStream fis = new FileInputStream(serverFile);
+        Document document = builder.parse(fis);
+        fis.close();
+
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", "${tomcat.http.port}");
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", "${tomcat.https.port}");
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", "${tomcat.ajp.port}");
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        DOMSource source = new DOMSource(document);
+        FileOutputStream fos = new FileOutputStream(serverFile);
+        StreamResult result = new StreamResult(fos);
+        transformer.transform(source, result);
+        fos.close();
     }
 
     @Override
     protected void doStart() throws Exception {
 
-        File catalinaHome = getContainerHome();
-        if (!catalinaHome.isDirectory())
-            throw new IllegalStateException("Not a valid Tomcat home dir: " + catalinaHome);
+        int jmxPort = nextAvailablePort(getCreateOptions().getJmxPort());
+        int ajpPort = nextAvailablePort(getCreateOptions().getAjpPort());
+        int httpPort = nextAvailablePort(getCreateOptions().getHttpPort());
+        int httpsPort = nextAvailablePort(getCreateOptions().getHttpsPort());
 
         // Construct a command to execute
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        cmd.add("-Dcom.sun.management.jmxremote.port=" + activeJMXPort());
+        cmd.add("-Dcom.sun.management.jmxremote.port=" + jmxPort);
         cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
         cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
+
+        cmd.add("-Dtomcat.ajp.port=" + ajpPort);
+        cmd.add("-Dtomcat.http.port=" + httpPort);
+        cmd.add("-Dtomcat.https.port=" + httpsPort);
 
         String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
+        File catalinaHome = getContainerHome();
         String absolutePath = catalinaHome.getAbsolutePath();
         String CLASS_PATH = absolutePath + "/bin/bootstrap.jar" + File.pathSeparator;
         CLASS_PATH += absolutePath + "/bin/tomcat-juli.jar";
@@ -84,6 +128,12 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
         startProcess(processBuilder);
+
+        putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+
+        String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
+        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
@@ -103,11 +153,15 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         return connector;
     }
 
-    private int activeJMXPort() {
-        int jmxPort = getCreateOptions().getJmxPort();
-        if (jmxPort == TomcatCreateOptions.DEFAULT_JMX_PORT) {
-            jmxPort = freePortValue(jmxPort);
+    private void replacePortValue(Document document, String expression, String replacement) throws XPathExpressionException {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        Element element = (Element) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
+        if (element != null) {
+            element.setAttribute("port", replacement);
+            Attr attrNode = element.getAttributeNode("redirectPort");
+            if (attrNode != null) {
+                element.setAttribute("redirectPort", "${tomcat.https.port}");
+            }
         }
-        return jmxPort;
     }
 }

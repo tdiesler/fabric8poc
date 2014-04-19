@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.remote.JMXConnector;
 
@@ -43,20 +42,8 @@ import org.jboss.modules.ModuleLoadException;
  */
 public final class WildFlyManagedContainer extends AbstractManagedContainer<WildFlyCreateOptions> {
 
-    // [TODO] provide better wildfly port offset
-    private static final AtomicInteger portOffset = new AtomicInteger();
-
-    private int currentPortOffset;
-
     WildFlyManagedContainer(WildFlyCreateOptions options) {
         super(options);
-    }
-
-    @Override
-    protected void doConfigure() throws Exception {
-        currentPortOffset = portOffset.incrementAndGet();
-        String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + (9990 + currentPortOffset);
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
@@ -71,12 +58,25 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         if (!modulesJar.exists())
             throw new IllegalStateException("Cannot find: " + modulesJar);
 
+        WildFlyCreateOptions options = getCreateOptions();
+        int managementNativePort = nextAvailablePort(options.getManagementNativePort());
+        int managementHttpPort = nextAvailablePort(options.getManagementHttpPort());
+        int managementHttpsPort = nextAvailablePort(options.getManagementHttpsPort());
+        int ajpPort = nextAvailablePort(options.getAjpPort());
+        int httpPort = nextAvailablePort(options.getHttpPort());
+        int httpsPort = nextAvailablePort(options.getHttpsPort());
+
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
-        cmd.add("-Djboss.socket.binding.port-offset=" + currentPortOffset);
+        cmd.add("-Djboss.management.native.port=" + managementNativePort);
+        cmd.add("-Djboss.management.http.port=" + managementHttpPort);
+        cmd.add("-Djboss.management.https.port=" + managementHttpsPort);
+        cmd.add("-Djboss.ajp.port=" + ajpPort);
+        cmd.add("-Djboss.http.port=" + httpPort);
+        cmd.add("-Djboss.https.port=" + httpsPort);
 
-        String javaArgs = getCreateOptions().getJavaVmArguments();
+        String javaArgs = options.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         cmd.add("-Djboss.home.dir=" + jbossHome);
@@ -86,11 +86,17 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         cmd.add(modulesPath.getAbsolutePath());
         cmd.add("org.jboss.as.standalone");
         cmd.add("-server-config");
-        cmd.add(getCreateOptions().getServerConfig());
+        cmd.add(options.getServerConfig());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
+
+        putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+
+        String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + managementHttpPort;
+        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
@@ -106,10 +112,9 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         return connector;
     }
 
-    // Confine the usage of jboss-modules to an additional class - this prevents
-    // NoClassDefFoundError: org/jboss/modules/ModuleLoadException
+    // Confine the usage of jboss-modules to an additional class
+    // This prevents NoClassDefFoundError: org/jboss/modules/ModuleLoadException
     static class JmxEnvironmentEnhancer {
-
         static void addClassLoader(Map<String, Object> env) {
             String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
             if (env.get(classLoaderKey) == null) {

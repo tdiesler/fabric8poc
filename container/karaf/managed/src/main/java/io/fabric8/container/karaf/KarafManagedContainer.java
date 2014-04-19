@@ -18,6 +18,7 @@ package io.fabric8.container.karaf;
 
 import io.fabric8.api.Constants;
 import io.fabric8.spi.AbstractManagedContainer;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.File;
 import java.io.FileReader;
@@ -47,7 +48,10 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
 
     @Override
     protected void doConfigure() throws Exception {
+
         File karafHome = getContainerHome();
+        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Karaf home does not exist: " + karafHome);
+
         String comment = "Modified by " + getClass().getName();
 
         // etc/org.ops4j.pax.web.cfg
@@ -55,51 +59,50 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         if (paxwebFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
-            String propertyKey = "org.osgi.service.http.port";
-            int confHttpPort = Integer.parseInt((String) props.get(propertyKey));
-            int httpPort = freePortValue(confHttpPort);
-            if (confHttpPort != httpPort) {
-                props.setProperty(propertyKey, new Integer(httpPort).toString());
-                FileWriter fileWriter = new FileWriter(paxwebFile);
-                try {
-                    props.store(fileWriter, comment);
-                } finally {
-                    fileWriter.close();
-                }
+
+            int httpPort = nextAvailablePort(getCreateOptions().getHttpPort());
+            int httpsPort = nextAvailablePort(getCreateOptions().getHttpsPort());
+
+            props.setProperty("org.osgi.service.http.port", new Integer(httpPort).toString());
+            props.setProperty("org.osgi.service.https.port", new Integer(httpsPort).toString());
+            FileWriter fileWriter = new FileWriter(paxwebFile);
+            try {
+                props.store(fileWriter, comment);
+            } finally {
+                fileWriter.close();
             }
+
             putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+            putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         }
 
         // etc/org.apache.karaf.management.cfg
         File managementFile = new File(karafHome, "etc/org.apache.karaf.management.cfg");
-        if (managementFile.exists()) {
-            Properties props = new Properties();
-            props.load(new FileReader(managementFile));
-            int confRegistryPort = Integer.parseInt((String) props.get("rmiRegistryPort"));
-            int registryPort = freePortValue(confRegistryPort);
-            int confServerPort = Integer.parseInt((String) props.get("rmiServerPort"));
-            int serverPort = freePortValue(confServerPort);
-            if (confRegistryPort != registryPort || confServerPort != serverPort) {
-                props.setProperty("rmiRegistryPort", new Integer(registryPort).toString());
-                props.setProperty("rmiServerPort", new Integer(serverPort).toString());
-                FileWriter fileWriter = new FileWriter(managementFile);
-                try {
-                    props.store(fileWriter, comment);
-                } finally {
-                    fileWriter.close();
-                }
-            }
-            String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + serverPort + "/jndi/rmi://127.0.0.1:" + registryPort + "/karaf-root";
-            putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
+
+        Properties props = new Properties();
+        props.load(new FileReader(managementFile));
+        int rmiRegistryPort = nextAvailablePort(getCreateOptions().getRmiRegistryPort());
+        int rmiServerPort = nextAvailablePort(getCreateOptions().getRmiServerPort());
+
+        props.setProperty("rmiRegistryPort", new Integer(rmiRegistryPort).toString());
+        props.setProperty("rmiServerPort", new Integer(rmiServerPort).toString());
+        FileWriter fileWriter = new FileWriter(managementFile);
+        try {
+            props.store(fileWriter, comment);
+        } finally {
+            fileWriter.close();
         }
+
+        String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + rmiServerPort + "/jndi/rmi://127.0.0.1:" + rmiRegistryPort + "/karaf-root";
+        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
     protected void doStart() throws Exception {
 
         File karafHome = getContainerHome();
-        if (!karafHome.isDirectory())
-            throw new IllegalStateException("Not a valid Karaf home dir: " + karafHome);
+        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Not a valid Karaf home dir: " + karafHome);
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
