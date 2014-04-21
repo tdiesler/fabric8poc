@@ -19,8 +19,7 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
@@ -28,11 +27,9 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
 
 /**
  * An immutable profile version
@@ -42,51 +39,27 @@ import org.jboss.gravia.utils.NotNullException;
  *
  * @Immutable
  */
-final class ImmutableProfileVersion implements ProfileVersion {
+final class ImmutableProfileVersion extends AttributeSupport implements ProfileVersion {
 
     private final Version identity;
-    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
-    private final AttributeSupport attributes;
     private final String tostring;
 
     ImmutableProfileVersion(ProfileVersionState versionState) {
-        NotNullException.assertValue(versionState, "versionState");
-        identity = versionState.getIdentity();
-        containers.addAll(versionState.getContainerIdentities());
-        profiles.addAll(versionState.getProfileIdentities());
-        attributes = new AttributeSupport(versionState.getAttributes());
-        tostring = versionState.toString();
+        super(versionState.getAttributes());
+        LockHandle readLock = versionState.aquireReadLock();
+        try {
+            identity = versionState.getIdentity();
+            profiles.addAll(versionState.getProfileIdentities());
+            tostring = versionState.toString();
+        } finally {
+            readLock.unlock();
+        }
     }
 
     @Override
     public Version getIdentity() {
         return identity;
-    }
-
-    @Override
-    public Set<ContainerIdentity> getContainers() {
-        return Collections.unmodifiableSet(containers);
-    }
-
-    @Override
-    public Set<AttributeKey<?>> getAttributeKeys() {
-        return attributes.getAttributeKeys();
-    }
-
-    @Override
-    public <T> T getAttribute(AttributeKey<T> key) {
-        return attributes.getAttribute(key);
-    }
-
-    @Override
-    public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return attributes.hasAttribute(key);
-    }
-
-    @Override
-    public Map<AttributeKey<?>, Object> getAttributes() {
-        return attributes.getAttributes();
     }
 
     @Override

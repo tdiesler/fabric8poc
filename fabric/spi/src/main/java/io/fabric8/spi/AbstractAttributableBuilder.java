@@ -21,21 +21,41 @@ package io.fabric8.spi;
 
 import io.fabric8.api.AttributableBuilder;
 import io.fabric8.api.AttributeKey;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Map;
 
 public class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
 
     private final AttributeSupport attributes = new AttributeSupport();
+    private boolean immutable;
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> B addAttribute(AttributeKey<T> key, T value) {
+        assertMutable();
         attributes.putAttribute(key, value);
+        return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addAttributes(Map<AttributeKey<?>, Object> atts) {
+        assertMutable();
+        attributes.putAllAttributes(atts);
         return (B) this;
     }
 
     protected Map<AttributeKey<?>, Object> getAttributes() {
         return attributes.getAttributes();
+    }
+
+    protected void assertMutable() {
+        IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
+    }
+
+    void makeImmutable() {
+        assertMutable();
+        immutable = true;
     }
 }

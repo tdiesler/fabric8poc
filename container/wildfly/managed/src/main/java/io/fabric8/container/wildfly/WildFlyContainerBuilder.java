@@ -40,36 +40,43 @@ public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<Wil
     }
 
     public WildFlyContainerBuilder setServerConfig(String serverConfig) {
+        assertMutable();
         options.setServerConfig(serverConfig);
         return this;
     }
 
     public WildFlyContainerBuilder setManagementNativePort(int nativePort) {
+        assertMutable();
         options.setManagementNativePort(nativePort);
         return this;
     }
 
     public WildFlyContainerBuilder setManagementHttpPort(int httpPort) {
+        assertMutable();
         options.setManagementHttpPort(httpPort);
         return this;
     }
 
     public WildFlyContainerBuilder setManagementHttpsPort(int httpsPort) {
+        assertMutable();
         options.setManagementHttpsPort(httpsPort);
         return this;
     }
 
     public WildFlyContainerBuilder setAjpPort(int ajpPort) {
+        assertMutable();
         options.setAjpPort(ajpPort);
         return this;
     }
 
     public WildFlyContainerBuilder setHttpPort(int httpPort) {
+        assertMutable();
         options.setHttpPort(httpPort);
         return this;
     }
 
     public WildFlyContainerBuilder setHttpsPort(int httpsPort) {
+        assertMutable();
         options.setHttpsPort(httpsPort);
         return this;
     }

@@ -19,8 +19,6 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
@@ -29,11 +27,9 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
 
 /**
  * An immutable profile
@@ -43,24 +39,20 @@ import org.jboss.gravia.utils.NotNullException;
  *
  * @Immutable
  */
-final class ImmutableProfile implements Profile {
+final class ImmutableProfile extends AttributeSupport implements Profile {
 
     private final Version version;
     private final ProfileIdentity identity;
 
     private final Set<ProfileIdentity> parents = new HashSet<ProfileIdentity>();
-    private final Set<ContainerIdentity> containers = new HashSet<ContainerIdentity>();
     private final Set<ProfileItem> profileItems = new HashSet<ProfileItem>();
-    private final AttributeSupport attributes;
     private final String tostring;
 
     ImmutableProfile(ProfileState profileState) {
-        NotNullException.assertValue(profileState, "profileState");
+        super(profileState.getAttributes());
         version = profileState.getProfileVersion();
         identity = profileState.getIdentity();
-        containers.addAll(profileState.getContainers());
         profileItems.addAll(profileState.getProfileItems(null));
-        attributes = new AttributeSupport(profileState.getAttributes());
         tostring = profileState.toString();
     }
 
@@ -77,31 +69,6 @@ final class ImmutableProfile implements Profile {
     @Override
     public Set<ProfileIdentity> getParents() {
         return Collections.unmodifiableSet(parents);
-    }
-
-    @Override
-    public Set<ContainerIdentity> getContainers() {
-        return Collections.unmodifiableSet(containers);
-    }
-
-    @Override
-    public Set<AttributeKey<?>> getAttributeKeys() {
-        return attributes.getAttributeKeys();
-    }
-
-    @Override
-    public <T> T getAttribute(AttributeKey<T> key) {
-        return attributes.getAttribute(key);
-    }
-
-    @Override
-    public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return attributes.hasAttribute(key);
-    }
-
-    @Override
-    public Map<AttributeKey<?>, Object> getAttributes() {
-        return attributes.getAttributes();
     }
 
     @Override

@@ -19,23 +19,22 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
+import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
 
 /**
  * An immutable container
@@ -45,30 +44,34 @@ import org.jboss.gravia.utils.NotNullException;
  *
  * @Immutable
  */
-final class ImmutableContainer implements Container {
+final class ImmutableContainer extends AttributeSupport implements Container {
 
     private final ContainerIdentity identity;
     private final Version profileVersion;
     private final Set<ContainerIdentity> children = new HashSet<>();
     private final Set<ProfileIdentity> profiles = new HashSet<>();
     private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
-    private final AttributeSupport attributes;
     private final ContainerIdentity parent;
     private final String tostring;
     private final State state;
 
     ImmutableContainer(ContainerState cntState) {
-        NotNullException.assertValue(cntState, "containerState");
-        identity = cntState.getIdentity();
-        ContainerState parentState = cntState.getParent();
-        parent = parentState != null ? parentState.getIdentity() : null;
-        profileVersion = cntState.getProfileVersion();
-        state = cntState.getState();
-        children.addAll(cntState.getChildContainers());
-        profiles.addAll(cntState.getProfiles());
-        endpoints.addAll(cntState.getServiceEndpointIdentities());
-        attributes = new AttributeSupport(cntState.getAttributes());
-        tostring = cntState.toString();
+        super(cntState.getAttributes());
+        LockHandle readLock = cntState.aquireReadLock();
+        try {
+            identity = cntState.getIdentity();
+            ContainerState parentState = cntState.getParentState();
+            parent = parentState != null ? parentState.getIdentity() : null;
+            ProfileVersionState versionState = cntState.getProfileVersion();
+            profileVersion = versionState != null ? versionState.getIdentity() : null;
+            state = cntState.getState();
+            children.addAll(cntState.getChildContainers());
+            profiles.addAll(cntState.getProfiles());
+            endpoints.addAll(cntState.getServiceEndpointIdentities());
+            tostring = cntState.toString();
+        } finally {
+            readLock.unlock();
+        }
     }
 
     @Override
@@ -99,26 +102,6 @@ final class ImmutableContainer implements Container {
     @Override
     public Set<ProfileIdentity> getProfiles() {
         return Collections.unmodifiableSet(profiles);
-    }
-
-    @Override
-    public Set<AttributeKey<?>> getAttributeKeys() {
-        return attributes.getAttributeKeys();
-    }
-
-    @Override
-    public <T> T getAttribute(AttributeKey<T> key) {
-        return attributes.getAttribute(key);
-    }
-
-    @Override
-    public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return attributes.hasAttribute(key);
-    }
-
-    @Override
-    public Map<AttributeKey<?>, Object> getAttributes() {
-        return attributes.getAttributes();
     }
 
     @Override

@@ -31,6 +31,8 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder addIdentity(Version version);
 
+    ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider);
+
     ProfileVersion getProfileVersion();
 
     final class Factory {

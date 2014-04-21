@@ -32,6 +32,7 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B addMavenCoordinates(MavenCoordinates coordinates) {
+        assertMutable();
         options.addMavenCoordinates(coordinates);
         return (B) this;
     }
@@ -39,6 +40,7 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setTargetDirectory(String target) {
+        assertMutable();
         options.setTargetDirectory(new File(target).getAbsoluteFile());
         return (B) this;
     }
@@ -46,6 +48,7 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setJavaVmArguments(String javaVmArguments) {
+        assertMutable();
         options.setJavaVmArguments(javaVmArguments);
         return (B) this;
     }
@@ -53,6 +56,7 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setOutputToConsole(boolean outputToConsole) {
+        assertMutable();
         options.setOutputToConsole(outputToConsole);
         return (B) this;
     }

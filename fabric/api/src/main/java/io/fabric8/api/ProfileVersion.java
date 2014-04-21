@@ -33,11 +33,6 @@ import org.jboss.gravia.resource.Version;
 public interface ProfileVersion extends Attributable, Identifiable<Version> {
 
     /**
-     * Get the associated list of containers
-     */
-    Set<ContainerIdentity> getContainers();
-
-    /**
      * Get the associated list of profiles
      */
     Set<ProfileIdentity> getProfiles();

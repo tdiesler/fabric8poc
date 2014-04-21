@@ -19,30 +19,21 @@
  */
 package io.fabric8.core.internal;
 
+import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.LockHandle;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
-import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * A registry of stateful {@link Container} instances
@@ -53,10 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
-    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
-
     private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();
-    private final Map<ContainerIdentity, ReentrantReadWriteLock> containerLocks = new HashMap<ContainerIdentity, ReentrantReadWriteLock>();
 
     @Activate
     void activate() {
@@ -68,85 +56,21 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    LockHandle aquireWriteLock(ContainerIdentity identity) {
-        final WriteLock writeLock;
-        final ContainerState cntState;
-        synchronized (containers) {
-            cntState = getRequiredContainer(identity);
-            ReentrantReadWriteLock lock = containerLocks.get(identity);
-            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain write lock for: " + identity);
-
-            writeLock = lock.writeLock();
-        }
-
-        boolean success;
-        try {
-            success = writeLock.tryLock() || writeLock.tryLock(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            success = false;
-        }
-        IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + identity);
-
-        final LockHandle versionLock;
-        Version version = cntState.getProfileVersion();
-        if (version != null) {
-            try {
-                versionLock = profileService.get().aquireProfileVersionLock(version);
-            } catch (RuntimeException ex) {
-                writeLock.unlock();
-                throw ex;
-            }
-        } else {
-            versionLock = null;
-        }
-
-        return new LockHandle() {
-            @Override
-            public void unlock() {
-                if (versionLock != null) {
-                    versionLock.unlock();
-                }
-                writeLock.unlock();
-            }
-        };
-    }
-
-    LockHandle aquireReadLock(ContainerIdentity identity) {
-        final ReadLock readLock;
-        synchronized (containers) {
-            ReentrantReadWriteLock lock = containerLocks.get(identity);
-            IllegalStateAssertion.assertNotNull(lock, "Cannot obtain read lock for: " + identity);
-
-            readLock = lock.readLock();
-        }
-
-        boolean success;
-        try {
-            success = readLock.tryLock() || readLock.tryLock(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            success = false;
-        }
-        IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + identity);
-
-        return new LockHandle() {
-            @Override
-            public void unlock() {
-                readLock.unlock();
-            }
-        };
-    }
-
     Set<ContainerIdentity> getContainerIds() {
         assertValid();
-        return Collections.unmodifiableSet(new HashSet<ContainerIdentity>(containers.keySet()));
+        return Collections.unmodifiableSet(containers.keySet());
     }
 
     Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
         assertValid();
         Set<ContainerState> result = new HashSet<ContainerState>();
-        for (ContainerState aux : containers.values()) {
-            if (identities == null || identities.contains(aux.getIdentity())) {
-                result.add(aux);
+        if (identities == null) {
+            result.addAll(containers.values());
+        } else {
+            for (ContainerState cntState : containers.values()) {
+                if (identities.contains(cntState.getIdentity())) {
+                    result.add(cntState);
+                }
             }
         }
         return Collections.unmodifiableSet(result);
@@ -157,32 +81,18 @@ public final class ContainerRegistry extends AbstractComponent {
         return getContainerInternal(identity);
     }
 
-    void addContainer(ContainerState parentState, ContainerState cntState) {
+    void addContainer(ContainerState cntState) {
         assertValid();
-        synchronized (containers) {
-            ContainerIdentity identity = cntState.getIdentity();
-            IllegalStateAssertion.assertTrue(getContainerInternal(identity) == null, "Container already exists: " + identity);
-
-            if (parentState != null) {
-                parentState.addChild(cntState);
-            }
-            containerLocks.put(identity, new ReentrantReadWriteLock());
-            containers.put(identity, cntState);
-        }
+        ContainerIdentity identity = cntState.getIdentity();
+        IllegalStateAssertion.assertTrue(getContainerInternal(identity) == null, "Container already exists: " + identity);
+        containers.put(identity, cntState);
     }
 
     ContainerState removeContainer(ContainerIdentity identity) {
         assertValid();
-        synchronized (containers) {
-            ContainerState cntState = getRequiredContainer(identity);
-            containers.remove(identity);
-            containerLocks.remove(identity);
-            ContainerState parentState = cntState.getParent();
-            if (parentState != null) {
-                parentState.removeChild(identity);
-            }
-            return cntState;
-        }
+        ContainerState cntState = getRequiredContainer(identity);
+        containers.remove(identity);
+        return cntState;
     }
 
     ContainerState getRequiredContainer(ContainerIdentity identity) {
@@ -194,14 +104,5 @@ public final class ContainerRegistry extends AbstractComponent {
 
     private ContainerState getContainerInternal(ContainerIdentity identity) {
         return containers.get(identity);
-    }
-
-    @Reference
-    void bindProfileService(ProfileService service) {
-        profileService.bind(service);
-    }
-
-    void unbindProfileService(ProfileService service) {
-        profileService.unbind(service);
     }
 }

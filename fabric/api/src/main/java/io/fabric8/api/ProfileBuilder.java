@@ -32,6 +32,8 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder addIdentity(String symbolicName);
 
+    ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider);
+
     <T extends ProfileItemBuilder<?>> T getItemBuilder(Class<T> type);
 
     ProfileBuilder addProfileItem(ProfileItem item);

@@ -51,6 +51,6 @@ public final class ProfileBuilderFactoryService extends AbstractComponent implem
     @Override
     public ProfileBuilder create() {
         assertValid();
-        return new DefaultProfileBuilder();
+        return DefaultProfileBuilder.create();
     }
 }

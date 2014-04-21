@@ -23,7 +23,7 @@ import org.jboss.gravia.utils.NotNullException;
 
 
 /**
- * An abstract identity
+ * An abstract string based identity
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014

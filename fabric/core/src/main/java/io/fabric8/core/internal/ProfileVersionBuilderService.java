@@ -51,6 +51,6 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
     @Override
     public ProfileVersionBuilder create() {
         assertValid();
-        return new DefaultProfileVersionBuilder();
+        return DefaultProfileVersionBuilder.create();
     }
 }

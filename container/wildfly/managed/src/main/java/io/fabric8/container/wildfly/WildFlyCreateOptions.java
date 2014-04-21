@@ -63,7 +63,6 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
     }
 
     void setServerConfig(String serverConfig) {
-        assertMutable();
         this.serverConfig = serverConfig;
     }
 

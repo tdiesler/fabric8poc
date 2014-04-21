@@ -92,18 +92,26 @@ public final class AttributesOpenType {
         String factoryName = (String) attData.get(AttributeType.ITEM_FACTORY);
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain type name");
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain factory name");
+        AttributeKey key;
         Factory factory;
         Class type;
         Object value;
         try {
             type = Class.forName(typeName, true, classLoader);
-            Class<?> factoryType = Class.forName(factoryName, true, classLoader);
-            factory = (Factory<?>) factoryType.newInstance();
-            value = factory.createFrom(valStr);
+            if (factoryName != null) {
+                Class<?> factoryType = Class.forName(factoryName, true, classLoader);
+                factory = (Factory<?>) factoryType.newInstance();
+                key = AttributeKey.create(name, type, factory);
+                value = factory.createFrom(valStr);
+            } else if (String.class.getName().equals(typeName)) {
+                key = AttributeKey.create(name, type);
+                value = valStr;
+            } else {
+                throw new IllegalStateException("No factory for attribute type: " + typeName);
+            }
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
-        AttributeKey key = AttributeKey.create(name, type, factory);
         attributes.putAttribute(key, value);
     }
 

@@ -32,7 +32,6 @@ public abstract class AbstractCreateOptions implements CreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private String identityPrefix = "Container";
-    private boolean immutable;
 
     @Override
     public String getIdentityPrefix() {
@@ -72,14 +71,5 @@ public abstract class AbstractCreateOptions implements CreateOptions {
 
     protected <T> void putAttribute(AttributeKey<T> key, T value) {
         attributes.putAttribute(key, value);
-    }
-
-    protected void assertMutable() {
-        IllegalStateAssertion.assertFalse(immutable, "Configuration is immutable");
-    }
-
-    void makeImmutable() {
-        assertMutable();
-        immutable = true;
     }
 }

@@ -40,13 +40,14 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
 
     /**
      * A config key that is made available as a container attribute
+     * [TODO] remove config.token
      */
     String CNFKEY_CONFIG_TOKEN = "config.token";
 
     /**
      * An attribute key for the {@link CNFKEY_CONFIG_TOKEN} value
      */
-    AttributeKey<String> ATTKEY_CONFIG_TOKEN = AttributeKey.create(String.class);
+    AttributeKey<String> ATTKEY_CONFIG_TOKEN = AttributeKey.create("fabric8.config.token", String.class);
 
     /**
      * The configuration PID for this service

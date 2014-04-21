@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi.management;
 
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.AttributeSupport;
@@ -113,11 +112,6 @@ public final class ProfileVersionOpenType {
         @Override
         public Version getIdentity() {
             return identity;
-        }
-
-        @Override
-        public Set<ContainerIdentity> getContainers() {
-            throw new UnsupportedOperationException();
         }
 
         @Override

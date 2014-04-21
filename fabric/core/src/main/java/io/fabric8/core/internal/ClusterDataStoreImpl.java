@@ -57,6 +57,7 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
     public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
         NotNullException.assertValue(prefix, "prefix");
         String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
-        return ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+        ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+        return containerId;
     }
 }

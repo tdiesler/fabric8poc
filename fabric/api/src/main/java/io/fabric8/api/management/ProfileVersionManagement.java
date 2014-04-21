@@ -52,5 +52,5 @@ public interface ProfileVersionManagement {
      * Get profile version details for the given identity
      * @return composite data type defined by {@link ProfileVersionOpenType}
      */
-    CompositeData getContainer(String identity);
+    CompositeData getProfileVersion(String identity);
 }

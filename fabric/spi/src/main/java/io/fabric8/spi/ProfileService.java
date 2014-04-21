@@ -19,12 +19,8 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitKey;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * The internal profile service
@@ -38,12 +34,4 @@ public interface ProfileService extends ProfileManager {
      * The {@link PermitKey} that protects this service.
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
-
-    void addContainerToProfileVersion(Version version, ContainerIdentity containerId);
-
-    void removeContainerFromProfileVersion(Version version, ContainerIdentity containerId);
-
-    void addContainerToProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId);
-
-    void removeContainerFromProfile(Version version, ProfileIdentity profileId, ContainerIdentity containerId);
 }

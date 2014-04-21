@@ -104,7 +104,7 @@ public abstract class BasicProfilesTests  {
         Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
 
         // Remove profile version
-        profileVersion = prfManager.removeProfileVersion(version);
-        Assert.assertEquals(0, profileVersion.getProfiles().size());
+        prfManager.removeProfileVersion(version);
+        Assert.assertNull(prfManager.getProfileVersion(version));
     }
 }

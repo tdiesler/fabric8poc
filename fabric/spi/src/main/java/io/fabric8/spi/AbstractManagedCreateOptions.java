@@ -61,17 +61,14 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
      */
 
     protected void addMavenCoordinates(MavenCoordinates coordinates) {
-        assertMutable();
         mavenCoordinates.add(coordinates);
     }
 
     protected void setTargetDirectory(File target) {
-        assertMutable();
         this.targetDirectory = target;
     }
 
     protected void setJavaVmArguments(String javaVmArguments) {
-        assertMutable();
         this.javaVmArguments = javaVmArguments;
     }
 

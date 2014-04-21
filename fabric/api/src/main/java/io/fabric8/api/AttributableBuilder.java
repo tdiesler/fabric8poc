@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
 
 
 
@@ -31,4 +33,6 @@ package io.fabric8.api;
 public interface AttributableBuilder<B extends AttributableBuilder<B>> {
 
     <T> B addAttribute(AttributeKey<T> key, T value);
+
+    B addAttributes(Map<AttributeKey<?>, Object> attributes);
 }

@@ -20,13 +20,14 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.ConfigurationProfileItemBuilder;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.NullProfileItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileItemBuilder;
+import io.fabric8.api.ProfileOptionsProvider;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -40,15 +41,31 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     private final Set<ProfileItem> items = new HashSet<ProfileItem>();
     private ProfileIdentity identity;
 
+    public static ProfileBuilder create() {
+        return new DefaultProfileBuilder();
+    }
+
+    // Hide ctor
+    private DefaultProfileBuilder() {
+    }
+
     @Override
     public ProfileBuilder addIdentity(String symbolicName) {
+        assertMutable();
         identity = ProfileIdentity.create(symbolicName);
         return this;
     }
 
     @Override
+    public ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider) {
+        assertMutable();
+        return optionsProvider.addBuilderOptions(this);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public <T extends ProfileItemBuilder<?>> T getItemBuilder(Class<T> type) {
+        assertMutable();
         if (ConfigurationProfileItemBuilder.class.isAssignableFrom(type)) {
             return (T) new DefaultConfigurationProfileItemBuilder();
         } else if (NullProfileItemBuilder.class.isAssignableFrom(type)) {
@@ -60,17 +77,25 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileBuilder addProfileItem(ProfileItem item) {
+        assertMutable();
         items.add(item);
         return this;
     }
 
     @Override
     public ProfileBuilder importProfile(InputStream input) {
+        assertMutable();
         throw new UnsupportedOperationException();
+    }
+
+    private void validate() {
+        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
     }
 
     @Override
     public Profile getProfile() {
+        validate();
+        makeImmutable();
         return new ProfileImpl();
     }
 
@@ -88,11 +113,6 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
         @Override
         public Set<ProfileIdentity> getParents() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        public Set<ContainerIdentity> getContainers() {
             return Collections.emptySet();
         }
 

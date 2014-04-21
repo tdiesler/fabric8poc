@@ -20,10 +20,11 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.ProfileVersionOptionsProvider;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
 import java.util.Map;
@@ -35,14 +36,35 @@ public final class DefaultProfileVersionBuilder extends AbstractAttributableBuil
 
     private Version identity;
 
+    public static ProfileVersionBuilder create() {
+        return new DefaultProfileVersionBuilder();
+    }
+
+    // Hide ctor
+    private DefaultProfileVersionBuilder() {
+    }
+
     @Override
     public ProfileVersionBuilder addIdentity(Version version) {
+        assertMutable();
         this.identity = version;
         return this;
     }
 
     @Override
+    public ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider) {
+        assertMutable();
+        return optionsProvider.addBuilderOptions(this);
+    }
+
+    private void validate() {
+        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
+    }
+
+    @Override
     public ProfileVersion getProfileVersion() {
+        validate();
+        makeImmutable();
         return new ProfileVersionImpl(getAttributes());
     }
 
@@ -55,11 +77,6 @@ public final class DefaultProfileVersionBuilder extends AbstractAttributableBuil
         @Override
         public Version getIdentity() {
             return identity;
-        }
-
-        @Override
-        public Set<ContainerIdentity> getContainers() {
-            return Collections.emptySet();
         }
 
         @Override

@@ -21,16 +21,12 @@ package io.fabric8.api;
 
 
 /**
- * A builder for a fabric container
+ * An options provider to the profile builder.
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 22-Apr-2014
  */
-public interface ContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> extends AttributableBuilder<B> {
+public interface ProfileOptionsProvider {
 
-    B addIdentityPrefix(String prefix);
-
-    B addCreateOptions(CreateOptionsProvider<B> optionsProvider);
-
-    C getCreateOptions();
+    ProfileBuilder addBuilderOptions(ProfileBuilder builder);
 }

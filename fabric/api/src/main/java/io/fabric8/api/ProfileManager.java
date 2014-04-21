@@ -40,6 +40,11 @@ public interface ProfileManager {
     LockHandle aquireProfileVersionLock(Version version);
 
     /**
+     * Get the default profile version
+     */
+    ProfileVersion getDefaultProfileVersion();
+
+    /**
      * Get the set of profile version identities in the cluster
      */
     Set<Version> getProfileVersionIds();

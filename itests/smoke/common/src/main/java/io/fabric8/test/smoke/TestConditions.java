@@ -70,7 +70,6 @@ public final class TestConditions {
         Assert.assertEquals("Default version", defaultVersion, defaultProfile.getProfileVersion());
         Assert.assertEquals("default", defaultProfile.getIdentity().getSymbolicName());
         Assert.assertTrue("No parents", defaultProfile.getParents().isEmpty());
-        Assert.assertTrue("No associated containers", defaultProfile.getContainers().isEmpty());
         Set<ProfileItem> profileItems = defaultProfile.getProfileItems(null);
         Assert.assertEquals("One profile item", 1, profileItems.size());
         ProfileItem profileItem = profileItems.iterator().next();

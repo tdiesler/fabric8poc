@@ -173,7 +173,7 @@ public final class MBeansProvider extends AbstractComponent {
         }
 
         @Override
-        public CompositeData getContainer(String identity) {
+        public CompositeData getProfileVersion(String identity) {
             ProfileVersion pversion = profileManager.getProfileVersion(Version.parseVersion(identity));
             return pversion != null ? ProfileVersionOpenType.getCompositeData(pversion) : null;
         }

@@ -43,21 +43,25 @@ public final class KarafContainerBuilder extends AbstractManagedContainerBuilder
     }
 
     public KarafContainerBuilder setRmiServerPort(int serverPort) {
+        assertMutable();
         options.setRmiServerPort(serverPort);
         return this;
     }
 
     public KarafContainerBuilder setRmiRegistryPort(int registryPort) {
+        assertMutable();
         options.setRmiRegistryPort(registryPort);
         return this;
     }
 
     public KarafContainerBuilder setHttpPort(int httpPort) {
+        assertMutable();
         options.setHttpPort(httpPort);
         return this;
     }
 
     public KarafContainerBuilder setHttpsPort(int httpsPort) {
+        assertMutable();
         options.setHttpsPort(httpsPort);
         return this;
     }

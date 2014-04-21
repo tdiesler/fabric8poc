@@ -150,7 +150,6 @@ public abstract class ProfileUpdateTests  {
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version12);
-        Assert.assertEquals(0, profileVersion.getProfiles().size());
     }
 
     @Test

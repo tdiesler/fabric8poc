@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.CreateOptionsProvider;
 
 public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, C> {
 
@@ -33,8 +34,16 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>,
     @Override
     @SuppressWarnings("unchecked")
     public B addIdentityPrefix(String prefix) {
+        assertMutable();
         getMutableOptions().setIdentityPrefix(prefix);
         return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addCreateOptions(CreateOptionsProvider<B> optionsProvider) {
+        assertMutable();
+        return optionsProvider.addBuilderOptions((B) this);
     }
 
     protected AbstractCreateOptions getMutableOptions() {
@@ -44,7 +53,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>,
     @Override
     public C getCreateOptions() {
         getMutableOptions().validateConfiguration();
-        getMutableOptions().makeImmutable();
+        makeImmutable();
         return options;
     }
 }
