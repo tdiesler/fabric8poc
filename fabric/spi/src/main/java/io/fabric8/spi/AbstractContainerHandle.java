@@ -23,24 +23,42 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceEndpoint;
 
+import java.util.Collections;
 import java.util.Set;
 
-
 /**
- * A handle to a container instance
+ * An abstract handle to a container instance
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 21-Apr-2014
  */
-public interface ContainerHandle {
+public abstract class AbstractContainerHandle implements ContainerHandle {
 
-    CreateOptions getCreateOptions();
+    private final CreateOptions options;
 
-    void start() throws LifecycleException;
+    protected AbstractContainerHandle(CreateOptions options) {
+        this.options = options;
+    }
 
-    void stop() throws LifecycleException;
+    @Override
+    public CreateOptions getCreateOptions() {
+        return options;
+    }
 
-    void destroy() throws LifecycleException;
+    @Override
+    public void start() throws LifecycleException {
+    }
 
-    Set<ServiceEndpoint> getServiceEndpoints();
+    @Override
+    public void stop() throws LifecycleException {
+    }
+
+    @Override
+    public void destroy() throws LifecycleException {
+    }
+
+    @Override
+    public Set<ServiceEndpoint> getServiceEndpoints() {
+        return Collections.emptySet();
+    }
 }

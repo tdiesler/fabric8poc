@@ -28,7 +28,6 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
-import io.fabric8.api.LifecycleException;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
@@ -47,7 +46,6 @@ import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.DefaultCreateOptions;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
@@ -119,9 +117,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<ContainerCreateHandler>();
+    private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
     private String configToken;
-    private ServiceRegistration<?> listenerRegistration;
 
     @Activate
     void activate(Map<String, ?> config) {
@@ -135,8 +133,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Deactivate
     void deactivate() {
         deactivateComponent(PERMIT);
-        if (listenerRegistration != null) {
-            listenerRegistration.unregister();
+        for (ServiceRegistration<?> sreg : registrations) {
+            sreg.unregister();
         }
     }
 
@@ -176,7 +174,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
-        listenerRegistration = syscontext.registerService(ProfileEventListener.class, listener, null);
+        registrations.add(syscontext.registerService(ProfileEventListener.class, listener, null));
     }
 
     @Override
@@ -202,23 +200,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Every type of {@link CreateOptions}
         List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
-        if (!(options instanceof DefaultCreateOptions)) {
-            Set<ContainerCreateHandler> handlers = getContainerCreateHandlers();
-            if (options instanceof ManagedCreateOptions) {
-                ManagedCreateOptions managedOptions = (ManagedCreateOptions) options;
-                Class<? extends ContainerCreateHandler> primaryType = managedOptions.getPrimaryHandler();
-                ContainerCreateHandler primary = ServiceLocator.awaitService(primaryType, 10, TimeUnit.SECONDS);
-                handles.add(primary.create(options));
-                handlers.remove(primary);
-            }
-            for (ContainerCreateHandler handler : handlers) {
-                if (handler.accept(options)) {
-                    handles.add(handler.create(options));
-                }
-            }
-            if (handles.isEmpty())
-                throw new LifecycleException("Cannot find ContainerCreateHandler that accepts: " + options.getClass().getName());
+        Set<ContainerCreateHandler> handlers = getContainerCreateHandlers();
+        if (options instanceof ManagedCreateOptions) {
+            ManagedCreateOptions managedOptions = (ManagedCreateOptions) options;
+            Class<? extends ContainerCreateHandler> primaryType = managedOptions.getPrimaryHandler();
+            ContainerCreateHandler primary = ServiceLocator.awaitService(primaryType, 10, TimeUnit.SECONDS);
+            handles.add(primary.create(options));
+            handlers.remove(primary);
         }
+        for (ContainerCreateHandler handler : handlers) {
+            if (handler.accept(options)) {
+                handles.add(handler.create(options));
+            }
+        }
+        IllegalStateAssertion.assertFalse(handles.isEmpty(), "Cannot find ContainerCreateHandler that accepts: " + options);
         ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
         ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
         ContainerState cntState = new ContainerState(parentState, identity, options, handles, configToken);
@@ -605,9 +600,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.identity = identity;
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
-            for (ContainerHandle handle : handles) {
-                attributes.putAllAttributes(handle.getAttributes());
-            }
             if (parentState != null) {
                 parentState.addChild(this);
             }

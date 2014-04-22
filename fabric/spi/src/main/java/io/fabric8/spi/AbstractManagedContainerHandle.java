@@ -19,8 +19,6 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceEndpoint;
@@ -28,7 +26,6 @@ import io.fabric8.api.ServiceEndpointIdentity;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -40,38 +37,14 @@ import javax.management.remote.JMXConnector;
  * @author thomas.diesler@jboss.com
  * @since 21-Apr-2014
  */
-public abstract class AbstractManagedContainerHandle implements ContainerHandle {
+public abstract class AbstractManagedContainerHandle extends AbstractContainerHandle {
 
     private final Set<ServiceEndpoint> endpoints = new HashSet<>();
     private final ManagedContainer<?> container;
 
     protected AbstractManagedContainerHandle(ManagedContainer<?> container) {
+        super(container.getCreateOptions());
         this.container = container;
-    }
-
-    @Override
-    public Set<AttributeKey<?>> getAttributeKeys() {
-        return container.getAttributeKeys();
-    }
-
-    @Override
-    public <T> T getAttribute(AttributeKey<T> key) {
-        return container.getAttribute(key);
-    }
-
-    @Override
-    public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return container.hasAttribute(key);
-    }
-
-    @Override
-    public Map<AttributeKey<?>, Object> getAttributes() {
-        return container.getAttributes();
-    }
-
-    @Override
-    public CreateOptions getCreateOptions() {
-        return container.getCreateOptions();
     }
 
     @Override
