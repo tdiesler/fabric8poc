@@ -141,7 +141,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getContainerIds() {
             Set<String> result = new HashSet<String>();
-            for (ContainerIdentity cntid : containerManager.getContainerIds()) {
+            for (ContainerIdentity cntid : containerManager.getContainerIdentities()) {
                 result.add(cntid.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -166,7 +166,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileVersionIds() {
             Set<String> result = new HashSet<String>();
-            for (Version version : profileManager.getProfileVersionIds()) {
+            for (Version version : profileManager.getVersions()) {
                 result.add(version.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -190,7 +190,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileIds(String version) {
             Set<String> result = new HashSet<String>();
-            for (ProfileIdentity prfid : profileManager.getProfileIds(Version.parseVersion(version))) {
+            for (ProfileIdentity prfid : profileManager.getProfileIdentities(Version.parseVersion(version))) {
                 result.add(prfid.toString());
             }
             return Collections.unmodifiableSet(result);

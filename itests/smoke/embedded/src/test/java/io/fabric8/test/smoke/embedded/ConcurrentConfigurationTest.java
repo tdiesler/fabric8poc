@@ -20,18 +20,18 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.ConcurrentConfigurationTests;
+import io.fabric8.test.smoke.ConcurrentConfigurationTestBase;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 /**
- * See {@link ConcurrentConfigurationTests}
+ * See {@link ConcurrentConfigurationTestBase}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ConcurrentConfigurationTest extends ConcurrentConfigurationTests {
+public class ConcurrentConfigurationTest extends ConcurrentConfigurationTestBase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {

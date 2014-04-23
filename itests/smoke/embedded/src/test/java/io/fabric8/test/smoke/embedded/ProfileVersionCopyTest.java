@@ -19,19 +19,24 @@
  */
 package io.fabric8.test.smoke.embedded;
 
+import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.BasicContainerLifecycleTestBase;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
- * Test basic container functionality.
+ * Test the {@link ProfileVersion} copy.
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 23-Apr-2014
  */
-public class BasicContainerLifecycleTest extends BasicContainerLifecycleTestBase {
+public class ProfileVersionCopyTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -41,5 +46,21 @@ public class BasicContainerLifecycleTest extends BasicContainerLifecycleTestBase
     @AfterClass
     public static void afterClass() throws Exception {
         EmbeddedTestSupport.afterClass();
+    }
+
+    @Test
+    public void testProfileVersionCopy() throws Exception {
+
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        ProfileVersion versionA = prfManager.getDefaultProfileVersion();
+        Assert.assertEquals("1.0.0", versionA.getIdentity().toString());
+
+        ProfileVersionBuilder builder = ProfileVersionBuilder.Factory.createFrom(versionA);
+        ProfileVersion versionB = builder.getProfileVersion();
+
+        Assert.assertEquals(versionA.getIdentity(), versionB.getIdentity());
+        Assert.assertEquals(versionA.getAttributes(), versionB.getAttributes());
+        Assert.assertEquals(versionA.getProfileIdentities(), versionB.getProfileIdentities());
+
     }
 }

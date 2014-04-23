@@ -22,9 +22,11 @@ package io.fabric8.test.smoke;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.BootstrapComplete;
 
@@ -40,7 +42,7 @@ import org.junit.Assert;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class TestConditions {
+public final class PrePostConditions {
 
     public static void assertPreConditions() {
         ServiceLocator.awaitService(BootstrapComplete.class);
@@ -55,19 +57,19 @@ public final class TestConditions {
     private static void assertConditions() {
 
         // No registered containers
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Assert.assertTrue("No containers", cntManager.getContainers(null).isEmpty());
 
         // One (default) profile version
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
-        Set<Version> profileVersions = prfManager.getProfileVersionIds();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Set<Version> profileVersions = prfManager.getVersions();
         Assert.assertEquals("One profile version", 1, profileVersions.size());
         Version defaultVersion = profileVersions.iterator().next();
         Assert.assertEquals("1.0.0", defaultVersion.toString());
 
         // Default profile content
         Profile defaultProfile = prfManager.getDefaultProfile();
-        Assert.assertEquals("Default version", defaultVersion, defaultProfile.getProfileVersion());
+        Assert.assertEquals("Default version", defaultVersion, defaultProfile.getVersion());
         Assert.assertEquals("default", defaultProfile.getIdentity().getSymbolicName());
         Assert.assertTrue("No parents", defaultProfile.getParents().isEmpty());
         Set<ProfileItem> profileItems = defaultProfile.getProfileItems(null);

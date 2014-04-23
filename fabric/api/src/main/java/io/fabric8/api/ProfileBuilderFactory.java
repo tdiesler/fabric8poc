@@ -21,6 +21,8 @@ package io.fabric8.api;
 
 
 
+
+
 /**
  * A profile builder factory
  *
@@ -30,4 +32,6 @@ package io.fabric8.api;
 public interface ProfileBuilderFactory {
 
     ProfileBuilder create();
+
+    ProfileBuilder createFrom(Profile profile);
 }

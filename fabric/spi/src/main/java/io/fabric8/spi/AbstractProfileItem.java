@@ -19,17 +19,12 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileItem;
-
-import java.util.Map;
-import java.util.Set;
 
 import org.jboss.gravia.utils.NotNullException;
 
-public abstract class AbstractProfileItem implements ProfileItem {
+public abstract class AbstractProfileItem<T extends ProfileItem> extends AttributeSupport implements ProfileItem {
 
-    private final AttributeSupport attributes = new AttributeSupport();
     private final String identity;
 
     protected AbstractProfileItem(String identity) {
@@ -37,25 +32,7 @@ public abstract class AbstractProfileItem implements ProfileItem {
         this.identity = identity;
     }
 
-    @Override
-    public Set<AttributeKey<?>> getAttributeKeys() {
-        return attributes.getAttributeKeys();
-    }
-
-    @Override
-    public <T> T getAttribute(AttributeKey<T> key) {
-        return attributes.getAttribute(key);
-    }
-
-    @Override
-    public <T> boolean hasAttribute(AttributeKey<T> key) {
-        return attributes.hasAttribute(key);
-    }
-
-    @Override
-    public Map<AttributeKey<?>, Object> getAttributes() {
-        return attributes.getAttributes();
-    }
+    public abstract T copyProfileItem(T item);
 
     @Override
     public String getIdentity() {

@@ -75,7 +75,7 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public ContainerIdentity getParent() {
+    public ContainerIdentity getParentIdentity() {
         return parent;
     }
 
@@ -90,7 +90,7 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public Set<ContainerIdentity> getChildContainers() {
+    public Set<ContainerIdentity> getChildIdentities() {
         return Collections.unmodifiableSet(children);
     }
 
@@ -100,12 +100,12 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public Set<ProfileIdentity> getProfiles() {
+    public Set<ProfileIdentity> getProfileIdentities() {
         return Collections.unmodifiableSet(profiles);
     }
 
     @Override
-    public HostIdentity getHost() {
+    public HostIdentity getHostIdentity() {
         throw new UnsupportedOperationException();
     }
 
@@ -115,7 +115,7 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getServiceEndpoints(Class<T> type) {
+    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getEndpointIdentities(Class<T> type) {
         Set<ServiceEndpointIdentity<?>> result = new HashSet<>();
         for (ServiceEndpointIdentity<?> epid : endpoints) {
             if (type == null || type.isAssignableFrom(epid.getType())) {

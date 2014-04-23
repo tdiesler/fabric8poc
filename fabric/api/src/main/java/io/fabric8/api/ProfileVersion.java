@@ -33,7 +33,7 @@ import org.jboss.gravia.resource.Version;
 public interface ProfileVersion extends Attributable, Identifiable<Version> {
 
     /**
-     * Get the associated list of profiles
+     * Get the associated profiles
      */
-    Set<ProfileIdentity> getProfiles();
+    Set<ProfileIdentity> getProfileIdentities();
 }

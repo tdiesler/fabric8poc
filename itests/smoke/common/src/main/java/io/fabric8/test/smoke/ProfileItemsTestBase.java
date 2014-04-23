@@ -21,19 +21,18 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
-import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.NullProfileItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
-import io.fabric8.api.ProfileItemBuilder;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
@@ -62,16 +61,16 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileItemsTests  {
+public abstract class ProfileItemsTestBase {
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
@@ -80,8 +79,9 @@ public abstract class ProfileItemsTests  {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Profile defaultProfile = prfManager.getDefaultProfile();
 
         // Create container A
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
@@ -89,7 +89,7 @@ public abstract class ProfileItemsTests  {
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 
-        // Verify parent identity
+        // Verify identityA
         Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
@@ -99,10 +99,8 @@ public abstract class ProfileItemsTests  {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         // Build an update profile
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder.addIdentity("default");
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
-        configBuilder.addIdentity("some.pid");
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap("foo", (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.getProfileItem());
         Profile updateProfile = profileBuilder.getProfile();
@@ -141,7 +139,7 @@ public abstract class ProfileItemsTests  {
         Assert.assertNull("Configuration null", config.getProperties());
 
         // Update the default profile
-        Profile defaultProfile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
+        defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals("One item", 2, defaultProfile.getProfileItems(null).size());
@@ -152,16 +150,14 @@ public abstract class ProfileItemsTests  {
         Assert.assertEquals("bar", props.get("foo"));
 
         // Build an update profile
-        profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder.addIdentity("default");
-        ProfileItemBuilder<?> itemBuilder = profileBuilder.getItemBuilder(NullProfileItemBuilder.class);
-        profileBuilder.addProfileItem(itemBuilder.addIdentity("some.pid").getProfileItem());
+        profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
+        profileBuilder.removeProfileItem("some.pid");
         updateProfile = profileBuilder.getProfile();
 
         // Update the default profile
         latchA.set(new CountDownLatch(1));
         latchB.set(new CountDownLatch(2));
-        defaultProfile = prfManager.updateProfile(Constants.DEFAULT_PROFILE_VERSION, updateProfile, profileListener);
+        defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals("One item", 1, defaultProfile.getProfileItems(null).size());

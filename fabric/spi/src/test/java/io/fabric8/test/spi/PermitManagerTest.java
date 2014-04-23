@@ -39,7 +39,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  */
-public class PermitManagerTestCase {
+public class PermitManagerTest {
 
     PermitManager permitManager;
 

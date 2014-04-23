@@ -20,7 +20,7 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.ProfileUpdateTests;
+import io.fabric8.test.smoke.ProfileUpdateTestBase;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,7 +31,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ProfileUpdateTest extends ProfileUpdateTests {
+public class ProfileUpdateTest extends ProfileUpdateTestBase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {

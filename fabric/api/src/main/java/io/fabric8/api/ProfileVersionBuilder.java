@@ -33,6 +33,12 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider);
 
+    ProfileBuilder getProfileBuilder(ProfileIdentity identity);
+
+    ProfileVersionBuilder addProfile(Profile profile);
+
+    ProfileVersionBuilder removeProfile(ProfileIdentity identity);
+
     ProfileVersion getProfileVersion();
 
     final class Factory {
@@ -40,6 +46,11 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
         public static ProfileVersionBuilder create() {
             ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
             return factory.create();
+        }
+
+        public static ProfileVersionBuilder createFrom(ProfileVersion profileVersion) {
+            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            return factory.createFrom(profileVersion);
         }
 
         // Hide ctor

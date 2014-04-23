@@ -17,17 +17,23 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.spi.internal;
 
+import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
-import io.fabric8.spi.DefaultProfileBuilder;
+import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.spi.scr.ValidatingReference;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * A provider service for the {@link ProfileBuilderFactory}
@@ -36,7 +42,9 @@ import org.osgi.service.component.annotations.Deactivate;
  * @since 18-Mar-2014
  */
 @Component(service = { ProfileBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
-public final class ProfileBuilderFactoryService extends AbstractComponent implements ProfileBuilderFactory {
+public final class ProfileBuilderService extends AbstractComponent implements ProfileBuilderFactory {
+
+    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
     @Activate
     void activate() throws Exception {
@@ -51,6 +59,21 @@ public final class ProfileBuilderFactoryService extends AbstractComponent implem
     @Override
     public ProfileBuilder create() {
         assertValid();
-        return DefaultProfileBuilder.create();
+        return new DefaultProfileBuilder();
+    }
+
+    @Override
+    public ProfileBuilder createFrom(Profile profile) {
+        LinkedProfile linkedProfile = profileService.get().copyProfile(profile);
+        return new DefaultProfileBuilder(linkedProfile);
+    }
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    void bindProfileService(ProfileService service) {
+        profileService.bind(service);
+    }
+
+    void unbindProfileService(ProfileService service) {
+        profileService.unbind(service);
     }
 }

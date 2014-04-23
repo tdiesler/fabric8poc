@@ -19,12 +19,20 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
 
 /**
- * A configuration item builder
+ * A profile that is linked to its parent profiles.
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 23-Apr-2014
  */
-public interface NullProfileItemBuilder extends ProfileItemBuilder<NullProfileItem> {
+public interface LinkedProfile extends Profile {
+
+    /**
+     * Get the parent profiles
+     */
+    Map<ProfileIdentity, LinkedProfile> getLinkedParents();
+
 }

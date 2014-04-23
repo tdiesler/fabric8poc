@@ -24,10 +24,10 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.api.management.ProfileVersionManagement;
@@ -36,7 +36,7 @@ import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyCreateOptions;
 import io.fabric8.spi.SystemProperties;
-import io.fabric8.test.smoke.TestConditions;
+import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.IOException;
 import java.util.Set;
@@ -62,12 +62,12 @@ public class ManagedContainerLifecycleTests  {
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
@@ -79,7 +79,7 @@ public class ManagedContainerLifecycleTests  {
         KarafContainerBuilder builder = KarafContainerBuilder.create().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.getCreateOptions();
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
         ContainerIdentity cntId = cnt.getIdentity();
         try {
@@ -102,7 +102,7 @@ public class ManagedContainerLifecycleTests  {
         TomcatContainerBuilder builder = TomcatContainerBuilder.create().setOutputToConsole(true).setTargetDirectory(dataDir);
         CreateOptions options = builder.getCreateOptions();
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
         ContainerIdentity cntId = cnt.getIdentity();
         try {
@@ -128,7 +128,7 @@ public class ManagedContainerLifecycleTests  {
         builder.setManagementHttpPort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_HTTP_PORT + 1);
         CreateOptions options = builder.getCreateOptions();
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
         ContainerIdentity cntId = cnt.getIdentity();
         try {
@@ -145,12 +145,12 @@ public class ManagedContainerLifecycleTests  {
     private void verifyContainer(Container cnt, String username, String password) throws IOException {
 
         // Assert that there is one {@link JMXServiceEndpoint}
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
-        Assert.assertEquals(1, cnt.getServiceEndpoints(JMXServiceEndpoint.class).size());
-        Assert.assertEquals(1, cnt.getServiceEndpoints(null).size());
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Assert.assertEquals(1, cnt.getEndpointIdentities(JMXServiceEndpoint.class).size());
+        Assert.assertEquals(1, cnt.getEndpointIdentities(null).size());
 
         // Get the JMX connector through the endpoint
-        ServiceEndpointIdentity<?> endpointId = cnt.getServiceEndpoints(null).iterator().next();
+        ServiceEndpointIdentity<?> endpointId = cnt.getEndpointIdentities(null).iterator().next();
         JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(cnt.getIdentity(), JMXServiceEndpoint.class);
         Assert.assertNotNull("JMXServiceEndpoint not null", jmxEndpoint);
         Assert.assertSame(jmxEndpoint, cntManager.getServiceEndpoint(cnt.getIdentity(), endpointId));

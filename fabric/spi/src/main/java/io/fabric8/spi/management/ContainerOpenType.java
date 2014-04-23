@@ -119,7 +119,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public HostIdentity getHost() {
+        public HostIdentity getHostIdentity() {
             throw new UnsupportedOperationException();
         }
 
@@ -129,12 +129,12 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public ContainerIdentity getParent() {
+        public ContainerIdentity getParentIdentity() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Set<ContainerIdentity> getChildContainers() {
+        public Set<ContainerIdentity> getChildIdentities() {
             throw new UnsupportedOperationException();
         }
 
@@ -144,7 +144,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getServiceEndpoints(Class<T> type) {
+        public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getEndpointIdentities(Class<T> type) {
             throw new UnsupportedOperationException();
         }
 
@@ -154,7 +154,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public Set<ProfileIdentity> getProfiles() {
+        public Set<ProfileIdentity> getProfileIdentities() {
             throw new UnsupportedOperationException();
         }
 

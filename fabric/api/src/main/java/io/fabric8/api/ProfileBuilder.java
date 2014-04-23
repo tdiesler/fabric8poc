@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import java.io.InputStream;
 
 
 /**
@@ -30,15 +29,21 @@ import java.io.InputStream;
  */
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
-    ProfileBuilder addIdentity(String symbolicName);
+    ProfileBuilder addIdentity(ProfileIdentity identity);
 
     ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider);
 
-    <T extends ProfileItemBuilder<?>> T getItemBuilder(Class<T> type);
+    <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type);
 
     ProfileBuilder addProfileItem(ProfileItem item);
 
-    ProfileBuilder importProfile(InputStream input);
+    ProfileBuilder removeProfileItem(String identity);
+
+    ProfileBuilder getParentBuilder(ProfileIdentity identity);
+
+    ProfileBuilder addParentProfile(Profile profile);
+
+    ProfileBuilder removeParentProfile(ProfileIdentity identity);
 
     Profile getProfile();
 
@@ -47,6 +52,11 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
         public static ProfileBuilder create() {
             ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
             return factory.create();
+        }
+
+        public static ProfileBuilder createFrom(Profile profile) {
+            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            return factory.createFrom(profile);
         }
 
         // Hide ctor

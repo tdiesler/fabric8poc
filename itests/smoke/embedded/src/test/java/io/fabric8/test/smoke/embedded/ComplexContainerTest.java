@@ -20,7 +20,7 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.ComplexContainerTests;
+import io.fabric8.test.smoke.ComplexContainerTestBase;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,7 +31,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ComplexContainerTest extends ComplexContainerTests {
+public class ComplexContainerTest extends ComplexContainerTestBase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {

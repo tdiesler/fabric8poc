@@ -23,8 +23,9 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
+import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
-import io.fabric8.api.NullProfileItem;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
@@ -56,6 +57,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.NotNullException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -118,24 +120,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         // Add the default profile version
         ProfileVersionBuilder versionBuilder = versionBuilderFactory.get().create();
         ProfileVersion profileVersion = versionBuilder.addIdentity(DEFAULT_PROFILE_VERSION).getProfileVersion();
-        ProfileVersionState versionState = addProfileVersionInternal(profileVersion);
+        addProfileVersionInternal(profileVersion);
 
         // Build the default profile
         ProfileBuilder profileBuilder = profileBuilderFactory.get().create();
-        profileBuilder.addIdentity(DEFAULT_PROFILE_IDENTITY.getSymbolicName());
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
-        configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
+        profileBuilder.addIdentity(DEFAULT_PROFILE_IDENTITY);
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
         profileBuilder.addProfileItem(configBuilder.getProfileItem());
         Profile defaultProfile = profileBuilder.getProfile();
 
         // Add the default profile
-        LockHandle writeLock = versionState.aquireWriteLock();
-        try {
-            addProfileInternal(DEFAULT_PROFILE_VERSION, defaultProfile);
-        } finally {
-            writeLock.unlock();
-        }
+        addProfileInternal(DEFAULT_PROFILE_VERSION, defaultProfile);
     }
 
     @Override
@@ -153,7 +149,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Version> getProfileVersionIds() {
+    public Set<Version> getVersions() {
         assertValid();
         return Collections.unmodifiableSet(profileVersions.keySet());
     }
@@ -179,16 +175,16 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public ProfileVersion addProfileVersion(ProfileVersion version) {
+    public ProfileVersion addProfileVersion(ProfileVersion profileVersion) {
         assertValid();
-        ProfileVersionState versionState = addProfileVersionInternal(version);
+        ProfileVersionState versionState = addProfileVersionInternal(profileVersion);
         return new ImmutableProfileVersion(versionState);
     }
 
-    private ProfileVersionState addProfileVersionInternal(ProfileVersion version) {
-        ProfileVersionState versionState = new ProfileVersionState(version);
+    private ProfileVersionState addProfileVersionInternal(ProfileVersion profileVersion) {
+        ProfileVersionState versionState = new ProfileVersionState(profileVersion);
         LOGGER.info("Add profile version: {}", versionState);
-        Version identity = version.getIdentity();
+        Version identity = profileVersion.getIdentity();
         IllegalStateAssertion.assertTrue(profileVersions.get(identity) == null, "ProfileVersion already exists: " + identity);
         profileVersions.put(identity, versionState);
         return versionState;
@@ -214,7 +210,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIds(Version version) {
+    public Set<ProfileIdentity> getProfileIdentities(Version version) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         return versionState.getProfileIdentities();
@@ -261,24 +257,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             ProfileIdentity identity = profile.getIdentity();
             IllegalStateAssertion.assertTrue(versionState.getProfileState(identity) == null, "Profile already exists: " + identity);
 
-            Set<ProfileState> profileParents = getProfileParents(versionState, profile);
-            ProfileState profileState = new ProfileState(versionState, profile, profileParents);
+            LOGGER.info("Add profile to version: {} <= {}", version, profile);
 
-            LOGGER.info("Add profile to version: {} <= {}", versionState, profileState);
-            return new ImmutableProfile(versionState.addProfile(profileState));
+            ProfileState profileState = new ProfileState(versionState, profile);
+            return new ImmutableProfile(profileState);
         } finally {
             writeLock.unlock();
         }
-    }
-
-    private Set<ProfileState> getProfileParents(ProfileVersionState versionState, Profile profile) {
-        Set<ProfileState> result = new HashSet<ProfileState>();
-        for (ProfileIdentity profid : profile.getParents()) {
-            ProfileState pstate = versionState.getRequiredProfile(profid);
-            IllegalStateAssertion.assertNotNull(pstate, "Cannot obtain parent profile: " + profid);
-            result.add(pstate);
-        }
-        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -299,17 +284,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile updateProfile(Version version, Profile profile, ProfileEventListener listener) {
+    public Profile updateProfile(Profile profile, ProfileEventListener listener) {
         assertValid();
-        ProfileVersionState versionState = getRequiredProfileVersion(version);
+        ProfileVersionState versionState = getRequiredProfileVersion(profile.getVersion());
         LockHandle writeLock = versionState.aquireWriteLock();
         try {
             ProfileState profileState = versionState.getRequiredProfile(profile.getIdentity());
             LOGGER.info("Update profile: {}", profileState);
             try {
-                Set<ProfileItem> profileItems = profile.getProfileItems(null);
-                profileState.updateProfileItems(profileItems);
-                Profile updated = new ImmutableProfile(profileState);
+                Profile updated = new ImmutableProfile(profileState.update(profile));
                 ProfileEvent event = new ProfileEvent(updated, ProfileEvent.EventType.UPDATED);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
                 return updated;
@@ -324,7 +307,21 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
     }
 
+    @Override
+    public LinkedProfileVersion copyProfileVersion(ProfileVersion version) {
+        ProfileVersionState versionState = getRequiredProfileVersion(version.getIdentity());
+        return new ImmutableProfileVersion(versionState, true);
+    }
+
+    @Override
+    public LinkedProfile copyProfile(Profile profile) {
+        ProfileVersionState versionState = getRequiredProfileVersion(profile.getVersion());
+        ProfileState profileState = versionState.getRequiredProfile(profile.getIdentity());
+        return new ImmutableProfile(profileState, true);
+    }
+
     ProfileVersionState getRequiredProfileVersion(Version version) {
+        NotNullException.assertValue(version, "version");
         ProfileVersionState versionState = profileVersions.get(version);
         IllegalStateAssertion.assertNotNull(versionState, "Cannot obtain profile version: " + version);
         return versionState;
@@ -381,8 +378,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         private final Map<ProfileIdentity, ProfileState> profiles = new HashMap<ProfileIdentity, ProfileState>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
-        private ProfileVersionState(ProfileVersion version) {
-            this.identity = version.getIdentity();
+        private ProfileVersionState(ProfileVersion profileVersion) {
+            super(profileVersion.getAttributes());
+            identity = profileVersion.getIdentity();
+            if (profileVersion instanceof LinkedProfileVersion) {
+                LinkedProfileVersion linkedVersion = (LinkedProfileVersion) profileVersion;
+                for (LinkedProfile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
+                    new ProfileState(this, linkedProfile);
+                }
+            }
         }
 
         LockHandle aquireWriteLock() {
@@ -497,66 +501,67 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         private final Map<ProfileIdentity, ProfileState> parents = new HashMap<ProfileIdentity, ProfileState>();
         private final Map<String, ProfileItem> profileItems = new HashMap<String, ProfileItem>();
 
-        private ProfileState(ProfileVersionState versionState, Profile profile, Set<ProfileState> parentStates) {
+        private ProfileState(ProfileVersionState versionState, Profile profile) {
+            super(profile.getAttributes());
             this.versionState = versionState;
             this.identity = profile.getIdentity();
-            for (ProfileState aux : parentStates) {
-                parents.put(aux.getIdentity(), aux);
-            }
+            IllegalStateAssertion.assertTrue(profile.getParents().isEmpty(), "Profile parents not yet supported");
             for (ProfileItem item : profile.getProfileItems(null)) {
                 profileItems.put(item.getIdentity(), item);
             }
+            versionState.addProfile(this);
         }
 
         ProfileIdentity getIdentity() {
             return identity;
         }
 
-        Version getProfileVersion() {
-            return versionState.getIdentity();
+        ProfileVersionState getProfileVersion() {
+            return versionState;
         }
 
-        Set<ProfileIdentity> getParents() {
+        Set<ProfileIdentity> getParentIdentities() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                return parents.keySet();
+                return Collections.unmodifiableSet(new HashSet<>(parents.keySet()));
             } finally {
                 readLock.unlock();
             }
         }
 
-        @SuppressWarnings("unchecked")
-        <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
-            Set<T> result = new HashSet<T>();
+        Set<ProfileState> getParentStates() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                for (ProfileItem item : profileItems.values()) {
-                    if (type == null || type.isAssignableFrom(item.getClass())) {
-                        result.add((T) item);
-                    }
-                }
+                return Collections.unmodifiableSet(new HashSet<>(parents.values()));
             } finally {
                 readLock.unlock();
             }
-            return Collections.unmodifiableSet(result);
+        }
+
+        Map<String, ProfileItem> getProfileItems() {
+            LockHandle readLock = versionState.aquireReadLock();
+            try {
+                return Collections.unmodifiableMap(new HashMap<>(profileItems));
+            } finally {
+                readLock.unlock();
+            }
         }
 
         // NOTE - Methods that mutate this objects should be private
         // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
 
-        private void updateProfileItems(Set<? extends ProfileItem> items) {
+        private ProfileState update(Profile profile) {
             LockHandle writeLock = versionState.aquireWriteLock();
             try {
-                for (ProfileItem item : items) {
-                    if (item instanceof NullProfileItem) {
-                        profileItems.remove(item.getIdentity());
-                    } else {
-                        profileItems.put(item.getIdentity(), item);
-                    }
+                IllegalStateAssertion.assertTrue(profile.getParents().isEmpty(), "Profile parents not yet supported");
+                profileItems.clear();
+                for (ProfileItem item : profile.getProfileItems(null)) {
+                    profileItems.put(item.getIdentity(), item);
                 }
             } finally {
                 writeLock.unlock();
             }
+            return this;
         }
 
         @Override

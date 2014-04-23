@@ -46,6 +46,7 @@ import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.DefaultContainerCreateHandler;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
@@ -248,7 +249,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 handle.start();
             }
             Profile defaultProfile = profileService.get().getDefaultProfile();
-            setVersionInternal(cntState, defaultProfile.getProfileVersion(), listener);
+            setVersionInternal(cntState, defaultProfile.getVersion(), listener);
             addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
             return new ImmutableContainer(cntState.start());
         } finally {
@@ -303,9 +304,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIds() {
+    public Set<ContainerIdentity> getContainerIdentities() {
         assertValid();
-        return containerRegistry.get().getContainerIds();
+        return containerRegistry.get().getContainerIdentities();
     }
 
     @Override
@@ -518,7 +519,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindConfigurationManager(ConfigurationManager service) {
         this.configManager.bind(service);
     }
-
     void unbindConfigurationManager(ConfigurationManager service) {
         this.configManager.unbind(service);
     }
@@ -529,7 +529,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             createHandlers.add(service);
         }
     }
-
     void unbindContainerLifecycleHandler(ContainerCreateHandler service) {
         synchronized (createHandlers) {
             createHandlers.remove(service);
@@ -540,16 +539,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindClusterDataStore(ClusterDataStore service) {
         clusterData.bind(service);
     }
-
     void unbindClusterDataStore(ClusterDataStore service) {
         clusterData.unbind(service);
+    }
+
+    @Reference
+    void bindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
+    }
+    void unbindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
     }
 
     @Reference
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
-
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -558,7 +561,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindEventDispatcher(EventDispatcher service) {
         eventDispatcher.bind(service);
     }
-
     void unbindEventDispatcher(EventDispatcher service) {
         eventDispatcher.unbind(service);
     }
@@ -567,7 +569,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindPermitManager(PermitManager service) {
         permitManager.bind(service);
     }
-
     void unbindPermitManager(PermitManager service) {
         permitManager.unbind(service);
     }
@@ -576,7 +577,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }
-
     void unbindProfileService(ProfileService service) {
         profileService.unbind(service);
     }

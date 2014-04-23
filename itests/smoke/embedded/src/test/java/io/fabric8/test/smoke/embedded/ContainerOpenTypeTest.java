@@ -21,14 +21,16 @@ package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.Factory;
-import io.fabric8.api.ProfileManager;
+import io.fabric8.api.Container;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.CreateOptionsProvider;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ProfileVersionOptionsProvider;
-import io.fabric8.api.ServiceLocator;
-import io.fabric8.api.management.ProfileVersionManagement;
-import io.fabric8.spi.DefaultProfileVersionBuilder;
-import io.fabric8.spi.management.ProfileVersionOpenType;
+import io.fabric8.api.management.ContainerManagement;
+import io.fabric8.spi.DefaultContainerBuilder;
+import io.fabric8.spi.management.ContainerOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
@@ -37,11 +39,11 @@ import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.openmbean.CompositeData;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 
 /**
  * Test the {@link ProfileVersion}.
@@ -49,7 +51,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  */
-public class ProfileVersionOpenTypeTestCase {
+public class ContainerOpenTypeTest {
 
     static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new ValueFactory());
     static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new ValueFactory());
@@ -67,36 +69,36 @@ public class ProfileVersionOpenTypeTestCase {
     @Test
     public void testComposisteData() throws Exception {
 
-        Version version = Version.parseVersion("2.0");
-
-        ProfileVersionBuilder builder = DefaultProfileVersionBuilder.create();
-        builder.addIdentity(version);
+        DefaultContainerBuilder builder = DefaultContainerBuilder.create();
+        builder.addIdentityPrefix("cntA");
         builder.addAttribute(AKEY, "AVal");
         builder.addAttribute(BKEY, "BVal");
-        ProfileVersion prfvA = builder.getProfileVersion();
+        CreateOptions options = builder.getCreateOptions();
 
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
-        prfvA = prfManager.addProfileVersion(prfvA);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Container cntA = cntManager.createContainer(options);
+        ContainerIdentity idA = cntA.getIdentity();
 
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        ProfileVersionManagement prfvManagement = ManagementUtils.getMBeanProxy(mbeanServer, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);
-        CompositeData cdata = prfvManagement.getProfileVersion(prfvA.getIdentity().toString());
-        ProfileVersion prfvB = ProfileVersionOpenType.getProfileVersion(cdata);
-        Assert.assertEquals(version, prfvB.getIdentity());
-        Assert.assertEquals(prfvA.getAttributes(), prfvB.getAttributes());
+        ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(mbeanServer, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
+        CompositeData cdata = cntManagement.getContainer(idA.getCanonicalForm());
+        Container cntB = ContainerOpenType.getContainer(cdata);
+        Assert.assertEquals(idA, cntB.getIdentity());
+        Assert.assertEquals(cntA.getAttributes(), cntB.getAttributes());
 
-        prfManager.removeProfileVersion(version);
+        cntManager.destroyContainer(idA);
 
-        // Test the {@link ProfileVersionOptionsProvider}
-        builder = DefaultProfileVersionBuilder.create();
-        builder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
-        ProfileVersion prfvC = builder.getProfileVersion();
+        // Test the {@link CreateOptionsProvider}
+        builder = DefaultContainerBuilder.create();
+        builder.addCreateOptions(new CompositeDataOptionsProvider(cdata));
+        options = builder.getCreateOptions();
 
-        prfvC = prfManager.addProfileVersion(prfvC);
-        Assert.assertEquals(prfvA.getIdentity(), prfvC.getIdentity());
-        Assert.assertEquals(prfvA.getAttributes(), prfvC.getAttributes());
+        Container cntC = cntManager.createContainer(options);
+        ContainerIdentity idC = cntC.getIdentity();
+        Assert.assertEquals("cntA#2", idC.getSymbolicName());
+        Assert.assertEquals(cntA.getAttributes(), cntC.getAttributes());
 
-        prfManager.removeProfileVersion(version);
+        cntManager.destroyContainer(idC);
     }
 
     public static class ValueFactory implements Factory<String> {
@@ -106,7 +108,7 @@ public class ProfileVersionOpenTypeTestCase {
         }
     }
 
-    static class CompositeDataOptionsProvider implements ProfileVersionOptionsProvider {
+    static class CompositeDataOptionsProvider implements CreateOptionsProvider<DefaultContainerBuilder> {
 
         private final CompositeData cdata;
 
@@ -115,11 +117,11 @@ public class ProfileVersionOpenTypeTestCase {
         }
 
         @Override
-        public ProfileVersionBuilder addBuilderOptions(ProfileVersionBuilder builder) {
-            ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
-            builder.addIdentity(profileVersion.getIdentity());
-            return builder.addAttributes(profileVersion.getAttributes());
+        public DefaultContainerBuilder addBuilderOptions(DefaultContainerBuilder builder) {
+            Container container = ContainerOpenType.getContainer(cdata);
+            String symbolicName = container.getIdentity().getSymbolicName();
+            String prefix = symbolicName.substring(0, symbolicName.indexOf('#'));
+            return builder.addIdentityPrefix(prefix).addAttributes(container.getAttributes());
         }
-
     }
 }

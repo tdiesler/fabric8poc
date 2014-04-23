@@ -45,9 +45,14 @@ public interface ProfileManager {
     ProfileVersion getDefaultProfileVersion();
 
     /**
+     * Get the default profile
+     */
+    Profile getDefaultProfile();
+
+    /**
      * Get the set of profile version identities in the cluster
      */
-    Set<Version> getProfileVersionIds();
+    Set<Version> getVersions();
 
     /**
      * Get the set of profile versions for the given identities
@@ -71,14 +76,9 @@ public interface ProfileManager {
     ProfileVersion removeProfileVersion(Version identity);
 
     /**
-     * Get the default profile
-     */
-    Profile getDefaultProfile();
-
-    /**
      * Get the profile idetities for a given version
      */
-    Set<ProfileIdentity> getProfileIds(Version version);
+    Set<ProfileIdentity> getProfileIdentities(Version version);
 
     /**
      * Get the profiles for a given version and identities
@@ -104,5 +104,5 @@ public interface ProfileManager {
     /**
      * Update the given profile
      */
-    Profile updateProfile(Version version, Profile profile, ProfileEventListener listener);
+    Profile updateProfile(Profile profile, ProfileEventListener listener);
 }

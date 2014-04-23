@@ -116,12 +116,17 @@ public final class ProfileOpenType {
         }
 
         @Override
-        public Version getProfileVersion() {
+        public Version getVersion() {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public Set<ProfileIdentity> getParents() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends ProfileItem> T getProfileItem(String identity, Class<T> type) {
             throw new UnsupportedOperationException();
         }
 

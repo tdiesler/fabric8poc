@@ -25,6 +25,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.ContainerService;
@@ -55,16 +56,16 @@ import org.osgi.service.cm.ConfigurationListener;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ConfiguredComponentTests  {
+public abstract class ConfiguredComponentTestBase  {
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
@@ -117,7 +118,7 @@ public abstract class ConfiguredComponentTests  {
         DefaultContainerBuilder builder = DefaultContainerBuilder.create();
         CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 

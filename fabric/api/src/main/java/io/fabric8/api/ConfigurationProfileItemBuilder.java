@@ -27,9 +27,7 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ConfigurationProfileItemBuilder extends ProfileItemBuilder<ConfigurationProfileItem> {
-
-    ConfigurationProfileItemBuilder addIdentity(String identity);
+public interface ConfigurationProfileItemBuilder extends ProfileItemBuilder<ConfigurationProfileItemBuilder, ConfigurationProfileItem> {
 
     ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config);
 }

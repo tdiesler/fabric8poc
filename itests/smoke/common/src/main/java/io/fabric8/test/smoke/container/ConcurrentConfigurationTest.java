@@ -21,8 +21,8 @@ package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.test.smoke.ConcurrentConfigurationTests;
-import io.fabric8.test.smoke.TestConditions;
+import io.fabric8.test.smoke.ConcurrentConfigurationTestBase;
+import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.InputStream;
 
@@ -42,20 +42,20 @@ import org.junit.runner.RunWith;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
- * See {@link ConcurrentConfigurationTests}
+ * See {@link ConcurrentConfigurationTestBase}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class ConcurrentConfigurationTest extends ConcurrentConfigurationTests {
+public class ConcurrentConfigurationTest extends ConcurrentConfigurationTestBase {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("concurrent-configuration-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ConcurrentConfigurationTests.class, TestConditions.class);
+        archive.addClasses(ConcurrentConfigurationTestBase.class, PrePostConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

@@ -26,9 +26,9 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ServiceLocator;
 
 import java.util.Collections;
 import java.util.Set;
@@ -45,33 +45,33 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class BasicProfilesTests  {
+public abstract class BasicProfilesTestBase  {
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
     public void testProfileAddRemove() throws Exception {
 
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
         // Verify the default profile
         Profile defaultProfile = prfManager.getDefaultProfile();
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, defaultProfile.getProfileVersion());
+        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, defaultProfile.getVersion());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, defaultProfile.getIdentity());
 
         Set<ProfileVersion> versions = prfManager.getProfileVersions(null);
         Assert.assertEquals("One version", 1, versions.size());
 
         ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
-        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfiles();
+        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIdentities();
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
@@ -86,9 +86,9 @@ public abstract class BasicProfilesTests  {
 
         // Build a profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder.addIdentity("foo");
-        ConfigurationProfileItemBuilder ibuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
-        ibuilder.addIdentity("some.pid").setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
+        profileBuilder.addIdentity(ProfileIdentity.create("foo"));
+        ConfigurationProfileItemBuilder ibuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
+        ibuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
         profileBuilder.addProfileItem(ibuilder.getProfileItem());
         Profile profile = profileBuilder.getProfile();
 

@@ -20,6 +20,7 @@
 package io.fabric8.api;
 
 
+
 /**
  * A profile version builder factory
  *
@@ -29,4 +30,6 @@ package io.fabric8.api;
 public interface ProfileVersionBuilderFactory {
 
     ProfileVersionBuilder create();
+
+    ProfileVersionBuilder createFrom(ProfileVersion profileVersion);
 }

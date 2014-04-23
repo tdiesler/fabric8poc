@@ -23,7 +23,6 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.DefaultContainerCreateHandler;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.osgi.service.component.annotations.Activate;
@@ -61,12 +60,6 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     void bindContainerService(ContainerService service) {
     }
     void unbindContainerService(ContainerService service) {
-    }
-
-    @Reference
-    void bindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
-    }
-    void unbindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
     }
 
     @Reference

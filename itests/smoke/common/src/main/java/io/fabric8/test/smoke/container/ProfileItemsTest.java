@@ -21,8 +21,8 @@ package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.test.smoke.TestConditions;
-import io.fabric8.test.smoke.ProfileItemsTests;
+import io.fabric8.test.smoke.PrePostConditions;
+import io.fabric8.test.smoke.ProfileItemsTestBase;
 
 import java.io.InputStream;
 
@@ -48,14 +48,14 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @since 14-Mar-2014
  */
 @RunWith(Arquillian.class)
-public class ProfileItemsTest extends ProfileItemsTests {
+public class ProfileItemsTest extends ProfileItemsTestBase {
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("profile-items-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileItemsTests.class, TestConditions.class);
+        archive.addClasses(ProfileItemsTestBase.class, PrePostConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

@@ -28,7 +28,7 @@ import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.basic.ManagedContainerLifecycleTests;
-import io.fabric8.test.smoke.TestConditions;
+import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.InputStream;
 
@@ -62,7 +62,7 @@ public class ManagedContainerLifecycleTest extends ManagedContainerLifecycleTest
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("managed-container-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ManagedContainerLifecycleTests.class, TestConditions.class);
+        archive.addClasses(ManagedContainerLifecycleTests.class, PrePostConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

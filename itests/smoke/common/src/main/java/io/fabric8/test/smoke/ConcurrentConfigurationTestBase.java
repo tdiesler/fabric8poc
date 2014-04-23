@@ -23,6 +23,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.ContainerService;
@@ -55,19 +56,19 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ConcurrentConfigurationTests  {
+public abstract class ConcurrentConfigurationTestBase  {
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private volatile Exception lastException;
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() throws Exception {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
         executor.shutdown();
         Assert.assertTrue("Terminated in time", executor.awaitTermination(10, TimeUnit.SECONDS));
     }
@@ -112,7 +113,7 @@ public abstract class ConcurrentConfigurationTests  {
 
         @Override
         public Boolean call() throws Exception {
-            ContainerManager manager = ServiceLocator.getRequiredService(ContainerManager.class);
+            ContainerManager manager = ContainerManagerLocator.getContainerManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     ContainerIdentity cntId = createAndStart(manager, i);

@@ -25,7 +25,7 @@ import org.jboss.gravia.resource.Version;
 
 
 /**
- * The abstraction of a Fabric8 profile
+ * The abstraction of a Fabric8 profile.
  *
  * <ol>
  * <li> How does profile templating work?
@@ -40,12 +40,17 @@ public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
     /**
      * Get the associated profile version
      */
-    Version getProfileVersion();
+    Version getVersion();
 
     /**
      * Get the profile parents
      */
     Set<ProfileIdentity> getParents();
+
+    /**
+     * Get the profile item for the given name
+     */
+    <T extends ProfileItem> T getProfileItem(String identity, Class<T> type);
 
     /**
      * Get the set of profile items for the given type

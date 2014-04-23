@@ -55,24 +55,24 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     String CONTAINER_SERVICE_PID = "container.service.pid";
 
     /**
-     * Get the associated host
-     */
-    HostIdentity getHost();
-
-    /**
      * Get the container state
      */
     State getState();
 
     /**
+     * Get the associated host
+     */
+    HostIdentity getHostIdentity();
+
+    /**
      * Get the parent container
      */
-    ContainerIdentity getParent();
+    ContainerIdentity getParentIdentity();
 
     /**
      * Get the set of child containers
      */
-    Set<ContainerIdentity> getChildContainers();
+    Set<ContainerIdentity> getChildIdentities();
 
     /**
      * Get the set of provided management domains
@@ -84,7 +84,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
      * Get the set of available service endpoints for the given type
      * @param type null for all types
      */
-    <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getServiceEndpoints(Class<T> type);
+    <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getEndpointIdentities(Class<T> type);
 
     /**
      * Get the profile version
@@ -94,5 +94,5 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the associated list of profiles
      */
-    Set<ProfileIdentity> getProfiles();
+    Set<ProfileIdentity> getProfileIdentities();
 }

@@ -26,16 +26,18 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
@@ -54,23 +56,23 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ComplexContainerTests  {
+public abstract class ComplexContainerTestBase  {
 
     @Before
     public void preConditions() {
-        TestConditions.assertPreConditions();
+        PrePostConditions.assertPreConditions();
     }
 
     @After
     public void postConditions() {
-        TestConditions.assertPostConditions();
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
     public void testContainersAndProfiles() throws Exception {
 
-        ContainerManager cntManager = ServiceLocator.getRequiredService(ContainerManager.class);
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
         // Create parent container
         DefaultContainerBuilder builder = DefaultContainerBuilder.create();
@@ -88,8 +90,8 @@ public abstract class ComplexContainerTests  {
 
         // Verify that the parent has the default profile assigned
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
-        Assert.assertEquals(1, cntParent.getProfiles().size());
-        Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIdentities().size());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
 
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
@@ -119,7 +121,7 @@ public abstract class ComplexContainerTests  {
 
         // Build a new profile and associated it with 2.0
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        Profile default20 = profileBuilder.addIdentity("default").getProfile();
+        Profile default20 = profileBuilder.addIdentity(ProfileIdentity.create("default")).getProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
@@ -138,14 +140,13 @@ public abstract class ComplexContainerTests  {
         cntParent = cntManager.setProfileVersion(idParent, version20, listener);
         Assert.assertTrue("ProvisionEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
-        Assert.assertEquals(1, cntParent.getProfiles().size());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Create profile foo
         profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder = profileBuilder.addIdentity("foo");
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getItemBuilder(ConfigurationProfileItemBuilder.class);
-        configBuilder.addIdentity(Container.CONTAINER_SERVICE_PID);
+        profileBuilder = profileBuilder.addIdentity(ProfileIdentity.create("foo"));
+        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.getProfileItem());
         Profile fooProfile = profileBuilder.getProfile();
@@ -161,7 +162,7 @@ public abstract class ComplexContainerTests  {
 
         // Add profile foo to 2.0
         prfManager.addProfile(version20, fooProfile);
-        Assert.assertEquals(2, prfManager.getProfileIds(version20).size());
+        Assert.assertEquals(2, prfManager.getProfileIdentities(version20).size());
 
         // Verify that the profile cannot be added again
         try {
@@ -187,9 +188,9 @@ public abstract class ComplexContainerTests  {
         cntParent = cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
         Assert.assertTrue("ProvisionEvent received", latchB.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
-        Assert.assertTrue(cntParent.getProfiles().contains(fooProfile.getIdentity()));
-        Assert.assertEquals(2, cntParent.getProfiles().size());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(fooProfile.getIdentity()));
+        Assert.assertEquals(2, cntParent.getProfileIdentities().size());
 
         // Create child container
         builder = DefaultContainerBuilder.create();
@@ -208,8 +209,8 @@ public abstract class ComplexContainerTests  {
 
         // Verify that the child has the default profile assigned
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
-        Assert.assertEquals(1, cntChild.getProfiles().size());
-        Assert.assertTrue(cntChild.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntChild.getProfileIdentities().size());
+        Assert.assertTrue(cntChild.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
 
         // Verify that the profile cannot be removed
         // because it is still used by a container
@@ -244,12 +245,12 @@ public abstract class ComplexContainerTests  {
         cntParent = cntManager.removeProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
         Assert.assertTrue("ProvisionEvent received", latchC.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
-        Assert.assertEquals(1, cntParent.getProfiles().size());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Remove profile foo from 2.0
         prfManager.removeProfile(version20, fooProfile.getIdentity());
-        Assert.assertEquals(1, prfManager.getProfileIds(version20).size());
+        Assert.assertEquals(1, prfManager.getProfileIdentities(version20).size());
 
         // Verify that the profile version cannot be removed
         // because it is still used by a container
@@ -266,7 +267,7 @@ public abstract class ComplexContainerTests  {
             @Override
             public void processEvent(ProvisionEvent event) {
                 Profile profile = event.getProfile();
-                String version = profile.getProfileVersion().toString();
+                String version = profile.getVersion().toString();
                 String symbolicName = profile.getIdentity().getSymbolicName();
                 if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
@@ -281,8 +282,8 @@ public abstract class ComplexContainerTests  {
         cntParent = cntManager.setProfileVersion(idParent, Constants.DEFAULT_PROFILE_VERSION, listener);
         Assert.assertTrue("ProvisionEvent received", latchD.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfiles().contains(Constants.DEFAULT_PROFILE_IDENTITY));
-        Assert.assertEquals(1, cntParent.getProfiles().size());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Remove profile version 2.0
         prfManager.removeProfileVersion(version20);

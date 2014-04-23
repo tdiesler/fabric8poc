@@ -54,7 +54,7 @@ public class AbstractAttributableBuilder<B extends AttributableBuilder<B>> imple
         IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
     }
 
-    void makeImmutable() {
+    protected void makeImmutable() {
         assertMutable();
         immutable = true;
     }

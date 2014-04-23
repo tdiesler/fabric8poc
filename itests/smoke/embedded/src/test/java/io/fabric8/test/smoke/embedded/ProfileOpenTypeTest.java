@@ -23,12 +23,12 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.Factory;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.management.ProfileManagement;
-import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.management.ProfileOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
@@ -51,7 +51,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  */
-public class ProfileOpenTypeTestCase {
+public class ProfileOpenTypeTest {
 
     static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new ValueFactory());
     static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new ValueFactory());
@@ -69,13 +69,13 @@ public class ProfileOpenTypeTestCase {
     @Test
     public void testComposisteData() throws Exception {
 
-        ProfileBuilder builder = DefaultProfileBuilder.create();
-        builder.addIdentity("someProfile");
+        ProfileBuilder builder = ProfileBuilder.Factory.create();
+        builder.addIdentity(ProfileIdentity.create("someProfile"));
         builder.addAttribute(AKEY, "AVal");
         builder.addAttribute(BKEY, "BVal");
         Profile prfA = builder.getProfile();
 
-        ProfileManager prfManager = ServiceLocator.getRequiredService(ProfileManager.class);
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         Version defaultVersion = prfManager.getDefaultProfileVersion().getIdentity();
         prfA = prfManager.addProfile(defaultVersion, prfA);
 
@@ -90,7 +90,7 @@ public class ProfileOpenTypeTestCase {
         prfManager.removeProfile(defaultVersion, prfA.getIdentity());
 
         // Test the {@link ProfileVersionOptionsProvider}
-        builder = DefaultProfileBuilder.create();
+        builder = ProfileBuilder.Factory.create();
         builder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
         Profile prfC = builder.getProfile();
 
@@ -119,7 +119,7 @@ public class ProfileOpenTypeTestCase {
         @Override
         public ProfileBuilder addBuilderOptions(ProfileBuilder builder) {
             Profile profile = ProfileOpenType.getProfile(cdata);
-            builder.addIdentity(profile.getIdentity().getSymbolicName());
+            builder.addIdentity(profile.getIdentity());
             return builder.addAttributes(profile.getAttributes());
         }
     }

@@ -19,14 +19,19 @@
  */
 package io.fabric8.core.internal;
 
+import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ProfileVersion;
+import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -39,18 +44,30 @@ import org.jboss.gravia.resource.Version;
  *
  * @Immutable
  */
-final class ImmutableProfileVersion extends AttributeSupport implements ProfileVersion {
+final class ImmutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
     private final Version identity;
-    private final Set<ProfileIdentity> profiles = new HashSet<ProfileIdentity>();
+    private final Set<ProfileIdentity> profileIdentities = new HashSet<ProfileIdentity>();
+    private final Map<ProfileIdentity, LinkedProfile> linkedProfiles;
     private final String tostring;
 
     ImmutableProfileVersion(ProfileVersionState versionState) {
+        this(versionState, false);
+    }
+
+    ImmutableProfileVersion(ProfileVersionState versionState, boolean linked) {
         super(versionState.getAttributes());
         LockHandle readLock = versionState.aquireReadLock();
         try {
             identity = versionState.getIdentity();
-            profiles.addAll(versionState.getProfileIdentities());
+            profileIdentities.addAll(versionState.getProfileIdentities());
+            linkedProfiles = linked ? new HashMap<ProfileIdentity, LinkedProfile>() : null;
+            if (linked) {
+                for (ProfileState profileState : versionState.getProfileStates()) {
+                    LinkedProfile linkedProfile = new ImmutableProfile(profileState, linked, linkedProfiles);
+                    linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
+                }
+            }
             tostring = versionState.toString();
         } finally {
             readLock.unlock();
@@ -63,8 +80,20 @@ final class ImmutableProfileVersion extends AttributeSupport implements ProfileV
     }
 
     @Override
-    public Set<ProfileIdentity> getProfiles() {
-        return Collections.unmodifiableSet(profiles);
+    public Set<ProfileIdentity> getProfileIdentities() {
+        return Collections.unmodifiableSet(profileIdentities);
+    }
+
+    @Override
+    public LinkedProfile getLinkedProfile(ProfileIdentity identity) {
+        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
+        return linkedProfiles.get(identity);
+    }
+
+    @Override
+    public Map<ProfileIdentity, LinkedProfile> getLinkedProfiles() {
+        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
+        return Collections.unmodifiableMap(linkedProfiles);
     }
 
     @Override

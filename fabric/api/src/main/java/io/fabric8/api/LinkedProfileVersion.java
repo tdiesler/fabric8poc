@@ -17,23 +17,26 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
-import io.fabric8.api.NullProfileItem;
-import io.fabric8.api.NullProfileItemBuilder;
+import java.util.Map;
 
-public final class DefaultNullProfileItemBuilder implements NullProfileItemBuilder {
 
-    private String identity;
+/**
+ * A profile version that is linked to its profiles.
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 23-Apr-2014
+ */
+public interface LinkedProfileVersion extends ProfileVersion {
 
-    @Override
-    public NullProfileItemBuilder addIdentity(String identity) {
-        this.identity = identity;
-        return this;
-    }
+    /**
+     * Get the linked profile for the given identity
+     */
+    LinkedProfile getLinkedProfile(ProfileIdentity identity);
 
-    @Override
-    public NullProfileItem getProfileItem() {
-        return new DefaultNullProfileItem(identity);
-    }
+    /**
+     * Get the associated profiles
+     */
+    Map<ProfileIdentity, LinkedProfile> getLinkedProfiles();
 }

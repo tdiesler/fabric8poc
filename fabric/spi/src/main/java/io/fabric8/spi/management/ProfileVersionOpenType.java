@@ -115,7 +115,7 @@ public final class ProfileVersionOpenType {
         }
 
         @Override
-        public Set<ProfileIdentity> getProfiles() {
+        public Set<ProfileIdentity> getProfileIdentities() {
             throw new UnsupportedOperationException();
         }
 
