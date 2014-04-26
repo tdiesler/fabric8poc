@@ -23,7 +23,6 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.Host;
@@ -178,7 +177,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public LockHandle aquireContainerLock(ContainerIdentity identity) {
+    public LockHandle aquireContainerLock(String identity) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         return cntState.aquireWriteLock();
@@ -191,7 +190,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container createContainer(ContainerIdentity parentId, CreateOptions options) {
+    public Container createContainer(String parentId, CreateOptions options) {
         assertValid();
         return createContainerInternal(getRequiredContainer(parentId), options);
     }
@@ -214,8 +213,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
         IllegalStateAssertion.assertFalse(handles.isEmpty(), "Cannot find ContainerCreateHandler that accepts: " + options);
-        ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
-        ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
+        String parentId = parentState != null ? parentState.getIdentity() : null;
+        String identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
         ContainerState cntState = new ContainerState(parentState, identity, options, handles, configToken);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
@@ -231,14 +230,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container getContainer(ContainerIdentity identity) {
+    public Container getContainer(String identity) {
         assertValid();
         ContainerState cntState = getContainerState(identity);
         return cntState != null ? new ImmutableContainer(cntState) : null;
     }
 
     @Override
-    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) {
+    public Container startContainer(String identity, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -257,7 +256,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container stopContainer(ContainerIdentity identity) {
+    public Container stopContainer(String identity) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -273,7 +272,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container destroyContainer(ContainerIdentity identity) {
+    public Container destroyContainer(String identity) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -303,13 +302,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
+    public Set<String> getContainerIdentities() {
         assertValid();
         return containerRegistry.get().getContainerIdentities();
     }
 
     @Override
-    public Set<Container> getContainers(Set<ContainerIdentity> identities) {
+    public Set<Container> getContainers(Set<String> identities) {
         assertValid();
         Set<Container> result = new HashSet<>();
         for (ContainerState cntState : getContainerStates(identities)) {
@@ -318,7 +317,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         return Collections.unmodifiableSet(result);
     }
 
-    private Set<ContainerState> getContainerStates(Set<ContainerIdentity> identities) {
+    private Set<ContainerState> getContainerStates(Set<String> identities) {
         Set<ContainerState> result = new HashSet<>(containerRegistry.get().getContainers(null));
         return Collections.unmodifiableSet(result);
     }
@@ -329,7 +328,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
+    public Container setProfileVersion(String identity, Version version, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -365,7 +364,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
+    public Container addProfiles(String identity, Set<String> identities, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -392,7 +391,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
+    public Container removeProfiles(String identity, Set<String> identities, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -470,47 +469,47 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public boolean pingContainer(ContainerIdentity identity) {
+    public boolean pingContainer(String identity) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Container joinFabric(ContainerIdentity identity, JoinOptions options) {
+    public Container joinFabric(String identity, JoinOptions options) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Container leaveFabric(ContainerIdentity identity) {
+    public Container leaveFabric(String identity) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+    public <T extends ServiceEndpoint> T getServiceEndpoint(String identity, Class<T> type) {
         ContainerState containerState = getRequiredContainer(identity);
         return containerState.getServiceEndpoint(type);
     }
 
     @Override
-    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+    public ServiceEndpoint getServiceEndpoint(String identity, ServiceEndpointIdentity<?> endpointId) {
         ContainerState containerState = getRequiredContainer(identity);
         return containerState.getServiceEndpoint(endpointId);
     }
 
     @Override
-    public List<Failure> getFailures(ContainerIdentity identity) {
+    public List<Failure> getFailures(String identity) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Failure> clearFailures(ContainerIdentity identity) {
+    public List<Failure> clearFailures(String identity) {
         throw new UnsupportedOperationException();
     }
 
-    private ContainerState getContainerState(ContainerIdentity identity) {
+    private ContainerState getContainerState(String identity) {
         return containerRegistry.get().getContainer(identity);
     }
 
-    private ContainerState getRequiredContainer(ContainerIdentity identity) {
+    private ContainerState getRequiredContainer(String identity) {
         return containerRegistry.get().getRequiredContainer(identity);
     }
 
@@ -583,16 +582,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     static final class ContainerState {
 
         private final ContainerState parentState;
-        private final ContainerIdentity identity;
+        private final String identity;
         private final AttributeSupport attributes;
         private final List<ContainerHandle> handles;
         private final Set<String> profiles = new HashSet<>();
-        private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
+        private final Map<String, ContainerState> children = new HashMap<>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles, String configToken) {
+        private ContainerState(ContainerState parentState, String identity, CreateOptions options, List<ContainerHandle> handles, String configToken) {
             this.parentState = parentState;
             this.handles = handles;
             this.state = State.CREATED;
@@ -657,7 +656,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             };
         }
 
-        ContainerIdentity getIdentity() {
+        String getIdentity() {
             return identity;
         }
 
@@ -693,7 +692,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             return parentState != null ? parentState : null;
         }
 
-        Set<ContainerIdentity> getChildContainers() {
+        Set<String> getChildContainers() {
             LockHandle readLock = aquireReadLock();
             try {
                 return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
@@ -773,7 +772,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        private void removeChild(ContainerIdentity identity) {
+        private void removeChild(String identity) {
             assertNotDestroyed();
             LockHandle writeLock = aquireWriteLock();
             try {

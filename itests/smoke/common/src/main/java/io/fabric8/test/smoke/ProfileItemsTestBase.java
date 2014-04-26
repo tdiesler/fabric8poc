@@ -23,7 +23,6 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -87,10 +86,10 @@ public abstract class ProfileItemsTestBase {
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
         CreateOptions options = cntBuilder.addIdentityPrefix("cntA").getCreateOptions();
         Container cntA = cntManager.createContainer(options);
-        ContainerIdentity cntIdA = cntA.getIdentity();
+        String cntIdA = cntA.getIdentity();
 
         // Verify identityA
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
+        Assert.assertTrue(cntIdA.startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container A
@@ -110,7 +109,7 @@ public abstract class ProfileItemsTestBase {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String symbolicName = event.getSource().getIdentity().getSymbolicName();
+                String symbolicName = event.getSource().getIdentity();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
                     latchA.get().countDown();
                 }
@@ -122,7 +121,7 @@ public abstract class ProfileItemsTestBase {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
                     latchB.get().countDown();
                 }

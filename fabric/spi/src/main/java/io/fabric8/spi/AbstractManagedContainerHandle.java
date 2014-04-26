@@ -54,7 +54,7 @@ public abstract class AbstractManagedContainerHandle extends AbstractContainerHa
 
             private final ServiceEndpointIdentity<JMXServiceEndpoint> identity;
             {
-                String idspec = container.getIdentity().getSymbolicName() + "-" + JMXServiceEndpoint.class.getSimpleName();
+                String idspec = container.getIdentity() + "-" + JMXServiceEndpoint.class.getSimpleName();
                 identity = ServiceEndpointIdentity.create(idspec, JMXServiceEndpoint.class);
             }
 

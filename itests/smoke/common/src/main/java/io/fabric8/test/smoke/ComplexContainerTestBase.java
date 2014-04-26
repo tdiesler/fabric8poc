@@ -24,7 +24,6 @@ import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -79,8 +78,8 @@ public abstract class ComplexContainerTestBase  {
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
-        ContainerIdentity idParent = cntParent.getIdentity();
-        Assert.assertTrue(idParent.getSymbolicName().startsWith("cntA#"));
+        String idParent = cntParent.getIdentity();
+        Assert.assertTrue(idParent.startsWith("cntA#"));
 
         // Start the parent container
         cntParent = cntManager.startContainer(idParent, null);
@@ -197,9 +196,9 @@ public abstract class ComplexContainerTestBase  {
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity
-        ContainerIdentity idChild = cntChild.getIdentity();
-        Assert.assertTrue(idChild.getSymbolicName().startsWith("cntA"));
-        Assert.assertTrue(idChild.getSymbolicName().indexOf(":cntB") > 0);
+        String idChild = cntChild.getIdentity();
+        Assert.assertTrue(idChild.startsWith("cntA"));
+        Assert.assertTrue(idChild.indexOf(":cntB") > 0);
 
         // Start the child container
         cntChild = cntManager.startContainer(idChild, null);

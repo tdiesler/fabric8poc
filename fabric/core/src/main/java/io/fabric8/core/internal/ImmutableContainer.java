@@ -20,7 +20,6 @@
 package io.fabric8.core.internal;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ServiceEndpoint;
@@ -45,12 +44,12 @@ import org.jboss.gravia.resource.Version;
  */
 final class ImmutableContainer extends AttributeSupport implements Container {
 
-    private final ContainerIdentity identity;
+    private final String identity;
     private final Version profileVersion;
-    private final Set<ContainerIdentity> children = new HashSet<>();
+    private final Set<String> children = new HashSet<>();
     private final Set<String> profiles = new HashSet<>();
     private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
-    private final ContainerIdentity parent;
+    private final String parent;
     private final String tostring;
     private final State state;
 
@@ -74,12 +73,12 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public ContainerIdentity getParentIdentity() {
+    public String getParentIdentity() {
         return parent;
     }
 
     @Override
-    public ContainerIdentity getIdentity() {
+    public String getIdentity() {
         return identity;
     }
 
@@ -89,7 +88,7 @@ final class ImmutableContainer extends AttributeSupport implements Container {
     }
 
     @Override
-    public Set<ContainerIdentity> getChildIdentities() {
+    public Set<String> getChildIdentities() {
         return Collections.unmodifiableSet(children);
     }
 

@@ -26,7 +26,6 @@ import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -175,8 +174,8 @@ public abstract class ProfileUpdateTestBase  {
         Container cntA = cntManager.createContainer(options);
 
         // Verify cntA identity
-        ContainerIdentity cntIdA = cntA.getIdentity();
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
+        String cntIdA = cntA.getIdentity();
+        Assert.assertTrue(cntIdA.startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container cntA
@@ -254,8 +253,8 @@ public abstract class ProfileUpdateTestBase  {
         Container cntB = cntManager.createContainer(options);
 
         // Verify child identity
-        ContainerIdentity cntIdB = cntB.getIdentity();
-        Assert.assertTrue(cntIdB.getSymbolicName().startsWith("cntB#"));
+        String cntIdB = cntB.getIdentity();
+        Assert.assertTrue(cntIdB.startsWith("cntB#"));
         Assert.assertEquals("bar", cntB.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         cntB = cntManager.destroyContainer(cntIdB);

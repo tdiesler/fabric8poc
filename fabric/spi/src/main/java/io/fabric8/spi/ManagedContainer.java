@@ -18,7 +18,6 @@ package io.fabric8.spi;
 
 import io.fabric8.api.Attributable;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
 
 import java.io.File;
@@ -41,7 +40,7 @@ public interface ManagedContainer<C extends ManagedCreateOptions> extends Attrib
 
     C getCreateOptions();
 
-    ContainerIdentity getIdentity();
+    String getIdentity();
 
     void create() throws LifecycleException;
 

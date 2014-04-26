@@ -20,7 +20,6 @@
 package io.fabric8.core.internal;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
@@ -140,7 +139,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getContainerIds() {
             Set<String> result = new HashSet<String>();
-            for (ContainerIdentity cntid : containerManager.getContainerIdentities()) {
+            for (String cntid : containerManager.getContainerIdentities()) {
                 result.add(cntid.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -148,7 +147,7 @@ public final class MBeansProvider extends AbstractComponent {
 
         @Override
         public CompositeData getContainer(String identity) {
-            Container container = containerManager.getContainer(ContainerIdentity.create(identity));
+            Container container = containerManager.getContainer(identity);
             return container != null ? ContainerOpenType.getCompositeData(container) : null;
         }
 

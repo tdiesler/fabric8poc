@@ -21,7 +21,6 @@ package io.fabric8.core.internal;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.HostDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
 
@@ -54,8 +53,8 @@ public final class HostDataStoreImpl extends AbstractComponent implements HostDa
     }
 
     @Override
-    public ContainerIdentity createManagedContainerIdentity(String prefix) {
+    public String createManagedContainerIdentity(String prefix) {
         NotNullException.assertValue(prefix, "prefix");
-        return ContainerIdentity.create(prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+        return prefix + "#" + uniqueTokenGenerator.incrementAndGet();
     }
 }

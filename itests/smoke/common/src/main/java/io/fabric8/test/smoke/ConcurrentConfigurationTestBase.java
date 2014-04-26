@@ -21,7 +21,6 @@ package io.fabric8.test.smoke;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -116,7 +115,7 @@ public abstract class ConcurrentConfigurationTestBase  {
             ContainerManager manager = ContainerManagerLocator.getContainerManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    ContainerIdentity cntId = createAndStart(manager, i);
+                    String cntId = createAndStart(manager, i);
                     Thread.sleep(10);
                     stopAndDestroy(manager, cntId);
                     Thread.sleep(10);
@@ -128,11 +127,11 @@ public abstract class ConcurrentConfigurationTestBase  {
             return true;
         }
 
-        private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
+        private String createAndStart(ContainerManager manager, int index) throws InterruptedException {
             DefaultContainerBuilder builder = DefaultContainerBuilder.create();
             CreateOptions options = builder.addIdentityPrefix(prefix + "#" + index).getCreateOptions();
             Container cnt = manager.createContainer(options);
-            ContainerIdentity cntId = cnt.getIdentity();
+            String cntId = cnt.getIdentity();
             //System.out.println(cnt);
             Assert.assertSame(State.CREATED, cnt.getState());
             Thread.sleep(10);
@@ -143,7 +142,7 @@ public abstract class ConcurrentConfigurationTestBase  {
         }
 
 
-        private void stopAndDestroy(ContainerManager manager, ContainerIdentity cntId) throws InterruptedException {
+        private void stopAndDestroy(ContainerManager manager, String cntId) throws InterruptedException {
             Container cnt = manager.stopContainer(cntId);
             //System.out.println(cnt);
             Assert.assertSame(State.STOPPED, cnt.getState());

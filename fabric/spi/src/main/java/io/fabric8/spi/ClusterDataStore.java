@@ -1,7 +1,5 @@
 package io.fabric8.spi;
 
-import io.fabric8.api.ContainerIdentity;
-
 /**
  * A cluster wide data store
  *
@@ -10,5 +8,5 @@ import io.fabric8.api.ContainerIdentity;
  */
 public interface ClusterDataStore {
 
-    ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix);
+    String createContainerIdentity(String parentId, String prefix);
 }

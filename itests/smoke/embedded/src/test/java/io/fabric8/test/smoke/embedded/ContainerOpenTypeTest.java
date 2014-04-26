@@ -22,7 +22,6 @@ package io.fabric8.test.smoke.embedded;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.Factory;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -77,11 +76,11 @@ public class ContainerOpenTypeTest {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
-        ContainerIdentity idA = cntA.getIdentity();
+        String idA = cntA.getIdentity();
 
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
         ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(mbeanServer, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
-        CompositeData cdata = cntManagement.getContainer(idA.getCanonicalForm());
+        CompositeData cdata = cntManagement.getContainer(idA);
         Container cntB = ContainerOpenType.getContainer(cdata);
         Assert.assertEquals(idA, cntB.getIdentity());
         Assert.assertEquals(cntA.getAttributes(), cntB.getAttributes());
@@ -94,8 +93,8 @@ public class ContainerOpenTypeTest {
         options = builder.getCreateOptions();
 
         Container cntC = cntManager.createContainer(options);
-        ContainerIdentity idC = cntC.getIdentity();
-        Assert.assertEquals("cntA#2", idC.getSymbolicName());
+        String idC = cntC.getIdentity();
+        Assert.assertEquals("cntA#2", idC);
         Assert.assertEquals(cntA.getAttributes(), cntC.getAttributes());
 
         cntManager.destroyContainer(idC);
@@ -119,7 +118,7 @@ public class ContainerOpenTypeTest {
         @Override
         public DefaultContainerBuilder addBuilderOptions(DefaultContainerBuilder builder) {
             Container container = ContainerOpenType.getContainer(cdata);
-            String symbolicName = container.getIdentity().getSymbolicName();
+            String symbolicName = container.getIdentity();
             String prefix = symbolicName.substring(0, symbolicName.indexOf('#'));
             return builder.addIdentityPrefix(prefix).addAttributes(container.getAttributes());
         }

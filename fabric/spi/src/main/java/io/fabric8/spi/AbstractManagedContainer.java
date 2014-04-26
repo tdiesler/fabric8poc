@@ -19,7 +19,6 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.utils.IllegalStateAssertion;
@@ -61,7 +60,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     private final AttributeSupport attributes = new AttributeSupport();
     private final MavenDelegateRepository mavenRepository;
-    private final ContainerIdentity identity;
+    private final String identity;
     private final C createOptions;
     private File containerHome;
     private State state;
@@ -77,7 +76,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     @Override
-    public ContainerIdentity getIdentity() {
+    public String getIdentity() {
         return identity;
     }
 

@@ -20,7 +20,6 @@
 package io.fabric8.core.internal;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.utils.IllegalStateAssertion;
@@ -44,7 +43,7 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = { ContainerRegistry.class }, immediate = true)
 public final class ContainerRegistry extends AbstractComponent {
 
-    private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();
+    private final Map<String, ContainerState> containers = new ConcurrentHashMap<String, ContainerState>();
 
     @Activate
     void activate() {
@@ -56,12 +55,12 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Set<ContainerIdentity> getContainerIdentities() {
+    Set<String> getContainerIdentities() {
         assertValid();
         return Collections.unmodifiableSet(containers.keySet());
     }
 
-    Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
+    Set<ContainerState> getContainers(Set<String> identities) {
         assertValid();
         Set<ContainerState> result = new HashSet<ContainerState>();
         if (identities == null) {
@@ -76,33 +75,33 @@ public final class ContainerRegistry extends AbstractComponent {
         return Collections.unmodifiableSet(result);
     }
 
-    ContainerState getContainer(ContainerIdentity identity) {
+    ContainerState getContainer(String identity) {
         assertValid();
         return getContainerInternal(identity);
     }
 
     void addContainer(ContainerState cntState) {
         assertValid();
-        ContainerIdentity identity = cntState.getIdentity();
+        String identity = cntState.getIdentity();
         IllegalStateAssertion.assertTrue(getContainerInternal(identity) == null, "Container already exists: " + identity);
         containers.put(identity, cntState);
     }
 
-    ContainerState removeContainer(ContainerIdentity identity) {
+    ContainerState removeContainer(String identity) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         containers.remove(identity);
         return cntState;
     }
 
-    ContainerState getRequiredContainer(ContainerIdentity identity) {
+    ContainerState getRequiredContainer(String identity) {
         assertValid();
         ContainerState container = getContainerInternal(identity);
         IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
         return container;
     }
 
-    private ContainerState getContainerInternal(ContainerIdentity identity) {
+    private ContainerState getContainerInternal(String identity) {
         return containers.get(identity);
     }
 }

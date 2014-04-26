@@ -29,7 +29,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Container extends Attributable, Identifiable<ContainerIdentity> {
+public interface Container extends Attributable, Identifiable<String> {
 
     /**
      * The container states
@@ -67,12 +67,12 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the parent container
      */
-    ContainerIdentity getParentIdentity();
+    String getParentIdentity();
 
     /**
      * Get the set of child containers
      */
-    Set<ContainerIdentity> getChildIdentities();
+    Set<String> getChildIdentities();
 
     /**
      * Get the set of provided management domains

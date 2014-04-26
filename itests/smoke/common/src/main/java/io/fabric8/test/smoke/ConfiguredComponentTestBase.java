@@ -23,7 +23,6 @@ import io.fabric8.api.ComponentEvent;
 import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -120,9 +119,9 @@ public abstract class ConfiguredComponentTestBase  {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
-        ContainerIdentity cntIdA = cntA.getIdentity();
+        String cntIdA = cntA.getIdentity();
 
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
+        Assert.assertTrue(cntIdA.startsWith("cntA#"));
         Assert.assertEquals("foo", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cntA.getState());
 
