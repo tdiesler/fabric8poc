@@ -35,7 +35,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
+public interface Profile extends Attributable, Identifiable<String> {
 
     /**
      * Get the associated profile version
@@ -45,7 +45,7 @@ public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
     /**
      * Get the profile parents
      */
-    Set<ProfileIdentity> getParents();
+    Set<String> getParents();
 
     /**
      * Get the profile item for the given name

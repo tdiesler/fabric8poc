@@ -32,7 +32,6 @@ import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
@@ -156,7 +155,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 Permit<ContainerService> permit = permitManager.aquirePermit(ContainerService.PERMIT, false);
                 try {
                     ContainerServiceImpl service = (ContainerServiceImpl) permit.getInstance();
-                    ProfileIdentity profileId = profile.getIdentity();
+                    String profileId = profile.getIdentity();
                     for (ContainerState cntState : service.getContainerStates(null)) {
                         if (cntState.getProfiles().contains(profileId)) {
                             LockHandle writeLock = cntState.aquireWriteLock();
@@ -285,7 +284,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             ProfileVersionState versionState = cntState.getProfileVersion();
             if (versionState != null) {
                 Version profileVersion = versionState.getIdentity();
-                Set<ProfileIdentity> profiles = cntState.getProfiles();
+                Set<String> profiles = cntState.getProfiles();
                 for (Profile profile : profileService.get().getProfiles(profileVersion, profiles)) {
                     unprovisionProfile(cntState, profile, null);
                 }
@@ -346,7 +345,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ProfileServiceImpl profileServiceImpl = (ProfileServiceImpl) profileService.get();
         ProfileVersionState nextVersionState = profileServiceImpl.getRequiredProfileVersion(nextVersion);
         ProfileVersionState prevVersionState = cntState.getProfileVersion();
-        Set<ProfileIdentity> profileIds = cntState.getProfiles();
+        Set<String> profileIds = cntState.getProfiles();
         Set<Profile> nextProfiles = profileServiceImpl.getProfiles(nextVersion, profileIds);
 
         LOGGER.info("Set container version: {} <= {}", cntState, nextVersion);
@@ -366,7 +365,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> identities, ProvisionEventListener listener) {
+    public Container addProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -377,7 +376,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container addProfilesInternal(ContainerState cntState, Set<ProfileIdentity> identities, ProvisionEventListener listener) {
+    private Container addProfilesInternal(ContainerState cntState, Set<String> identities, ProvisionEventListener listener) {
         ProfileVersionState versionState = cntState.getProfileVersion();
         Version profileVersion = versionState.getIdentity();
         Set<Profile> profiles = profileService.get().getProfiles(profileVersion, identities);
@@ -393,7 +392,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> identities, ProvisionEventListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -404,7 +403,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container removeProfilesInternal(ContainerState cntState, Set<ProfileIdentity> identities, ProvisionEventListener listener) {
+    private Container removeProfilesInternal(ContainerState cntState, Set<String> identities, ProvisionEventListener listener) {
         ProfileVersionState versionState = cntState.getProfileVersion();
         Version profileVersion = versionState.getIdentity();
         Set<Profile> profiles = profileService.get().getProfiles(profileVersion, identities);
@@ -587,7 +586,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
         private final List<ContainerHandle> handles;
-        private final Set<ProfileIdentity> profiles = new HashSet<>();
+        private final Set<String> profiles = new HashSet<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
@@ -712,7 +711,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        Set<ProfileIdentity> getProfiles() {
+        Set<String> getProfiles() {
             LockHandle readLock = aquireReadLock();
             try {
                 return Collections.unmodifiableSet(new HashSet<>(profiles));
@@ -794,7 +793,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        private void addProfiles(Set<ProfileIdentity> identities) {
+        private void addProfiles(Set<String> identities) {
             assertNotDestroyed();
             LockHandle writeLock = aquireWriteLock();
             try {
@@ -804,7 +803,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        private void removeProfiles(Set<ProfileIdentity> identities) {
+        private void removeProfiles(Set<String> identities) {
             assertNotDestroyed();
             LockHandle writeLock = aquireWriteLock();
             try {
