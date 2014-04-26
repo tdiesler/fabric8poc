@@ -22,7 +22,6 @@ package io.fabric8.test.basic;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -81,7 +80,7 @@ public class ManagedContainerLifecycleTests  {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
-        ContainerIdentity cntId = cnt.getIdentity();
+        String cntId = cnt.getIdentity();
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);
@@ -104,7 +103,7 @@ public class ManagedContainerLifecycleTests  {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
-        ContainerIdentity cntId = cnt.getIdentity();
+        String cntId = cnt.getIdentity();
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);
@@ -130,7 +129,7 @@ public class ManagedContainerLifecycleTests  {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
-        ContainerIdentity cntId = cnt.getIdentity();
+        String cntId = cnt.getIdentity();
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);

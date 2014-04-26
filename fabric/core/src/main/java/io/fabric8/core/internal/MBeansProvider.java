@@ -20,10 +20,8 @@
 package io.fabric8.core.internal;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ContainerManagement;
@@ -141,7 +139,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getContainerIds() {
             Set<String> result = new HashSet<String>();
-            for (ContainerIdentity cntid : containerManager.getContainerIdentities()) {
+            for (String cntid : containerManager.getContainerIdentities()) {
                 result.add(cntid.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -149,7 +147,7 @@ public final class MBeansProvider extends AbstractComponent {
 
         @Override
         public CompositeData getContainer(String identity) {
-            Container container = containerManager.getContainer(ContainerIdentity.create(identity));
+            Container container = containerManager.getContainer(identity);
             return container != null ? ContainerOpenType.getCompositeData(container) : null;
         }
 
@@ -190,7 +188,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileIds(String version) {
             Set<String> result = new HashSet<String>();
-            for (ProfileIdentity prfid : profileManager.getProfileIdentities(Version.parseVersion(version))) {
+            for (String prfid : profileManager.getProfileIdentities(Version.parseVersion(version))) {
                 result.add(prfid.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -198,7 +196,7 @@ public final class MBeansProvider extends AbstractComponent {
 
         @Override
         public CompositeData getProfile(String version, String identity) {
-            Profile profile = profileManager.getProfile(Version.parseVersion(version), ProfileIdentity.create(identity));
+            Profile profile = profileManager.getProfile(Version.parseVersion(version), identity);
             return profile != null ? ProfileOpenType.getCompositeData(profile) : null;
         }
     }

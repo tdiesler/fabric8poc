@@ -20,9 +20,7 @@
 package io.fabric8.spi.management;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.AttributeSupport;
@@ -73,7 +71,7 @@ public final class ContainerOpenType {
     }
 
     public static CompositeData getCompositeData(Container container) {
-        String identity = container.getIdentity().getCanonicalForm();
+        String identity = container.getIdentity();
         List<Object> items = new ArrayList<Object>();
         items.add(identity);
         try {
@@ -104,17 +102,17 @@ public final class ContainerOpenType {
 
     static class CompositeDataContainer extends AttributeSupport implements Container {
 
-        private final ContainerIdentity identity;
+        private final String identity;
 
         private CompositeDataContainer(CompositeData cdata, ClassLoader classLoader) {
-            identity = ContainerIdentity.createFrom((String) cdata.get(ContainerOpenType.ITEM_IDENTITY));
+            identity = (String) cdata.get(ContainerOpenType.ITEM_IDENTITY);
             for (CompositeData attData : (CompositeData[]) cdata.get(ContainerOpenType.ITEM_ATTRIBUTES)) {
                 AttributesOpenType.addAttribute(this, attData, classLoader);
             }
         }
 
         @Override
-        public ContainerIdentity getIdentity() {
+        public String getIdentity() {
             return identity;
         }
 
@@ -129,12 +127,12 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public ContainerIdentity getParentIdentity() {
+        public String getParentIdentity() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Set<ContainerIdentity> getChildIdentities() {
+        public Set<String> getChildIdentities() {
             throw new UnsupportedOperationException();
         }
 
@@ -154,7 +152,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        public Set<String> getProfileIdentities() {
             throw new UnsupportedOperationException();
         }
 

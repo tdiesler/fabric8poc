@@ -33,6 +33,6 @@ public interface LinkedProfile extends Profile {
     /**
      * Get the parent profiles
      */
-    Map<ProfileIdentity, LinkedProfile> getLinkedParents();
+    Map<String, LinkedProfile> getLinkedParents();
 
 }

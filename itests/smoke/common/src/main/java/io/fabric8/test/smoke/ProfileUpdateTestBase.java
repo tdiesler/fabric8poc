@@ -26,7 +26,6 @@ import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -34,7 +33,6 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -82,7 +80,7 @@ public abstract class ProfileUpdateTestBase  {
     public void testProfileUpdate() throws Exception {
 
         Version version12 = Version.parseVersion("1.2");
-        ProfileIdentity identity = ProfileIdentity.create("foo");
+        String identity = "foo";
 
         // Build a profile version
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create().addIdentity(version12);
@@ -122,7 +120,7 @@ public abstract class ProfileUpdateTestBase  {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String symbolicName = event.getSource().getIdentity().getSymbolicName();
+                String symbolicName = event.getSource().getIdentity();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "foo".equals(symbolicName)) {
                     latchA.countDown();
                 }
@@ -134,7 +132,7 @@ public abstract class ProfileUpdateTestBase  {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
                     latchB.countDown();
                 }
@@ -176,8 +174,8 @@ public abstract class ProfileUpdateTestBase  {
         Container cntA = cntManager.createContainer(options);
 
         // Verify cntA identity
-        ContainerIdentity cntIdA = cntA.getIdentity();
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
+        String cntIdA = cntA.getIdentity();
+        Assert.assertTrue(cntIdA.startsWith("cntA#"));
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container cntA
@@ -195,7 +193,7 @@ public abstract class ProfileUpdateTestBase  {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String symbolicName = event.getSource().getIdentity().getSymbolicName();
+                String symbolicName = event.getSource().getIdentity();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
                     latchA.get().countDown();
                 }
@@ -207,7 +205,7 @@ public abstract class ProfileUpdateTestBase  {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
                     latchB.get().countDown();
                 }
@@ -255,8 +253,8 @@ public abstract class ProfileUpdateTestBase  {
         Container cntB = cntManager.createContainer(options);
 
         // Verify child identity
-        ContainerIdentity cntIdB = cntB.getIdentity();
-        Assert.assertTrue(cntIdB.getSymbolicName().startsWith("cntB#"));
+        String cntIdB = cntB.getIdentity();
+        Assert.assertTrue(cntIdB.startsWith("cntB#"));
         Assert.assertEquals("bar", cntB.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         cntB = cntManager.destroyContainer(cntIdB);

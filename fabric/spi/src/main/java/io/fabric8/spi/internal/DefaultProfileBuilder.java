@@ -24,7 +24,6 @@ import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileItemBuilder;
 import io.fabric8.api.ProfileOptionsProvider;
@@ -57,7 +56,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder addIdentity(ProfileIdentity identity) {
+    public ProfileBuilder addIdentity(String identity) {
         assertMutable();
         mutableProfile.setIdentity(identity);
         return this;
@@ -96,7 +95,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder getParentBuilder(ProfileIdentity identity) {
+    public ProfileBuilder getParentBuilder(String identity) {
         assertMutable();
         MutableProfile mutableParent = (MutableProfile) mutableProfile.getLinkedParent(identity);
         return mutableParent != null ? new DefaultProfileBuilder(mutableParent) : new DefaultProfileBuilder().addIdentity(identity);
@@ -110,7 +109,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder removeParentProfile(ProfileIdentity identity) {
+    public ProfileBuilder removeParentProfile(String identity) {
         assertMutable();
         mutableProfile.removeParentProfile(identity);
         return this;
@@ -129,19 +128,19 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     static class MutableProfile extends AttributeSupport implements LinkedProfile {
 
-        private final Map<ProfileIdentity, LinkedProfile> parentProfiles = new HashMap<>();
+        private final Map<String, LinkedProfile> parentProfiles = new HashMap<>();
         private final Map<String, ProfileItem> profileItems = new HashMap<>();
-        private ProfileIdentity identity;
+        private String identity;
         private Version version;
 
         MutableProfile() {
         }
 
         MutableProfile(LinkedProfile linkedProfile) {
-            this(linkedProfile, new HashMap<ProfileIdentity, LinkedProfile>());
+            this(linkedProfile, new HashMap<String, LinkedProfile>());
         }
 
-        MutableProfile(LinkedProfile linkedProfile, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
+        MutableProfile(LinkedProfile linkedProfile, Map<String, LinkedProfile> linkedProfiles) {
             super(linkedProfile.getAttributes());
             identity = linkedProfile.getIdentity();
             version = linkedProfile.getVersion();
@@ -159,11 +158,11 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
         }
 
         @Override
-        public ProfileIdentity getIdentity() {
+        public String getIdentity() {
             return identity;
         }
 
-        void setIdentity(ProfileIdentity identity) {
+        void setIdentity(String identity) {
             this.identity = identity;
         }
 
@@ -172,17 +171,17 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
             return version;
         }
 
-        LinkedProfile getLinkedParent(ProfileIdentity identity) {
+        LinkedProfile getLinkedParent(String identity) {
             return parentProfiles.get(identity);
         }
 
         @Override
-        public Set<ProfileIdentity> getParents() {
+        public Set<String> getParents() {
             return Collections.unmodifiableSet(parentProfiles.keySet());
         }
 
         @Override
-        public Map<ProfileIdentity, LinkedProfile> getLinkedParents() {
+        public Map<String, LinkedProfile> getLinkedParents() {
             return Collections.unmodifiableMap(parentProfiles);
         }
 
@@ -190,7 +189,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
             parentProfiles.put(profile.getIdentity(), (LinkedProfile) profile);
         }
 
-        void removeParentProfile(ProfileIdentity identity) {
+        void removeParentProfile(String identity) {
             parentProfiles.remove(identity);
         }
 

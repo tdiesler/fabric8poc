@@ -21,7 +21,6 @@ package io.fabric8.core.internal;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
 
@@ -54,10 +53,10 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
     }
 
     @Override
-    public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
+    public String createContainerIdentity(String parentId, String prefix) {
         NotNullException.assertValue(prefix, "prefix");
-        String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
-        ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+        String parentName = parentId != null ? parentId + ":" : "";
+        String containerId = parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet();
         return containerId;
     }
 }

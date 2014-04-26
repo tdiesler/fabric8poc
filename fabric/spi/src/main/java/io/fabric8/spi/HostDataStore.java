@@ -1,7 +1,5 @@
 package io.fabric8.spi;
 
-import io.fabric8.api.ContainerIdentity;
-
 /**
  * A host wide data store
  *
@@ -10,6 +8,6 @@ import io.fabric8.api.ContainerIdentity;
  */
 public interface HostDataStore {
 
-    ContainerIdentity createManagedContainerIdentity(String prefix);
+    String createManagedContainerIdentity(String prefix);
 
 }

@@ -24,7 +24,6 @@ import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -71,7 +70,7 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals("One version", 1, versions.size());
 
         ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
-        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIdentities();
+        Set<String> profileIdentities = defaultVersion.getProfileIdentities();
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
@@ -86,7 +85,7 @@ public abstract class BasicProfilesTestBase  {
 
         // Build a profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder.addIdentity(ProfileIdentity.create("foo"));
+        profileBuilder.addIdentity("foo");
         ConfigurationProfileItemBuilder ibuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
         ibuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
         profileBuilder.addProfileItem(ibuilder.getProfileItem());

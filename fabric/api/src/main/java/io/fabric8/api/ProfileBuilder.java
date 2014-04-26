@@ -29,7 +29,7 @@ package io.fabric8.api;
  */
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
-    ProfileBuilder addIdentity(ProfileIdentity identity);
+    ProfileBuilder addIdentity(String identity);
 
     ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider);
 
@@ -39,11 +39,11 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder removeProfileItem(String identity);
 
-    ProfileBuilder getParentBuilder(ProfileIdentity identity);
+    ProfileBuilder getParentBuilder(String identity);
 
     ProfileBuilder addParentProfile(Profile profile);
 
-    ProfileBuilder removeParentProfile(ProfileIdentity identity);
+    ProfileBuilder removeParentProfile(String identity);
 
     Profile getProfile();
 

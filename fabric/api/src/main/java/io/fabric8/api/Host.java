@@ -33,5 +33,5 @@ public interface Host extends Attributable, Identifiable<HostIdentity> {
     /**
      * Get the set of associated containers
      */
-    Set<ContainerIdentity> getContainers();
+    Set<String> getContainers();
 }

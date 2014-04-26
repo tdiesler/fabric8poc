@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi.management;
 
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.AttributeSupport;
 
@@ -115,7 +114,7 @@ public final class ProfileVersionOpenType {
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        public Set<String> getProfileIdentities() {
             throw new UnsupportedOperationException();
         }
 

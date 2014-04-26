@@ -23,7 +23,6 @@ package io.fabric8.test.smoke;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
@@ -60,9 +59,9 @@ public abstract class BasicContainerLifecycleTestBase  {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
-        ContainerIdentity cntIdA = cntA.getIdentity();
+        String cntIdA = cntA.getIdentity();
 
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("Container#"));
+        Assert.assertTrue(cntIdA.startsWith("Container#"));
         Assert.assertSame(State.CREATED, cntA.getState());
         Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertNull("Null profile version", cntA.getProfileVersion());

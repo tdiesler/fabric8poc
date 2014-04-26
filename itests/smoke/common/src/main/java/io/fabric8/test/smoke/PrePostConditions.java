@@ -70,7 +70,7 @@ public final class PrePostConditions {
         // Default profile content
         Profile defaultProfile = prfManager.getDefaultProfile();
         Assert.assertEquals("Default version", defaultVersion, defaultProfile.getVersion());
-        Assert.assertEquals("default", defaultProfile.getIdentity().getSymbolicName());
+        Assert.assertEquals("default", defaultProfile.getIdentity());
         Assert.assertTrue("No parents", defaultProfile.getParents().isEmpty());
         Set<ProfileItem> profileItems = defaultProfile.getProfileItems(null);
         Assert.assertEquals("One profile item", 1, profileItems.size());
