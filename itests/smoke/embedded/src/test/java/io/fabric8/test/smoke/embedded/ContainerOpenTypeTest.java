@@ -73,7 +73,7 @@ public class ContainerOpenTypeTest {
         builder.addIdentityPrefix("cntA");
         builder.addAttribute(AKEY, "AVal");
         builder.addAttribute(BKEY, "BVal");
-        CreateOptions options = builder.getCreateOptions();
+        CreateOptions options = builder.build();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
@@ -91,7 +91,7 @@ public class ContainerOpenTypeTest {
         // Test the {@link CreateOptionsProvider}
         builder = DefaultContainerBuilder.create();
         builder.addCreateOptions(new CompositeDataOptionsProvider(cdata));
-        options = builder.getCreateOptions();
+        options = builder.build();
 
         Container cntC = cntManager.createContainer(options);
         ContainerIdentity idC = cntC.getIdentity();

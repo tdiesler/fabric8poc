@@ -78,7 +78,7 @@ public abstract class BasicProfilesTestBase  {
         Version version = Version.parseVersion("1.1");
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profileVersion = versionBuilder.addIdentity(version).getProfileVersion();
+        ProfileVersion profileVersion = versionBuilder.addIdentity(version).build();
 
         // Add a profile version
         prfManager.addProfileVersion(profileVersion);
@@ -89,8 +89,8 @@ public abstract class BasicProfilesTestBase  {
         profileBuilder.addIdentity(ProfileIdentity.create("foo"));
         ConfigurationProfileItemBuilder ibuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
         ibuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
-        profileBuilder.addProfileItem(ibuilder.getProfileItem());
-        Profile profile = profileBuilder.getProfile();
+        profileBuilder.addProfileItem(ibuilder.build());
+        Profile profile = profileBuilder.build();
 
         // Add the profile to the given version
         profile = prfManager.addProfile(version, profile);

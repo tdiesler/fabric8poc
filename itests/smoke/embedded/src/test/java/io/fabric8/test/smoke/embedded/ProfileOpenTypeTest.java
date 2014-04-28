@@ -73,7 +73,7 @@ public class ProfileOpenTypeTest {
         builder.addIdentity(ProfileIdentity.create("someProfile"));
         builder.addAttribute(AKEY, "AVal");
         builder.addAttribute(BKEY, "BVal");
-        Profile prfA = builder.getProfile();
+        Profile prfA = builder.build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         Version defaultVersion = prfManager.getDefaultProfileVersion().getIdentity();
@@ -92,7 +92,7 @@ public class ProfileOpenTypeTest {
         // Test the {@link ProfileVersionOptionsProvider}
         builder = ProfileBuilder.Factory.create();
         builder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
-        Profile prfC = builder.getProfile();
+        Profile prfC = builder.build();
 
         prfC = prfManager.addProfile(defaultVersion, prfC);
         Assert.assertEquals(prfA.getIdentity(), prfC.getIdentity());

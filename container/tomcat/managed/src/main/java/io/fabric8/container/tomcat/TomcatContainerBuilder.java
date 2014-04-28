@@ -37,7 +37,7 @@ public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<Tomc
 
     @Override
     public TomcatManagedContainer getManagedContainer() {
-        return new TomcatManagedContainer(getCreateOptions());
+        return new TomcatManagedContainer(build());
     }
 
     public TomcatContainerBuilder setJmxPort(int jmxPort) {

@@ -56,7 +56,7 @@ public abstract class BasicContainerLifecycleTestBase  {
     public void testContainerLifecycle() throws Exception {
 
         DefaultContainerBuilder builder = DefaultContainerBuilder.create();
-        CreateOptions options = builder.getCreateOptions();
+        CreateOptions options = builder.build();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
