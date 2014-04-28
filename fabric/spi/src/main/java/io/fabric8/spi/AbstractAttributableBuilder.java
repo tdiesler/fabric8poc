@@ -25,7 +25,7 @@ import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Map;
 
-public class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
+public abstract class AbstractAttributableBuilder<T, B extends AttributableBuilder<T, B>> implements AttributableBuilder<T, B> {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private boolean immutable;

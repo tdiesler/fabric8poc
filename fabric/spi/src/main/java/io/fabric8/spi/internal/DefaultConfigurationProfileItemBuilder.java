@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableBuilder<ConfigurationProfileItemBuilder> implements ConfigurationProfileItemBuilder {
+final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableBuilder<ConfigurationProfileItem, ConfigurationProfileItemBuilder> implements ConfigurationProfileItemBuilder {
 
     private final MutableConfigurationProfileItem mutableItem;
 
@@ -49,7 +49,7 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
     }
 
     @Override
-    public ConfigurationProfileItem getProfileItem() {
+    public ConfigurationProfileItem build() {
         validate();
         makeImmutable();
         return mutableItem;

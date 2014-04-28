@@ -61,7 +61,7 @@ public class ProfileCopyTest {
         Set<ProfileItem> itemsA = profileA.getProfileItems(null);
 
         ProfileBuilder builder = ProfileBuilder.Factory.createFrom(profileA);
-        Profile profileB = builder.getProfile();
+        Profile profileB = builder.build();
         Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, profileB.getVersion());
         Set<ProfileItem> itemsB = profileB.getProfileItems(null);
 

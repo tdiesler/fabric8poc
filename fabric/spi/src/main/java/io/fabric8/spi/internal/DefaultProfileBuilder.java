@@ -40,7 +40,7 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
+final class DefaultProfileBuilder extends AbstractAttributableBuilder<Profile, ProfileBuilder> implements ProfileBuilder {
 
     private final MutableProfile mutableProfile;
 
@@ -117,7 +117,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public Profile getProfile() {
+    public Profile build() {
         validate();
         makeImmutable();
         return mutableProfile;

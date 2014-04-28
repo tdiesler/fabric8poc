@@ -27,7 +27,7 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
+public interface ProfileBuilder extends AttributableBuilder<Profile, ProfileBuilder> {
 
     ProfileBuilder addIdentity(ProfileIdentity identity);
 
@@ -44,8 +44,6 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
     ProfileBuilder addParentProfile(Profile profile);
 
     ProfileBuilder removeParentProfile(ProfileIdentity identity);
-
-    Profile getProfile();
 
     final class Factory {
 

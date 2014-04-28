@@ -30,9 +30,9 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-public interface AttributableBuilder<B extends AttributableBuilder<B>> {
+public interface AttributableBuilder<T, B extends AttributableBuilder<T, B>> extends Builder<T, AttributableBuilder<T, B>> {
 
-    <T> B addAttribute(AttributeKey<T> key, T value);
+    <V> B addAttribute(AttributeKey<V> key, V value);
 
     B addAttributes(Map<AttributeKey<?>, Object> attributes);
 }
