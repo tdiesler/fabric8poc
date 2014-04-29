@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEventListener;
@@ -114,6 +116,17 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
+    public LinkedProfileVersion getLinkedProfileVersion(Version identity) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return service.getLinkedProfileVersion(identity);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
     public ProfileVersion addProfileVersion(ProfileVersion version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
@@ -174,6 +187,17 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
         try {
             ProfileService service = permit.getInstance();
             return service.getProfile(version, identity);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public LinkedProfile getLinkedProfile(Version version, String identity) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return service.getLinkedProfile(version, identity);
         } finally {
             permit.release();
         }

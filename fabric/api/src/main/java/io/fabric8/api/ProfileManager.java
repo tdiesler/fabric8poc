@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,9 +61,14 @@ public interface ProfileManager {
     Set<ProfileVersion> getProfileVersions(Set<Version> identities);
 
     /**
-     * Get the profile versions for the given identity
+     * Get the profile version for the given identity
      */
     ProfileVersion getProfileVersion(Version identity);
+
+    /**
+     * Get the linked profile version for the given identity
+     */
+    LinkedProfileVersion getLinkedProfileVersion(Version identity);
 
     /**
      * Add a profile version
@@ -90,6 +95,11 @@ public interface ProfileManager {
      * Get the profile for a given identity and version
      */
     Profile getProfile(Version version, String identity);
+
+    /**
+     * Get the linked profile version for the given identity
+     */
+    LinkedProfile getLinkedProfile(Version version, String identity);
 
     /**
      * Add a profile to the given version

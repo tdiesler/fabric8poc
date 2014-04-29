@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ package io.fabric8.test.smoke.embedded;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
@@ -98,7 +99,7 @@ public class EffectiveProfileTest {
         LinkedProfile profileC = builderC.build();
 
         // Verify effective A
-        LinkedProfile effectiveA = profileA.getEffectiveProfile();
+        Profile effectiveA = profileA.getEffectiveProfile();
         Assert.assertEquals("effective:A", effectiveA.getIdentity());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
@@ -107,7 +108,7 @@ public class EffectiveProfileTest {
         Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
 
         // Verify effective B
-        LinkedProfile effectiveB = profileB.getEffectiveProfile();
+        Profile effectiveB = profileB.getEffectiveProfile();
         Assert.assertEquals("effective:B", effectiveB.getIdentity());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
@@ -117,7 +118,7 @@ public class EffectiveProfileTest {
         Assert.assertEquals(configB, effectiveB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
 
         // Verify effective C
-        LinkedProfile effectiveC = profileC.getEffectiveProfile();
+        Profile effectiveC = profileC.getEffectiveProfile();
         Assert.assertEquals("effective:C", effectiveC.getIdentity());
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());
