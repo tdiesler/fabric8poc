@@ -49,7 +49,7 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
     }
 
     @Override
-    public ConfigurationProfileItem getProfileItem() {
+    public ConfigurationProfileItem buildProfileItem() {
         validate();
         makeImmutable();
         return mutableItem;

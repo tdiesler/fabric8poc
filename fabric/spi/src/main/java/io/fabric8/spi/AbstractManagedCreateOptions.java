@@ -77,8 +77,8 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
     }
 
     @Override
-    protected void validateConfiguration() {
+    protected void validate() {
         IllegalStateAssertion.assertNotNull(targetDirectory, "targetDirectory");
-        super.validateConfiguration();
+        super.validate();
     }
 }

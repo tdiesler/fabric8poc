@@ -55,8 +55,8 @@ public class ProfileVersionCopyTest {
         ProfileVersion versionA = prfManager.getDefaultProfileVersion();
         Assert.assertEquals("1.0.0", versionA.getIdentity().toString());
 
-        ProfileVersionBuilder builder = ProfileVersionBuilder.Factory.createFrom(versionA);
-        ProfileVersion versionB = builder.getProfileVersion();
+        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(versionA);
+        ProfileVersion versionB = versionBuilder.buildProfileVersion();
 
         Assert.assertEquals(versionA.getIdentity(), versionB.getIdentity());
         Assert.assertEquals(versionA.getAttributes(), versionB.getAttributes());

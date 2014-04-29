@@ -115,7 +115,7 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
     }
 
     @Override
-    protected void validateConfiguration() {
+    protected void validate() {
         if (getMavenCoordinates().isEmpty()) {
             Properties properties = new Properties();
             try {
@@ -131,6 +131,6 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);
         }
-        super.validateConfiguration();
+        super.validate();
     }
 }

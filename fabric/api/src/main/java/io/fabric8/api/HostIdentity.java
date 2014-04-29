@@ -29,8 +29,8 @@ package io.fabric8.api;
  */
 public final class HostIdentity extends Identity {
 
-    public static HostIdentity create(String symbolicNamen) {
-        return new HostIdentity(symbolicNamen);
+    public static HostIdentity create(String symbolicName) {
+        return new HostIdentity(symbolicName);
     }
 
     private HostIdentity(String symbolicName) {

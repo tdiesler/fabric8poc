@@ -27,7 +27,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersionBuilder>{
+public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersionBuilder> {
 
     ProfileVersionBuilder addIdentity(Version version);
 
@@ -39,13 +39,18 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder removeProfile(ProfileIdentity identity);
 
-    ProfileVersion getProfileVersion();
+    LinkedProfileVersion buildProfileVersion();
 
     final class Factory {
 
         public static ProfileVersionBuilder create() {
             ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.create();
+            return factory.create(null);
+        }
+
+        public static ProfileVersionBuilder create(Version version) {
+            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            return factory.create(version);
         }
 
         public static ProfileVersionBuilder createFrom(ProfileVersion profileVersion) {

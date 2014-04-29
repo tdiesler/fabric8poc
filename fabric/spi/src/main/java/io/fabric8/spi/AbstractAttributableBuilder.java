@@ -25,14 +25,14 @@ import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Map;
 
-public class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
+public abstract class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private boolean immutable;
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> B addAttribute(AttributeKey<T> key, T value) {
+    public <V> B addAttribute(AttributeKey<V> key, V value) {
         assertMutable();
         attributes.putAttribute(key, value);
         return (B) this;

@@ -27,6 +27,7 @@ import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import org.jboss.gravia.resource.Version;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -59,7 +60,13 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
     @Override
     public ProfileVersionBuilder create() {
         assertValid();
-        return new DefaultProfileVersionBuilder();
+        return new DefaultProfileVersionBuilder((Version) null);
+    }
+
+    @Override
+    public ProfileVersionBuilder create(Version version) {
+        assertValid();
+        return new DefaultProfileVersionBuilder(version);
     }
 
     @Override

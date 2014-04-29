@@ -82,7 +82,7 @@ public interface ProfileManager {
 
     /**
      * Get the profiles for a given version and identities
-     * @param identities The requested identities or <code>null</code> for all profile versions
+     * @param identities The requested identities or <code>null</code> for all profiles
      */
     Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities);
 

@@ -115,8 +115,8 @@ public abstract class ConfiguredComponentTestBase  {
         Assert.assertTrue("ComponentEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
-        DefaultContainerBuilder builder = DefaultContainerBuilder.create();
-        CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
+        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").buildCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);

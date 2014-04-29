@@ -40,6 +40,4 @@ public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>
     B setOutputToConsole(boolean outputToConsole);
 
     ManagedContainer<C> getManagedContainer();
-
-    C getCreateOptions();
 }

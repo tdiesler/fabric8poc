@@ -34,8 +34,8 @@ public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Id
     private final Class<T> type;
     private final String canonicalForm;
 
-    public static <T extends ServiceEndpoint> ServiceEndpointIdentity<T> create(String symbolicNamen, Class<T> type) {
-        return new ServiceEndpointIdentity<T>(symbolicNamen, type);
+    public static <T extends ServiceEndpoint> ServiceEndpointIdentity<T> create(String symbolicName, Class<T> type) {
+        return new ServiceEndpointIdentity<T>(symbolicName, type);
     }
 
     private ServiceEndpointIdentity(String symbolicName, Class<T> type) {

@@ -75,8 +75,8 @@ public abstract class ComplexContainerTestBase  {
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
         // Create parent container
-        DefaultContainerBuilder builder = DefaultContainerBuilder.create();
-        CreateOptions options = builder.addIdentityPrefix("cntA").getCreateOptions();
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
+        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").buildCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
@@ -95,8 +95,8 @@ public abstract class ComplexContainerTestBase  {
 
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
-        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create();
-        ProfileVersion profVersion20 = pvbuilder.addIdentity(version20).getProfileVersion();
+        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create(version20);
+        ProfileVersion profVersion20 = pvbuilder.buildProfileVersion();
 
         // Verify that the version cannot be set
         // because it is not registered with the {@link ProfileManager}
@@ -120,8 +120,8 @@ public abstract class ComplexContainerTestBase  {
         }
 
         // Build a new profile and associated it with 2.0
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create();
-        Profile default20 = profileBuilder.addIdentity(ProfileIdentity.create("default")).getProfile();
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(Constants.DEFAULT_PROFILE_IDENTITY);
+        Profile default20 = profileBuilder.buildProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
@@ -144,12 +144,11 @@ public abstract class ComplexContainerTestBase  {
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Create profile foo
-        profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder = profileBuilder.addIdentity(ProfileIdentity.create("foo"));
+        profileBuilder = ProfileBuilder.Factory.create(ProfileIdentity.create("foo"));
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
-        profileBuilder.addProfileItem(configBuilder.getProfileItem());
-        Profile fooProfile = profileBuilder.getProfile();
+        profileBuilder.addProfileItem(configBuilder.buildProfileItem());
+        Profile fooProfile = profileBuilder.buildProfile();
 
         // Verify that the profile cannot be added
         // because the profile version does not yet exist
@@ -193,8 +192,8 @@ public abstract class ComplexContainerTestBase  {
         Assert.assertEquals(2, cntParent.getProfileIdentities().size());
 
         // Create child container
-        builder = DefaultContainerBuilder.create();
-        options = builder.addIdentityPrefix("cntB").getCreateOptions();
+        cntBuilder = DefaultContainerBuilder.create();
+        options = cntBuilder.addIdentityPrefix("cntB").buildCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity

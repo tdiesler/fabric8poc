@@ -58,7 +58,7 @@ public abstract class AbstractCreateOptions implements CreateOptions {
         return attributes.getAttributes();
     }
 
-    protected void validateConfiguration() {
+    protected void validate() {
         IllegalStateAssertion.assertNotNull(identityPrefix, "Identity prefix cannot be null");
     }
 

@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.resource.Version;
+
 
 
 /**
@@ -30,6 +32,8 @@ package io.fabric8.api;
 public interface ProfileVersionBuilderFactory {
 
     ProfileVersionBuilder create();
+
+    ProfileVersionBuilder create(Version version);
 
     ProfileVersionBuilder createFrom(ProfileVersion profileVersion);
 }

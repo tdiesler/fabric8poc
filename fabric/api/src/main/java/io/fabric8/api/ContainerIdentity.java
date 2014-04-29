@@ -27,8 +27,8 @@ package io.fabric8.api;
  */
 public final class ContainerIdentity extends Identity {
 
-    public static ContainerIdentity create(String symbolicNamen) {
-        return new ContainerIdentity(symbolicNamen);
+    public static ContainerIdentity create(String symbolicName) {
+        return new ContainerIdentity(symbolicName);
     }
 
     public static ContainerIdentity createFrom(String canonicalForm) {

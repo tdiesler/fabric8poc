@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public interface AttributableBuilder<B extends AttributableBuilder<B>> {
 
-    <T> B addAttribute(AttributeKey<T> key, T value);
+    <V> B addAttribute(AttributeKey<V> key, V value);
 
     B addAttributes(Map<AttributeKey<?>, Object> attributes);
 }

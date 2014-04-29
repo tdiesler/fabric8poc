@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.resource.Version;
+
 
 
 /**
@@ -30,6 +32,8 @@ package io.fabric8.api;
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder addIdentity(ProfileIdentity identity);
+
+    ProfileBuilder addProfileVersion(Version version);
 
     ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider);
 
@@ -45,13 +49,18 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder removeParentProfile(ProfileIdentity identity);
 
-    Profile getProfile();
+    LinkedProfile buildProfile();
 
     final class Factory {
 
         public static ProfileBuilder create() {
             ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
             return factory.create();
+        }
+
+        public static ProfileBuilder create(ProfileIdentity identity) {
+            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            return factory.create(identity);
         }
 
         public static ProfileBuilder createFrom(Profile profile) {

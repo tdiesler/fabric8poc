@@ -35,4 +35,8 @@ public interface LinkedProfile extends Profile {
      */
     Map<ProfileIdentity, LinkedProfile> getLinkedParents();
 
+    /**
+     * Get the effective profile
+     */
+    LinkedProfile getEffectiveProfile();
 }

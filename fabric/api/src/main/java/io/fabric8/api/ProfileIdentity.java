@@ -29,8 +29,8 @@ package io.fabric8.api;
  */
 public final class ProfileIdentity extends Identity {
 
-    public static ProfileIdentity create(String symbolicNamen) {
-        return new ProfileIdentity(symbolicNamen);
+    public static ProfileIdentity create(String symbolicName) {
+        return new ProfileIdentity(symbolicName);
     }
 
     public static ProfileIdentity createFrom(String canonicalForm) {

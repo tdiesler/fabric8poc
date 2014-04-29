@@ -24,7 +24,6 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileIdentity;
-import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
@@ -43,8 +42,8 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     private final MutableProfileVersion mutableVersion;
 
-    DefaultProfileVersionBuilder() {
-        mutableVersion = new MutableProfileVersion();
+    DefaultProfileVersionBuilder(Version identity) {
+        mutableVersion = new MutableProfileVersion(identity);
     }
 
     DefaultProfileVersionBuilder(LinkedProfileVersion linkedVersion) {
@@ -67,8 +66,8 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     @Override
     public ProfileBuilder getProfileBuilder(ProfileIdentity identity) {
         assertMutable();
-        MutableProfile mutableProfile = (MutableProfile) mutableVersion.getLinkedProfile(identity);
-        return mutableProfile != null ? new DefaultProfileBuilder(mutableProfile) : new DefaultProfileBuilder().addIdentity(identity);
+        LinkedProfile linkedProfile = mutableVersion.getLinkedProfile(identity);
+        return linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
     }
 
     @Override
@@ -86,7 +85,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileVersion getProfileVersion() {
+    public LinkedProfileVersion buildProfileVersion() {
         validate();
         makeImmutable();
         return mutableVersion;
@@ -101,13 +100,14 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         private final Map<ProfileIdentity, LinkedProfile> linkedProfiles = new HashMap<>();
         private Version identity;
 
-        MutableProfileVersion() {
+        MutableProfileVersion(Version identity) {
+           this.identity = identity;
         }
 
         MutableProfileVersion(LinkedProfileVersion linkedVersion) {
             identity = linkedVersion.getIdentity();
             for (LinkedProfile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
-                MutableProfile mutableProfile = (MutableProfile) linkedProfiles.get(linkedProfile.getIdentity());
+                LinkedProfile mutableProfile = linkedProfiles.get(linkedProfile.getIdentity());
                 if (mutableProfile == null) {
                     mutableProfile = new MutableProfile(linkedProfile, linkedProfiles);
                 }

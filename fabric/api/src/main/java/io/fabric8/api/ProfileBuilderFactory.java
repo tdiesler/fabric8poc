@@ -33,5 +33,7 @@ public interface ProfileBuilderFactory {
 
     ProfileBuilder create();
 
+    ProfileBuilder create(ProfileIdentity identity);
+
     ProfileBuilder createFrom(Profile profile);
 }

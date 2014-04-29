@@ -30,5 +30,5 @@ package io.fabric8.api;
  */
 public interface ProfileItemBuilder<B extends ProfileItemBuilder<B, T>, T extends ProfileItem> extends AttributableBuilder<B> {
 
-    T getProfileItem();
+    T buildProfileItem();
 }

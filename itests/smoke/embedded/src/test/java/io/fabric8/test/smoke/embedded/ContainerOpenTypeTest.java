@@ -69,11 +69,11 @@ public class ContainerOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        DefaultContainerBuilder builder = DefaultContainerBuilder.create();
-        builder.addIdentityPrefix("cntA");
-        builder.addAttribute(AKEY, "AVal");
-        builder.addAttribute(BKEY, "BVal");
-        CreateOptions options = builder.getCreateOptions();
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
+        cntBuilder.addIdentityPrefix("cntA");
+        cntBuilder.addAttribute(AKEY, "AVal");
+        cntBuilder.addAttribute(BKEY, "BVal");
+        CreateOptions options = cntBuilder.buildCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
@@ -89,9 +89,9 @@ public class ContainerOpenTypeTest {
         cntManager.destroyContainer(idA);
 
         // Test the {@link CreateOptionsProvider}
-        builder = DefaultContainerBuilder.create();
-        builder.addCreateOptions(new CompositeDataOptionsProvider(cdata));
-        options = builder.getCreateOptions();
+        cntBuilder = DefaultContainerBuilder.create();
+        cntBuilder.addCreateOptions(new CompositeDataOptionsProvider(cdata));
+        options = cntBuilder.buildCreateOptions();
 
         Container cntC = cntManager.createContainer(options);
         ContainerIdentity idC = cntC.getIdentity();

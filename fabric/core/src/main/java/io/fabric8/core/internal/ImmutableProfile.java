@@ -27,6 +27,7 @@ import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.utils.IllegalStateAssertion;
+import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,6 +107,12 @@ final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
     public Map<ProfileIdentity, LinkedProfile> getLinkedParents() {
         IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return Collections.unmodifiableMap(parentProfiles);
+    }
+
+    @Override
+    public LinkedProfile getEffectiveProfile() {
+        IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
+        return ProfileUtils.getEffectiveProfile(this);
     }
 
     @Override

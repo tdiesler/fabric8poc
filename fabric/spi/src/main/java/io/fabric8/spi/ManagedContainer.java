@@ -33,13 +33,13 @@ import javax.management.remote.JMXConnector;
  * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
-public interface ManagedContainer<C extends ManagedCreateOptions> extends Attributable {
+public interface ManagedContainer<T extends ManagedCreateOptions> extends Attributable {
 
     File getContainerHome();
 
     State getState();
 
-    C getCreateOptions();
+    T getCreateOptions();
 
     ContainerIdentity getIdentity();
 

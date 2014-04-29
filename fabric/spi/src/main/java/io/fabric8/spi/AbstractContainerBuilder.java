@@ -23,11 +23,11 @@ import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.CreateOptionsProvider;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>, C extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, C> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
 
-    protected final C options;
+    protected final T options;
 
-    protected AbstractContainerBuilder(C options) {
+    protected AbstractContainerBuilder(T options) {
         this.options = options;
     }
 
@@ -51,8 +51,8 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, C>,
     }
 
     @Override
-    public C getCreateOptions() {
-        getMutableOptions().validateConfiguration();
+    public T buildCreateOptions() {
+        getMutableOptions().validate();
         makeImmutable();
         return options;
     }

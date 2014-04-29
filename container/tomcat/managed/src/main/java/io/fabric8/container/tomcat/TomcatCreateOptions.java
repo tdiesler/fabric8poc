@@ -84,7 +84,7 @@ public final class TomcatCreateOptions extends AbstractManagedCreateOptions {
     }
 
     @Override
-    protected void validateConfiguration() {
+    protected void validate() {
         if (getMavenCoordinates().isEmpty()) {
             Properties properties = new Properties();
             try {
@@ -98,6 +98,6 @@ public final class TomcatCreateOptions extends AbstractManagedCreateOptions {
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);
         }
-        super.validateConfiguration();
+        super.validate();
     }
 }

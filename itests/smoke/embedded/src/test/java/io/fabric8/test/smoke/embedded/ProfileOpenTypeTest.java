@@ -69,11 +69,10 @@ public class ProfileOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        ProfileBuilder builder = ProfileBuilder.Factory.create();
-        builder.addIdentity(ProfileIdentity.create("someProfile"));
-        builder.addAttribute(AKEY, "AVal");
-        builder.addAttribute(BKEY, "BVal");
-        Profile prfA = builder.getProfile();
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(ProfileIdentity.create("someProfile"));
+        profileBuilder.addAttribute(AKEY, "AVal");
+        profileBuilder.addAttribute(BKEY, "BVal");
+        Profile prfA = profileBuilder.buildProfile();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         Version defaultVersion = prfManager.getDefaultProfileVersion().getIdentity();
@@ -90,9 +89,9 @@ public class ProfileOpenTypeTest {
         prfManager.removeProfile(defaultVersion, prfA.getIdentity());
 
         // Test the {@link ProfileVersionOptionsProvider}
-        builder = ProfileBuilder.Factory.create();
-        builder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
-        Profile prfC = builder.getProfile();
+        profileBuilder = ProfileBuilder.Factory.create();
+        profileBuilder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
+        Profile prfC = profileBuilder.buildProfile();
 
         prfC = prfManager.addProfile(defaultVersion, prfC);
         Assert.assertEquals(prfA.getIdentity(), prfC.getIdentity());

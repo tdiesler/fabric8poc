@@ -23,9 +23,9 @@ import java.io.File;
 
 import org.jboss.gravia.repository.MavenCoordinates;
 
-public abstract class AbstractManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends AbstractManagedCreateOptions> extends AbstractContainerBuilder<B, C> implements ManagedContainerBuilder<B, C> {
+public abstract class AbstractManagedContainerBuilder<B extends ManagedContainerBuilder<B, T>, T extends AbstractManagedCreateOptions> extends AbstractContainerBuilder<B, T> implements ManagedContainerBuilder<B, T> {
 
-    protected AbstractManagedContainerBuilder(C options) {
+    protected AbstractManagedContainerBuilder(T options) {
         super(options);
     }
 
