@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.CreateOptionsProvider;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B, T> implements ContainerBuilder<B, T> {
 
     protected final T options;
 
@@ -51,7 +51,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
     }
 
     @Override
-    public T buildCreateOptions() {
+    public T build() {
         getMutableOptions().validate();
         makeImmutable();
         return options;

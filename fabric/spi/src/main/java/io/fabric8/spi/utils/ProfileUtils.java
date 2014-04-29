@@ -40,7 +40,7 @@ public final class ProfileUtils {
         String identity = "effective:" + linkedProfile.getIdentity();
         ProfileBuilder prfBuilder = ProfileBuilder.Factory.create(identity);
         addProfileContent(prfBuilder, linkedProfile);
-        return prfBuilder.buildProfile();
+        return prfBuilder.build();
     }
 
     private static void addProfileContent(ProfileBuilder builder, LinkedProfile linkedProfile) {

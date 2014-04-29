@@ -85,7 +85,7 @@ public abstract class ProfileItemsTestBase {
 
         // Create container A
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").buildCreateOptions();
+        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").build();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 
@@ -102,8 +102,8 @@ public abstract class ProfileItemsTestBase {
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap("foo", (Object) "bar"));
-        profileBuilder.addProfileItem(configBuilder.buildProfileItem());
-        Profile updateProfile = profileBuilder.buildProfile();
+        profileBuilder.addProfileItem(configBuilder.build());
+        Profile updateProfile = profileBuilder.build();
 
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
@@ -152,7 +152,7 @@ public abstract class ProfileItemsTestBase {
         // Build an update profile
         profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
         profileBuilder.removeProfileItem("some.pid");
-        updateProfile = profileBuilder.buildProfile();
+        updateProfile = profileBuilder.build();
 
         // Update the default profile
         latchA.set(new CountDownLatch(1));

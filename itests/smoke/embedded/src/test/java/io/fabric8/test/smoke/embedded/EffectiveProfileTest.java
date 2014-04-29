@@ -75,27 +75,27 @@ public class EffectiveProfileTest {
 
         ProfileBuilder builderC = ProfileBuilder.Factory.create(identityC);
         ConfigurationProfileItemBuilder itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).buildProfileItem());
+        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
         itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).buildProfileItem());
+        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
 
         ProfileBuilder builderB = builderC.getParentBuilder(identityB);
         itemBuilder = builderB.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.setConfiguration(configB).buildProfileItem());
+        builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
         itemBuilder = builderB.getProfileItemBuilder("confItemB", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.setConfiguration(configB).buildProfileItem());
+        builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
 
         ProfileBuilder builderA = builderB.getParentBuilder(identityA);
         itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).buildProfileItem());
+        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
         itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).buildProfileItem());
+        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
 
-        LinkedProfile profileA = builderA.buildProfile();
+        LinkedProfile profileA = builderA.build();
         builderB.addParentProfile(profileA);
-        LinkedProfile profileB = builderB.buildProfile();
+        LinkedProfile profileB = builderB.build();
         builderC.addParentProfile(profileB);
-        LinkedProfile profileC = builderC.buildProfile();
+        LinkedProfile profileC = builderC.build();
 
         // Verify effective A
         LinkedProfile effectiveA = profileA.getEffectiveProfile();

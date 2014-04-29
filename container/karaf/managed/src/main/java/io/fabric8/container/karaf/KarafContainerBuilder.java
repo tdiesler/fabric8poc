@@ -43,7 +43,7 @@ public final class KarafContainerBuilder extends AbstractManagedContainerBuilder
 
     @Override
     public ManagedContainer<KarafCreateOptions> getManagedContainer() {
-        return new KarafManagedContainer(buildCreateOptions());
+        return new KarafManagedContainer(build());
     }
 
     public KarafContainerBuilder setRmiServerPort(int serverPort) {

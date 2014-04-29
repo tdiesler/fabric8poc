@@ -21,14 +21,9 @@ package io.fabric8.api;
 
 
 /**
- * A builder for a fabric container
- *
- * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * A generic builder
  */
-public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AttributableBuilder<B, T> {
+public interface Builder<T> {
 
-    B addIdentityPrefix(String prefix);
-
-    B addCreateOptions(CreateOptionsProvider<B> optionsProvider);
+    T build();
 }

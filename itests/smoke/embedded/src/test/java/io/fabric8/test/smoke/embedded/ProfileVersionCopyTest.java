@@ -56,7 +56,7 @@ public class ProfileVersionCopyTest {
         Assert.assertEquals("1.0.0", versionA.getIdentity().toString());
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(versionA);
-        ProfileVersion versionB = versionBuilder.buildProfileVersion();
+        ProfileVersion versionB = versionBuilder.build();
 
         Assert.assertEquals(versionA.getIdentity(), versionB.getIdentity());
         Assert.assertEquals(versionA.getAttributes(), versionB.getAttributes());
