@@ -389,9 +389,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             super(profileVersion.getAttributes());
             identity = profileVersion.getIdentity();
             if (profileVersion instanceof LinkedProfileVersion) {
+                Map<String, ProfileState> profileStates = new HashMap<>();
                 LinkedProfileVersion linkedVersion = (LinkedProfileVersion) profileVersion;
-                for (Profile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
-                    new ProfileState(this, linkedProfile);
+                for (Profile profile : linkedVersion.getLinkedProfiles().values()) {
+                    ProfileState profileState = new ProfileState(this, profile);
+                    profileStates.put(profile.getIdentity(), profileState);
+                }
+                for (Profile profile : linkedVersion.getLinkedProfiles().values()) {
+                    ProfileState profileState = profileStates.get(profile.getIdentity());
+                    for (String parentid : profile.getParents()) {
+                        ProfileState parentState = profileStates.get(parentid);
+                        profileState.addParentState(parentState);
+                    }
                 }
             }
         }
@@ -473,7 +482,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return profileState;
         }
 
-        // NOTE - Methods that mutate this objects should be private
+        // NOTE - Methods that mutate this objects should be private and obtain a write lock
         // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
 
         private ProfileState addProfile(ProfileState profileState) {
@@ -505,14 +514,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
         private final String identity;
         private final ProfileVersionState versionState;
-        private final Map<String, ProfileState> parents = new HashMap<String, ProfileState>();
-        private final Map<String, ProfileItem> profileItems = new HashMap<String, ProfileItem>();
+        private final Map<String, ProfileState> parentStates = new HashMap<>();
+        private final Map<String, ProfileItem> profileItems = new HashMap<>();
 
         private ProfileState(ProfileVersionState versionState, Profile profile) {
             super(profile.getAttributes());
             this.versionState = versionState;
             this.identity = profile.getIdentity();
-            IllegalStateAssertion.assertTrue(profile.getParents().isEmpty(), "Profile parents not yet supported");
             for (ProfileItem item : profile.getProfileItems(null)) {
                 profileItems.put(item.getIdentity(), item);
             }
@@ -530,7 +538,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Set<String> getParentIdentities() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                return Collections.unmodifiableSet(new HashSet<>(parents.keySet()));
+                return Collections.unmodifiableSet(new HashSet<>(parentStates.keySet()));
             } finally {
                 readLock.unlock();
             }
@@ -539,7 +547,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Set<ProfileState> getParentStates() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                return Collections.unmodifiableSet(new HashSet<>(parents.values()));
+                return Collections.unmodifiableSet(new HashSet<>(parentStates.values()));
             } finally {
                 readLock.unlock();
             }
@@ -554,13 +562,19 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        // NOTE - Methods that mutate this objects should be private
+        // NOTE - Methods that mutate this objects should be private and obtain a write lock
         // Only the {@link ProfileService} is supposed to mutate the {@link ProfileVersionState}
 
         private ProfileState update(Profile profile) {
             LockHandle writeLock = versionState.aquireWriteLock();
             try {
-                IllegalStateAssertion.assertTrue(profile.getParents().isEmpty(), "Profile parents not yet supported");
+                Map<String, ProfileState> foundParents = new HashMap<>();
+                for (String parentId : profile.getParents()) {
+                    ProfileState parentState = versionState.getRequiredProfile(parentId);
+                    foundParents.put(parentId, parentState);
+                }
+                parentStates.clear();
+                parentStates.putAll(foundParents);
                 profileItems.clear();
                 for (ProfileItem item : profile.getProfileItems(null)) {
                     profileItems.put(item.getIdentity(), item);
@@ -569,6 +583,15 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                 writeLock.unlock();
             }
             return this;
+        }
+
+        private void addParentState(ProfileState parantState) {
+            LockHandle writeLock = versionState.aquireWriteLock();
+            try {
+                parentStates.put(parantState.getIdentity(), parantState);
+            } finally {
+                writeLock.unlock();
+            }
         }
 
         @Override

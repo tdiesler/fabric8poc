@@ -86,6 +86,18 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableVersion.getIdentity(), "Identity cannot be null");
+        Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
+        for (String profileid : linkedProfiles.keySet()) {
+            validateLinkedProfile(profileid, linkedProfiles);
+        }
+    }
+
+    private void validateLinkedProfile(String profileid, Map<String, Profile> linkedProfiles) {
+        Profile profile = linkedProfiles.get(profileid);
+        IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
+        for (String parentid : profile.getParents()) {
+            validateLinkedProfile(parentid, linkedProfiles);
+        }
     }
 
     static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
