@@ -390,7 +390,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             identity = profileVersion.getIdentity();
             if (profileVersion instanceof LinkedProfileVersion) {
                 LinkedProfileVersion linkedVersion = (LinkedProfileVersion) profileVersion;
-                for (LinkedProfile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
+                for (Profile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
                     new ProfileState(this, linkedProfile);
                 }
             }

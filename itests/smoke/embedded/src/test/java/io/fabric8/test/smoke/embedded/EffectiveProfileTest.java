@@ -21,14 +21,17 @@ package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
-import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.spi.utils.ProfileUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -55,6 +58,7 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
+        Version version = Version.parseVersion("2.0");
         String identityA = "A";
         String identityB = "B";
         String identityC = "C";
@@ -74,32 +78,38 @@ public class EffectiveProfileTest {
         configC.put("keyB", "bbb");
         configC.put("keyC", "ccc");
 
-        ProfileBuilder builderC = ProfileBuilder.Factory.create(identityC);
-        ConfigurationProfileItemBuilder itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
-        itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
+        ProfileBuilder builderA = versionBuilder.getProfileBuilder(identityA);
+        ConfigurationProfileItemBuilder itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
+        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
+        itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
+        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
+        Profile profileA = builderA.build();
+        versionBuilder.addProfile(profileA);
 
-        ProfileBuilder builderB = builderC.getParentBuilder(identityB);
+        ProfileBuilder builderB = versionBuilder.getProfileBuilder(identityB);
         itemBuilder = builderB.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
         builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
         itemBuilder = builderB.getProfileItemBuilder("confItemB", ConfigurationProfileItemBuilder.class);
         builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
+        builderB.addParentProfile(profileA.getIdentity());
+        Profile profileB = builderB.build();
+        versionBuilder.addProfile(profileB);
 
-        ProfileBuilder builderA = builderB.getParentBuilder(identityA);
-        itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
-        itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
+        ProfileBuilder builderC = versionBuilder.getProfileBuilder(identityC);
+        itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
+        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
+        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addParentProfile(profileB.getIdentity());
+        Profile profileC = builderC.build();
+        versionBuilder.addProfile(profileB);
 
-        LinkedProfile profileA = builderA.build();
-        builderB.addParentProfile(profileA);
-        LinkedProfile profileB = builderB.build();
-        builderC.addParentProfile(profileB);
-        LinkedProfile profileC = builderC.build();
+        LinkedProfileVersion profileVersion = versionBuilder.build();
+        Map<String, Profile> linkedProfiles = profileVersion.getLinkedProfiles();
 
         // Verify effective A
-        Profile effectiveA = profileA.getEffectiveProfile();
+        Profile effectiveA = ProfileUtils.getEffectiveProfile(profileA, linkedProfiles);
         Assert.assertEquals("effective:A", effectiveA.getIdentity());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
@@ -108,7 +118,7 @@ public class EffectiveProfileTest {
         Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
 
         // Verify effective B
-        Profile effectiveB = profileB.getEffectiveProfile();
+        Profile effectiveB = ProfileUtils.getEffectiveProfile(profileB, linkedProfiles);
         Assert.assertEquals("effective:B", effectiveB.getIdentity());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
@@ -118,7 +128,7 @@ public class EffectiveProfileTest {
         Assert.assertEquals(configB, effectiveB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
 
         // Verify effective C
-        Profile effectiveC = profileC.getEffectiveProfile();
+        Profile effectiveC = ProfileUtils.getEffectiveProfile(profileC, linkedProfiles);
         Assert.assertEquals("effective:C", effectiveC.getIdentity());
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());

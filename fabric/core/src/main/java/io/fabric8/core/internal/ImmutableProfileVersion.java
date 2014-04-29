@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.Profile;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
@@ -47,7 +47,7 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
 
     private final Version identity;
     private final Set<String> profileIdentities = new HashSet<String>();
-    private final Map<String, LinkedProfile> linkedProfiles;
+    private final Map<String, Profile> linkedProfiles;
     private final String tostring;
 
     ImmutableProfileVersion(ProfileVersionState versionState) {
@@ -60,10 +60,10 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
         try {
             identity = versionState.getIdentity();
             profileIdentities.addAll(versionState.getProfileIdentities());
-            linkedProfiles = linked ? new HashMap<String, LinkedProfile>() : null;
+            linkedProfiles = linked ? new HashMap<String, Profile>() : null;
             if (linked) {
                 for (ProfileState profileState : versionState.getProfileStates()) {
-                    LinkedProfile linkedProfile = new ImmutableProfile(profileState, linked, linkedProfiles);
+                    Profile linkedProfile = new ImmutableProfile(profileState);
                     linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
                 }
             }
@@ -84,13 +84,13 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(String identity) {
+    public Profile getLinkedProfile(String identity) {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return linkedProfiles.get(identity);
     }
 
     @Override
-    public Map<String, LinkedProfile> getLinkedProfiles() {
+    public Map<String, Profile> getLinkedProfiles() {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return Collections.unmodifiableMap(linkedProfiles);
     }

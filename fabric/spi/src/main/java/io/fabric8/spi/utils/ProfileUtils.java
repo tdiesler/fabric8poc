@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,12 @@
 package io.fabric8.spi.utils;
 
 import io.fabric8.api.LinkedProfile;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A set of profile utils
@@ -36,26 +40,42 @@ public final class ProfileUtils {
     private ProfileUtils() {
     }
 
-    public static LinkedProfile getEffectiveProfile(LinkedProfile linkedProfile) {
-        String identity = "effective:" + linkedProfile.getIdentity();
+    public static Profile getEffectiveProfile(LinkedProfile linkedProfile) {
+        return getEffectiveProfile(linkedProfile, getLinkedProfiles(linkedProfile, null));
+    }
+
+    public static Profile getEffectiveProfile(Profile profile, Map<String, Profile> linkedProfiles) {
+        String identity = "effective:" + profile.getIdentity();
         ProfileBuilder prfBuilder = ProfileBuilder.Factory.create(identity);
-        addProfileContent(prfBuilder, linkedProfile);
+        addProfileContent(prfBuilder, profile, linkedProfiles);
         return prfBuilder.build();
     }
 
-    private static void addProfileContent(ProfileBuilder builder, LinkedProfile linkedProfile) {
+    private static void addProfileContent(ProfileBuilder builder, Profile profile, Map<String, Profile> linkedProfiles) {
 
         // Add parent content
-        for (LinkedProfile linkedParent : linkedProfile.getLinkedParents().values()) {
-            addProfileContent(builder, linkedParent);
+        for (String parentIdentity : profile.getParents()) {
+            Profile parentProfile = linkedProfiles.get(parentIdentity);
+            addProfileContent(builder, parentProfile, linkedProfiles);
         }
 
         // Add attributes
-        builder.addAttributes(linkedProfile.getAttributes());
+        builder.addAttributes(profile.getAttributes());
 
         // Add profile items
-        for (ProfileItem item : linkedProfile.getProfileItems(null)) {
+        for (ProfileItem item : profile.getProfileItems(null)) {
             builder.addProfileItem(item);
         }
+    }
+
+    private static Map<String, Profile> getLinkedProfiles(LinkedProfile linkedProfile, Map<String, Profile> linkedProfiles) {
+        if (linkedProfiles == null) {
+            linkedProfiles = new HashMap<>();
+        }
+        linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
+        for (LinkedProfile linkedParent : linkedProfile.getLinkedParents().values()) {
+            getLinkedProfiles(linkedParent, linkedProfiles);
+        }
+        return linkedProfiles;
     }
 }

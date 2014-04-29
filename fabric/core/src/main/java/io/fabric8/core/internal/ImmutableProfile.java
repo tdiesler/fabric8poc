@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ package io.fabric8.core.internal;
 
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
@@ -109,7 +110,7 @@ final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
     }
 
     @Override
-    public LinkedProfile getEffectiveProfile() {
+    public Profile getEffectiveProfile() {
         IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return ProfileUtils.getEffectiveProfile(this);
     }

@@ -29,7 +29,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, LinkedProfile> {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile> {
 
     ProfileBuilder addIdentity(String identity);
 
@@ -43,9 +43,7 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Link
 
     ProfileBuilder removeProfileItem(String identity);
 
-    ProfileBuilder getParentBuilder(String identity);
-
-    ProfileBuilder addParentProfile(Profile profile);
+    ProfileBuilder addParentProfile(String identity);
 
     ProfileBuilder removeParentProfile(String identity);
 

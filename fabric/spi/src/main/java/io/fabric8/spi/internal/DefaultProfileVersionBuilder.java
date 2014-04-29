@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi.internal;
 
-import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -27,7 +26,6 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
-import io.fabric8.spi.internal.DefaultProfileBuilder.MutableProfile;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
@@ -43,10 +41,6 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     DefaultProfileVersionBuilder(Version identity) {
         mutableVersion = new MutableProfileVersion(identity);
-    }
-
-    DefaultProfileVersionBuilder(LinkedProfileVersion linkedVersion) {
-        mutableVersion = new MutableProfileVersion(linkedVersion);
     }
 
     @Override
@@ -65,7 +59,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     @Override
     public ProfileBuilder getProfileBuilder(String identity) {
         assertMutable();
-        LinkedProfile linkedProfile = mutableVersion.getLinkedProfile(identity);
+        Profile linkedProfile = mutableVersion.getLinkedProfile(identity);
         return linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
     }
 
@@ -96,22 +90,11 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
-        private final Map<String, LinkedProfile> linkedProfiles = new HashMap<>();
+        private final Map<String, Profile> linkedProfiles = new HashMap<>();
         private Version identity;
 
         MutableProfileVersion(Version identity) {
            this.identity = identity;
-        }
-
-        MutableProfileVersion(LinkedProfileVersion linkedVersion) {
-            identity = linkedVersion.getIdentity();
-            for (LinkedProfile linkedProfile : linkedVersion.getLinkedProfiles().values()) {
-                LinkedProfile mutableProfile = linkedProfiles.get(linkedProfile.getIdentity());
-                if (mutableProfile == null) {
-                    mutableProfile = new MutableProfile(linkedProfile, linkedProfiles);
-                }
-                linkedProfiles.put(mutableProfile.getIdentity(), mutableProfile);
-            }
         }
 
         @Override
@@ -129,17 +112,17 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public LinkedProfile getLinkedProfile(String identity) {
+        public Profile getLinkedProfile(String identity) {
             return linkedProfiles.get(identity);
         }
 
         @Override
-        public Map<String, LinkedProfile> getLinkedProfiles() {
+        public Map<String, Profile> getLinkedProfiles() {
             return Collections.unmodifiableMap(linkedProfiles);
         }
 
         void addProfile(Profile profile) {
-            linkedProfiles.put(profile.getIdentity(), (LinkedProfile) profile);
+            linkedProfiles.put(profile.getIdentity(), profile);
         }
 
         void removeProfile(String identity) {
