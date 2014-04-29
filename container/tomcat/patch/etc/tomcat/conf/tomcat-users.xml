@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!--
   #%L
-  Gravia :: Integration Tests :: Tomcat
+  Fabric8 :: Container :: Tomcat :: Patch
   %%
-  Copyright (C) 2010 - 2014 JBoss by Red Hat
+  Copyright (C) 2014 Red Hat
   %%
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
