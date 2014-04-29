@@ -33,10 +33,10 @@ public interface LinkedProfileVersion extends ProfileVersion {
     /**
      * Get the linked profile for the given identity
      */
-    LinkedProfile getLinkedProfile(ProfileIdentity identity);
+    LinkedProfile getLinkedProfile(String identity);
 
     /**
      * Get the associated profiles
      */
-    Map<ProfileIdentity, LinkedProfile> getLinkedProfiles();
+    Map<String, LinkedProfile> getLinkedProfiles();
 }

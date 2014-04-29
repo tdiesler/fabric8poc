@@ -33,7 +33,7 @@ public interface ProfileBuilderFactory {
 
     ProfileBuilder create();
 
-    ProfileBuilder create(ProfileIdentity identity);
+    ProfileBuilder create(String identity);
 
     ProfileBuilder createFrom(Profile profile);
 }

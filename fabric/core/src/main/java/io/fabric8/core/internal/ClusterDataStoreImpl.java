@@ -19,11 +19,11 @@
  */
 package io.fabric8.core.internal;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.gravia.utils.NotNullException;
 import org.osgi.service.component.annotations.Activate;

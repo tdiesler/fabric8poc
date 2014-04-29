@@ -35,5 +35,5 @@ public interface ProfileVersion extends Attributable, Identifiable<Version> {
     /**
      * Get the associated profiles
      */
-    Set<ProfileIdentity> getProfileIdentities();
+    Set<String> getProfileIdentities();
 }

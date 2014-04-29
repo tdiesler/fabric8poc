@@ -31,7 +31,6 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
@@ -209,7 +208,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities(Version version) {
+    public Set<String> getProfileIdentities(Version version) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         return versionState.getProfileIdentities();
@@ -222,7 +221,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getProfile(Version version, ProfileIdentity profid) {
+    public Profile getProfile(Version version, String profid) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         ProfileState profileState = versionState.getProfileState(profid);
@@ -230,7 +229,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities) {
+    public Set<Profile> getProfiles(Version version, Set<String> identities) {
         assertValid();
         Set<Profile> result = new HashSet<Profile>();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
@@ -253,7 +252,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         LockHandle writeLock = versionState.aquireWriteLock();
         try {
-            ProfileIdentity identity = profile.getIdentity();
+            String identity = profile.getIdentity();
             IllegalStateAssertion.assertTrue(versionState.getProfileState(identity) == null, "Profile already exists: " + identity);
 
             LOGGER.info("Add profile to version: {} <= {}", version, profile);
@@ -266,7 +265,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile removeProfile(Version version, ProfileIdentity identity) {
+    public Profile removeProfile(Version version, String identity) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
         LockHandle writeLock = versionState.aquireWriteLock();
@@ -374,7 +373,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     static class ProfileVersionState extends AttributeSupport {
 
         private final Version identity;
-        private final Map<ProfileIdentity, ProfileState> profiles = new HashMap<ProfileIdentity, ProfileState>();
+        private final Map<String, ProfileState> profiles = new HashMap<String, ProfileState>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
         private ProfileVersionState(ProfileVersion profileVersion) {
@@ -430,10 +429,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return identity;
         }
 
-        Set<ProfileIdentity> getProfileIdentities() {
+        Set<String> getProfileIdentities() {
             LockHandle readLock = aquireReadLock();
             try {
-                HashSet<ProfileIdentity> snapshot = new HashSet<ProfileIdentity>(profiles.keySet());
+                HashSet<String> snapshot = new HashSet<String>(profiles.keySet());
                 return Collections.unmodifiableSet(snapshot);
             } finally {
                 readLock.unlock();
@@ -450,7 +449,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        ProfileState getProfileState(ProfileIdentity profileId) {
+        ProfileState getProfileState(String profileId) {
             LockHandle readLock = aquireReadLock();
             try {
                 return profiles.get(profileId);
@@ -459,7 +458,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        ProfileState getRequiredProfile(ProfileIdentity profileId) {
+        ProfileState getRequiredProfile(String profileId) {
             ProfileState profileState = getProfileState(profileId);
             IllegalStateAssertion.assertNotNull(profileState, "Cannot obtain profile state: " + identity + "/" + profileId);
             return profileState;
@@ -478,7 +477,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        private ProfileState removeProfile(ProfileIdentity identity) {
+        private ProfileState removeProfile(String identity) {
             LockHandle writeLock = aquireWriteLock();
             try {
                 return profiles.remove(identity);
@@ -495,9 +494,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     static class ProfileState extends AttributeSupport {
 
-        private final ProfileIdentity identity;
+        private final String identity;
         private final ProfileVersionState versionState;
-        private final Map<ProfileIdentity, ProfileState> parents = new HashMap<ProfileIdentity, ProfileState>();
+        private final Map<String, ProfileState> parents = new HashMap<String, ProfileState>();
         private final Map<String, ProfileItem> profileItems = new HashMap<String, ProfileItem>();
 
         private ProfileState(ProfileVersionState versionState, Profile profile) {
@@ -511,7 +510,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             versionState.addProfile(this);
         }
 
-        ProfileIdentity getIdentity() {
+        String getIdentity() {
             return identity;
         }
 
@@ -519,7 +518,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             return versionState;
         }
 
-        Set<ProfileIdentity> getParentIdentities() {
+        Set<String> getParentIdentities() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
                 return Collections.unmodifiableSet(new HashSet<>(parents.keySet()));

@@ -23,7 +23,6 @@ import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.HashMap;
@@ -55,9 +54,9 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
-        ProfileIdentity identityA = ProfileIdentity.create("A");
-        ProfileIdentity identityB = ProfileIdentity.create("B");
-        ProfileIdentity identityC = ProfileIdentity.create("C");
+        String identityA = "A";
+        String identityB = "B";
+        String identityC = "C";
 
         Map<String, Object>  configA = new HashMap<>();
         configA.put("keyA", "aaa");
@@ -100,7 +99,7 @@ public class EffectiveProfileTest {
 
         // Verify effective A
         LinkedProfile effectiveA = profileA.getEffectiveProfile();
-        Assert.assertEquals("effective:A", effectiveA.getIdentity().getCanonicalForm());
+        Assert.assertEquals("effective:A", effectiveA.getIdentity());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
         Assert.assertEquals(2, effectiveA.getProfileItems(null).size());
@@ -109,7 +108,7 @@ public class EffectiveProfileTest {
 
         // Verify effective B
         LinkedProfile effectiveB = profileB.getEffectiveProfile();
-        Assert.assertEquals("effective:B", effectiveB.getIdentity().getCanonicalForm());
+        Assert.assertEquals("effective:B", effectiveB.getIdentity());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
         Assert.assertEquals(3, effectiveB.getProfileItems(null).size());
@@ -119,7 +118,7 @@ public class EffectiveProfileTest {
 
         // Verify effective C
         LinkedProfile effectiveC = profileC.getEffectiveProfile();
-        Assert.assertEquals("effective:C", effectiveC.getIdentity().getCanonicalForm());
+        Assert.assertEquals("effective:C", effectiveC.getIdentity());
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());
         Assert.assertEquals(4, effectiveC.getProfileItems(null).size());

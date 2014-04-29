@@ -22,7 +22,6 @@ package io.fabric8.core.internal;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
@@ -47,8 +46,8 @@ import org.jboss.gravia.resource.Version;
 final class ImmutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
     private final Version identity;
-    private final Set<ProfileIdentity> profileIdentities = new HashSet<ProfileIdentity>();
-    private final Map<ProfileIdentity, LinkedProfile> linkedProfiles;
+    private final Set<String> profileIdentities = new HashSet<String>();
+    private final Map<String, LinkedProfile> linkedProfiles;
     private final String tostring;
 
     ImmutableProfileVersion(ProfileVersionState versionState) {
@@ -61,7 +60,7 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
         try {
             identity = versionState.getIdentity();
             profileIdentities.addAll(versionState.getProfileIdentities());
-            linkedProfiles = linked ? new HashMap<ProfileIdentity, LinkedProfile>() : null;
+            linkedProfiles = linked ? new HashMap<String, LinkedProfile>() : null;
             if (linked) {
                 for (ProfileState profileState : versionState.getProfileStates()) {
                     LinkedProfile linkedProfile = new ImmutableProfile(profileState, linked, linkedProfiles);
@@ -80,18 +79,18 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities() {
+    public Set<String> getProfileIdentities() {
         return Collections.unmodifiableSet(profileIdentities);
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(ProfileIdentity identity) {
+    public LinkedProfile getLinkedProfile(String identity) {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return linkedProfiles.get(identity);
     }
 
     @Override
-    public Map<ProfileIdentity, LinkedProfile> getLinkedProfiles() {
+    public Map<String, LinkedProfile> getLinkedProfiles() {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return Collections.unmodifiableMap(linkedProfiles);
     }

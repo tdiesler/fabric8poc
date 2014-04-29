@@ -23,7 +23,6 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
@@ -64,7 +63,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder getProfileBuilder(ProfileIdentity identity) {
+    public ProfileBuilder getProfileBuilder(String identity) {
         assertMutable();
         LinkedProfile linkedProfile = mutableVersion.getLinkedProfile(identity);
         return linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
@@ -78,7 +77,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileVersionBuilder removeProfile(ProfileIdentity identity) {
+    public ProfileVersionBuilder removeProfile(String identity) {
         assertMutable();
         mutableVersion.removeProfile(identity);
         return this;
@@ -97,7 +96,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
-        private final Map<ProfileIdentity, LinkedProfile> linkedProfiles = new HashMap<>();
+        private final Map<String, LinkedProfile> linkedProfiles = new HashMap<>();
         private Version identity;
 
         MutableProfileVersion(Version identity) {
@@ -125,17 +124,17 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public Set<ProfileIdentity> getProfileIdentities() {
+        public Set<String> getProfileIdentities() {
             return Collections.unmodifiableSet(linkedProfiles.keySet());
         }
 
         @Override
-        public LinkedProfile getLinkedProfile(ProfileIdentity identity) {
+        public LinkedProfile getLinkedProfile(String identity) {
             return linkedProfiles.get(identity);
         }
 
         @Override
-        public Map<ProfileIdentity, LinkedProfile> getLinkedProfiles() {
+        public Map<String, LinkedProfile> getLinkedProfiles() {
             return Collections.unmodifiableMap(linkedProfiles);
         }
 
@@ -143,7 +142,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
             linkedProfiles.put(profile.getIdentity(), (LinkedProfile) profile);
         }
 
-        void removeProfile(ProfileIdentity identity) {
+        void removeProfile(String identity) {
             linkedProfiles.remove(identity);
         }
     }

@@ -112,12 +112,12 @@ public interface ContainerManager {
     /**
      * Add profiles to the container with the given identity
      */
-    Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener);
+    Container addProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener);
 
     /**
      * Remove profiles from the container with the given identity
      */
-    Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener);
+    Container removeProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener);
 
     /**
      * Get the a service endpoint for the given type

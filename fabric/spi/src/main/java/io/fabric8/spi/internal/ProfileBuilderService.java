@@ -23,7 +23,6 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -60,11 +59,11 @@ public final class ProfileBuilderService extends AbstractComponent implements Pr
     @Override
     public ProfileBuilder create() {
         assertValid();
-        return new DefaultProfileBuilder((ProfileIdentity) null);
+        return new DefaultProfileBuilder((String) null);
     }
 
     @Override
-    public ProfileBuilder create(ProfileIdentity identity) {
+    public ProfileBuilder create(String identity) {
         assertValid();
         return new DefaultProfileBuilder(identity);
     }

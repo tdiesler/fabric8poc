@@ -19,9 +19,9 @@
  */
 package io.fabric8.spi;
 
-import org.jboss.gravia.repository.MavenCoordinates;
-
 import io.fabric8.api.ContainerBuilder;
+
+import org.jboss.gravia.repository.MavenCoordinates;
 
 /**
  * A builder for a fabric container

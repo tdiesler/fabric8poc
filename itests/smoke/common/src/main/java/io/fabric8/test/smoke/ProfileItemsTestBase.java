@@ -110,7 +110,7 @@ public abstract class ProfileItemsTestBase {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String symbolicName = event.getSource().getIdentity().getSymbolicName();
+                String symbolicName = event.getSource().getIdentity();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
                     latchA.get().countDown();
                 }
@@ -122,7 +122,7 @@ public abstract class ProfileItemsTestBase {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
                     latchB.get().countDown();
                 }

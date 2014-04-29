@@ -31,7 +31,7 @@ import org.jboss.gravia.resource.Version;
  */
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
-    ProfileBuilder addIdentity(ProfileIdentity identity);
+    ProfileBuilder addIdentity(String identity);
 
     ProfileBuilder addProfileVersion(Version version);
 
@@ -43,11 +43,11 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder removeProfileItem(String identity);
 
-    ProfileBuilder getParentBuilder(ProfileIdentity identity);
+    ProfileBuilder getParentBuilder(String identity);
 
     ProfileBuilder addParentProfile(Profile profile);
 
-    ProfileBuilder removeParentProfile(ProfileIdentity identity);
+    ProfileBuilder removeParentProfile(String identity);
 
     LinkedProfile buildProfile();
 
@@ -58,7 +58,7 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
             return factory.create();
         }
 
-        public static ProfileBuilder create(ProfileIdentity identity) {
+        public static ProfileBuilder create(String identity) {
             ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
             return factory.create(identity);
         }

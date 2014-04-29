@@ -26,7 +26,6 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LockHandle;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
@@ -220,7 +219,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener) {
+    public Container addProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -231,7 +230,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<ProfileIdentity> profiles, ProvisionEventListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();

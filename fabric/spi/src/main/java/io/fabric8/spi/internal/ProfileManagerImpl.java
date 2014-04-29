@@ -22,7 +22,6 @@ package io.fabric8.spi.internal;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEventListener;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.ProfileService;
@@ -148,7 +147,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<ProfileIdentity> getProfileIdentities(Version version) {
+    public Set<String> getProfileIdentities(Version version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -159,7 +158,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<Profile> getProfiles(Version version, Set<ProfileIdentity> identities) {
+    public Set<Profile> getProfiles(Version version, Set<String> identities) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -170,7 +169,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile getProfile(Version version, ProfileIdentity identity) {
+    public Profile getProfile(Version version, String identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -192,7 +191,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile removeProfile(Version version, ProfileIdentity identity) {
+    public Profile removeProfile(Version version, String identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();

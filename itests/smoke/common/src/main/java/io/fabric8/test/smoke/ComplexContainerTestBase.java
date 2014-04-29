@@ -30,7 +30,6 @@ import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -129,7 +128,7 @@ public abstract class ComplexContainerTestBase  {
         ProvisionEventListener listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == EventType.PROVISIONED && "default".equals(symbolicName)) {
                     latchA.countDown();
                 }
@@ -144,7 +143,7 @@ public abstract class ComplexContainerTestBase  {
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Create profile foo
-        profileBuilder = ProfileBuilder.Factory.create(ProfileIdentity.create("foo"));
+        profileBuilder = ProfileBuilder.Factory.create("foo");
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.buildProfileItem());
@@ -176,7 +175,7 @@ public abstract class ComplexContainerTestBase  {
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == EventType.PROVISIONED && "foo".equals(symbolicName)) {
                     latchB.countDown();
                 }
@@ -233,7 +232,7 @@ public abstract class ComplexContainerTestBase  {
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity().getSymbolicName();
+                String symbolicName = event.getProfile().getIdentity();
                 if (event.getType() == EventType.REMOVED && "foo".equals(symbolicName)) {
                     latchC.countDown();
                 }
@@ -267,7 +266,7 @@ public abstract class ComplexContainerTestBase  {
             public void processEvent(ProvisionEvent event) {
                 Profile profile = event.getProfile();
                 String version = profile.getVersion().toString();
-                String symbolicName = profile.getIdentity().getSymbolicName();
+                String symbolicName = profile.getIdentity();
                 if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
                     latchD.countDown();
                 }

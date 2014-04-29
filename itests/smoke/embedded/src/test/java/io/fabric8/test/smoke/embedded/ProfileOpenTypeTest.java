@@ -23,7 +23,6 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.Factory;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileOptionsProvider;
@@ -69,7 +68,7 @@ public class ProfileOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(ProfileIdentity.create("someProfile"));
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create("someProfile");
         profileBuilder.addAttribute(AKEY, "AVal");
         profileBuilder.addAttribute(BKEY, "BVal");
         Profile prfA = profileBuilder.buildProfile();

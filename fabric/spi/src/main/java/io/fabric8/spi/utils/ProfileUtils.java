@@ -18,7 +18,6 @@ package io.fabric8.spi.utils;
 
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 
 /**
@@ -34,8 +33,7 @@ public final class ProfileUtils {
     }
 
     public static LinkedProfile getEffectiveProfile(LinkedProfile linkedProfile) {
-        String symbolicName = linkedProfile.getIdentity().getSymbolicName();
-        ProfileIdentity identity = ProfileIdentity.createFrom("effective:" + symbolicName);
+        String identity = "effective:" + linkedProfile.getIdentity();
         ProfileBuilder prfBuilder = ProfileBuilder.Factory.create(identity);
         addProfileContent(prfBuilder, linkedProfile);
         return prfBuilder.buildProfile();

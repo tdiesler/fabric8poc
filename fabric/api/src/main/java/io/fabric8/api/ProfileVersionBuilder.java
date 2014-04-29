@@ -33,11 +33,11 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider);
 
-    ProfileBuilder getProfileBuilder(ProfileIdentity identity);
+    ProfileBuilder getProfileBuilder(String identity);
 
     ProfileVersionBuilder addProfile(Profile profile);
 
-    ProfileVersionBuilder removeProfile(ProfileIdentity identity);
+    ProfileVersionBuilder removeProfile(String identity);
 
     LinkedProfileVersion buildProfileVersion();
 
