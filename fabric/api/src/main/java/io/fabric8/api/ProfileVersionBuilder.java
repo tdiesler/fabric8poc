@@ -51,11 +51,6 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
             return factory.create(version);
         }
 
-        public static ProfileVersionBuilder createFrom(ProfileVersion profileVersion) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.createFrom(profileVersion);
-        }
-
         // Hide ctor
         private Factory() {
         }
