@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,18 +19,17 @@
  */
 package io.fabric8.core.internal;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
-import io.fabric8.api.LockHandle;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -46,31 +45,18 @@ import org.jboss.gravia.resource.Version;
 final class ImmutableContainer extends AttributeSupport implements Container {
 
     private final ContainerIdentity identity;
-    private final Version profileVersion;
-    private final Set<ContainerIdentity> children = new HashSet<>();
-    private final Set<String> profiles = new HashSet<>();
-    private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
-    private final ContainerIdentity parent;
-    private final String tostring;
     private final State state;
 
-    ImmutableContainer(ContainerState cntState) {
-        super(cntState.getAttributes());
-        LockHandle readLock = cntState.aquireReadLock();
-        try {
-            identity = cntState.getIdentity();
-            ContainerState parentState = cntState.getParentState();
-            parent = parentState != null ? parentState.getIdentity() : null;
-            ProfileVersionState versionState = cntState.getProfileVersion();
-            profileVersion = versionState != null ? versionState.getIdentity() : null;
-            state = cntState.getState();
-            children.addAll(cntState.getChildContainers());
-            profiles.addAll(cntState.getProfiles());
-            endpoints.addAll(cntState.getServiceEndpointIdentities());
-            tostring = cntState.toString();
-        } finally {
-            readLock.unlock();
-        }
+    private Version profileVersion;
+    private Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
+    private Set<ContainerIdentity> children = new HashSet<>();
+    private Set<String> profiles = new HashSet<>();
+    private ContainerIdentity parent;
+
+    private ImmutableContainer(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
+        super(attributes);
+        this.identity = identity;
+        this.state = state;
     }
 
     @Override
@@ -138,6 +124,43 @@ final class ImmutableContainer extends AttributeSupport implements Container {
 
     @Override
     public String toString() {
-        return tostring;
+        return "Container[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
+    }
+
+    static class Builder {
+        private final ImmutableContainer container;
+
+        Builder(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
+            container = new ImmutableContainer(identity, attributes, state);
+        }
+
+        Builder addProfileVersion(Version version) {
+            container.profileVersion = version;
+            return this;
+        }
+
+        Builder addServiceEndpoints(Set<ServiceEndpointIdentity<?>> endpoints) {
+            container.endpoints.addAll(endpoints);
+            return this;
+        }
+
+        Builder addChildren(Set<ContainerIdentity> children) {
+            container.children.addAll(children);
+            return this;
+        }
+
+        Builder addParent(ContainerIdentity parent) {
+            container.parent = parent;
+            return this;
+        }
+
+        Builder addProfiles(Set<String> profiles) {
+            container.profiles.addAll(profiles);
+            return this;
+        }
+
+        ImmutableContainer build() {
+            return container;
+        }
     }
 }

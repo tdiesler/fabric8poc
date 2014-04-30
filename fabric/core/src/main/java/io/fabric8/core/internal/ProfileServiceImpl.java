@@ -286,7 +286,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle writeLock = versionState.aquireWriteLock();
         try {
             for (ContainerState cntState : containerRegistry.get().getContainers(null)) {
-                IllegalStateAssertion.assertFalse(cntState.getProfiles().contains(identity), "Cannot remove profile used by: " + cntState);
+                IllegalStateAssertion.assertFalse(cntState.getProfileIdentities().contains(identity), "Cannot remove profile used by: " + cntState);
             }
             LOGGER.info("Remove profile from version: {} => {}", versionState, identity);
             ProfileState profileState = versionState.removeProfile(identity);
