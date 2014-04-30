@@ -19,7 +19,7 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Attributable;
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
@@ -50,12 +50,14 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     private final Map<String, ProfileItem> profileItems = new HashMap<>();
     private Map<String, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(String identity, Attributable attributes, Version version, Set<String> parents, Map<String, ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
-        super(attributes.getAttributes());
+    public ImmutableProfile(String identity, Map<AttributeKey<?>, Object> attributes, Version version, Set<String> parents, Set<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+        super(attributes);
         this.identity = identity;
         this.version = version;
         this.parentIdentities.addAll(parents);
-        this.profileItems.putAll(items);
+        for (ProfileItem item : items) {
+            this.profileItems.put(item.getIdentity(), item);
+        }
         if (linkedProfiles != null) {
             this.parentProfiles = new HashMap<>();
             this.parentProfiles.putAll(linkedProfiles);

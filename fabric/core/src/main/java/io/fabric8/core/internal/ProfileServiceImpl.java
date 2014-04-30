@@ -487,7 +487,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         ProfileVersion immutableProfileVersion() {
             LockHandle readLock = aquireReadLock();
             try {
-                return new ImmutableProfileVersion(identity, getAttributes(), profiles.keySet(), null);
+                return new ImmutableProfileVersion(identity, getAttributes(), getProfileIdentities(), null);
             } finally {
                 readLock.unlock();
             }
@@ -501,7 +501,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                     Profile linkedProfile = profileState.immutableProfile();
                     linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
                 }
-                return new ImmutableProfileVersion(identity, getAttributes(), profiles.keySet(), linkedProfiles);
+                return new ImmutableProfileVersion(identity, getAttributes(), getProfileIdentities(), linkedProfiles);
             } finally {
                 readLock.unlock();
             }
@@ -590,7 +590,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Profile immutableProfile() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                return new ImmutableProfile(identity, this, versionState.getIdentity(), getParentIdentities(), getProfileItems(), null);
+                Set<ProfileItem> items = new HashSet<>(getProfileItems().values());
+                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), items, null);
             } finally {
                 readLock.unlock();
             }
@@ -610,7 +611,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                         linkedProfiles.put(linkedParent.getIdentity(), linkedParent);
                     }
                 }
-                return new ImmutableProfile(identity, this, versionState.getIdentity(), getParentIdentities(), getProfileItems(), linkedProfiles);
+                Set<ProfileItem> items = new HashSet<>(getProfileItems().values());
+                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), items, linkedProfiles);
             } finally {
                 readLock.unlock();
             }

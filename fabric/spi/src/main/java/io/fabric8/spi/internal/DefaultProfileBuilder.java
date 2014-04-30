@@ -28,6 +28,7 @@ import io.fabric8.api.ProfileItemBuilder;
 import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
@@ -41,7 +42,6 @@ import org.jboss.gravia.resource.Version;
 final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder, Profile> implements ProfileBuilder {
 
     private final MutableProfile mutableProfile;
-    private boolean immutable;
 
     DefaultProfileBuilder(String identity) {
         mutableProfile = new MutableProfile(identity);
@@ -57,28 +57,24 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     @Override
     public ProfileBuilder addIdentity(String identity) {
-        assertMutable();
         mutableProfile.setIdentity(identity);
         return this;
     }
 
     @Override
     public ProfileBuilder addProfileVersion(Version version) {
-        assertMutable();
         mutableProfile.setVersion(version);
         return this;
     }
 
     @Override
     public ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider) {
-        assertMutable();
         return optionsProvider.addBuilderOptions(this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type) {
-        assertMutable();
         if (ConfigurationProfileItemBuilder.class.isAssignableFrom(type)) {
             ConfigurationProfileItem item = mutableProfile.getProfileItem(identity, ConfigurationProfileItem.class);
             return (T) (item != null ? new DefaultConfigurationProfileItemBuilder(item) : new DefaultConfigurationProfileItemBuilder(identity));
@@ -89,28 +85,24 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     @Override
     public ProfileBuilder addProfileItem(ProfileItem item) {
-        assertMutable();
         mutableProfile.addProfileItem(item);
         return this;
     }
 
     @Override
     public ProfileBuilder removeProfileItem(String symbolicName) {
-        assertMutable();
         mutableProfile.removeProfileItem(symbolicName);
         return this;
     }
 
     @Override
     public ProfileBuilder addParentProfile(String identity) {
-        assertMutable();
         mutableProfile.addParentProfile(identity);
         return this;
     }
 
     @Override
     public ProfileBuilder removeParentProfile(String identity) {
-        assertMutable();
         mutableProfile.removeParentProfile(identity);
         return this;
     }
@@ -118,35 +110,25 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     @Override
     public Profile build() {
         validate();
-        makeImmutable();
-        return mutableProfile;
+        return mutableProfile.immutableProfile();
     }
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
     }
 
-    protected void assertMutable() {
-        IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
-    }
-
-    protected void makeImmutable() {
-        assertMutable();
-        immutable = true;
-    }
-
-    static class MutableProfile extends AttributeSupport implements Profile {
+    private static class MutableProfile extends AttributeSupport implements Profile {
 
         private final Set<String> parentProfiles = new HashSet<>();
         private final Map<String, ProfileItem> profileItems = new HashMap<>();
         private String identity;
         private Version version;
 
-        MutableProfile(String identity) {
+        private MutableProfile(String identity) {
             this.identity = identity;
         }
 
-        MutableProfile(Profile sourceProfile) {
+        private MutableProfile(Profile sourceProfile) {
             super(sourceProfile.getAttributes());
             identity = sourceProfile.getIdentity();
             version = sourceProfile.getVersion();
@@ -156,9 +138,17 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
             }
         }
 
+        private Profile immutableProfile() {
+            return new ImmutableProfile(identity, getAttributes(), version, getParents(), getProfileItems(null), null);
+        }
+
         @Override
         public String getIdentity() {
             return identity;
+        }
+
+        private void setIdentity(String identity) {
+            this.identity = identity;
         }
 
         @Override
@@ -166,9 +156,21 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
             return version;
         }
 
+        private void setVersion(Version version) {
+            this.version = version;
+        }
+
         @Override
         public Set<String> getParents() {
             return Collections.unmodifiableSet(parentProfiles);
+        }
+
+        private void addParentProfile(String identity) {
+            parentProfiles.add(identity);
+        }
+
+        private void removeParentProfile(String identity) {
+            parentProfiles.remove(identity);
         }
 
         @Override
@@ -187,22 +189,6 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
                 }
             }
             return Collections.unmodifiableSet(result);
-        }
-
-        private void setIdentity(String identity) {
-            this.identity = identity;
-        }
-
-        private void setVersion(Version version) {
-            this.version = version;
-        }
-
-        private void addParentProfile(String identity) {
-            parentProfiles.add(identity);
-        }
-
-        private void removeParentProfile(String identity) {
-            parentProfiles.remove(identity);
         }
 
         private void addProfileItem(ProfileItem item) {

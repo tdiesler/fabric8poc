@@ -63,13 +63,13 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileVersionBuilder addProfile(Profile profile) {
-        mutableVersion.addProfile(profile);
+        mutableVersion.addLinkedProfile(profile);
         return this;
     }
 
     @Override
     public ProfileVersionBuilder removeProfile(String identity) {
-        mutableVersion.removeProfile(identity);
+        mutableVersion.removeLinkedProfile(identity);
         return this;
     }
 
@@ -95,13 +95,17 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         }
     }
 
-    static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
+    private static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
         private final Map<String, Profile> linkedProfiles = new HashMap<>();
         private Version identity;
 
-        MutableProfileVersion(Version identity) {
+        private MutableProfileVersion(Version identity) {
            this.identity = identity;
+        }
+
+        private LinkedProfileVersion immutableProfileVersion() {
+            return new ImmutableProfileVersion(identity, getAttributes(), linkedProfiles.keySet(), linkedProfiles);
         }
 
         @Override
@@ -109,7 +113,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
             return identity;
         }
 
-        void setIdentity(Version identity) {
+        private void setIdentity(Version identity) {
             this.identity = identity;
         }
 
@@ -128,16 +132,12 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
             return Collections.unmodifiableMap(linkedProfiles);
         }
 
-        void addProfile(Profile profile) {
+        private void addLinkedProfile(Profile profile) {
             linkedProfiles.put(profile.getIdentity(), profile);
         }
 
-        void removeProfile(String identity) {
+        private void removeLinkedProfile(String identity) {
             linkedProfiles.remove(identity);
-        }
-
-        private LinkedProfileVersion immutableProfileVersion() {
-            return new ImmutableProfileVersion(identity, getAttributes(), linkedProfiles.keySet(), linkedProfiles);
         }
     }
 }
