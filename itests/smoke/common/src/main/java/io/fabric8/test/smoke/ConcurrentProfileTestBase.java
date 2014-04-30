@@ -79,9 +79,9 @@ public abstract class ConcurrentProfileTestBase {
 
     @After
     public void postConditions() throws Exception {
-        PrePostConditions.assertPostConditions();
         executor.shutdown();
         Assert.assertTrue("Terminated in time", executor.awaitTermination(10, TimeUnit.SECONDS));
+        PrePostConditions.assertPostConditions();
     }
 
     @Test

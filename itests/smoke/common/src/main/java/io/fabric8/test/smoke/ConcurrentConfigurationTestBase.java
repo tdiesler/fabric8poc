@@ -58,7 +58,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public abstract class ConcurrentConfigurationTestBase  {
 
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private volatile Exception lastException;
 
     @Before
@@ -68,9 +68,9 @@ public abstract class ConcurrentConfigurationTestBase  {
 
     @After
     public void postConditions() throws Exception {
-        PrePostConditions.assertPostConditions();
         executor.shutdown();
         Assert.assertTrue("Terminated in time", executor.awaitTermination(10, TimeUnit.SECONDS));
+        PrePostConditions.assertPostConditions();
     }
 
     @Test
