@@ -19,11 +19,9 @@
  */
 package io.fabric8.core.internal;
 
+import io.fabric8.api.Attributable;
 import io.fabric8.api.LinkedProfileVersion;
-import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
@@ -47,29 +45,15 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
 
     private final Version identity;
     private final Set<String> profileIdentities = new HashSet<String>();
-    private final Map<String, Profile> linkedProfiles;
-    private final String tostring;
+    private Map<String, Profile> linkedProfiles;
 
-    ImmutableProfileVersion(ProfileVersionState versionState) {
-        this(versionState, false);
-    }
-
-    ImmutableProfileVersion(ProfileVersionState versionState, boolean linked) {
-        super(versionState.getAttributes());
-        LockHandle readLock = versionState.aquireReadLock();
-        try {
-            identity = versionState.getIdentity();
-            profileIdentities.addAll(versionState.getProfileIdentities());
-            linkedProfiles = linked ? new HashMap<String, Profile>() : null;
-            if (linked) {
-                for (ProfileState profileState : versionState.getProfileStates()) {
-                    Profile linkedProfile = new ImmutableProfile(profileState);
-                    linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
-                }
-            }
-            tostring = versionState.toString();
-        } finally {
-            readLock.unlock();
+    ImmutableProfileVersion(Version identity, Attributable attributes, Set<String> profileIds, Map<String, Profile> linkedProfiles) {
+        super(attributes.getAttributes());
+        this.identity = identity;
+        this.profileIdentities.addAll(profileIds);
+        if (linkedProfiles != null) {
+            this.linkedProfiles = new HashMap<>();
+            this.linkedProfiles.putAll(linkedProfiles);
         }
     }
 
@@ -109,6 +93,6 @@ final class ImmutableProfileVersion extends AttributeSupport implements LinkedPr
 
     @Override
     public String toString() {
-        return tostring;
+        return "ProfileVersion[" + identity + "]";
     }
 }

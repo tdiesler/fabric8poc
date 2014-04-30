@@ -143,7 +143,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public ProfileVersion getDefaultProfileVersion() {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(DEFAULT_PROFILE_VERSION);
-        return new ImmutableProfileVersion(versionState);
+        return versionState.getImmutable(false);
     }
 
     @Override
@@ -159,7 +159,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         for (ProfileVersionState versionState : profileVersions.values()) {
             Version identity = versionState.getIdentity();
             if (identities == null || identities.contains(identity)) {
-                result.add(new ImmutableProfileVersion(versionState));
+                result.add(versionState.getImmutable(false));
             }
         }
         return Collections.unmodifiableSet(result);
@@ -169,21 +169,21 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public ProfileVersion getProfileVersion(Version identity) {
         assertValid();
         ProfileVersionState versionState = profileVersions.get(identity);
-        return versionState != null ? new ImmutableProfileVersion(versionState) : null;
+        return versionState != null ? versionState.getImmutable(false) : null;
     }
 
     @Override
     public LinkedProfileVersion getLinkedProfileVersion(Version identity) {
         assertValid();
         ProfileVersionState versionState = profileVersions.get(identity);
-        return versionState != null ? new ImmutableProfileVersion(versionState, true) : null;
+        return versionState != null ? versionState.getImmutable(true) : null;
     }
 
     @Override
     public ProfileVersion addProfileVersion(ProfileVersion profileVersion) {
         assertValid();
         ProfileVersionState versionState = addProfileVersionInternal(profileVersion);
-        return new ImmutableProfileVersion(versionState);
+        return versionState.getImmutable(false);
     }
 
     private ProfileVersionState addProfileVersionInternal(ProfileVersion profileVersion) {
@@ -208,7 +208,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
             LOGGER.info("Remove profile version: {}", versionState);
             profileVersions.remove(version);
-            return new ImmutableProfileVersion(versionState);
+            return versionState.getImmutable(false);
         } finally {
             writeLock.unlock();
         }
@@ -480,6 +480,23 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             ProfileState profileState = getProfileState(profileId);
             IllegalStateAssertion.assertNotNull(profileState, "Cannot obtain profile state: " + identity + "/" + profileId);
             return profileState;
+        }
+
+        LinkedProfileVersion getImmutable(boolean linked) {
+            LockHandle readLock = aquireReadLock();
+            try {
+                Map<String, Profile> linkedProfiles = null;
+                if (linked) {
+                    linkedProfiles = new HashMap<String, Profile>();
+                    for (ProfileState profileState : profiles.values()) {
+                        Profile linkedProfile = new ImmutableProfile(profileState);
+                        linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
+                    }
+                }
+                return new ImmutableProfileVersion(identity, this, profiles.keySet(), linkedProfiles);
+            } finally {
+                readLock.unlock();
+            }
         }
 
         // NOTE - Methods that mutate this objects should be private and obtain a write lock
