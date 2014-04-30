@@ -111,6 +111,7 @@ public class EffectiveProfileTest {
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
         itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addParentProfile(profileA.getIdentity());
         builderC.addParentProfile(profileB.getIdentity());
         Profile profileC = builderC.build();
         versionBuilder.addProfile(profileC);

@@ -109,6 +109,7 @@ public class LinkedProfileVersionTest {
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
         itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addParentProfile(profileA.getIdentity());
         builderC.addParentProfile(profileB.getIdentity());
         Profile profileC = builderC.build();
         versionBuilder.addProfile(profileC);
@@ -140,15 +141,16 @@ public class LinkedProfileVersionTest {
         profileB = linkedVersion.getLinkedProfile(identityB);
         Assert.assertTrue("No attributes", profileB.getAttributes().isEmpty());
         Assert.assertEquals(1, profileB.getParents().size());
-        Assert.assertEquals(identityA, profileB.getParents().iterator().next());
+        Assert.assertTrue(profileB.getParents().contains(identityA));
         Assert.assertEquals(2, profileB.getProfileItems(null).size());
         Assert.assertEquals(configB, profileB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
         Assert.assertEquals(configB, profileB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
 
         profileC = linkedVersion.getLinkedProfile(identityC);
         Assert.assertTrue("No attributes", profileC.getAttributes().isEmpty());
-        Assert.assertEquals(1, profileC.getParents().size());
-        Assert.assertEquals(identityB, profileC.getParents().iterator().next());
+        Assert.assertEquals(2, profileC.getParents().size());
+        Assert.assertTrue(profileC.getParents().contains(identityA));
+        Assert.assertTrue(profileC.getParents().contains(identityB));
         Assert.assertEquals(2, profileC.getProfileItems(null).size());
         Assert.assertEquals(configC, profileC.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
         Assert.assertEquals(configC, profileC.getProfileItem("confItemC", ConfigurationProfileItem.class).getConfiguration());

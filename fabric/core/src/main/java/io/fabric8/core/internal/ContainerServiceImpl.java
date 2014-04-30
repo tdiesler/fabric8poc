@@ -427,13 +427,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(identity);
         LOGGER.info("Provision profile: {} <= {}", cntState, identity);
 
-        Profile profile = new ImmutableProfile(profileState);
+        Profile profile = profileState.getImmutableProfile();
         Container container = new ImmutableContainer(cntState);
         ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Do the provisioning
-        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(new ImmutableProfile(profileState, true));
+        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(profileState.getImmutableLinkedProfile());
         Set<ConfigurationProfileItem> configItems = effectiveProfile.getProfileItems(ConfigurationProfileItem.class);
         configManager.get().applyConfigurationItems(configItems);
 
@@ -451,7 +451,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Unprovision profile: {} => {}", cntState, profileId);
 
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(profileId);
-        Profile profile = new ImmutableProfile(profileState);
+        Profile profile = profileState.getImmutableProfile();
         Container container = new ImmutableContainer(cntState);
         ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);

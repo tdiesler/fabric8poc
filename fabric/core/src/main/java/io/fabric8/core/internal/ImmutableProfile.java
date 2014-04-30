@@ -19,12 +19,10 @@
  */
 package io.fabric8.core.internal;
 
+import io.fabric8.api.Attributable;
 import io.fabric8.api.LinkedProfile;
-import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ProfileUtils;
@@ -49,42 +47,19 @@ final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
 
     private final Version version;
     private final String identity;
-    private final Map<String, LinkedProfile> parentProfiles;
     private final Set<String> parentIdentities = new HashSet<>();
     private final Map<String, ProfileItem> profileItems = new HashMap<>();
-    private final String tostring;
+    private Map<String, LinkedProfile> parentProfiles;
 
-    ImmutableProfile(ProfileState profileState) {
-        this(profileState, false);
-    }
-
-    ImmutableProfile(ProfileState profileState, boolean linked) {
-        this(profileState, linked, new HashMap<String, LinkedProfile>());
-    }
-
-    ImmutableProfile(ProfileState profileState, boolean linked, Map<String, LinkedProfile> linkedProfiles) {
-        super(profileState.getAttributes());
-        ProfileVersionState versionState = profileState.getProfileVersion();
-        LockHandle readLock = versionState.aquireReadLock();
-        try {
-            identity = profileState.getIdentity();
-            version = versionState.getIdentity();
-            profileItems.putAll(profileState.getProfileItems());
-            parentIdentities.addAll(profileState.getParentIdentities());
-            parentProfiles = linked ? new HashMap<String, LinkedProfile>() : null;
-            if (linked) {
-                for (ProfileState parentState : profileState.getParentStates()) {
-                    LinkedProfile linkedParent = linkedProfiles.get(parentState.getIdentity());
-                    if (linkedParent == null) {
-                        linkedParent = new ImmutableProfile(parentState, linked, linkedProfiles);
-                        linkedProfiles.put(linkedParent.getIdentity(), linkedParent);
-                    }
-                    parentProfiles.put(linkedParent.getIdentity(), linkedParent);
-                }
-            }
-            tostring = profileState.toString();
-        } finally {
-            readLock.unlock();
+    ImmutableProfile(String identity, Attributable attributes, Version version, Set<String> parents, Map<String, ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+        super(attributes.getAttributes());
+        this.identity = identity;
+        this.version = version;
+        this.parentIdentities.addAll(parents);
+        this.profileItems.putAll(items);
+        if (linkedProfiles != null) {
+            this.parentProfiles = new HashMap<>();
+            this.parentProfiles.putAll(linkedProfiles);
         }
     }
 
@@ -147,6 +122,6 @@ final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
 
     @Override
     public String toString() {
-        return tostring;
+        return "Profile[version=" + version + ",id=" + identity + "]";
     }
 }

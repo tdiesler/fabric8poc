@@ -108,6 +108,7 @@ public class LinkedProfileTest {
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
         itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
         builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addParentProfile(profileA.getIdentity());
         builderC.addParentProfile(profileB.getIdentity());
         Profile profileC = builderC.build();
         versionBuilder.addProfile(profileC);
@@ -117,28 +118,39 @@ public class LinkedProfileTest {
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfManager.addProfileVersion(linkedVersion);
 
-        profileA = prfManager.getLinkedProfile(version, identityA);
-        Assert.assertTrue("No attributes", profileA.getAttributes().isEmpty());
-        Assert.assertTrue("No parents", profileA.getParents().isEmpty());
-        Assert.assertEquals(2, profileA.getProfileItems(null).size());
-        Assert.assertEquals(configA, profileA.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configA, profileA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
+        LinkedProfile linkedA = prfManager.getLinkedProfile(version, identityA);
+        Assert.assertTrue("No attributes", linkedA.getAttributes().isEmpty());
+        Assert.assertTrue("No parents", linkedA.getParents().isEmpty());
+        Assert.assertTrue("No linked parents", linkedA.getLinkedParents().isEmpty());
+        Assert.assertEquals(2, linkedA.getProfileItems(null).size());
+        Assert.assertEquals(configA, linkedA.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configA, linkedA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
 
-        profileB = prfManager.getLinkedProfile(version, identityB);
-        Assert.assertTrue("No attributes", profileB.getAttributes().isEmpty());
-        Assert.assertEquals(1, profileB.getParents().size());
-        Assert.assertEquals(identityA, profileB.getParents().iterator().next());
-        Assert.assertEquals(2, profileB.getProfileItems(null).size());
-        Assert.assertEquals(configB, profileB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configB, profileB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
+        LinkedProfile linkedB = prfManager.getLinkedProfile(version, identityB);
+        Assert.assertTrue("No attributes", linkedB.getAttributes().isEmpty());
+        Assert.assertEquals(1, linkedB.getParents().size());
+        Assert.assertEquals(1, linkedB.getLinkedParents().size());
+        Assert.assertTrue(linkedB.getParents().contains(identityA));
+        Assert.assertNotNull(linkedB.getLinkedParents().get(identityA));
+        Assert.assertEquals(2, linkedB.getProfileItems(null).size());
+        Assert.assertEquals(configB, linkedB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configB, linkedB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
 
-        profileC = prfManager.getLinkedProfile(version, identityC);
-        Assert.assertTrue("No attributes", profileC.getAttributes().isEmpty());
-        Assert.assertEquals(1, profileC.getParents().size());
-        Assert.assertEquals(identityB, profileC.getParents().iterator().next());
-        Assert.assertEquals(2, profileC.getProfileItems(null).size());
-        Assert.assertEquals(configC, profileC.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configC, profileC.getProfileItem("confItemC", ConfigurationProfileItem.class).getConfiguration());
+        LinkedProfile linkedC = prfManager.getLinkedProfile(version, identityC);
+        Assert.assertTrue("No attributes", linkedC.getAttributes().isEmpty());
+        Assert.assertEquals(2, linkedC.getParents().size());
+        Assert.assertEquals(2, linkedC.getLinkedParents().size());
+        Assert.assertTrue(linkedC.getParents().contains(identityA));
+        Assert.assertTrue(linkedC.getParents().contains(identityB));
+        Assert.assertNotNull(linkedC.getLinkedParents().get(identityA));
+        Assert.assertNotNull(linkedC.getLinkedParents().get(identityB));
+        Assert.assertEquals(2, linkedC.getProfileItems(null).size());
+        Assert.assertEquals(configC, linkedC.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configC, linkedC.getProfileItem("confItemC", ConfigurationProfileItem.class).getConfiguration());
+
+        Map<String, LinkedProfile> linkedParents = linkedC.getLinkedParents();
+        Assert.assertEquals(2, linkedParents.size());
+        Assert.assertSame(linkedParents.get(identityA), linkedParents.get(identityB).getLinkedParents().get(identityA));
 
         prfManager.removeProfileVersion(version);
     }
