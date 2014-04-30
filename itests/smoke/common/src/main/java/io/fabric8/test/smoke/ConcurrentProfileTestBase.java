@@ -136,7 +136,10 @@ public abstract class ConcurrentProfileTestBase {
 
         // Add profile B to the container
         cntManager.setProfileVersion(cntId, version, null);
-        cntManager.addProfiles(cntId, Collections.singleton("prfB"), listener);
+        cntManager.addProfiles(cntId, Collections.singleton("prfB"), null);
+
+        // Start the container
+        cntManager.startContainer(cntId, listener);
         Assert.assertTrue("ProvisionEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
 
         Future<Boolean> cntClient = executor.submit(new ContainerClient(cntId));

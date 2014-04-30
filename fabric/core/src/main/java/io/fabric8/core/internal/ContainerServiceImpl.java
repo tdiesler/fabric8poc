@@ -250,10 +250,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             for (ContainerHandle handle : cntState.getContainerHandles()) {
                 handle.start();
             }
-            Profile defaultProfile = profileService.get().getDefaultProfile();
-            setVersionInternal(cntState, defaultProfile.getVersion(), listener);
-            addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
-            return cntState.start().immutableContainer();
+            if (cntState.getProfileVersion() == null) {
+                Profile defaultProfile = profileService.get().getDefaultProfile();
+                setVersionInternal(cntState, defaultProfile.getVersion(), listener);
+                addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
+            }
+
+            // Start & provision the container profiles
+            cntState.start();
+            Set<String> profiles = cntState.getProfileIdentities();
+            provisionProfiles(cntState, profiles, listener);
+
+            return cntState.immutableContainer();
         } finally {
             writeLock.unlock();
         }
@@ -418,8 +426,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void provisionProfiles(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
-        for (String profile : profiles) {
-            provisionProfile(cntState, profile, listener);
+        if (cntState.getState() == State.STARTED) {
+            for (String profile : profiles) {
+                provisionProfile(cntState, profile, listener);
+            }
         }
     }
 
@@ -443,8 +453,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void unprovisionProfiles(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
-        for (String profileId : profiles) {
-            unprovisionProfile(cntState, profileId, listener);
+        if (cntState.getState() == State.STARTED) {
+            for (String profileId : profiles) {
+                unprovisionProfile(cntState, profileId, listener);
+            }
         }
     }
 
