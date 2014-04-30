@@ -88,8 +88,8 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder removeProfileItem(String symbolicName) {
-        mutableProfile.removeProfileItem(symbolicName);
+    public ProfileBuilder removeProfileItem(String identity) {
+        mutableProfile.removeProfileItem(identity);
         return this;
     }
 
@@ -193,8 +193,8 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
             profileItems.put(item.getIdentity(), item);
         }
 
-        private void removeProfileItem(String symbolicName) {
-            profileItems.remove(symbolicName);
+        private void removeProfileItem(String identity) {
+            profileItems.remove(identity);
         }
     }
 }

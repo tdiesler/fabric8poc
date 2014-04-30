@@ -45,6 +45,7 @@ import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.IllegalStateAssertion;
+import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -238,6 +239,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
+    public Profile getEffectiveProfile(Version version, String identity) {
+        assertValid();
+        ProfileVersionState versionState = getRequiredProfileVersion(version);
+        ProfileState profileState = versionState.getRequiredProfile(identity);
+        return ProfileUtils.getEffectiveProfile(profileState.immutableLinkedProfile());
+    }
+
+    @Override
     public LinkedProfile getLinkedProfile(Version version, String profid) {
         assertValid();
         ProfileVersionState versionState = getRequiredProfileVersion(version);
@@ -323,9 +332,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public LinkedProfile copyProfile(Profile profile) {
-        ProfileVersionState versionState = getRequiredProfileVersion(profile.getVersion());
-        ProfileState profileState = versionState.getRequiredProfile(profile.getIdentity());
+    public LinkedProfile copyProfile(Version version, String identity) {
+        ProfileVersionState versionState = getRequiredProfileVersion(version);
+        ProfileState profileState = versionState.getRequiredProfile(identity);
         return profileState.immutableLinkedProfile();
     }
 

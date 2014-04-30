@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -113,12 +113,12 @@ public abstract class ConcurrentConfigurationTestBase  {
 
         @Override
         public Boolean call() throws Exception {
-            ContainerManager manager = ContainerManagerLocator.getContainerManager();
+            ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    ContainerIdentity cntId = createAndStart(manager, i);
+                    ContainerIdentity cntId = createAndStart(cntManager, i);
                     Thread.sleep(10);
-                    stopAndDestroy(manager, cntId);
+                    stopAndDestroy(cntManager, cntId);
                     Thread.sleep(10);
                 } catch (Exception ex) {
                     lastException = ex;
@@ -128,27 +128,27 @@ public abstract class ConcurrentConfigurationTestBase  {
             return true;
         }
 
-        private ContainerIdentity createAndStart(ContainerManager manager, int index) throws InterruptedException {
+        private ContainerIdentity createAndStart(ContainerManager cntManager, int index) throws InterruptedException {
             DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
             CreateOptions options = cntBuilder.addIdentityPrefix(prefix + "#" + index).build();
-            Container cnt = manager.createContainer(options);
+            Container cnt = cntManager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();
             //System.out.println(cnt);
             Assert.assertSame(State.CREATED, cnt.getState());
             Thread.sleep(10);
-            cnt = manager.startContainer(cntId, null);
+            cnt = cntManager.startContainer(cntId, null);
             //System.out.println(cnt);
             Assert.assertSame(State.STARTED, cnt.getState());
             return cntId;
         }
 
 
-        private void stopAndDestroy(ContainerManager manager, ContainerIdentity cntId) throws InterruptedException {
-            Container cnt = manager.stopContainer(cntId);
+        private void stopAndDestroy(ContainerManager cntManager, ContainerIdentity cntId) throws InterruptedException {
+            Container cnt = cntManager.stopContainer(cntId);
             //System.out.println(cnt);
             Assert.assertSame(State.STOPPED, cnt.getState());
             Thread.sleep(10);
-            cnt = manager.destroyContainer(cntId);
+            cnt = cntManager.destroyContainer(cntId);
             //System.out.println(cnt);
             Assert.assertSame(State.DESTROYED, cnt.getState());
         }

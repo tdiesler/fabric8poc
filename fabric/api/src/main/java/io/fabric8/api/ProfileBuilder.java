@@ -59,9 +59,9 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Prof
             return factory.create(identity);
         }
 
-        public static ProfileBuilder createFrom(Profile profile) {
+        public static ProfileBuilder createFrom(Version version, String identity) {
             ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
-            return factory.createFrom(profile);
+            return factory.createFrom(version, identity);
         }
 
         // Hide ctor

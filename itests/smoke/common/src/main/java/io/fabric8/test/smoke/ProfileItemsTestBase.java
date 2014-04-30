@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@
 package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
+
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
@@ -91,7 +93,7 @@ public abstract class ProfileItemsTestBase {
 
         // Verify identityA
         Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-        Assert.assertEquals("default", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
+        Assert.assertEquals(DEFAULT_PROFILE_IDENTITY, cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container A
         cntA = cntManager.startContainer(cntIdA, null);
@@ -99,7 +101,7 @@ public abstract class ProfileItemsTestBase {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         // Build an update profile
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
         configBuilder.setConfiguration(Collections.singletonMap("foo", (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.build());
@@ -110,8 +112,8 @@ public abstract class ProfileItemsTestBase {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String symbolicName = event.getSource().getIdentity();
-                if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(symbolicName)) {
+                String identity = event.getSource().getIdentity();
+                if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(identity)) {
                     latchA.get().countDown();
                 }
             }
@@ -122,11 +124,11 @@ public abstract class ProfileItemsTestBase {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String symbolicName = event.getProfile().getIdentity();
-                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(symbolicName)) {
+                String identity = event.getProfile().getIdentity();
+                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(identity)) {
                     latchB.get().countDown();
                 }
-                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(symbolicName)) {
+                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(identity)) {
                     latchB.get().countDown();
                 }
             }
@@ -150,7 +152,7 @@ public abstract class ProfileItemsTestBase {
         Assert.assertEquals("bar", props.get("foo"));
 
         // Build an update profile
-        profileBuilder = ProfileBuilder.Factory.createFrom(defaultProfile);
+        profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
         profileBuilder.removeProfileItem("some.pid");
         updateProfile = profileBuilder.build();
 

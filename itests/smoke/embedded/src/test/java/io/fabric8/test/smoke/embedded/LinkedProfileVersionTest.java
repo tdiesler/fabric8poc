@@ -115,10 +115,15 @@ public class LinkedProfileVersionTest {
         versionBuilder.addProfile(profileC);
 
         LinkedProfileVersion linkedVersion = versionBuilder.build();
+        Set<String> profileIdentities = linkedVersion.getProfileIdentities();
+        Assert.assertEquals(3, profileIdentities.size());
+        Assert.assertTrue(profileIdentities.contains(identityA));
+        Assert.assertTrue(profileIdentities.contains(identityB));
+        Assert.assertTrue(profileIdentities.contains(identityC));
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         ProfileVersion profileVersion = prfManager.addProfileVersion(linkedVersion);
-        Set<String> profileIdentities = profileVersion.getProfileIdentities();
+        profileIdentities = profileVersion.getProfileIdentities();
         Assert.assertEquals(3, profileIdentities.size());
         Assert.assertTrue(profileIdentities.contains(identityA));
         Assert.assertTrue(profileIdentities.contains(identityB));

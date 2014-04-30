@@ -20,9 +20,10 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.LinkedProfile;
-import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.permit.PermitKey;
+
+import org.jboss.gravia.resource.Version;
 
 /**
  * The internal profile service
@@ -37,5 +38,5 @@ public interface ProfileService extends ProfileManager {
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
 
-    LinkedProfile copyProfile(Profile profile);
+    LinkedProfile copyProfile(Version version, String identity);
 }

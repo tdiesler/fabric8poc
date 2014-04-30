@@ -22,14 +22,12 @@ package io.fabric8.test.smoke.embedded;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
-import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.spi.utils.ProfileUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.HashMap;
@@ -116,38 +114,7 @@ public class EffectiveProfileTest {
         Profile profileC = builderC.build();
         versionBuilder.addProfile(profileC);
 
-        LinkedProfileVersion linkedVersion = versionBuilder.build();
-        Map<String, Profile> linkedProfiles = linkedVersion.getLinkedProfiles();
-
-        // Verify effective A
-        Profile effectiveA = ProfileUtils.getEffectiveProfile(profileA, linkedProfiles);
-        Assert.assertEquals("effective:A", effectiveA.getIdentity());
-        Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
-        Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
-        Assert.assertEquals(2, effectiveA.getProfileItems(null).size());
-        Assert.assertEquals(configA, effectiveA.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
-
-        // Verify effective B
-        Profile effectiveB = ProfileUtils.getEffectiveProfile(profileB, linkedProfiles);
-        Assert.assertEquals("effective:B", effectiveB.getIdentity());
-        Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
-        Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
-        Assert.assertEquals(3, effectiveB.getProfileItems(null).size());
-        Assert.assertEquals(configB, effectiveB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveB.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configB, effectiveB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
-
-        // Verify effective C
-        Profile effectiveC = ProfileUtils.getEffectiveProfile(profileC, linkedProfiles);
-        Assert.assertEquals("effective:C", effectiveC.getIdentity());
-        Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
-        Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());
-        Assert.assertEquals(4, effectiveC.getProfileItems(null).size());
-        Assert.assertEquals(configC, effectiveC.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveC.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configB, effectiveC.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configC, effectiveC.getProfileItem("confItemC", ConfigurationProfileItem.class).getConfiguration());
+        ProfileVersion linkedVersion = versionBuilder.build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         ProfileVersion profileVersion = prfManager.addProfileVersion(linkedVersion);
@@ -159,7 +126,7 @@ public class EffectiveProfileTest {
 
         // Verify effective A
         LinkedProfile linkedA = prfManager.getLinkedProfile(version, identityA);
-        effectiveA = linkedA.getEffectiveProfile();
+        Profile effectiveA = linkedA.getEffectiveProfile();
         Assert.assertEquals("effective:A", effectiveA.getIdentity());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
@@ -169,7 +136,7 @@ public class EffectiveProfileTest {
 
         // Verify effective B
         LinkedProfile linkedB = prfManager.getLinkedProfile(version, identityB);
-        effectiveB = linkedB.getEffectiveProfile();
+        Profile effectiveB = linkedB.getEffectiveProfile();
         Assert.assertEquals("effective:B", effectiveB.getIdentity());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
@@ -180,7 +147,7 @@ public class EffectiveProfileTest {
 
         // Verify effective C
         LinkedProfile linkedC = prfManager.getLinkedProfile(version, identityC);
-        effectiveC = linkedC.getEffectiveProfile();
+        Profile effectiveC = linkedC.getEffectiveProfile();
         Assert.assertEquals("effective:C", effectiveC.getIdentity());
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());

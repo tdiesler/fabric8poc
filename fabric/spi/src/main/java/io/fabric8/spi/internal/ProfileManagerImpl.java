@@ -193,6 +193,17 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
+    public Profile getEffectiveProfile(Version version, String identity) {
+        Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
+        try {
+            ProfileService service = permit.getInstance();
+            return service.getEffectiveProfile(version, identity);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
     public LinkedProfile getLinkedProfile(Version version, String identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {

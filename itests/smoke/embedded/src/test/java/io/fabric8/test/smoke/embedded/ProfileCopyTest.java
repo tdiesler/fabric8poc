@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.Set;
 
+import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -55,14 +56,18 @@ public class ProfileCopyTest {
     @Test
     public void testProfileCopy() throws Exception {
 
+        Version version = Constants.DEFAULT_PROFILE_VERSION;
+        String identity = Constants.DEFAULT_PROFILE_IDENTITY;
+
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         Profile profileA = prfManager.getDefaultProfile();
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, profileA.getVersion());
+        Assert.assertEquals(version, profileA.getVersion());
+        Assert.assertEquals(identity, profileA.getIdentity());
         Set<ProfileItem> itemsA = profileA.getProfileItems(null);
 
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(profileA);
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(version, identity);
         Profile profileB = profileBuilder.build();
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, profileB.getVersion());
+        Assert.assertEquals(version, profileB.getVersion());
         Set<ProfileItem> itemsB = profileB.getProfileItems(null);
 
         Assert.assertEquals(profileA.getIdentity(), profileB.getIdentity());

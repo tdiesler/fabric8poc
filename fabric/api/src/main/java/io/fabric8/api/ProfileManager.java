@@ -97,7 +97,12 @@ public interface ProfileManager {
     Profile getProfile(Version version, String identity);
 
     /**
-     * Get the linked profile version for the given identity
+     * Get the effective profile for a given identity and version
+     */
+    Profile getEffectiveProfile(Version version, String identity);
+
+    /**
+     * Get the linked profile for the given identity
      */
     LinkedProfile getLinkedProfile(Version version, String identity);
 
