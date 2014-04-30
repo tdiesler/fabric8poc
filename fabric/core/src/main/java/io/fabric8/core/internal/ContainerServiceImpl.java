@@ -48,6 +48,7 @@ import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultContainerCreateHandler;
 import io.fabric8.spi.EventDispatcher;
+import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
@@ -221,7 +222,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ContainerState cntState = new ContainerState(parentState, identity, options, handles, configToken);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
-        return cntState.getImmutableContainer();
+        return cntState.immutableContainer();
     }
 
     private Set<ContainerCreateHandler> getContainerCreateHandlers() {
@@ -236,7 +237,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container getContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState cntState = getContainerState(identity);
-        return cntState != null ? cntState.getImmutableContainer() : null;
+        return cntState != null ? cntState.immutableContainer() : null;
     }
 
     @Override
@@ -252,7 +253,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             Profile defaultProfile = profileService.get().getDefaultProfile();
             setVersionInternal(cntState, defaultProfile.getVersion(), listener);
             addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
-            return cntState.start().getImmutableContainer();
+            return cntState.start().immutableContainer();
         } finally {
             writeLock.unlock();
         }
@@ -268,7 +269,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             for (ContainerHandle handle : cntState.getContainerHandles()) {
                 handle.stop();
             }
-            return cntState.stop().getImmutableContainer();
+            return cntState.stop().immutableContainer();
         } finally {
             writeLock.unlock();
         }
@@ -295,7 +296,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
             containerRegistry.get().removeContainer(identity);
             cntState.destroy();
-            return cntState.getImmutableContainer();
+            return cntState.immutableContainer();
         } finally {
             writeLock.unlock();
         }
@@ -312,7 +313,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         assertValid();
         Set<Container> result = new HashSet<>();
         for (ContainerState cntState : getContainerStates(identities)) {
-            result.add(cntState.getImmutableContainer());
+            result.add(cntState.immutableContainer());
         }
         return Collections.unmodifiableSet(result);
     }
@@ -356,7 +357,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         cntState.setProfileVersion(nextVersionState);
         provisionProfiles(cntState, cntState.getProfileIdentities(), listener);
 
-        return cntState.getImmutableContainer();
+        return cntState.immutableContainer();
     }
 
     @Override
@@ -379,7 +380,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Update the references
         cntState.addProfiles(identities);
-        return cntState.getImmutableContainer();
+        return cntState.immutableContainer();
     }
 
     @Override
@@ -402,7 +403,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Update the references
         cntState.removeProfiles(profiles);
-        return cntState.getImmutableContainer();
+        return cntState.immutableContainer();
     }
 
     private void updateProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
@@ -427,13 +428,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(identity);
         LOGGER.info("Provision profile: {} <= {}", cntState, identity);
 
-        Profile profile = profileState.getImmutableProfile();
-        Container container = cntState.getImmutableContainer();
+        Profile profile = profileState.immutableProfile();
+        Container container = cntState.immutableContainer();
         ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Do the provisioning
-        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(profileState.getImmutableLinkedProfile());
+        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(profileState.immutableLinkedProfile());
         Set<ConfigurationProfileItem> configItems = effectiveProfile.getProfileItems(ConfigurationProfileItem.class);
         configManager.get().applyConfigurationItems(configItems);
 
@@ -451,8 +452,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Unprovision profile: {} => {}", cntState, profileId);
 
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(profileId);
-        Profile profile = profileState.getImmutableProfile();
-        Container container = cntState.getImmutableContainer();
+        Profile profile = profileState.immutableProfile();
+        Container container = cntState.immutableContainer();
         ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
@@ -749,7 +750,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             return Collections.unmodifiableMap(endpoints);
         }
 
-        ImmutableContainer getImmutableContainer() {
+        ImmutableContainer immutableContainer() {
             LockHandle readLock = aquireReadLock();
             try {
                 ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());

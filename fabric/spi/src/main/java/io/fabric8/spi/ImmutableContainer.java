@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
@@ -25,7 +25,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.AttributeSupport;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,7 +41,7 @@ import org.jboss.gravia.resource.Version;
  *
  * @Immutable
  */
-final class ImmutableContainer extends AttributeSupport implements Container {
+public final class ImmutableContainer extends AttributeSupport implements Container {
 
     private final ContainerIdentity identity;
     private final State state;
@@ -127,39 +126,39 @@ final class ImmutableContainer extends AttributeSupport implements Container {
         return "Container[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
     }
 
-    static class Builder {
+    public static class Builder {
         private final ImmutableContainer container;
 
-        Builder(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
+        public Builder(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
             container = new ImmutableContainer(identity, attributes, state);
         }
 
-        Builder addProfileVersion(Version version) {
+        public Builder addProfileVersion(Version version) {
             container.profileVersion = version;
             return this;
         }
 
-        Builder addServiceEndpoints(Set<ServiceEndpointIdentity<?>> endpoints) {
+        public Builder addServiceEndpoints(Set<ServiceEndpointIdentity<?>> endpoints) {
             container.endpoints.addAll(endpoints);
             return this;
         }
 
-        Builder addChildren(Set<ContainerIdentity> children) {
+        public Builder addChildren(Set<ContainerIdentity> children) {
             container.children.addAll(children);
             return this;
         }
 
-        Builder addParent(ContainerIdentity parent) {
+        public Builder addParent(ContainerIdentity parent) {
             container.parent = parent;
             return this;
         }
 
-        Builder addProfiles(Set<String> profiles) {
+        public Builder addProfiles(Set<String> profiles) {
             container.profiles.addAll(profiles);
             return this;
         }
 
-        ImmutableContainer build() {
+        public ImmutableContainer build() {
             return container;
         }
     }

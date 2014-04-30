@@ -41,6 +41,7 @@ import org.jboss.gravia.resource.Version;
 final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder, Profile> implements ProfileBuilder {
 
     private final MutableProfile mutableProfile;
+    private boolean immutable;
 
     DefaultProfileBuilder(String identity) {
         mutableProfile = new MutableProfile(identity);
@@ -123,6 +124,15 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
+    }
+
+    protected void assertMutable() {
+        IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
+    }
+
+    protected void makeImmutable() {
+        assertMutable();
+        immutable = true;
     }
 
     static class MutableProfile extends AttributeSupport implements Profile {

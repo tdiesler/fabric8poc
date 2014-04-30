@@ -17,12 +17,11 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
-import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
@@ -41,13 +40,13 @@ import org.jboss.gravia.resource.Version;
  *
  * @Immutable
  */
-final class ImmutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
+public final class ImmutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
 
     private final Version identity;
     private final Set<String> profileIdentities = new HashSet<String>();
     private Map<String, Profile> linkedProfiles;
 
-    ImmutableProfileVersion(Version identity, Map<AttributeKey<?>, Object> attributes, Set<String> profileIds, Map<String, Profile> linkedProfiles) {
+    public ImmutableProfileVersion(Version identity, Map<AttributeKey<?>, Object> attributes, Set<String> profileIds, Map<String, Profile> linkedProfiles) {
         super(attributes);
         this.identity = identity;
         this.profileIdentities.addAll(profileIds);

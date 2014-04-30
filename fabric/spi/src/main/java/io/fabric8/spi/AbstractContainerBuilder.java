@@ -22,10 +22,12 @@ package io.fabric8.spi;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.CreateOptionsProvider;
+import io.fabric8.spi.utils.IllegalStateAssertion;
 
 public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B, T> implements ContainerBuilder<B, T> {
 
     protected final T options;
+    private boolean immutable;
 
     protected AbstractContainerBuilder(T options) {
         this.options = options;
@@ -55,5 +57,14 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
         getMutableOptions().validate();
         makeImmutable();
         return options;
+    }
+
+    protected void assertMutable() {
+        IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
+    }
+
+    protected void makeImmutable() {
+        assertMutable();
+        immutable = true;
     }
 }

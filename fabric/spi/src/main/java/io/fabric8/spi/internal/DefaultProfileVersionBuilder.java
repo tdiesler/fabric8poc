@@ -26,6 +26,7 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ImmutableProfileVersion;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
@@ -44,35 +45,30 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileVersionBuilder addIdentity(Version identity) {
-        assertMutable();
+    public ProfileVersionBuilder setIdentity(Version identity) {
         mutableVersion.setIdentity(identity);
         return this;
     }
 
     @Override
     public ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider) {
-        assertMutable();
         return optionsProvider.addBuilderOptions(this);
     }
 
     @Override
     public ProfileBuilder getProfileBuilder(String identity) {
-        assertMutable();
         Profile linkedProfile = mutableVersion.getLinkedProfile(identity);
         return linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
     }
 
     @Override
     public ProfileVersionBuilder addProfile(Profile profile) {
-        assertMutable();
         mutableVersion.addProfile(profile);
         return this;
     }
 
     @Override
     public ProfileVersionBuilder removeProfile(String identity) {
-        assertMutable();
         mutableVersion.removeProfile(identity);
         return this;
     }
@@ -80,8 +76,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     @Override
     public LinkedProfileVersion build() {
         validate();
-        makeImmutable();
-        return mutableVersion;
+        return mutableVersion.immutableProfileVersion();
     }
 
     private void validate() {
@@ -139,6 +134,10 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
         void removeProfile(String identity) {
             linkedProfiles.remove(identity);
+        }
+
+        private LinkedProfileVersion immutableProfileVersion() {
+            return new ImmutableProfileVersion(identity, getAttributes(), linkedProfiles.keySet(), linkedProfiles);
         }
     }
 }

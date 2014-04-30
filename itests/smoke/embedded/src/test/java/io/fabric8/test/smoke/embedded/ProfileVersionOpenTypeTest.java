@@ -115,7 +115,7 @@ public class ProfileVersionOpenTypeTest {
         @Override
         public ProfileVersionBuilder addBuilderOptions(ProfileVersionBuilder builder) {
             ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
-            builder.addIdentity(profileVersion.getIdentity());
+            builder.setIdentity(profileVersion.getIdentity());
             return builder.addAttributes(profileVersion.getAttributes());
         }
 
