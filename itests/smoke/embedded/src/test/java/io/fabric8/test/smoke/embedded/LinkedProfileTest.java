@@ -27,6 +27,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
@@ -86,34 +87,23 @@ public class LinkedProfileTest {
     public void testLinkedProfile() {
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
-        ProfileBuilder builderA = versionBuilder.getProfileBuilder(identityA);
-        ConfigurationProfileItemBuilder itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.configuration(configA).build());
-        itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.configuration(configA).build());
-        Profile profileA = builderA.build();
-        versionBuilder.addProfile(profileA);
-
-        ProfileBuilder builderB = versionBuilder.getProfileBuilder(identityB);
-        itemBuilder = builderB.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.configuration(configB).build());
-        itemBuilder = builderB.getProfileItemBuilder("confItemB", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.configuration(configB).build());
-        builderB.addParentProfile(profileA.getIdentity());
-        Profile profileB = builderB.build();
-        versionBuilder.addProfile(profileB);
-
-        ProfileBuilder builderC = versionBuilder.getProfileBuilder(identityC);
-        itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.configuration(configC).build());
-        itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.configuration(configC).build());
-        builderC.addParentProfile(profileA.getIdentity());
-        builderC.addParentProfile(profileB.getIdentity());
-        Profile profileC = builderC.build();
-        versionBuilder.addProfile(profileC);
-
-        LinkedProfileVersion linkedVersion = versionBuilder.build();
+        ProfileVersion linkedVersion = versionBuilder
+                .addProfile(versionBuilder.getProfileBuilder(identityA)
+                        .addConfigurationItem("confItem", configA)
+                        .addConfigurationItem("confItemA", configA)
+                        .build())
+                .addProfile(versionBuilder.getProfileBuilder(identityB)
+                        .addParentProfile(identityA)
+                        .addConfigurationItem("confItem", configB)
+                        .addConfigurationItem("confItemB", configB)
+                        .build())
+                .addProfile(versionBuilder.getProfileBuilder(identityC)
+                        .addParentProfile(identityA)
+                        .addParentProfile(identityB)
+                        .addConfigurationItem("confItem", configC)
+                        .addConfigurationItem("confItemC", configC)
+                        .build())
+                .build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfManager.addProfileVersion(linkedVersion);

@@ -72,16 +72,6 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type) {
-        if (ConfigurationProfileItemBuilder.class.isAssignableFrom(type)) {
-            return (T) new DefaultConfigurationProfileItemBuilder(identity);
-        } else {
-            throw new IllegalArgumentException("Unsupported type: " + type);
-        }
-    }
-
-    @Override
     public ProfileBuilder addProfileItem(ProfileItem item) {
         mutableProfile.addProfileItem(item);
         return this;
@@ -89,6 +79,18 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     @Override
     public ProfileBuilder removeProfileItem(String identity) {
+        mutableProfile.removeProfileItem(identity);
+        return this;
+    }
+
+    @Override
+    public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
+        mutableProfile.addProfileItem(new DefaultConfigurationProfileItemBuilder(identity).configuration(config).build());
+        return this;
+    }
+
+    @Override
+    public ProfileBuilder removeConfigurationItem(String identity) {
         mutableProfile.removeProfileItem(identity);
         return this;
     }

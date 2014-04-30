@@ -125,11 +125,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         addProfileVersionInternal(profileVersion);
 
         // Build the default profile
-        ProfileBuilder profileBuilder = profileBuilderFactory.get().create(DEFAULT_PROFILE_IDENTITY);
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
-        profileBuilder.addProfileItem(configBuilder.build());
-        Profile defaultProfile = profileBuilder.build();
+        Profile defaultProfile = profileBuilderFactory.get()
+                .create(DEFAULT_PROFILE_IDENTITY)
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"))
+                .build();
 
         // Add the default profile
         addProfileInternal(DEFAULT_PROFILE_VERSION, defaultProfile);

@@ -84,11 +84,9 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals(2, prfManager.getProfileVersions(null).size());
 
         // Build a profile
-        ProfileBuilder prfBuilder = ProfileBuilder.Factory.create("foo");
-        ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        itemBuilder.configuration(Collections.singletonMap("xxx", (Object) "yyy"));
-        prfBuilder.addProfileItem(itemBuilder.build());
-        Profile profile = prfBuilder.build();
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
+                .build();
 
         // Add the profile to the given version
         profile = prfManager.addProfile(version, profile);

@@ -90,18 +90,18 @@ public abstract class ConcurrentProfileTestBase {
         // Build a profile version with two profiles
         // A <= B
         ProfileVersionBuilder vsnBuilder = ProfileVersionBuilder.Factory.create(version);
-        ProfileBuilder prfBuilder = vsnBuilder.getProfileBuilder("prfA");
-        ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-        itemBuilder.configuration(Collections.singletonMap("keyA", (Object) new Integer(0)));
-        prfBuilder.addProfileItem(itemBuilder.build());
-        vsnBuilder.addProfile(prfBuilder.build());
-        prfBuilder = vsnBuilder.getProfileBuilder("prfB");
-        itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-        itemBuilder.configuration(Collections.singletonMap("keyB", (Object) new Integer(0)));
-        prfBuilder.addProfileItem(itemBuilder.build());
-        prfBuilder.addParentProfile("prfA");
-        vsnBuilder.addProfile(prfBuilder.build());
-        ProfileVersion profileVersion = vsnBuilder.build();
+
+        ProfileVersion profileVersion =  vsnBuilder
+                .addProfile(
+                        vsnBuilder.getProfileBuilder("prfA")
+                                .addConfigurationItem(PID,Collections.singletonMap("keyA", (Object) new Integer(0)))
+                                .build())
+                .addProfile(
+                        vsnBuilder.getProfileBuilder("prfB")
+                                .addParentProfile("prfA")
+                                .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
+                        .build()
+                ).build();
 
         // Add the profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -206,20 +206,17 @@ public abstract class ConcurrentProfileTestBase {
                     ConfigurationProfileItem prfItem = prfA.getProfileItem(PID, ConfigurationProfileItem.class);
                     Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyA", new Integer(i + 1));
-                    ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-                    itemBuilder.configuration(config);
-                    prfBuilder.addProfileItem(itemBuilder.build());
-                    prfA = prfBuilder.build();
+
+                    prfA = prfBuilder
+                            .addConfigurationItem(PID, config)
+                            .build();
 
                     prfBuilder = ProfileBuilder.Factory.createFrom(version, "prfB");
                     Profile prfB = prfBuilder.build();
                     prfItem = prfB.getProfileItem(PID, ConfigurationProfileItem.class);
                     config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyB", new Integer(i + 1));
-                    itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-                    itemBuilder.configuration(config);
-                    prfBuilder.addProfileItem(itemBuilder.build());
-                    prfB = prfBuilder.build();
+                    prfB = prfBuilder.addConfigurationItem(PID, config).build();
 
                     LockHandle lock = prfManager.aquireProfileVersionLock(version);
                     try {

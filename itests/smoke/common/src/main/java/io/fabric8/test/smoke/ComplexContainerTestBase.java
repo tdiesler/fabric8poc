@@ -143,11 +143,9 @@ public abstract class ComplexContainerTestBase  {
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Create profile foo
-        profileBuilder = ProfileBuilder.Factory.create("foo");
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
-        profileBuilder.addProfileItem(configBuilder.build());
-        Profile fooProfile = profileBuilder.build();
+        Profile fooProfile = ProfileBuilder.Factory.create("foo")
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"))
+                .build();
 
         // Verify that the profile cannot be added
         // because the profile version does not yet exist

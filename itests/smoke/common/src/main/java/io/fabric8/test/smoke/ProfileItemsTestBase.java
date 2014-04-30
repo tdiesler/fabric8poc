@@ -101,11 +101,9 @@ public abstract class ProfileItemsTestBase {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         // Build an update profile
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap("foo", (Object) "bar"));
-        profileBuilder.addProfileItem(configBuilder.build());
-        Profile updateProfile = profileBuilder.build();
+        Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
+                .addConfigurationItem("some.pid", Collections.singletonMap("foo", (Object) "bar"))
+                .build();
 
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
@@ -152,9 +150,9 @@ public abstract class ProfileItemsTestBase {
         Assert.assertEquals("bar", props.get("foo"));
 
         // Build an update profile
-        profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
-        profileBuilder.removeProfileItem("some.pid");
-        updateProfile = profileBuilder.build();
+        updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
+                .removeConfigurationItem("some.pid")
+                .build();
 
         // Update the default profile
         latchA.set(new CountDownLatch(1));

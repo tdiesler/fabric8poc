@@ -74,12 +74,11 @@ public final class ProfileUtils {
                 if (prevItem != null) {
                     Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
                     config.putAll(((ConfigurationProfileItem) item).getConfiguration());
-                    ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(itemId, ConfigurationProfileItemBuilder.class);
-                    item = itemBuilder.configuration(config).build();
+                    prfBuilder.addConfigurationItem(itemId, config);
+                } else {
+                    prfBuilder.addProfileItem(profile.getProfileItem(itemId, ConfigurationProfileItem.class));
                 }
             }
-
-            prfBuilder.addProfileItem(item);
         }
     }
 

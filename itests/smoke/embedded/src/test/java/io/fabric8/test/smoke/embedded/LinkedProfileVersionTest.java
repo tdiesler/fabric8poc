@@ -87,34 +87,23 @@ public class LinkedProfileVersionTest {
     public void testLinkedProfileVersion() {
 
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
-        ProfileBuilder builderA = versionBuilder.getProfileBuilder(identityA);
-        ConfigurationProfileItemBuilder itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.configuration(configA).build());
-        itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.configuration(configA).build());
-        Profile profileA = builderA.build();
-        versionBuilder.addProfile(profileA);
-
-        ProfileBuilder builderB = versionBuilder.getProfileBuilder(identityB);
-        itemBuilder = builderB.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.configuration(configB).build());
-        itemBuilder = builderB.getProfileItemBuilder("confItemB", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.configuration(configB).build());
-        builderB.addParentProfile(profileA.getIdentity());
-        Profile profileB = builderB.build();
-        versionBuilder.addProfile(profileB);
-
-        ProfileBuilder builderC = versionBuilder.getProfileBuilder(identityC);
-        itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.configuration(configC).build());
-        itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.configuration(configC).build());
-        builderC.addParentProfile(profileA.getIdentity());
-        builderC.addParentProfile(profileB.getIdentity());
-        Profile profileC = builderC.build();
-        versionBuilder.addProfile(profileC);
-
-        LinkedProfileVersion linkedVersion = versionBuilder.build();
+        LinkedProfileVersion linkedVersion = versionBuilder
+                .addProfile(versionBuilder.getProfileBuilder(identityA)
+                        .addConfigurationItem("confItem", configA)
+                        .addConfigurationItem("confItemA", configA)
+                        .build())
+                .addProfile(versionBuilder.getProfileBuilder(identityB)
+                        .addParentProfile(identityA)
+                        .addConfigurationItem("confItem", configB)
+                        .addConfigurationItem("confItemB", configB)
+                        .build())
+                .addProfile(versionBuilder.getProfileBuilder(identityC)
+                        .addParentProfile(identityA)
+                        .addParentProfile(identityB)
+                        .addConfigurationItem("confItem", configC)
+                        .addConfigurationItem("confItemC", configC)
+                        .build())
+                .build();
         Set<String> profileIdentities = linkedVersion.getProfileIdentities();
         Assert.assertEquals(3, profileIdentities.size());
         Assert.assertTrue(profileIdentities.contains(identityA));
@@ -136,14 +125,14 @@ public class LinkedProfileVersionTest {
         Assert.assertTrue(profileIdentities.contains(identityB));
         Assert.assertTrue(profileIdentities.contains(identityC));
 
-        profileA = linkedVersion.getLinkedProfile(identityA);
+        Profile profileA = linkedVersion.getLinkedProfile(identityA);
         Assert.assertTrue("No attributes", profileA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", profileA.getParents().isEmpty());
         Assert.assertEquals(2, profileA.getProfileItems(null).size());
         Assert.assertEquals(configA, profileA.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
         Assert.assertEquals(configA, profileA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
 
-        profileB = linkedVersion.getLinkedProfile(identityB);
+        Profile profileB = linkedVersion.getLinkedProfile(identityB);
         Assert.assertTrue("No attributes", profileB.getAttributes().isEmpty());
         Assert.assertEquals(1, profileB.getParents().size());
         Assert.assertTrue(profileB.getParents().contains(identityA));
@@ -151,7 +140,7 @@ public class LinkedProfileVersionTest {
         Assert.assertEquals(configB, profileB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
         Assert.assertEquals(configB, profileB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
 
-        profileC = linkedVersion.getLinkedProfile(identityC);
+        Profile profileC = linkedVersion.getLinkedProfile(identityC);
         Assert.assertTrue("No attributes", profileC.getAttributes().isEmpty());
         Assert.assertEquals(2, profileC.getParents().size());
         Assert.assertTrue(profileC.getParents().contains(identityA));

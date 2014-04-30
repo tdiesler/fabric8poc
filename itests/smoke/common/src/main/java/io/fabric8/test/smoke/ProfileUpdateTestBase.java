@@ -86,12 +86,12 @@ public abstract class ProfileUpdateTestBase  {
 
         // Build a profile version
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version12);
-        ProfileBuilder profileBuilder = versionBuilder.getProfileBuilder(identity);
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap("xxx", (Object) "yyy"));
-        profileBuilder.addProfileItem(configBuilder.build());
-        versionBuilder.addProfile(profileBuilder.build());
-        ProfileVersion profileVersion = versionBuilder.build();
+        ProfileVersion profileVersion = versionBuilder.addProfile(
+                versionBuilder.getProfileBuilder(identity)
+                        .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
+                        .build()
+
+        ).build();
 
         // Add a profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -106,10 +106,9 @@ public abstract class ProfileUpdateTestBase  {
         ConfigurationProfileItem profileItem = profile.getProfileItem("some.pid", ConfigurationProfileItem.class);
         Assert.assertEquals("yyy", profileItem.getConfiguration().get("xxx"));
 
-        profileBuilder = ProfileBuilder.Factory.createFrom(version12, identity);
-        configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap("xxx", (Object) "zzz"));
-        Profile updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
+        Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identity)
+                .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "zzz"))
+                .build();
 
         // Verify update profile
         Assert.assertEquals(identity, updateProfile.getIdentity());
@@ -184,10 +183,9 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
-        ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
-        Profile updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
+        Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"))
+                .build();
 
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
@@ -264,10 +262,9 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Build an update profile
-        profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
-        configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
-        updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
+        updateProfile =  ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"))
+                .build();
 
         latchA.set(new CountDownLatch(1));
         prfManager.updateProfile(updateProfile, profileListener);

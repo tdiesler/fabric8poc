@@ -21,6 +21,7 @@ package io.fabric8.api;
 
 import org.jboss.gravia.resource.Version;
 
+import java.util.Map;
 
 
 /**
@@ -37,11 +38,13 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Prof
 
     ProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider);
 
-    <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type);
-
     ProfileBuilder addProfileItem(ProfileItem item);
 
     ProfileBuilder removeProfileItem(String identity);
+
+    ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config);
+
+    ProfileBuilder removeConfigurationItem(String identity);
 
     ProfileBuilder addParentProfile(String identity);
 
