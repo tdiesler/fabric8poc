@@ -20,6 +20,8 @@
 
 package io.fabric8.spi.utils;
 
+import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -51,20 +53,33 @@ public final class ProfileUtils {
         return prfBuilder.build();
     }
 
-    private static void addProfileContent(ProfileBuilder builder, Profile profile, Map<String, Profile> linkedProfiles) {
+    private static void addProfileContent(ProfileBuilder prfBuilder, Profile profile, Map<String, Profile> linkedProfiles) {
 
         // Add parent content
         for (String parentIdentity : profile.getParents()) {
             Profile parentProfile = linkedProfiles.get(parentIdentity);
-            addProfileContent(builder, parentProfile, linkedProfiles);
+            addProfileContent(prfBuilder, parentProfile, linkedProfiles);
         }
 
         // Add attributes
-        builder.addAttributes(profile.getAttributes());
+        prfBuilder.addAttributes(profile.getAttributes());
 
         // Add profile items
         for (ProfileItem item : profile.getProfileItems(null)) {
-            builder.addProfileItem(item);
+
+            // Merge with ConfigurationProfileItem
+            if (item instanceof ConfigurationProfileItem) {
+                String itemId = item.getIdentity();
+                ConfigurationProfileItem prevItem = prfBuilder.build().getProfileItem(itemId, ConfigurationProfileItem.class);
+                if (prevItem != null) {
+                    Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
+                    config.putAll(((ConfigurationProfileItem) item).getConfiguration());
+                    ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(itemId, ConfigurationProfileItemBuilder.class);
+                    item = itemBuilder.setConfiguration(config).build();
+                }
+            }
+
+            prfBuilder.addProfileItem(item);
         }
     }
 

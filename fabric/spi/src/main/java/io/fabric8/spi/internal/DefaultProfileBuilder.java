@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi.internal;
 
-import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -76,8 +75,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     @SuppressWarnings("unchecked")
     public <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type) {
         if (ConfigurationProfileItemBuilder.class.isAssignableFrom(type)) {
-            ConfigurationProfileItem item = mutableProfile.getProfileItem(identity, ConfigurationProfileItem.class);
-            return (T) (item != null ? new DefaultConfigurationProfileItemBuilder(item) : new DefaultConfigurationProfileItemBuilder(identity));
+            return (T) new DefaultConfigurationProfileItemBuilder(identity);
         } else {
             throw new IllegalArgumentException("Unsupported type: " + type);
         }

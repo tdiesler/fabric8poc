@@ -38,10 +38,6 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
         mutableItem = new MutableConfigurationProfileItem(identity);
     }
 
-    DefaultConfigurationProfileItemBuilder(ConfigurationProfileItem item) {
-        mutableItem = (MutableConfigurationProfileItem) item;
-    }
-
     @Override
     public ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config) {
         assertMutable();
