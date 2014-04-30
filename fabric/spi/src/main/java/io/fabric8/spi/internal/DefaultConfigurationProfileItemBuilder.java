@@ -32,7 +32,6 @@ import java.util.Map;
 final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableBuilder<ConfigurationProfileItemBuilder, ConfigurationProfileItem> implements ConfigurationProfileItemBuilder {
 
     private final MutableConfigurationProfileItem mutableItem;
-    private boolean immutable;
 
     DefaultConfigurationProfileItemBuilder(String identity) {
         mutableItem = new MutableConfigurationProfileItem(identity);
@@ -40,7 +39,6 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
 
     @Override
     public ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config) {
-        assertMutable();
         mutableItem.setConfiguration(config);
         return this;
     }
@@ -48,21 +46,11 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
     @Override
     public ConfigurationProfileItem build() {
         validate();
-        makeImmutable();
         return mutableItem.immutableProfileItem();
     }
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableItem.getIdentity(), "Configuration item must have an identity");
-    }
-
-    protected void assertMutable() {
-        IllegalStateAssertion.assertFalse(immutable, "Builder is immutable");
-    }
-
-    protected void makeImmutable() {
-        assertMutable();
-        immutable = true;
     }
 
     private final class MutableConfigurationProfileItem extends AbstractProfileItem implements ConfigurationProfileItem {
