@@ -587,10 +587,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             }
         }
 
-        Map<String, ProfileItem> getProfileItems() {
+        Set<ProfileItem> getProfileItems() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                return Collections.unmodifiableMap(new HashMap<>(profileItems));
+                Set<ProfileItem> items = new HashSet<>(profileItems.values());
+                return Collections.unmodifiableSet(items);
             } finally {
                 readLock.unlock();
             }
@@ -599,8 +600,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         Profile immutableProfile() {
             LockHandle readLock = versionState.aquireReadLock();
             try {
-                Set<ProfileItem> items = new HashSet<>(getProfileItems().values());
-                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), items, null);
+                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), getProfileItems(), null);
             } finally {
                 readLock.unlock();
             }
@@ -620,8 +620,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                         linkedProfiles.put(linkedParent.getIdentity(), linkedParent);
                     }
                 }
-                Set<ProfileItem> items = new HashSet<>(getProfileItems().values());
-                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), items, linkedProfiles);
+                return new ImmutableProfile(identity, getAttributes(), versionState.getIdentity(), getParentIdentities(), getProfileItems(), linkedProfiles);
             } finally {
                 readLock.unlock();
             }

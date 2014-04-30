@@ -69,7 +69,7 @@ public abstract class ConcurrentProfileTestBase {
     static final Version version = Version.parseVersion("1.2");
     static final String PID = "pidA";
 
-    final ExecutorService executor = Executors.newCachedThreadPool();
+    final ExecutorService executor = Executors.newFixedThreadPool(2);
     volatile Exception lastException;
 
     @Before

@@ -49,7 +49,7 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
     public ConfigurationProfileItem build() {
         validate();
         makeImmutable();
-        return mutableItem;
+        return mutableItem.immutableProfileItem();
     }
 
     private void validate() {
@@ -65,17 +65,12 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
         immutable = true;
     }
 
-    final class MutableConfigurationProfileItem extends AbstractProfileItem<ConfigurationProfileItem> implements ConfigurationProfileItem {
+    private final class MutableConfigurationProfileItem extends AbstractProfileItem implements ConfigurationProfileItem {
 
         private final Map<String, Object> configuration = new HashMap<String, Object>();
 
-        MutableConfigurationProfileItem(String identity) {
+        private MutableConfigurationProfileItem(String identity) {
             super(identity);
-        }
-
-        MutableConfigurationProfileItem(ConfigurationProfileItem item) {
-            super(item.getIdentity());
-            setConfiguration(item.getConfiguration());
         }
 
         @Override
@@ -83,16 +78,30 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
             return Collections.unmodifiableMap(configuration);
         }
 
-        void setConfiguration(Map<String, Object> config) {
+        private void setConfiguration(Map<String, Object> config) {
             configuration.clear();
             if (config != null) {
                 configuration.putAll(config);
             }
         }
 
+        private ConfigurationProfileItem immutableProfileItem() {
+            return new ImmutableConfigurationProfileItem(getIdentity(), getConfiguration());
+        }
+    }
+
+    private final class ImmutableConfigurationProfileItem extends AbstractProfileItem implements ConfigurationProfileItem {
+
+        private final Map<String, Object> configuration = new HashMap<String, Object>();
+
+        private ImmutableConfigurationProfileItem(String identity, Map<String, Object> configuration) {
+            super(identity);
+            this.configuration.putAll(configuration);
+        }
+
         @Override
-        public ConfigurationProfileItem copyProfileItem(ConfigurationProfileItem item) {
-            return new MutableConfigurationProfileItem(item);
+        public Map<String, Object> getConfiguration() {
+            return Collections.unmodifiableMap(configuration);
         }
 
         @Override
@@ -102,11 +111,9 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == this)
-                return true;
-            if (!(obj instanceof MutableConfigurationProfileItem))
-                return false;
-            MutableConfigurationProfileItem other = (MutableConfigurationProfileItem) obj;
+            if (obj == this) return true;
+            if (!(obj instanceof ImmutableConfigurationProfileItem)) return false;
+            ImmutableConfigurationProfileItem other = (ImmutableConfigurationProfileItem) obj;
             return getIdentity().equals(other.getIdentity());
         }
 
