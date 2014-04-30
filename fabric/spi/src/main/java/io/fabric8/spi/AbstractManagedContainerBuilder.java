@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,6 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B addMavenCoordinates(MavenCoordinates coordinates) {
-        assertMutable();
         options.addMavenCoordinates(coordinates);
         return (B) this;
     }
@@ -40,7 +39,6 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setTargetDirectory(String target) {
-        assertMutable();
         options.setTargetDirectory(new File(target).getAbsoluteFile());
         return (B) this;
     }
@@ -48,7 +46,6 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setJavaVmArguments(String javaVmArguments) {
-        assertMutable();
         options.setJavaVmArguments(javaVmArguments);
         return (B) this;
     }
@@ -56,7 +53,6 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
     @Override
     @SuppressWarnings("unchecked")
     public B setOutputToConsole(boolean outputToConsole) {
-        assertMutable();
         options.setOutputToConsole(outputToConsole);
         return (B) this;
     }
