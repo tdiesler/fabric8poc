@@ -38,6 +38,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
+import org.junit.Assume;
 import org.junit.runner.RunWith;
 
 /**
@@ -75,5 +76,11 @@ public class ConcurrentProfileTest extends ConcurrentProfileTestBase {
             }
         });
         return archive.getArchive();
+    }
+
+    @Override
+    public void testConcurrentProfiles() throws Exception {
+        Assume.assumeFalse(RuntimeType.getRuntimeType() == RuntimeType.KARAF);
+        super.testConcurrentProfiles();
     }
 }
