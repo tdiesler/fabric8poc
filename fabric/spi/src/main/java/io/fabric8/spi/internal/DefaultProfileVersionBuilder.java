@@ -45,13 +45,13 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileVersionBuilder setIdentity(Version identity) {
+    public ProfileVersionBuilder identity(Version identity) {
         mutableVersion.setIdentity(identity);
         return this;
     }
 
     @Override
-    public ProfileVersionBuilder addBuilderOptions(ProfileVersionOptionsProvider optionsProvider) {
+    public ProfileVersionBuilder fromOptionsProvider(ProfileVersionOptionsProvider optionsProvider) {
         return optionsProvider.addBuilderOptions(this);
     }
 

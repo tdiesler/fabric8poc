@@ -87,7 +87,7 @@ public class ProfileVersionOpenTypeTest {
 
         // Test the {@link ProfileVersionOptionsProvider}
         versionBuilder = ProfileVersionBuilder.Factory.create();
-        versionBuilder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
+        versionBuilder.fromOptionsProvider(new CompositeDataOptionsProvider(cdata));
         ProfileVersion prfvC = versionBuilder.build();
 
         prfvC = prfManager.addProfileVersion(prfvC);
@@ -115,7 +115,7 @@ public class ProfileVersionOpenTypeTest {
         @Override
         public ProfileVersionBuilder addBuilderOptions(ProfileVersionBuilder builder) {
             ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
-            builder.setIdentity(profileVersion.getIdentity());
+            builder.identity(profileVersion.getIdentity());
             return builder.addAttributes(profileVersion.getAttributes());
         }
 

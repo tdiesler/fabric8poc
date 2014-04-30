@@ -100,7 +100,7 @@ public class StandaloneManagedContainerTest {
     }
 
     private <B extends ManagedContainerBuilder<?, ?>> B buildCreateOptions(B builder) {
-        builder.setTargetDirectory("target/managed-container").setOutputToConsole(true);
+        builder.targetDirectory("target/managed-container").outputToConsole(true);
         return builder;
     }
 

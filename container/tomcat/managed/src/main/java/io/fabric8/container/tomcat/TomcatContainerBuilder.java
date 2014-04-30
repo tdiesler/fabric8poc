@@ -44,22 +44,22 @@ public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<Tomc
         return new TomcatManagedContainer(build());
     }
 
-    public TomcatContainerBuilder setJmxPort(int jmxPort) {
+    public TomcatContainerBuilder jmxPort(int jmxPort) {
         options.setJmxPort(jmxPort);
         return this;
     }
 
-    public TomcatContainerBuilder setAjpPort(int ajpPort) {
+    public TomcatContainerBuilder ajpPort(int ajpPort) {
         options.setAjpPort(ajpPort);
         return this;
     }
 
-    public TomcatContainerBuilder setHttpPort(int httpPort) {
+    public TomcatContainerBuilder httpPort(int httpPort) {
         options.setHttpPort(httpPort);
         return this;
     }
 
-    public TomcatContainerBuilder setHttpsPort(int httpsPort) {
+    public TomcatContainerBuilder httpsPort(int httpsPort) {
         options.setHttpsPort(httpsPort);
         return this;
     }

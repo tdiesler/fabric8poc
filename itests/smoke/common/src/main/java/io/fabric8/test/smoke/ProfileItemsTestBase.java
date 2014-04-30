@@ -87,7 +87,7 @@ public abstract class ProfileItemsTestBase {
 
         // Create container A
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 
@@ -103,7 +103,7 @@ public abstract class ProfileItemsTestBase {
         // Build an update profile
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap("foo", (Object) "bar"));
+        configBuilder.configuration(Collections.singletonMap("foo", (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.build());
         Profile updateProfile = profileBuilder.build();
 

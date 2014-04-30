@@ -130,7 +130,7 @@ public abstract class ConcurrentConfigurationTestBase  {
 
         private ContainerIdentity createAndStart(ContainerManager cntManager, int index) throws InterruptedException {
             DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-            CreateOptions options = cntBuilder.addIdentityPrefix(prefix + "#" + index).build();
+            CreateOptions options = cntBuilder.identityPrefix(prefix + "#" + index).build();
             Container cnt = cntManager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();
             //System.out.println(cnt);

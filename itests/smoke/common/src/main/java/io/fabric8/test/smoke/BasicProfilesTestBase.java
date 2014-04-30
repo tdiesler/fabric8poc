@@ -86,7 +86,7 @@ public abstract class BasicProfilesTestBase  {
         // Build a profile
         ProfileBuilder prfBuilder = ProfileBuilder.Factory.create("foo");
         ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        itemBuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
+        itemBuilder.configuration(Collections.singletonMap("xxx", (Object) "yyy"));
         prfBuilder.addProfileItem(itemBuilder.build());
         Profile profile = prfBuilder.build();
 

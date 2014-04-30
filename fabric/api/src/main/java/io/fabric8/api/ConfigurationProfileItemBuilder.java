@@ -29,5 +29,5 @@ import java.util.Map;
  */
 public interface ConfigurationProfileItemBuilder extends ProfileItemBuilder<ConfigurationProfileItemBuilder, ConfigurationProfileItem> {
 
-    ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config);
+    ConfigurationProfileItemBuilder configuration(Map<String, Object> config);
 }

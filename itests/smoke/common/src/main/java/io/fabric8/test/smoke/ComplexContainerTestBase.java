@@ -75,7 +75,7 @@ public abstract class ComplexContainerTestBase  {
 
         // Create parent container
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
@@ -145,7 +145,7 @@ public abstract class ComplexContainerTestBase  {
         // Create profile foo
         profileBuilder = ProfileBuilder.Factory.create("foo");
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
+        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
         profileBuilder.addProfileItem(configBuilder.build());
         Profile fooProfile = profileBuilder.build();
 
@@ -192,7 +192,7 @@ public abstract class ComplexContainerTestBase  {
 
         // Create child container
         cntBuilder = DefaultContainerBuilder.create();
-        options = cntBuilder.addIdentityPrefix("cntB").build();
+        options = cntBuilder.identityPrefix("cntB").build();
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity

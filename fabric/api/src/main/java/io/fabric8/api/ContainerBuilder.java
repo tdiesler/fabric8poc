@@ -28,7 +28,7 @@ package io.fabric8.api;
  */
 public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AttributableBuilder<B, T> {
 
-    B addIdentityPrefix(String prefix);
+    B identityPrefix(String prefix);
 
     B addCreateOptions(CreateOptionsProvider<B> optionsProvider);
 }

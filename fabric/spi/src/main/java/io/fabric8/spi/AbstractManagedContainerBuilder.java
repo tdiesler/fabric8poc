@@ -38,21 +38,21 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
 
     @Override
     @SuppressWarnings("unchecked")
-    public B setTargetDirectory(String target) {
+    public B targetDirectory(String target) {
         options.setTargetDirectory(new File(target).getAbsoluteFile());
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public B setJavaVmArguments(String javaVmArguments) {
+    public B jvmArguments(String javaVmArguments) {
         options.setJavaVmArguments(javaVmArguments);
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public B setOutputToConsole(boolean outputToConsole) {
+    public B outputToConsole(boolean outputToConsole) {
         options.setOutputToConsole(outputToConsole);
         return (B) this;
     }

@@ -116,7 +116,7 @@ public abstract class ConfiguredComponentTestBase  {
         sregB.unregister();
 
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);

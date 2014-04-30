@@ -31,11 +31,11 @@ import org.jboss.gravia.resource.Version;
  */
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile> {
 
-    ProfileBuilder addIdentity(String identity);
+    ProfileBuilder identity(String identity);
 
-    ProfileBuilder addProfileVersion(Version version);
+    ProfileBuilder profileVersion(Version version);
 
-    ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider);
+    ProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider);
 
     <T extends ProfileItemBuilder<?, ?>> T getProfileItemBuilder(String identity, Class<T> type);
 

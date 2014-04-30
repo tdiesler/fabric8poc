@@ -38,7 +38,7 @@ final class DefaultConfigurationProfileItemBuilder extends AbstractAttributableB
     }
 
     @Override
-    public ConfigurationProfileItemBuilder setConfiguration(Map<String, Object> config) {
+    public ConfigurationProfileItemBuilder configuration(Map<String, Object> config) {
         mutableItem.setConfiguration(config);
         return this;
     }

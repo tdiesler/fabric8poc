@@ -33,7 +33,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B addIdentityPrefix(String prefix) {
+    public B identityPrefix(String prefix) {
         getMutableOptions().setIdentityPrefix(prefix);
         return (B) this;
     }

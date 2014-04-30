@@ -31,13 +31,13 @@ import org.jboss.gravia.repository.MavenCoordinates;
  */
 public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends ManagedCreateOptions> extends ContainerBuilder<B, C> {
 
-    B setTargetDirectory(String target);
+    B targetDirectory(String target);
 
-    B setJavaVmArguments(String javaVmArguments);
+    B jvmArguments(String javaVmArguments);
 
     B addMavenCoordinates(MavenCoordinates coordinates);
 
-    B setOutputToConsole(boolean outputToConsole);
+    B outputToConsole(boolean outputToConsole);
 
     ManagedContainer<C> getManagedContainer();
 }

@@ -89,7 +89,7 @@ public class ProfileOpenTypeTest {
 
         // Test the {@link ProfileVersionOptionsProvider}
         profileBuilder = ProfileBuilder.Factory.create();
-        profileBuilder.addBuilderOptions(new CompositeDataOptionsProvider(cdata));
+        profileBuilder.fromOptionsProvider(new CompositeDataOptionsProvider(cdata));
         Profile prfC = profileBuilder.build();
 
         prfC = prfManager.addProfile(defaultVersion, prfC);
@@ -117,7 +117,7 @@ public class ProfileOpenTypeTest {
         @Override
         public ProfileBuilder addBuilderOptions(ProfileBuilder builder) {
             Profile profile = ProfileOpenType.getProfile(cdata);
-            builder.addIdentity(profile.getIdentity());
+            builder.identity(profile.getIdentity());
             return builder.addAttributes(profile.getAttributes());
         }
     }

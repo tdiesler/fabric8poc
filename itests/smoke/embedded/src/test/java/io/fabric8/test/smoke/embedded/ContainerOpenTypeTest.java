@@ -70,7 +70,7 @@ public class ContainerOpenTypeTest {
     public void testComposisteData() throws Exception {
 
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        cntBuilder.addIdentityPrefix("cntA");
+        cntBuilder.identityPrefix("cntA");
         cntBuilder.addAttribute(AKEY, "AVal");
         cntBuilder.addAttribute(BKEY, "BVal");
         CreateOptions options = cntBuilder.build();
@@ -121,7 +121,7 @@ public class ContainerOpenTypeTest {
             Container container = ContainerOpenType.getContainer(cdata);
             String symbolicName = container.getIdentity().getSymbolicName();
             String prefix = symbolicName.substring(0, symbolicName.indexOf('#'));
-            return builder.addIdentityPrefix(prefix).addAttributes(container.getAttributes());
+            return builder.identityPrefix(prefix).addAttributes(container.getAttributes());
         }
     }
 }

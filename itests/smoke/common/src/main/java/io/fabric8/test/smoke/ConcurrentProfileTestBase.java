@@ -92,12 +92,12 @@ public abstract class ConcurrentProfileTestBase {
         ProfileVersionBuilder vsnBuilder = ProfileVersionBuilder.Factory.create(version);
         ProfileBuilder prfBuilder = vsnBuilder.getProfileBuilder("prfA");
         ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-        itemBuilder.setConfiguration(Collections.singletonMap("keyA", (Object) new Integer(0)));
+        itemBuilder.configuration(Collections.singletonMap("keyA", (Object) new Integer(0)));
         prfBuilder.addProfileItem(itemBuilder.build());
         vsnBuilder.addProfile(prfBuilder.build());
         prfBuilder = vsnBuilder.getProfileBuilder("prfB");
         itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-        itemBuilder.setConfiguration(Collections.singletonMap("keyB", (Object) new Integer(0)));
+        itemBuilder.configuration(Collections.singletonMap("keyB", (Object) new Integer(0)));
         prfBuilder.addProfileItem(itemBuilder.build());
         prfBuilder.addParentProfile("prfA");
         vsnBuilder.addProfile(prfBuilder.build());
@@ -118,7 +118,7 @@ public abstract class ConcurrentProfileTestBase {
 
         // Create a container
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create().addIdentityPrefix("cntA");
+        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create().identityPrefix("cntA");
         Container cnt = cntManager.createContainer(cntBuilder.build());
         ContainerIdentity cntId = cnt.getIdentity();
 
@@ -207,7 +207,7 @@ public abstract class ConcurrentProfileTestBase {
                     Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyA", new Integer(i + 1));
                     ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-                    itemBuilder.setConfiguration(config);
+                    itemBuilder.configuration(config);
                     prfBuilder.addProfileItem(itemBuilder.build());
                     prfA = prfBuilder.build();
 
@@ -217,7 +217,7 @@ public abstract class ConcurrentProfileTestBase {
                     config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyB", new Integer(i + 1));
                     itemBuilder = prfBuilder.getProfileItemBuilder(PID, ConfigurationProfileItemBuilder.class);
-                    itemBuilder.setConfiguration(config);
+                    itemBuilder.configuration(config);
                     prfBuilder.addProfileItem(itemBuilder.build());
                     prfB = prfBuilder.build();
 

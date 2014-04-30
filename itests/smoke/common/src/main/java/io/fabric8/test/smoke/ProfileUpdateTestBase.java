@@ -88,7 +88,7 @@ public abstract class ProfileUpdateTestBase  {
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version12);
         ProfileBuilder profileBuilder = versionBuilder.getProfileBuilder(identity);
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "yyy"));
+        configBuilder.configuration(Collections.singletonMap("xxx", (Object) "yyy"));
         profileBuilder.addProfileItem(configBuilder.build());
         versionBuilder.addProfile(profileBuilder.build());
         ProfileVersion profileVersion = versionBuilder.build();
@@ -108,7 +108,7 @@ public abstract class ProfileUpdateTestBase  {
 
         profileBuilder = ProfileBuilder.Factory.createFrom(version12, identity);
         configBuilder = profileBuilder.getProfileItemBuilder("some.pid", ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap("xxx", (Object) "zzz"));
+        configBuilder.configuration(Collections.singletonMap("xxx", (Object) "zzz"));
         Profile updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
 
         // Verify update profile
@@ -171,7 +171,7 @@ public abstract class ProfileUpdateTestBase  {
 
         // Create container cntA
         DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.addIdentityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
         Container cntA = cntManager.createContainer(options);
 
         // Verify cntA identity
@@ -186,7 +186,7 @@ public abstract class ProfileUpdateTestBase  {
 
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
         ConfigurationProfileItemBuilder configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
+        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"));
         Profile updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
 
         // Setup the profile listener
@@ -250,7 +250,7 @@ public abstract class ProfileUpdateTestBase  {
 
         // Create container B
         cntBuilder = DefaultContainerBuilder.create();
-        options = cntBuilder.addIdentityPrefix("cntB").build();
+        options = cntBuilder.identityPrefix("cntB").build();
         Container cntB = cntManager.createContainer(options);
 
         // Verify child identity
@@ -266,7 +266,7 @@ public abstract class ProfileUpdateTestBase  {
         // Build an update profile
         profileBuilder = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY);
         configBuilder = profileBuilder.getProfileItemBuilder(Container.CONTAINER_SERVICE_PID, ConfigurationProfileItemBuilder.class);
-        configBuilder.setConfiguration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
+        configBuilder.configuration(Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"));
         updateProfile = profileBuilder.addProfileItem(configBuilder.build()).build();
 
         latchA.set(new CountDownLatch(1));

@@ -55,19 +55,19 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder addIdentity(String identity) {
+    public ProfileBuilder identity(String identity) {
         mutableProfile.setIdentity(identity);
         return this;
     }
 
     @Override
-    public ProfileBuilder addProfileVersion(Version version) {
+    public ProfileBuilder profileVersion(Version version) {
         mutableProfile.setVersion(version);
         return this;
     }
 
     @Override
-    public ProfileBuilder addBuilderOptions(ProfileOptionsProvider optionsProvider) {
+    public ProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider) {
         return optionsProvider.addBuilderOptions(this);
     }
 

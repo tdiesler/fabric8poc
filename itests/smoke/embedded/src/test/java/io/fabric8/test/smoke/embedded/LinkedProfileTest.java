@@ -88,26 +88,26 @@ public class LinkedProfileTest {
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
         ProfileBuilder builderA = versionBuilder.getProfileBuilder(identityA);
         ConfigurationProfileItemBuilder itemBuilder = builderA.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
+        builderA.addProfileItem(itemBuilder.configuration(configA).build());
         itemBuilder = builderA.getProfileItemBuilder("confItemA", ConfigurationProfileItemBuilder.class);
-        builderA.addProfileItem(itemBuilder.setConfiguration(configA).build());
+        builderA.addProfileItem(itemBuilder.configuration(configA).build());
         Profile profileA = builderA.build();
         versionBuilder.addProfile(profileA);
 
         ProfileBuilder builderB = versionBuilder.getProfileBuilder(identityB);
         itemBuilder = builderB.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
+        builderB.addProfileItem(itemBuilder.configuration(configB).build());
         itemBuilder = builderB.getProfileItemBuilder("confItemB", ConfigurationProfileItemBuilder.class);
-        builderB.addProfileItem(itemBuilder.setConfiguration(configB).build());
+        builderB.addProfileItem(itemBuilder.configuration(configB).build());
         builderB.addParentProfile(profileA.getIdentity());
         Profile profileB = builderB.build();
         versionBuilder.addProfile(profileB);
 
         ProfileBuilder builderC = versionBuilder.getProfileBuilder(identityC);
         itemBuilder = builderC.getProfileItemBuilder("confItem", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addProfileItem(itemBuilder.configuration(configC).build());
         itemBuilder = builderC.getProfileItemBuilder("confItemC", ConfigurationProfileItemBuilder.class);
-        builderC.addProfileItem(itemBuilder.setConfiguration(configC).build());
+        builderC.addProfileItem(itemBuilder.configuration(configC).build());
         builderC.addParentProfile(profileA.getIdentity());
         builderC.addParentProfile(profileB.getIdentity());
         Profile profileC = builderC.build();

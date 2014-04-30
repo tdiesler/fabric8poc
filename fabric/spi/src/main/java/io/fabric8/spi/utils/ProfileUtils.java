@@ -75,7 +75,7 @@ public final class ProfileUtils {
                     Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
                     config.putAll(((ConfigurationProfileItem) item).getConfiguration());
                     ConfigurationProfileItemBuilder itemBuilder = prfBuilder.getProfileItemBuilder(itemId, ConfigurationProfileItemBuilder.class);
-                    item = itemBuilder.setConfiguration(config).build();
+                    item = itemBuilder.configuration(config).build();
                 }
             }
 
