@@ -21,7 +21,6 @@
 package io.fabric8.spi.utils;
 
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;

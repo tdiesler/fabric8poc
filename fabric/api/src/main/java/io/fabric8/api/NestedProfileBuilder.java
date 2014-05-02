@@ -15,7 +15,5 @@
 
 package io.fabric8.api;
 
-public interface NestedProfileBuilder<P extends Builder> extends ProfileBuilderBase<NestedProfileBuilder<P>>,
-        AttributableBuilder<NestedProfileBuilder<P>, Profile>,
-        CompositeBuilder<P>  {
+public interface NestedProfileBuilder<P extends Builder<?>> extends ProfileBuilderBase<NestedProfileBuilder<P>>, AttributableBuilder<NestedProfileBuilder<P>, Profile>, CompositeBuilder<P>  {
 }

@@ -15,7 +15,7 @@
 
 package io.fabric8.api;
 
-public interface CompositeBuilder<P extends Builder>   {
+interface CompositeBuilder<P extends Builder<?>>   {
 
     P and();
 }

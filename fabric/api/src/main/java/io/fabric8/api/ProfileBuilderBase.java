@@ -19,7 +19,7 @@ import org.jboss.gravia.resource.Version;
 
 import java.util.Map;
 
-public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> {
+interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> {
 
     B identity(String identity);
 

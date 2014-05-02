@@ -19,14 +19,13 @@
  */
 package io.fabric8.spi.internal;
 
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ProfileItemBuilder;
 import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ImmutableConfigurationProfileItem;
 import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
@@ -85,7 +84,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
 
     @Override
     public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
-        mutableProfile.addProfileItem(new DefaultConfigurationProfileItemBuilder(identity).configuration(config).build());
+        mutableProfile.addProfileItem(new ImmutableConfigurationProfileItem(identity, config));
         return this;
     }
 

@@ -21,13 +21,11 @@ package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderFactory;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;

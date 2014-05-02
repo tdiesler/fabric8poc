@@ -19,10 +19,9 @@
  */
 package io.fabric8.test.smoke;
 
-import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
