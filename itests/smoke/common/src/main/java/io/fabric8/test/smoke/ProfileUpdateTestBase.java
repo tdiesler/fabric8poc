@@ -24,7 +24,6 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ComponentEvent;
 import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
@@ -85,13 +84,11 @@ public abstract class ProfileUpdateTestBase  {
         final String identity = "foo";
 
         // Build a profile version
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version12);
-        ProfileVersion profileVersion = versionBuilder.addProfile(
-                versionBuilder.getProfileBuilder(identity)
-                        .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                        .build()
-
-        ).build();
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
+                .newProfile(identity)
+                .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
+                .and()
+                .build();
 
         // Add a profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();

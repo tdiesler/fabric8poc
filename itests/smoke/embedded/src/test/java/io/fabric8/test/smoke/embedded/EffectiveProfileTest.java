@@ -20,10 +20,8 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -86,24 +84,22 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
-
-        ProfileVersion linkedVersion = versionBuilder
-                .addProfile(versionBuilder.getProfileBuilder(identityA)
+        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
+                .newProfile(identityA)
                         .addConfigurationItem("confItem", configA)
                         .addConfigurationItem("confItemA", configA)
-                        .build())
-                .addProfile(versionBuilder.getProfileBuilder(identityB)
+                        .and()
+                .newProfile(identityB)
                         .addParentProfile(identityA)
                         .addConfigurationItem("confItem", configB)
                         .addConfigurationItem("confItemB", configB)
-                        .build())
-                .addProfile(versionBuilder.getProfileBuilder(identityC)
+                        .and()
+                .newProfile(identityC)
                         .addParentProfile(identityA)
                         .addParentProfile(identityB)
                         .addConfigurationItem("confItem", configC)
                         .addConfigurationItem("confItemC", configC)
-                        .build())
+                        .and()
                 .build();
 
 

@@ -20,11 +20,7 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.LinkedProfile;
-import io.fabric8.api.LinkedProfileVersion;
-import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -86,23 +82,22 @@ public class LinkedProfileTest {
     @Test
     public void testLinkedProfile() {
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
-        ProfileVersion linkedVersion = versionBuilder
-                .addProfile(versionBuilder.getProfileBuilder(identityA)
-                        .addConfigurationItem("confItem", configA)
-                        .addConfigurationItem("confItemA", configA)
-                        .build())
-                .addProfile(versionBuilder.getProfileBuilder(identityB)
-                        .addParentProfile(identityA)
-                        .addConfigurationItem("confItem", configB)
-                        .addConfigurationItem("confItemB", configB)
-                        .build())
-                .addProfile(versionBuilder.getProfileBuilder(identityC)
-                        .addParentProfile(identityA)
-                        .addParentProfile(identityB)
-                        .addConfigurationItem("confItem", configC)
-                        .addConfigurationItem("confItemC", configC)
-                        .build())
+        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
+                .newProfile(identityA)
+                .addConfigurationItem("confItem", configA)
+                .addConfigurationItem("confItemA", configA)
+                .and()
+                .newProfile(identityB)
+                .addParentProfile(identityA)
+                .addConfigurationItem("confItem", configB)
+                .addConfigurationItem("confItemB", configB)
+                .and()
+                .newProfile(identityC)
+                .addParentProfile(identityA)
+                .addParentProfile(identityB)
+                .addConfigurationItem("confItem", configC)
+                .addConfigurationItem("confItemC", configC)
+                .and()
                 .build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
