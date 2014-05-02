@@ -20,7 +20,6 @@
 package io.fabric8.test.smoke;
 
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.ConfigurationProfileItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
@@ -89,19 +88,16 @@ public abstract class ConcurrentProfileTestBase {
 
         // Build a profile version with two profiles
         // A <= B
-        ProfileVersionBuilder vsnBuilder = ProfileVersionBuilder.Factory.create(version);
 
-        ProfileVersion profileVersion =  vsnBuilder
-                .addProfile(
-                        vsnBuilder.getProfileBuilder("prfA")
-                                .addConfigurationItem(PID,Collections.singletonMap("keyA", (Object) new Integer(0)))
-                                .build())
-                .addProfile(
-                        vsnBuilder.getProfileBuilder("prfB")
-                                .addParentProfile("prfA")
-                                .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
-                        .build()
-                ).build();
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
+                .newProfile("prfA")
+                    .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(0)))
+                .and()
+                .newProfile("prfB")
+                    .addParentProfile("prfA")
+                .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
+                .and()
+                .build();
 
         // Add the profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();

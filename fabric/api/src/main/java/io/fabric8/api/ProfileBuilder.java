@@ -21,8 +21,6 @@ package io.fabric8.api;
 
 import org.jboss.gravia.resource.Version;
 
-import java.util.Map;
-
 
 /**
  * A builder for a fabric profile
@@ -30,25 +28,8 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile> {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile>, ProfileBuilderBase<ProfileBuilder>, Builder<Profile> {
 
-    ProfileBuilder identity(String identity);
-
-    ProfileBuilder profileVersion(Version version);
-
-    ProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider);
-
-    ProfileBuilder addProfileItem(ProfileItem item);
-
-    ProfileBuilder removeProfileItem(String identity);
-
-    ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config);
-
-    ProfileBuilder removeConfigurationItem(String identity);
-
-    ProfileBuilder addParentProfile(String identity);
-
-    ProfileBuilder removeParentProfile(String identity);
 
     final class Factory {
 

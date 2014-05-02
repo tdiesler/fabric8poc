@@ -20,6 +20,7 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.LinkedProfileVersion;
+import io.fabric8.api.NestedProfileBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileVersionBuilder;
@@ -59,6 +60,11 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     public ProfileBuilder getProfileBuilder(String identity) {
         Profile linkedProfile = mutableVersion.getLinkedProfile(identity);
         return linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
+    }
+
+    @Override
+    public NestedProfileBuilder newProfile(String identity) {
+        return new ProfileVersionNestedProfileBuilder(this, getProfileBuilder(identity));
     }
 
     @Override
