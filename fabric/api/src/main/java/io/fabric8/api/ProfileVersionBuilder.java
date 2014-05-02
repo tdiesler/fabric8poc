@@ -35,7 +35,7 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileBuilder getProfileBuilder(String identity);
 
-    NestedProfileBuilder<ProfileVersionBuilder> newProfile(String identity);
+    NestedProfileBuilder newProfile(String identity);
 
     ProfileVersionBuilder addProfile(Profile profile);
 

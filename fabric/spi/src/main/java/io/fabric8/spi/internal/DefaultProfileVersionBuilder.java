@@ -63,7 +63,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public NestedProfileBuilder<ProfileVersionBuilder> newProfile(String identity) {
+    public NestedProfileBuilder newProfile(String identity) {
         return new ProfileVersionNestedProfileBuilder(this, getProfileBuilder(identity));
     }
 

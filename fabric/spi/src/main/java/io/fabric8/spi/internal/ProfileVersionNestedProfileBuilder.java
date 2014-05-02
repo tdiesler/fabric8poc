@@ -25,7 +25,7 @@ import org.jboss.gravia.resource.Version;
 
 import java.util.Map;
 
-final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder<ProfileVersionBuilder> {
+final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
 
     private final ProfileVersionBuilder parent;
     private final ProfileBuilder nested;
