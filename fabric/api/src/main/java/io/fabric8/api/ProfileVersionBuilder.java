@@ -41,6 +41,11 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder removeProfile(String identity);
 
+    interface NestedProfileBuilder extends ProfileBuilderBase<NestedProfileBuilder>, AttributableBuilder<NestedProfileBuilder>  {
+
+        ProfileVersionBuilder and();
+    }
+
     final class Factory {
 
         public static ProfileVersionBuilder create() {

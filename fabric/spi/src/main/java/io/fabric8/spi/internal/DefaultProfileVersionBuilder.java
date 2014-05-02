@@ -20,7 +20,6 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.LinkedProfileVersion;
-import io.fabric8.api.NestedProfileBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileVersionBuilder;

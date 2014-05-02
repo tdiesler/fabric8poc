@@ -16,14 +16,15 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.NestedProfileBuilder;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.api.ProfileVersionBuilder;
-import org.jboss.gravia.resource.Version;
+import io.fabric8.api.ProfileVersionBuilder.NestedProfileBuilder;
 
 import java.util.Map;
+
+import org.jboss.gravia.resource.Version;
 
 final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
 
