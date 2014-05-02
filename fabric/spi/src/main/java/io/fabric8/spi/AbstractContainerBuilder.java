@@ -24,7 +24,7 @@ import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.CreateOptionsProvider;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B, T> implements ContainerBuilder<B, T>, Builder<T> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T>, Builder<T> {
 
     protected final T options;
 

@@ -28,7 +28,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile>, ProfileBuilderBase<ProfileBuilder>, Builder<Profile> {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder>, ProfileBuilderBase<ProfileBuilder>, Builder<Profile> {
 
 
     final class Factory {

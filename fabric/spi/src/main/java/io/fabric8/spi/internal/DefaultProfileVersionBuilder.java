@@ -37,7 +37,7 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<ProfileVersionBuilder, LinkedProfileVersion> implements ProfileVersionBuilder {
+final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<ProfileVersionBuilder> implements ProfileVersionBuilder {
 
     private final MutableProfileVersion mutableVersion;
 
