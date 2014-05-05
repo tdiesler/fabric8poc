@@ -39,6 +39,7 @@ import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.junit.runner.RunWith;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * See {@link ConcurrentProfileTestBase}
@@ -64,12 +65,12 @@ public class ConcurrentProfileTest extends ConcurrentProfileTestBase {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
-                    builder.addImportPackages(BootstrapComplete.class);
+                    builder.addImportPackages(BootstrapComplete.class, ConfigurationAdmin.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api,io.fabric8.spi");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,org.osgi.enterprise,io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }

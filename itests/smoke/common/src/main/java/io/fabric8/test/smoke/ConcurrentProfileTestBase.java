@@ -33,11 +33,13 @@ import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
+import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +55,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Test concurrent access to profiles
@@ -160,12 +164,13 @@ public abstract class ConcurrentProfileTestBase {
         public Boolean call() throws Exception {
             ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
             ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     // Add the profile
                     cntManager.addProfiles(cntId, Collections.singleton("prfB"), null);
 
-                    // Verify that that the effective profile is consistent
+                    // Verify that the effective profile is consistent
                     Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
                     ConfigurationProfileItem item = effectiveB.getProfileItem(PID, ConfigurationProfileItem.class);
                     Map<String, Object> config = item.getConfiguration();
@@ -175,6 +180,17 @@ public abstract class ConcurrentProfileTestBase {
                     Assert.assertNotNull("keyA value expected", valA);
                     Assert.assertNotNull("keyB value expected", valB);
                     Assert.assertEquals("config values not equal: " + config, valA, valB);
+
+                    // Verify that the ConfigurationAdmin data is consistent
+                    Configuration configuration = configAdmin.getConfiguration(PID, null);
+                    Dictionary<String, Object> props = configuration.getProperties();
+
+                    valA = (Integer) props.get("keyA");
+                    valB = (Integer) props.get("keyB");
+                    Assert.assertNotNull("keyA value expected", valA);
+                    Assert.assertNotNull("keyB value expected", valB);
+                    Assert.assertEquals("config values not equal: " + props, valA, valB);
+
                     Thread.sleep(10);
 
                     // Remove the profile
