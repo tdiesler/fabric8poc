@@ -87,7 +87,7 @@ public class ProfileVersionOpenTypeTest {
 
         // Test the {@link ProfileVersionOptionsProvider}
         versionBuilder = ProfileVersionBuilder.Factory.create();
-        versionBuilder.fromOptionsProvider(new CompositeDataOptionsProvider(cdata));
+        versionBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         ProfileVersion prfvC = versionBuilder.build();
 
         prfvC = prfManager.addProfileVersion(prfvC);

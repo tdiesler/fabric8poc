@@ -66,7 +66,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider) {
+    public ProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider) {
         return optionsProvider.addBuilderOptions(this);
     }
 

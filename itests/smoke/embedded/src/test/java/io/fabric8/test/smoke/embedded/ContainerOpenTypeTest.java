@@ -90,7 +90,7 @@ public class ContainerOpenTypeTest {
 
         // Test the {@link CreateOptionsProvider}
         cntBuilder = DefaultContainerBuilder.create();
-        cntBuilder.fromOptionsProvider(new CompositeDataOptionsProvider(cdata));
+        cntBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         options = cntBuilder.build();
 
         Container cntC = cntManager.createContainer(options);

@@ -40,7 +40,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B fromOptionsProvider(OptionsProvider<B> optionsProvider) {
+    public B addOptions(OptionsProvider<B> optionsProvider) {
         return optionsProvider.addBuilderOptions((B) this);
     }
 

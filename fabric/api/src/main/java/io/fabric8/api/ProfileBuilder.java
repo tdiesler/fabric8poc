@@ -28,9 +28,7 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends ProfileBuilderBase<ProfileBuilder>, Builder<Profile> {
-
-    ProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider);
+public interface ProfileBuilder extends ProfileBuilderBase<ProfileBuilder>, Builder<ProfileBuilder, Profile> {
 
     final class Factory {
 

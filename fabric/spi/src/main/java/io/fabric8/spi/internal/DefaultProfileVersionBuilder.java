@@ -51,7 +51,7 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileVersionBuilder fromOptionsProvider(OptionsProvider<ProfileVersionBuilder> optionsProvider) {
+    public ProfileVersionBuilder addOptions(OptionsProvider<ProfileVersionBuilder> optionsProvider) {
         return optionsProvider.addBuilderOptions(this);
     }
 

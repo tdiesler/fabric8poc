@@ -56,7 +56,7 @@ final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
 
     @Override
     public ProfileVersionNestedProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider) {
-        nested.fromOptionsProvider(optionsProvider);
+        nested.addOptions(optionsProvider);
         return this;
     }
 
