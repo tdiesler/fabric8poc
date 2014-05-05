@@ -150,7 +150,7 @@ public abstract class ProfileItemsTestBase {
 
         // Build an update profile
         updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
-                .removeConfigurationItem("some.pid")
+                .removeProfileItem("some.pid")
                 .build();
 
         // Update the default profile

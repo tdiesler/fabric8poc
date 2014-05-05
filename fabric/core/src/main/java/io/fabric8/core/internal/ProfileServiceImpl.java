@@ -328,13 +328,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
     }
 
-    @Override
-    public LinkedProfile copyProfile(Version version, String identity) {
-        ProfileVersionState versionState = getRequiredProfileVersion(version);
-        ProfileState profileState = versionState.getRequiredProfile(identity);
-        return profileState.immutableLinkedProfile();
-    }
-
     ProfileVersionState getRequiredProfileVersion(Version version) {
         NotNullException.assertValue(version, "version");
         ProfileVersionState versionState = profileVersions.get(version);

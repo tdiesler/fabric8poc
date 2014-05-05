@@ -47,6 +47,11 @@ public interface ProfileBuilder extends ProfileBuilderBase<ProfileBuilder>, Buil
             return factory.createFrom(version, identity);
         }
 
+        public static ProfileBuilder createFrom(LinkedProfile linkedProfile) {
+            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            return factory.createFrom(linkedProfile);
+        }
+
         // Hide ctor
         private Factory() {
         }

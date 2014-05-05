@@ -46,11 +46,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     DefaultProfileBuilder(Profile sourceProfile) {
-        if (sourceProfile instanceof MutableProfile) {
-            mutableProfile = (MutableProfile) sourceProfile;
-        } else {
-            mutableProfile = new MutableProfile(sourceProfile);
-        }
+        mutableProfile = new MutableProfile(sourceProfile);
     }
 
     @Override
@@ -85,12 +81,6 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     @Override
     public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
         mutableProfile.addProfileItem(new ImmutableConfigurationProfileItem(identity, config));
-        return this;
-    }
-
-    @Override
-    public ProfileBuilder removeConfigurationItem(String identity) {
-        mutableProfile.removeProfileItem(identity);
         return this;
     }
 

@@ -34,4 +34,6 @@ public interface ProfileBuilderFactory {
     ProfileBuilder create(String identity);
 
     ProfileBuilder createFrom(Version version, String identity);
+
+    ProfileBuilder createFrom(LinkedProfile linkedProfile);
 }

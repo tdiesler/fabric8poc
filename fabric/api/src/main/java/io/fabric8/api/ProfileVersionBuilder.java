@@ -31,15 +31,13 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder identity(Version version);
 
-    NestedProfileBuilder getProfileBuilder(String identity);
-
-    ProfileVersionBuilder addProfile(Profile profile);
+    NestedProfileBuilder withProfile(String identity);
 
     ProfileVersionBuilder removeProfile(String identity);
 
     interface NestedProfileBuilder extends ProfileBuilderBase<NestedProfileBuilder>  {
 
-        NestedProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider);
+        NestedProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider);
 
         ProfileVersionBuilder and();
     }
@@ -48,12 +46,17 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
         public static ProfileVersionBuilder create() {
             ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.create(null);
+            return factory.create();
         }
 
-        public static ProfileVersionBuilder create(Version version) {
+        public static ProfileVersionBuilder createFrom(Version version) {
             ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
-            return factory.create(version);
+            return factory.createFrom(version);
+        }
+
+        public static ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion) {
+            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            return factory.createFrom(linkedVersion);
         }
 
         // Hide ctor

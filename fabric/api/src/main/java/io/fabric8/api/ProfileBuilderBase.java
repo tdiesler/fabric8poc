@@ -31,8 +31,6 @@ public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends Att
 
     B addConfigurationItem(String identity, Map<String, Object> config);
 
-    B removeConfigurationItem(String identity);
-
     B addParentProfile(String identity);
 
     B removeParentProfile(String identity);

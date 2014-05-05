@@ -70,7 +70,12 @@ public final class ProfileBuilderService extends AbstractComponent implements Pr
 
     @Override
     public ProfileBuilder createFrom(Version version, String identity) {
-        LinkedProfile linkedProfile = profileService.get().copyProfile(version, identity);
+        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, identity);
+        return new DefaultProfileBuilder(linkedProfile);
+    }
+
+    @Override
+    public ProfileBuilder createFrom(LinkedProfile linkedProfile) {
         return new DefaultProfileBuilder(linkedProfile);
     }
 

@@ -93,7 +93,7 @@ public abstract class ComplexContainerTestBase  {
 
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
-        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.create(version20);
+        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.createFrom(version20);
         ProfileVersion profVersion20 = pvbuilder.build();
 
         // Verify that the version cannot be set

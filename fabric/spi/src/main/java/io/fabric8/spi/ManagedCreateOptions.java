@@ -36,7 +36,7 @@ public interface ManagedCreateOptions extends CreateOptions {
 
     /**
      * Get the array of maven artefacts that are getting unpacked
-     * during {@link ManagedContainer#create(ContainerConfiguration)}
+     * during {@link ManagedContainer#createFrom(ContainerConfiguration)}
      */
     List<MavenCoordinates> getMavenCoordinates();
 

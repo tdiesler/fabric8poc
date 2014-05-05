@@ -84,17 +84,17 @@ public class LinkedProfileVersionTest {
     @Test
     public void testLinkedProfileVersion() {
 
-        LinkedProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
-                .getProfileBuilder(identityA)
+        LinkedProfileVersion linkedVersion = ProfileVersionBuilder.Factory.createFrom(version)
+                .withProfile(identityA)
                 .addConfigurationItem("confItem", configA)
                 .addConfigurationItem("confItemA", configA)
                 .and()
-                .getProfileBuilder(identityB)
+                .withProfile(identityB)
                 .addParentProfile(identityA)
                 .addConfigurationItem("confItem", configB)
                 .addConfigurationItem("confItemB", configB)
                 .and()
-                .getProfileBuilder(identityC)
+                .withProfile(identityC)
                 .addParentProfile(identityA)
                 .addParentProfile(identityB)
                 .addConfigurationItem("confItem", configC)

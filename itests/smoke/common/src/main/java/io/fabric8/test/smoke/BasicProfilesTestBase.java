@@ -75,7 +75,7 @@ public abstract class BasicProfilesTestBase  {
 
         Version version = Version.parseVersion("1.1");
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
+        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(version);
         ProfileVersion profileVersion = versionBuilder.build();
 
         // Add a profile version

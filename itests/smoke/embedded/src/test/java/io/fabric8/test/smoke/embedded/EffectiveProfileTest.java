@@ -84,15 +84,15 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
-        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
-                .getProfileBuilder(identityA).addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
+        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.createFrom(version)
+                .withProfile(identityA).addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
                 .and()
-                .getProfileBuilder(identityB)
+                .withProfile(identityB)
                 .addParentProfile(identityA)
                 .addConfigurationItem("confItem", configB)
                 .addConfigurationItem("confItemB", configB)
                 .and()
-                .getProfileBuilder(identityC)
+                .withProfile(identityC)
                 .addParentProfile(identityA)
                 .addParentProfile(identityB)
                 .addConfigurationItem("confItem", configC)

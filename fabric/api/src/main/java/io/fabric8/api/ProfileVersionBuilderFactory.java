@@ -34,4 +34,8 @@ public interface ProfileVersionBuilderFactory {
     ProfileVersionBuilder create();
 
     ProfileVersionBuilder create(Version version);
+
+    ProfileVersionBuilder createFrom(Version version);
+
+    ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion);
 }

@@ -89,11 +89,11 @@ public abstract class ConcurrentProfileTestBase {
         // Build a profile version with two profiles
         // A <= B
 
-        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
-                .getProfileBuilder("prfA")
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.createFrom(version)
+                .withProfile("prfA")
                 .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(0)))
                 .and()
-                .getProfileBuilder("prfB")
+                .withProfile("prfB")
                 .addParentProfile("prfA")
                 .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
                 .and()

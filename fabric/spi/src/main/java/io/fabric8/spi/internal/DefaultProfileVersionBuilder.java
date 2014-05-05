@@ -22,7 +22,6 @@ package io.fabric8.spi.internal;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
@@ -44,6 +43,10 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         mutableVersion = new MutableProfileVersion(identity);
     }
 
+    DefaultProfileVersionBuilder(LinkedProfileVersion linkedVersion) {
+        mutableVersion = new MutableProfileVersion(linkedVersion);
+    }
+
     @Override
     public ProfileVersionBuilder identity(Version identity) {
         mutableVersion.setIdentity(identity);
@@ -56,16 +59,10 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public NestedProfileBuilder getProfileBuilder(String identity) {
+    public NestedProfileBuilder withProfile(String identity) {
         Profile linkedProfile = mutableVersion.getLinkedProfile(identity);
-        ProfileBuilder profileBuilder = linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
-        return new ProfileVersionNestedProfileBuilder(this, profileBuilder);
-    }
-
-    @Override
-    public ProfileVersionBuilder addProfile(Profile profile) {
-        mutableVersion.addLinkedProfile(profile);
-        return this;
+        DefaultProfileBuilder profileBuilder = linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
+        return new DefaultNestedProfileBuilder(this, profileBuilder);
     }
 
     @Override
@@ -78,6 +75,11 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     public LinkedProfileVersion build() {
         validate();
         return mutableVersion.immutableProfileVersion();
+    }
+
+    ProfileVersionBuilder addProfile(Profile profile) {
+        mutableVersion.addLinkedProfile(profile);
+        return this;
     }
 
     private void validate() {
@@ -103,6 +105,11 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
 
         private MutableProfileVersion(Version identity) {
            this.identity = identity;
+        }
+
+        public MutableProfileVersion(LinkedProfileVersion linkedVersion) {
+            super(linkedVersion.getAttributes());
+            linkedProfiles.putAll(linkedVersion.getLinkedProfiles());
         }
 
         private LinkedProfileVersion immutableProfileVersion() {

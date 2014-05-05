@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
 import io.fabric8.spi.ProfileService;
@@ -65,6 +66,19 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
     public ProfileVersionBuilder create(Version version) {
         assertValid();
         return new DefaultProfileVersionBuilder(version);
+    }
+
+    @Override
+    public ProfileVersionBuilder createFrom(Version version) {
+        assertValid();
+        LinkedProfileVersion linkedVersion = profileService.get().getLinkedProfileVersion(version);
+        return linkedVersion != null ? new DefaultProfileVersionBuilder(linkedVersion) : new DefaultProfileVersionBuilder(version);
+    }
+
+    @Override
+    public ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion) {
+        assertValid();
+        return new DefaultProfileVersionBuilder(linkedVersion);
     }
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)

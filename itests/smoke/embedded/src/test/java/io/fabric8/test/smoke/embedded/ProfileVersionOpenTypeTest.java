@@ -68,7 +68,7 @@ public class ProfileVersionOpenTypeTest {
 
         Version version = Version.parseVersion("2.0");
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create(version);
+        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(version);
         versionBuilder.addAttribute(AKEY, "AVal");
         versionBuilder.addAttribute(BKEY, "BVal");
         ProfileVersion prfvA = versionBuilder.build();

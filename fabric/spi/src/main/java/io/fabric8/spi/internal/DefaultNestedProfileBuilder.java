@@ -26,12 +26,12 @@ import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
 
-final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
+final class DefaultNestedProfileBuilder implements NestedProfileBuilder {
 
-    private final ProfileVersionBuilder parent;
-    private final ProfileBuilder nested;
+    private final DefaultProfileVersionBuilder parent;
+    private final DefaultProfileBuilder nested;
 
-    public ProfileVersionNestedProfileBuilder(ProfileVersionBuilder parent, ProfileBuilder nested) {
+    public DefaultNestedProfileBuilder(DefaultProfileVersionBuilder parent, DefaultProfileBuilder nested) {
         this.parent = parent;
         this.nested = nested;
     }
@@ -43,67 +43,61 @@ final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder identity(String identity) {
+    public DefaultNestedProfileBuilder identity(String identity) {
          nested.identity(identity);
          return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder profileVersion(Version version) {
+    public DefaultNestedProfileBuilder profileVersion(Version version) {
         nested.profileVersion(version);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider) {
+    public DefaultNestedProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider) {
         nested.addOptions(optionsProvider);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder addProfileItem(ProfileItem item) {
+    public DefaultNestedProfileBuilder addProfileItem(ProfileItem item) {
          nested.addProfileItem(item);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder removeProfileItem(String identity) {
+    public DefaultNestedProfileBuilder removeProfileItem(String identity) {
         nested.removeProfileItem(identity);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
+    public DefaultNestedProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
         nested.addConfigurationItem(identity, config);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder removeConfigurationItem(String identity) {
-        nested.removeConfigurationItem(identity);
-        return this;
-    }
-
-    @Override
-    public ProfileVersionNestedProfileBuilder addParentProfile(String identity) {
+    public DefaultNestedProfileBuilder addParentProfile(String identity) {
         nested.addParentProfile(identity);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder removeParentProfile(String identity) {
+    public DefaultNestedProfileBuilder removeParentProfile(String identity) {
         nested.removeParentProfile(identity);
         return this;
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder addAttributes(Map<AttributeKey<?>, Object> attributes) {
+    public DefaultNestedProfileBuilder addAttributes(Map<AttributeKey<?>, Object> attributes) {
         nested.addAttributes(attributes);
         return this;
     }
 
     @Override
-    public <V> ProfileVersionNestedProfileBuilder addAttribute(AttributeKey<V> key, V value) {
+    public <V> DefaultNestedProfileBuilder addAttribute(AttributeKey<V> key, V value) {
         nested.addAttribute(key, value);
         return this;
     }
