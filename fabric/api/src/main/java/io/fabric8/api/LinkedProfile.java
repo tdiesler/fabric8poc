@@ -31,7 +31,12 @@ import java.util.Map;
 public interface LinkedProfile extends Profile {
 
     /**
-     * Get the parent profiles
+     * Get the linked parent profile.
+     */
+    LinkedProfile getLinkedParent(String identity);
+
+    /**
+     * Get the linked parent profiles
      */
     Map<String, LinkedProfile> getLinkedParents();
 

@@ -24,6 +24,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
+import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -197,22 +198,22 @@ public abstract class ConcurrentProfileTestBase {
             ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(version, "prfA");
-                    Profile prfA = prfBuilder.build();
-                    ConfigurationProfileItem prfItem = prfA.getProfileItem(PID, ConfigurationProfileItem.class);
+                    LinkedProfile linkedB = prfManager.getLinkedProfile(version, "prfB");
+                    LinkedProfile linkedA = linkedB.getLinkedParent("prfA");
+
+                    ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(linkedA);
+                    ConfigurationProfileItem prfItem = linkedA.getProfileItem(PID, ConfigurationProfileItem.class);
                     Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyA", new Integer(i + 1));
 
-                    prfA = prfBuilder
-                            .addConfigurationItem(PID, config)
-                            .build();
+                    Profile prfA = prfBuilder.addConfigurationItem(PID, config).build();
 
-                    prfBuilder = ProfileBuilder.Factory.createFrom(version, "prfB");
-                    Profile prfB = prfBuilder.build();
-                    prfItem = prfB.getProfileItem(PID, ConfigurationProfileItem.class);
+                    prfBuilder = ProfileBuilder.Factory.createFrom(linkedB);
+                    prfItem = linkedB.getProfileItem(PID, ConfigurationProfileItem.class);
                     config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyB", new Integer(i + 1));
-                    prfB = prfBuilder.addConfigurationItem(PID, config).build();
+
+                    Profile prfB = prfBuilder.addConfigurationItem(PID, config).build();
 
                     LockHandle lock = prfManager.aquireProfileVersionLock(version);
                     try {

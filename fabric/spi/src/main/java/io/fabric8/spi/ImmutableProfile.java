@@ -80,6 +80,12 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     }
 
     @Override
+    public LinkedProfile getLinkedParent(String identity) {
+        IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
+        return parentProfiles.get(identity);
+    }
+
+    @Override
     public Map<String, LinkedProfile> getLinkedParents() {
         IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return Collections.unmodifiableMap(parentProfiles);
