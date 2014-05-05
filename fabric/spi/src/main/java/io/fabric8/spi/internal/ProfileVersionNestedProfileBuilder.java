@@ -16,9 +16,9 @@
 package io.fabric8.spi.internal;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilder.NestedProfileBuilder;
 
@@ -55,7 +55,7 @@ final class ProfileVersionNestedProfileBuilder implements NestedProfileBuilder {
     }
 
     @Override
-    public ProfileVersionNestedProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider) {
+    public ProfileVersionNestedProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider) {
         nested.fromOptionsProvider(optionsProvider);
         return this;
     }

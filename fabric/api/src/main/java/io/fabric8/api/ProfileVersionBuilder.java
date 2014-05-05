@@ -31,17 +31,17 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
 
     ProfileVersionBuilder identity(Version version);
 
-    ProfileVersionBuilder fromOptionsProvider(ProfileVersionOptionsProvider optionsProvider);
+    ProfileVersionBuilder fromOptionsProvider(OptionsProvider<ProfileVersionBuilder> optionsProvider);
 
-    ProfileBuilder getProfileBuilder(String identity);
-
-    NestedProfileBuilder newProfile(String identity);
+    NestedProfileBuilder getProfileBuilder(String identity);
 
     ProfileVersionBuilder addProfile(Profile profile);
 
     ProfileVersionBuilder removeProfile(String identity);
 
-    interface NestedProfileBuilder extends ProfileBuilderBase<NestedProfileBuilder>, AttributableBuilder<NestedProfileBuilder>  {
+    interface NestedProfileBuilder extends ProfileBuilderBase<NestedProfileBuilder>  {
+
+        NestedProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider);
 
         ProfileVersionBuilder and();
     }

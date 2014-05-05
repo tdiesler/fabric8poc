@@ -15,17 +15,15 @@
 
 package io.fabric8.api;
 
-import org.jboss.gravia.resource.Version;
-
 import java.util.Map;
 
-interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> {
+import org.jboss.gravia.resource.Version;
+
+public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends AttributableBuilder<B> {
 
     B identity(String identity);
 
     B profileVersion(Version version);
-
-    B fromOptionsProvider(ProfileOptionsProvider optionsProvider);
 
     B addProfileItem(ProfileItem item);
 

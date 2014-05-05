@@ -19,10 +19,10 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.spi.AbstractAttributableBuilder;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ImmutableConfigurationProfileItem;
@@ -66,7 +66,7 @@ final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBui
     }
 
     @Override
-    public ProfileBuilder fromOptionsProvider(ProfileOptionsProvider optionsProvider) {
+    public ProfileBuilder fromOptionsProvider(OptionsProvider<ProfileBuilder> optionsProvider) {
         return optionsProvider.addBuilderOptions(this);
     }
 

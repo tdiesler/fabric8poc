@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.CreateOptionsProvider;
+import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.spi.DefaultContainerBuilder;
@@ -90,7 +90,7 @@ public class ContainerOpenTypeTest {
 
         // Test the {@link CreateOptionsProvider}
         cntBuilder = DefaultContainerBuilder.create();
-        cntBuilder.addCreateOptions(new CompositeDataOptionsProvider(cdata));
+        cntBuilder.fromOptionsProvider(new CompositeDataOptionsProvider(cdata));
         options = cntBuilder.build();
 
         Container cntC = cntManager.createContainer(options);
@@ -108,7 +108,7 @@ public class ContainerOpenTypeTest {
         }
     }
 
-    static class CompositeDataOptionsProvider implements CreateOptionsProvider<DefaultContainerBuilder> {
+    static class CompositeDataOptionsProvider implements OptionsProvider<DefaultContainerBuilder> {
 
         private final CompositeData cdata;
 

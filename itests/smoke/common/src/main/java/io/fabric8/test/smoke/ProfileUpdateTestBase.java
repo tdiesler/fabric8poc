@@ -85,7 +85,7 @@ public abstract class ProfileUpdateTestBase  {
 
         // Build a profile version
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
-                .newProfile(identity)
+                .getProfileBuilder(identity)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
                 .and()
                 .build();

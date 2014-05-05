@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,11 @@ package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.Factory;
+import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
-import io.fabric8.api.ProfileOptionsProvider;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.spi.management.ProfileOpenType;
@@ -106,7 +106,7 @@ public class ProfileOpenTypeTest {
         }
     }
 
-    static class CompositeDataOptionsProvider implements ProfileOptionsProvider {
+    static class CompositeDataOptionsProvider implements OptionsProvider<ProfileBuilder> {
 
         private final CompositeData cdata;
 

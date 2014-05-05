@@ -19,12 +19,11 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Builder;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.CreateOptionsProvider;
+import io.fabric8.api.OptionsProvider;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T>, Builder<T> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
 
     protected final T options;
 
@@ -41,7 +40,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B addCreateOptions(CreateOptionsProvider<B> optionsProvider) {
+    public B fromOptionsProvider(OptionsProvider<B> optionsProvider) {
         return optionsProvider.addBuilderOptions((B) this);
     }
 
