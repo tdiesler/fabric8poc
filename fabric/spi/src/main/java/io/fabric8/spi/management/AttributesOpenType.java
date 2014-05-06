@@ -21,7 +21,7 @@ package io.fabric8.spi.management;
 
 import io.fabric8.api.Attributable;
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeKey.Factory;
+import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
@@ -93,14 +93,14 @@ public final class AttributesOpenType {
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain type name");
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain factory name");
         AttributeKey key;
-        Factory factory;
+        ValueFactory factory;
         Class type;
         Object value;
         try {
             type = Class.forName(typeName, true, classLoader);
             if (factoryName != null) {
                 Class<?> factoryType = Class.forName(factoryName, true, classLoader);
-                factory = (Factory<?>) factoryType.newInstance();
+                factory = (ValueFactory<?>) factoryType.newInstance();
                 key = AttributeKey.create(name, type, factory);
                 value = factory.createFrom(valStr);
             } else if (String.class.getName().equals(typeName)) {

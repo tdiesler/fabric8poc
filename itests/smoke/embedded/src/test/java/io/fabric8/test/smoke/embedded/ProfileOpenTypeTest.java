@@ -20,7 +20,7 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeKey.Factory;
+import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -52,8 +52,8 @@ import org.junit.Test;
  */
 public class ProfileOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new ValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new ValueFactory());
+    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
+    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -99,7 +99,7 @@ public class ProfileOpenTypeTest {
         prfManager.removeProfile(defaultVersion, prfC.getIdentity());
     }
 
-    public static class ValueFactory implements Factory<String> {
+    public static class StringValueFactory implements ValueFactory<String> {
         @Override
         public String createFrom(Object source) {
             return (String) source;

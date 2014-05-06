@@ -19,8 +19,9 @@
  */
 package io.fabric8.test.smoke;
 
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import io.fabric8.api.ConfigurationProfileItem;
-import io.fabric8.api.Container;
+import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -33,10 +34,9 @@ import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.spi.DefaultContainerBuilder;
+import io.fabric8.api.ServiceLocator;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -95,6 +95,8 @@ public abstract class ConcurrentProfileTestBase {
         // A <= B
 
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.createFrom(version)
+                .withProfile(DEFAULT_PROFILE_IDENTITY)
+                .and()
                 .withProfile("prfA")
                 .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(0)))
                 .and()
@@ -119,9 +121,7 @@ public abstract class ConcurrentProfileTestBase {
 
         // Create a container
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create().identityPrefix("cntA");
-        Container cnt = cntManager.createContainer(cntBuilder.build());
-        ContainerIdentity cntId = cnt.getIdentity();
+        ContainerIdentity cntId = Constants.CURRENT_CONTAINER_IDENTITY;
 
         // Setup the provision listener
         final CountDownLatch latchA = new CountDownLatch(1);
@@ -148,7 +148,7 @@ public abstract class ConcurrentProfileTestBase {
         Assert.assertTrue("cntClient ok", cntClient.get());
         Assert.assertTrue("prfClient ok", prfClient.get());
 
-        cntManager.destroyContainer(cntId);
+        cntManager.setProfileVersion(cntId, Constants.DEFAULT_PROFILE_VERSION, null);
         prfManager.removeProfileVersion(version);
     }
 

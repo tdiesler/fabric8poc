@@ -20,7 +20,7 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeKey.Factory;
+import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
@@ -29,9 +29,9 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.management.ContainerManagement;
-import io.fabric8.spi.DefaultContainerBuilder;
 import io.fabric8.spi.management.ContainerOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
+import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.lang.management.ManagementFactory;
@@ -53,8 +53,8 @@ import org.junit.Test;
  */
 public class ContainerOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new ValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new ValueFactory());
+    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
+    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -69,7 +69,7 @@ public class ContainerOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
+        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
         cntBuilder.identityPrefix("cntA");
         cntBuilder.addAttribute(AKEY, "AVal");
         cntBuilder.addAttribute(BKEY, "BVal");
@@ -89,7 +89,7 @@ public class ContainerOpenTypeTest {
         cntManager.destroyContainer(idA);
 
         // Test the {@link CreateOptionsProvider}
-        cntBuilder = DefaultContainerBuilder.create();
+        cntBuilder = EmbeddedContainerBuilder.create();
         cntBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         options = cntBuilder.build();
 
@@ -101,14 +101,14 @@ public class ContainerOpenTypeTest {
         cntManager.destroyContainer(idC);
     }
 
-    public static class ValueFactory implements Factory<String> {
+    public static class StringValueFactory implements ValueFactory<String> {
         @Override
         public String createFrom(Object source) {
             return (String) source;
         }
     }
 
-    static class CompositeDataOptionsProvider implements OptionsProvider<DefaultContainerBuilder> {
+    static class CompositeDataOptionsProvider implements OptionsProvider<EmbeddedContainerBuilder> {
 
         private final CompositeData cdata;
 
@@ -117,7 +117,7 @@ public class ContainerOpenTypeTest {
         }
 
         @Override
-        public DefaultContainerBuilder addBuilderOptions(DefaultContainerBuilder builder) {
+        public EmbeddedContainerBuilder addBuilderOptions(EmbeddedContainerBuilder builder) {
             Container container = ContainerOpenType.getContainer(cdata);
             String symbolicName = container.getIdentity().getSymbolicName();
             String prefix = symbolicName.substring(0, symbolicName.indexOf('#'));

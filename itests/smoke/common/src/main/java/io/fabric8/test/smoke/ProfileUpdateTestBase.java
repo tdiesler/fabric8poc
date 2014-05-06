@@ -26,10 +26,8 @@ import io.fabric8.api.ComponentEventListener;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
@@ -41,7 +39,6 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
 import java.util.Set;
@@ -85,6 +82,8 @@ public abstract class ProfileUpdateTestBase  {
 
         // Build a profile version
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.createFrom(version12)
+                .withProfile(DEFAULT_PROFILE_IDENTITY)
+                .and()
                 .withProfile(identity)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
                 .and()
@@ -165,17 +164,8 @@ public abstract class ProfileUpdateTestBase  {
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
-        // Create container cntA
-        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
-        Container cntA = cntManager.createContainer(options);
-
-        // Verify cntA identity
-        ContainerIdentity cntIdA = cntA.getIdentity();
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-
-        // Start container cntA
-        cntA = cntManager.startContainer(cntIdA, null);
+        // Get current container
+        Container cntA = cntManager.getCurrentContainer();
         Assert.assertSame(State.STARTED, cntA.getState());
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
@@ -241,20 +231,6 @@ public abstract class ProfileUpdateTestBase  {
         ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());
         Assert.assertEquals("bar", citem.getConfiguration().get("config.token"));
-
-        // Create container B
-        cntBuilder = DefaultContainerBuilder.create();
-        options = cntBuilder.identityPrefix("cntB").build();
-        Container cntB = cntManager.createContainer(options);
-
-        // Verify child identity
-        ContainerIdentity cntIdB = cntB.getIdentity();
-        Assert.assertTrue(cntIdB.getSymbolicName().startsWith("cntB#"));
-
-        cntB = cntManager.destroyContainer(cntIdB);
-        Assert.assertSame(State.DESTROYED, cntB.getState());
-        cntA = cntManager.destroyContainer(cntIdA);
-        Assert.assertSame(State.DESTROYED, cntA.getState());
 
         // Build an update profile
         updateProfile =  ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)

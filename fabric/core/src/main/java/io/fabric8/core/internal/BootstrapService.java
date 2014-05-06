@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,19 +21,13 @@ package io.fabric8.core.internal;
 
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Profile;
-import io.fabric8.spi.ContainerCreateHandler;
-import io.fabric8.spi.DefaultContainerCreateHandler;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
-import org.jboss.gravia.runtime.ModuleContext;
-import org.jboss.gravia.runtime.RuntimeLocator;
-import org.jboss.gravia.runtime.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -51,7 +45,6 @@ public final class BootstrapService extends AbstractComponent {
 
     private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
-    private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
     @Activate
     void activate() throws Exception {
@@ -70,12 +63,6 @@ public final class BootstrapService extends AbstractComponent {
         Profile profile = profileService.get().getDefaultProfile();
         Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
         configManager.get().applyConfigurationItems(items);
-
-        // Register the {@link DefaultContainerCreateHandler}
-        // [TODO] Is this needed when we have the current container?
-        ModuleContext syscontext = RuntimeLocator.getRequiredRuntime().getModuleContext();
-        String[] classes = new String[] { ContainerCreateHandler.class.getName(), DefaultContainerCreateHandler.class.getName() };
-        registrations.add(syscontext.registerService(classes, new DefaultContainerCreateHandler(), null));
     }
 
     @Reference

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,22 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.test.embedded.support;
 
+import io.fabric8.spi.AbstractContainerBuilder;
+import io.fabric8.spi.AbstractCreateOptions;
+import io.fabric8.test.embedded.support.EmbeddedContainerBuilder.EmbeddedCreateOptions;
 
-public final class DefaultCreateOptions extends AbstractCreateOptions {
+public final class EmbeddedContainerBuilder extends AbstractContainerBuilder<EmbeddedContainerBuilder, EmbeddedCreateOptions> {
+
+    public static EmbeddedContainerBuilder create() {
+        return new EmbeddedContainerBuilder();
+    }
+
+    private EmbeddedContainerBuilder() {
+        super(new EmbeddedCreateOptions());
+    }
+
+    static class EmbeddedCreateOptions extends AbstractCreateOptions {
+    }
 }

@@ -42,13 +42,12 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.ServiceLocator;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
+import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.DefaultContainerCreateHandler;
-import io.fabric8.spi.DefaultCreateOptions;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ManagedCreateOptions;
@@ -181,7 +180,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Create the current container
         ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
         if (currentCnt == null) {
-            DefaultCreateOptions options = new DefaultCreateOptions();
+            CreateOptions options = new AbstractCreateOptions(){};
             List<ContainerHandle> handles = Collections.emptyList();
             currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles);
             LOGGER.info("Create current container: {}", currentCnt);
@@ -242,7 +241,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 handles.add(handler.create(options));
             }
         }
-        IllegalStateAssertion.assertFalse(handles.isEmpty(), "Cannot find ContainerCreateHandler that accepts: " + options);
         ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
         ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
         ContainerState cntState = new ContainerState(parentState, identity, options, handles);
@@ -300,6 +298,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container stopContainer(ContainerIdentity identity) {
         assertValid();
+        IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot stop current container");
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
@@ -316,10 +315,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container destroyContainer(ContainerIdentity identity) {
         assertValid();
+        IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot destroy current container");
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             IllegalStateAssertion.assertTrue(cntState.getChildIdentities().isEmpty(), "Cannot destroy a container that has active child containers: " + identity);
+
+            // Stop the container
+            if (cntState.getState() == State.STARTED) {
+                stopContainer(identity);
+            }
 
             // Unprovision the associated profiles
             ProfileVersionState versionState = cntState.getProfileVersion();
@@ -578,12 +583,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
     void unbindClusterDataStore(ClusterDataStore service) {
         clusterData.unbind(service);
-    }
-
-    @Reference
-    void bindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
-    }
-    void unbindDefaultContainerCreateHandler(DefaultContainerCreateHandler service) {
     }
 
     @Reference

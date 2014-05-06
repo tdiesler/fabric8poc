@@ -34,7 +34,7 @@ public final class AttributeKey<T> {
     /**
      * A factory to create an attribute value
      */
-    public interface Factory<T> {
+    public interface ValueFactory<T> {
 
         /**
          * Create the attribute value from the given source
@@ -45,7 +45,7 @@ public final class AttributeKey<T> {
 
     private final Class<T> type;
     private final String name;
-    private final Factory<T> factory;
+    private final ValueFactory<T> factory;
     private final String tostring;
 
     public static <T> AttributeKey<T> create(Class<T> type) {
@@ -57,11 +57,11 @@ public final class AttributeKey<T> {
         return new AttributeKey<T>(name, type, null);
     }
 
-    public static <T> AttributeKey<T> create(String name, Class<T> type, Factory<T> factory) {
+    public static <T> AttributeKey<T> create(String name, Class<T> type, ValueFactory<T> factory) {
         return new AttributeKey<T>(name, type, factory);
     }
 
-    private AttributeKey(String name, Class<T> type, Factory<T> factory) {
+    private AttributeKey(String name, Class<T> type, ValueFactory<T> factory) {
         NotNullException.assertValue(name, "name");
         NotNullException.assertValue(type, "type");
         this.name = name;
@@ -79,7 +79,7 @@ public final class AttributeKey<T> {
         return type;
     }
 
-    public Factory<T> getFactory() {
+    public ValueFactory<T> getFactory() {
         return factory;
     }
 

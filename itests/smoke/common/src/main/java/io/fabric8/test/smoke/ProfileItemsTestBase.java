@@ -21,13 +21,10 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
@@ -37,7 +34,6 @@ import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.DefaultContainerBuilder;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -82,21 +78,11 @@ public abstract class ProfileItemsTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        Profile defaultProfile = prfManager.getDefaultProfile();
 
-        // Create container A
-        DefaultContainerBuilder cntBuilder = DefaultContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
-        Container cntA = cntManager.createContainer(options);
-        ContainerIdentity cntIdA = cntA.getIdentity();
-
-        // Verify identityA
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-
-        // Start container A
-        cntA = cntManager.startContainer(cntIdA, null);
-        Assert.assertSame(State.STARTED, cntA.getState());
-        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
+        // Get current container
+        Container cnt = cntManager.getCurrentContainer();
+        Assert.assertSame(State.STARTED, cnt.getState());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cnt.getProfileVersion());
 
         // Build an update profile
         Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
@@ -137,7 +123,7 @@ public abstract class ProfileItemsTestBase {
         Assert.assertNull("Configuration null", config.getProperties());
 
         // Update the default profile
-        defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
+        Profile defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals("One item", 2, defaultProfile.getProfileItems(null).size());
@@ -161,8 +147,5 @@ public abstract class ProfileItemsTestBase {
         Assert.assertEquals("One item", 1, defaultProfile.getProfileItems(null).size());
 
         sregB.unregister();
-
-        cntA = cntManager.destroyContainer(cntIdA);
-        Assert.assertSame(State.DESTROYED, cntA.getState());
     }
 }
