@@ -19,6 +19,7 @@
  */
 package io.fabric8.core.internal;
 
+import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationProfileItem;
 import io.fabric8.api.Container;
@@ -47,6 +48,7 @@ import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultContainerCreateHandler;
+import io.fabric8.spi.DefaultCreateOptions;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ManagedCreateOptions;
@@ -142,6 +144,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void activateInternal() {
+
+        // Create the current container
+        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
+        if (currentCnt == null) {
+            DefaultCreateOptions options = new DefaultCreateOptions();
+            List<ContainerHandle> handles = Collections.emptyList();
+            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles, configToken);
+            LOGGER.info("Create current container: {}", currentCnt);
+            containerRegistry.get().addContainer(currentCnt);
+        }
 
         // Register a listener for profile update events
         ProfileEventListener listener = new ProfileEventListener() {
@@ -333,7 +345,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     @Override
     public Container getCurrentContainer() {
-        throw new UnsupportedOperationException();
+        assertValid();
+        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
+        return currentCnt.immutableContainer();
     }
 
     @Override
@@ -591,18 +605,22 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerState parentState;
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
-        private final List<ContainerHandle> handles;
         private final Set<String> profiles = new HashSet<>();
+        private final List<ContainerHandle> handles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
 
         private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles, String configToken) {
+            NotNullException.assertValue(identity, "identity");
+            NotNullException.assertValue(options, "options");
+            NotNullException.assertValue(handles, "handles");
+            NotNullException.assertValue(configToken, "configToken");
             this.parentState = parentState;
-            this.handles = handles;
-            this.state = State.CREATED;
             this.identity = identity;
+            this.state = State.CREATED;
+            this.handles.addAll(handles);
             this.attributes = new AttributeSupport(options.getAttributes());
             this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
             if (parentState != null) {
