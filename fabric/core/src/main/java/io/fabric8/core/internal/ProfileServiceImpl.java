@@ -125,7 +125,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         // Build the default profile
         Profile defaultProfile = profileBuilderFactory.get()
                 .create(DEFAULT_PROFILE_IDENTITY)
-                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"))
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
                 .build();
 
         // Add the default profile

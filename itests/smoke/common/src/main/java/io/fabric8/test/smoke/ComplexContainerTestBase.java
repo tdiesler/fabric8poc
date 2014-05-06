@@ -143,7 +143,7 @@ public abstract class ComplexContainerTestBase  {
 
         // Create profile foo
         Profile fooProfile = ProfileBuilder.Factory.create("foo")
-                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"))
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("confKey", (Object) "bar"))
                 .build();
 
         // Verify that the profile cannot be added

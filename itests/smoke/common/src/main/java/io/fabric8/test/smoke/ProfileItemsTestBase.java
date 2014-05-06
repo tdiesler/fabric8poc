@@ -92,7 +92,6 @@ public abstract class ProfileItemsTestBase {
 
         // Verify identityA
         Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-        Assert.assertEquals(DEFAULT_PROFILE_IDENTITY, cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container A
         cntA = cntManager.startContainer(cntIdA, null);

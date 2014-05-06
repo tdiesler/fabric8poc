@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,17 +37,6 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     enum State {
         CREATED, STARTED, STOPPED, DESTROYED
     }
-
-    /**
-     * A config key that is made available as a container attribute
-     * [TODO] remove config.token
-     */
-    String CNFKEY_CONFIG_TOKEN = "config.token";
-
-    /**
-     * An attribute key for the {@link CNFKEY_CONFIG_TOKEN} value
-     */
-    AttributeKey<String> ATTKEY_CONFIG_TOKEN = AttributeKey.create("fabric8.config.token", String.class);
 
     /**
      * The configuration PID for this service

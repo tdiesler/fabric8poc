@@ -95,7 +95,7 @@ public abstract class ConcurrentConfigurationTestBase  {
             for (int i = 0; lastException == null && i < 20; i++) {
                 Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
                 Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(Container.CNFKEY_CONFIG_TOKEN, "config#" + i);
+                props.put("config.token", "config#" + i);
                 config.update(props);
                 Thread.sleep(50);
             }

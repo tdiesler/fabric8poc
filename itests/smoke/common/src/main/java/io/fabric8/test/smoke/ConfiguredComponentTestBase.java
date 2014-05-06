@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,7 +107,7 @@ public abstract class ConfiguredComponentTestBase  {
         ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(syscontext, ConfigurationAdmin.class);
         Configuration config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Container.CNFKEY_CONFIG_TOKEN, "foo");
+        props.put("config.token", "foo");
         config.update(props);
 
         // Wait a little for the component to get updated
@@ -123,7 +123,6 @@ public abstract class ConfiguredComponentTestBase  {
         ContainerIdentity cntIdA = cntA.getIdentity();
 
         Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-        Assert.assertEquals("foo", cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
         Assert.assertSame(State.CREATED, cntA.getState());
 
         cntA = cntManager.startContainer(cntIdA, null);
@@ -139,7 +138,7 @@ public abstract class ConfiguredComponentTestBase  {
         latchA.set(new CountDownLatch(1));
         config = configAdmin.getConfiguration(Container.CONTAINER_SERVICE_PID, null);
         props = new Hashtable<String, Object>();
-        props.put(Container.CNFKEY_CONFIG_TOKEN, "default");
+        props.put("config.token", "default");
         config.update(props);
 
         // Wait a little for the component to get updated

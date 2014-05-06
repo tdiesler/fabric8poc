@@ -173,7 +173,6 @@ public abstract class ProfileUpdateTestBase  {
         // Verify cntA identity
         ContainerIdentity cntIdA = cntA.getIdentity();
         Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
-        Assert.assertEquals(DEFAULT_PROFILE_IDENTITY, cntA.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         // Start container cntA
         cntA = cntManager.startContainer(cntIdA, null);
@@ -181,7 +180,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
-                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "bar"))
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "bar"))
                 .build();
 
         // Setup the profile listener
@@ -241,7 +240,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationProfileItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());
-        Assert.assertEquals("bar", citem.getConfiguration().get(Container.CNFKEY_CONFIG_TOKEN));
+        Assert.assertEquals("bar", citem.getConfiguration().get("config.token"));
 
         // Create container B
         cntBuilder = DefaultContainerBuilder.create();
@@ -251,7 +250,6 @@ public abstract class ProfileUpdateTestBase  {
         // Verify child identity
         ContainerIdentity cntIdB = cntB.getIdentity();
         Assert.assertTrue(cntIdB.getSymbolicName().startsWith("cntB#"));
-        Assert.assertEquals("bar", cntB.getAttribute(Container.ATTKEY_CONFIG_TOKEN));
 
         cntB = cntManager.destroyContainer(cntIdB);
         Assert.assertSame(State.DESTROYED, cntB.getState());
@@ -260,7 +258,7 @@ public abstract class ProfileUpdateTestBase  {
 
         // Build an update profile
         updateProfile =  ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
-                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap(Container.CNFKEY_CONFIG_TOKEN, (Object) "default"))
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
                 .build();
 
         latchA.set(new CountDownLatch(1));

@@ -67,6 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
@@ -124,11 +125,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<ContainerCreateHandler>();
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
-    private String configToken;
-
     @Activate
     void activate(Map<String, ?> config) {
-        configToken = (String) config.get(Container.CNFKEY_CONFIG_TOKEN);
         activateInternal();
         activateComponent(PERMIT, this);
     }
@@ -144,16 +142,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void activateInternal() {
-
-        // Create the current container
-        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
-        if (currentCnt == null) {
-            DefaultCreateOptions options = new DefaultCreateOptions();
-            List<ContainerHandle> handles = Collections.emptyList();
-            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles, configToken);
-            LOGGER.info("Create current container: {}", currentCnt);
-            containerRegistry.get().addContainer(currentCnt);
-        }
 
         // Register a listener for profile update events
         ProfileEventListener listener = new ProfileEventListener() {
@@ -186,10 +174,36 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 }
             }
         };
-
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
         registrations.add(syscontext.registerService(ProfileEventListener.class, listener, null));
+
+        // Create the current container
+        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
+        if (currentCnt == null) {
+            DefaultCreateOptions options = new DefaultCreateOptions();
+            List<ContainerHandle> handles = Collections.emptyList();
+            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles);
+            LOGGER.info("Create current container: {}", currentCnt);
+            containerRegistry.get().addContainer(currentCnt);
+
+            final CountDownLatch provisionLatch = new CountDownLatch(1);
+            ProvisionEventListener provisionListener = new ProvisionEventListener() {
+                @Override
+                public void processEvent(ProvisionEvent event) {
+                    provisionLatch.countDown();
+                }
+            };
+
+            // Start the current container
+            startContainerInternal(currentCnt, provisionListener);
+            try {
+                boolean success = provisionLatch.await(10, TimeUnit.SECONDS);
+                IllegalStateAssertion.assertTrue(success, "Cannot provision current container");
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
     }
 
     @Override
@@ -231,7 +245,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         IllegalStateAssertion.assertFalse(handles.isEmpty(), "Cannot find ContainerCreateHandler that accepts: " + options);
         ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
         ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
-        ContainerState cntState = new ContainerState(parentState, identity, options, handles, configToken);
+        ContainerState cntState = new ContainerState(parentState, identity, options, handles);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
         return cntState.immutableContainer();
@@ -256,6 +270,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
+        return startContainerInternal(cntState, listener);
+    }
+
+    private Container startContainerInternal(ContainerState cntState, ProvisionEventListener listener) {
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             LOGGER.info("Start container: {}", cntState);
@@ -271,7 +289,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             // Start & provision the container profiles
             cntState.start();
             Set<String> profiles = cntState.getProfileIdentities();
-            provisionProfiles(cntState, profiles, listener);
+            provisionProfilesInternal(cntState, profiles, listener);
 
             return cntState.immutableContainer();
         } finally {
@@ -307,7 +325,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             ProfileVersionState versionState = cntState.getProfileVersion();
             if (versionState != null) {
                 Set<String> profiles = cntState.getProfileIdentities();
-                unprovisionProfiles(cntState, profiles, null);
+                unprovisionProfilesInternal(cntState, profiles, null);
             }
 
             LOGGER.info("Destroy container: {}", cntState);
@@ -372,12 +390,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Unprovision the previous profiles
         if (prevVersionState != null) {
-            unprovisionProfiles(cntState, cntState.getProfileIdentities(), listener);
+            unprovisionProfilesInternal(cntState, cntState.getProfileIdentities(), listener);
         }
 
         // Provision the next profiles
         cntState.setProfileVersion(nextVersionState);
-        provisionProfiles(cntState, cntState.getProfileIdentities(), listener);
+        provisionProfilesInternal(cntState, cntState.getProfileIdentities(), listener);
 
         return cntState.immutableContainer();
     }
@@ -398,7 +416,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Add container profiles: {} <= {}", cntState, identities);
 
         // Provision the profiles
-        provisionProfiles(cntState, identities, listener);
+        provisionProfilesInternal(cntState, identities, listener);
 
         // Update the references
         cntState.addProfiles(identities);
@@ -421,7 +439,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Remove container profiles: {} => {}", cntState, profiles);
 
         // Unprovision the profiles
-        unprovisionProfiles(cntState, profiles, listener);
+        unprovisionProfilesInternal(cntState, profiles, listener);
 
         // Update the references
         cntState.removeProfiles(profiles);
@@ -433,21 +451,21 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Update container profile: {} <= {}", cntState, identity);
 
         // Unprovision the profile
-        unprovisionProfile(cntState, identity, listener);
+        unprovisionProfileInternal(cntState, identity, listener);
 
         // Provision the profile
-        provisionProfile(cntState, identity, listener);
+        provisionProfileInternal(cntState, identity, listener);
     }
 
-    private void provisionProfiles(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
+    private void provisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
         if (cntState.getState() == State.STARTED) {
             for (String profile : profiles) {
-                provisionProfile(cntState, profile, listener);
+                provisionProfileInternal(cntState, profile, listener);
             }
         }
     }
 
-    private void provisionProfile(ContainerState cntState, String identity, ProvisionEventListener listener) {
+    private void provisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
 
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(identity);
         LOGGER.info("Provision profile: {} <= {}", cntState, identity);
@@ -466,15 +484,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
-    private void unprovisionProfiles(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
+    private void unprovisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
         if (cntState.getState() == State.STARTED) {
             for (String profileId : profiles) {
-                unprovisionProfile(cntState, profileId, listener);
+                unprovisionProfileInternal(cntState, profileId, listener);
             }
         }
     }
 
-    private void unprovisionProfile(ContainerState cntState, String profileId, ProvisionEventListener listener) {
+    private void unprovisionProfileInternal(ContainerState cntState, String profileId, ProvisionEventListener listener) {
         LOGGER.info("Unprovision profile: {} => {}", cntState, profileId);
 
         ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(profileId);
@@ -612,17 +630,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles, String configToken) {
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles) {
             NotNullException.assertValue(identity, "identity");
             NotNullException.assertValue(options, "options");
             NotNullException.assertValue(handles, "handles");
-            NotNullException.assertValue(configToken, "configToken");
             this.parentState = parentState;
             this.identity = identity;
             this.state = State.CREATED;
             this.handles.addAll(handles);
             this.attributes = new AttributeSupport(options.getAttributes());
-            this.attributes.putAttribute(Container.ATTKEY_CONFIG_TOKEN, configToken);
             if (parentState != null) {
                 parentState.addChild(this);
             }

@@ -81,6 +81,6 @@ public final class PrePostConditions {
         ConfigurationProfileItem configItem = (ConfigurationProfileItem) profileItem;
         Map<String, Object> config = configItem.getConfiguration();
         Assert.assertEquals("One config entry", 1, config.size());
-        Assert.assertEquals("default", config.get(Container.CNFKEY_CONFIG_TOKEN));
+        Assert.assertEquals("default", config.get("config.token"));
     }
 }
