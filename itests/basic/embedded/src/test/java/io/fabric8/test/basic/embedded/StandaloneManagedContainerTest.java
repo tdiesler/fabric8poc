@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,8 @@
 
 package io.fabric8.test.basic.embedded;
 
+import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.api.management.ProfileVersionManagement;
@@ -32,6 +34,7 @@ import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.io.File;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
@@ -120,7 +123,10 @@ public class StandaloneManagedContainerTest {
             MBeanServerConnection server = connector.getMBeanServerConnection();
             ContainerManagement cntManagement = ManagementUtils.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
             Assert.assertNotNull("ContainerManagement not null", cntManagement);
-            Assert.assertTrue("No containers", cntManagement.getContainerIds().isEmpty());
+            Set<String> containerIds = cntManagement.getContainerIds();
+            Assert.assertEquals("One container", 1, containerIds.size());
+            ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
+            Assert.assertEquals(Constants.CURRENT_CONTAINER_IDENTITY, cntId);
 
             // Access profiles through JMX
             ProfileVersionManagement prvManagement = ManagementUtils.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);

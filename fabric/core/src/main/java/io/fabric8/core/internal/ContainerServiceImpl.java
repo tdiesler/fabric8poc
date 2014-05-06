@@ -66,7 +66,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
@@ -186,22 +185,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             LOGGER.info("Create current container: {}", currentCnt);
             containerRegistry.get().addContainer(currentCnt);
 
-            final CountDownLatch provisionLatch = new CountDownLatch(1);
-            ProvisionEventListener provisionListener = new ProvisionEventListener() {
-                @Override
-                public void processEvent(ProvisionEvent event) {
-                    provisionLatch.countDown();
-                }
-            };
-
             // Start the current container
-            startContainerInternal(currentCnt, provisionListener);
-            try {
-                boolean success = provisionLatch.await(10, TimeUnit.SECONDS);
-                IllegalStateAssertion.assertTrue(success, "Cannot provision current container");
-            } catch (InterruptedException ex) {
-                throw new IllegalStateException(ex);
-            }
+            startContainerInternal(currentCnt, null);
         }
     }
 

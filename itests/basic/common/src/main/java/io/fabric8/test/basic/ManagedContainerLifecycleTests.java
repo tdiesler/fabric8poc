@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ package io.fabric8.test.basic;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -163,7 +164,9 @@ public class ManagedContainerLifecycleTests  {
             ContainerManagement cntManagement = jmxEndpoint.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
             Assert.assertNotNull("ContainerManagement not null", cntManagement);
             Set<String> containerIds = cntManagement.getContainerIds();
-            Assert.assertTrue("No containers, but was: " + containerIds, containerIds.isEmpty());
+            Assert.assertEquals("One container", 1, containerIds.size());
+            ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
+            Assert.assertEquals(Constants.CURRENT_CONTAINER_IDENTITY, cntId);
 
             // Access profiles through JMX
             ProfileVersionManagement prvManagement = jmxEndpoint.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);
