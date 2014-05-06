@@ -25,6 +25,7 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.spi.internal.DefaultProfileBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,7 @@ public final class ProfileUtils {
 
     public static Profile getEffectiveProfile(Profile profile, Map<String, Profile> linkedProfiles) {
         String identity = "effective:" + profile.getIdentity();
-        ProfileBuilder prfBuilder = ProfileBuilder.Factory.create(identity);
+        ProfileBuilder prfBuilder = new DefaultProfileBuilder(identity);
         addProfileContent(prfBuilder, profile, linkedProfiles);
         return prfBuilder.build();
     }

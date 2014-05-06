@@ -33,22 +33,22 @@ public interface ProfileBuilder extends ProfileBuilderBase<ProfileBuilder>, Buil
     final class Factory {
 
         public static ProfileBuilder create() {
-            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
             return factory.create();
         }
 
         public static ProfileBuilder create(String identity) {
-            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
             return factory.create(identity);
         }
 
         public static ProfileBuilder createFrom(Version version, String identity) {
-            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
             return factory.createFrom(version, identity);
         }
 
         public static ProfileBuilder createFrom(LinkedProfile linkedProfile) {
-            ProfileBuilderFactory factory = ServiceLocator.awaitService(ProfileBuilderFactory.class);
+            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
             return factory.createFrom(linkedProfile);
         }
 

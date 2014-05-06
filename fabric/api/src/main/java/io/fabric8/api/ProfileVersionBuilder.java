@@ -45,17 +45,22 @@ public interface ProfileVersionBuilder extends AttributableBuilder<ProfileVersio
     final class Factory {
 
         public static ProfileVersionBuilder create() {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
             return factory.create();
         }
 
+        public static ProfileVersionBuilder create(Version version) {
+            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
+            return factory.create(version);
+        }
+
         public static ProfileVersionBuilder createFrom(Version version) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
             return factory.createFrom(version);
         }
 
         public static ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.awaitService(ProfileVersionBuilderFactory.class);
+            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
             return factory.createFrom(linkedVersion);
         }
 
