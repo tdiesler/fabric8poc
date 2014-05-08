@@ -1,16 +1,19 @@
 package io.fabric8.spi;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ImmutableConfigurationProfileItem extends AbstractProfileItem implements ConfigurationProfileItem {
+/**
+ *
+ */
+public final class DefaultConfigurationItem extends AbstractProfileItem implements ConfigurationItem {
 
     private final Map<String, Object> configuration = new HashMap<String, Object>();
 
-    public ImmutableConfigurationProfileItem(String identity, Map<String, Object> configuration) {
+    public DefaultConfigurationItem(String identity, Map<String, Object> configuration) {
         super(identity);
         this.configuration.putAll(configuration);
     }
@@ -28,8 +31,8 @@ public final class ImmutableConfigurationProfileItem extends AbstractProfileItem
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (!(obj instanceof ImmutableConfigurationProfileItem)) return false;
-        ImmutableConfigurationProfileItem other = (ImmutableConfigurationProfileItem) obj;
+        if (!(obj instanceof DefaultConfigurationItem)) return false;
+        DefaultConfigurationItem other = (DefaultConfigurationItem) obj;
         return getIdentity().equals(other.getIdentity());
     }
 

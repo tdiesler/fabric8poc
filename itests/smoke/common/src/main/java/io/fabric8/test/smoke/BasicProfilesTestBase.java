@@ -19,10 +19,9 @@
  */
 package io.fabric8.test.smoke;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -75,26 +74,22 @@ public abstract class BasicProfilesTestBase  {
 
         Version version = Version.parseVersion("1.1");
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(version);
-        ProfileVersion profileVersion = versionBuilder.build();
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
+                .withProfile("foo")
+                .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
+                .and()
+                .build();
 
         // Add a profile version
         prfManager.addProfileVersion(profileVersion);
         Assert.assertEquals(2, prfManager.getProfileVersions(null).size());
-
-        // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
-                .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                .build();
-
-        // Add the profile to the given version
-        profile = prfManager.addProfile(version, profile);
         Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
 
         // Verify profile
-        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
+        Profile profile = prfManager.getProfile(version, "foo");
+        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationProfileItem citem = items.iterator().next();
+        ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
         Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
 

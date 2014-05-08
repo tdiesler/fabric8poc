@@ -19,7 +19,7 @@
  */
 package io.fabric8.core.internal;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
@@ -66,9 +66,9 @@ public final class ConfigurationManager extends AbstractComponent {
         deactivateComponent();
     }
 
-    void applyConfigurationItems(Set<ConfigurationProfileItem> items) {
+    void applyConfigurationItems(Set<ConfigurationItem> items) {
         assertValid();
-        for (ConfigurationProfileItem item : items) {
+        for (ConfigurationItem item : items) {
             LOGGER.info("Apply configuration item: {}", item);
             try {
                 Configuration config = configAdmin.get().getConfiguration(item.getIdentity(), null);

@@ -20,7 +20,7 @@
 
 package io.fabric8.spi.utils;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -42,54 +42,39 @@ public final class ProfileUtils {
     private ProfileUtils() {
     }
 
-    public static Profile getEffectiveProfile(LinkedProfile linkedProfile) {
-        return getEffectiveProfile(linkedProfile, getLinkedProfiles(linkedProfile, null));
-    }
-
-    public static Profile getEffectiveProfile(Profile profile, Map<String, Profile> linkedProfiles) {
+    public static Profile getEffectiveProfile(LinkedProfile profile) {
         String identity = "effective:" + profile.getIdentity();
         ProfileBuilder prfBuilder = new DefaultProfileBuilder(identity);
-        addProfileContent(prfBuilder, profile, linkedProfiles);
+        buildEffectiveProfile(prfBuilder, profile);
         return prfBuilder.build();
     }
 
-    private static void addProfileContent(ProfileBuilder prfBuilder, Profile profile, Map<String, Profile> linkedProfiles) {
+    private static void buildEffectiveProfile(ProfileBuilder builder, LinkedProfile profile) {
 
         // Add parent content
-        for (String parentIdentity : profile.getParents()) {
-            Profile parentProfile = linkedProfiles.get(parentIdentity);
-            addProfileContent(prfBuilder, parentProfile, linkedProfiles);
+        for (String identity : profile.getParents()) {
+            LinkedProfile parent = profile.getLinkedParent(identity);
+            buildEffectiveProfile(builder, parent);
         }
 
         // Add attributes
-        prfBuilder.addAttributes(profile.getAttributes());
+        builder.addAttributes(profile.getAttributes());
 
         // Add profile items
         for (ProfileItem item : profile.getProfileItems(null)) {
 
             // Merge with ConfigurationProfileItem
-            if (item instanceof ConfigurationProfileItem) {
+            if (item instanceof ConfigurationItem) {
                 String itemId = item.getIdentity();
-                ConfigurationProfileItem prevItem = prfBuilder.build().getProfileItem(itemId, ConfigurationProfileItem.class);
+                ConfigurationItem prevItem = builder.build().getProfileItem(itemId, ConfigurationItem.class);
                 if (prevItem != null) {
                     Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
-                    config.putAll(((ConfigurationProfileItem) item).getConfiguration());
-                    prfBuilder.addConfigurationItem(itemId, config);
+                    config.putAll(((ConfigurationItem) item).getConfiguration());
+                    builder.addConfigurationItem(itemId, config);
                 } else {
-                    prfBuilder.addProfileItem(profile.getProfileItem(itemId, ConfigurationProfileItem.class));
+                    builder.addProfileItem(profile.getProfileItem(itemId, ConfigurationItem.class));
                 }
             }
         }
-    }
-
-    private static Map<String, Profile> getLinkedProfiles(LinkedProfile linkedProfile, Map<String, Profile> linkedProfiles) {
-        if (linkedProfiles == null) {
-            linkedProfiles = new HashMap<>();
-        }
-        linkedProfiles.put(linkedProfile.getIdentity(), linkedProfile);
-        for (LinkedProfile linkedParent : linkedProfile.getLinkedParents().values()) {
-            getLinkedProfiles(linkedParent, linkedProfiles);
-        }
-        return linkedProfiles;
     }
 }

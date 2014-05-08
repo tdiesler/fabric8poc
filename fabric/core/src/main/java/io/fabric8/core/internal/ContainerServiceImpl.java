@@ -21,7 +21,7 @@ package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
@@ -29,6 +29,7 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
+import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
@@ -40,7 +41,6 @@ import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileState;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
@@ -327,8 +327,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
 
             // Unprovision the associated profiles
-            ProfileVersionState versionState = cntState.getProfileVersion();
-            if (versionState != null) {
+            if (cntState.getProfileVersion() != null) {
                 Set<String> profiles = cntState.getProfileIdentities();
                 unprovisionProfilesInternal(cntState, profiles, null);
             }
@@ -387,14 +386,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionEventListener listener) {
 
-        ProfileServiceImpl profileServiceImpl = (ProfileServiceImpl) profileService.get();
-        ProfileVersionState nextVersionState = profileServiceImpl.getRequiredProfileVersion(nextVersion);
-        ProfileVersionState prevVersionState = cntState.getProfileVersion();
+        ProfileVersion prevVersion = cntState.getProfileVersion();
+        ProfileVersionState nextVersionState = ((ProfileServiceImpl)profileService.get()).getProfileVersionState(nextVersion);
 
         LOGGER.info("Set container version: {} <= {}", cntState, nextVersion);
 
         // Unprovision the previous profiles
-        if (prevVersionState != null) {
+        if (prevVersion != null) {
             unprovisionProfilesInternal(cntState, cntState.getProfileIdentities(), listener);
         }
 
@@ -472,20 +470,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private void provisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
 
-        ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(identity);
+        Version cntVersion = cntState.getProfileVersion().getIdentity();
+        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(cntVersion, identity);
         LOGGER.info("Provision profile: {} <= {}", cntState, identity);
 
-        Profile profile = profileState.immutableProfile();
         Container container = cntState.immutableContainer();
-        ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, profile);
+        ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Do the provisioning
-        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(profileState.immutableLinkedProfile());
-        Set<ConfigurationProfileItem> configItems = effectiveProfile.getProfileItems(ConfigurationProfileItem.class);
+        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
+        Set<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
         configManager.get().applyConfigurationItems(configItems);
 
-        event = new ProvisionEvent(container, EventType.PROVISIONED, profile);
+        event = new ProvisionEvent(container, EventType.PROVISIONED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
@@ -497,11 +495,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private void unprovisionProfileInternal(ContainerState cntState, String profileId, ProvisionEventListener listener) {
-        LOGGER.info("Unprovision profile: {} => {}", cntState, profileId);
+    private void unprovisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
+        LOGGER.info("Unprovision profile: {} => {}", cntState, identity);
 
-        ProfileState profileState = cntState.getProfileVersion().getRequiredProfile(profileId);
-        Profile profile = profileState.immutableProfile();
+        Version cntVersion = cntState.getProfileVersion().getIdentity();
+        Profile profile = profileService.get().getRequiredProfile(cntVersion, identity);
         Container container = cntState.immutableContainer();
         ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, profile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
@@ -741,13 +739,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        ProfileVersionState getProfileVersion() {
-            LockHandle readLock = aquireReadLock();
-            try {
-                return versionState;
-            } finally {
-                readLock.unlock();
-            }
+        ProfileVersion getProfileVersion() {
+            return versionState != null ? versionState.getProfileVersion() : null;
         }
 
         Set<String> getProfileIdentities() {

@@ -19,8 +19,12 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.permit.PermitKey;
+
+import org.jboss.gravia.resource.Version;
 
 /**
  * The internal profile service
@@ -34,4 +38,8 @@ public interface ProfileService extends ProfileManager {
      * The {@link PermitKey} that protects this service.
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
+
+    ProfileVersion getRequiredProfileVersion(Version version);
+
+    Profile getRequiredProfile(Version version, String identity);
 }

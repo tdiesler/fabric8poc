@@ -50,7 +50,7 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     private final Map<String, ProfileItem> profileItems = new HashMap<>();
     private Map<String, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(String identity, Map<AttributeKey<?>, Object> attributes, Version version, Set<String> parents, Set<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, Set<String> parents, Set<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
         super(attributes);
         this.identity = identity;
         this.version = version;

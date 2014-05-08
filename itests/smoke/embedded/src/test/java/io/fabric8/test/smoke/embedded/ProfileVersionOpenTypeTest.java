@@ -19,7 +19,6 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.ProfileManager;
@@ -50,9 +49,6 @@ import org.junit.Test;
  */
 public class ProfileVersionOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
-
     @BeforeClass
     public static void beforeClass() throws Exception {
         EmbeddedTestSupport.beforeClass();
@@ -68,10 +64,9 @@ public class ProfileVersionOpenTypeTest {
 
         Version version = Version.parseVersion("2.0");
 
-        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.createFrom(version);
-        versionBuilder.addAttribute(AKEY, "AVal");
-        versionBuilder.addAttribute(BKEY, "BVal");
-        ProfileVersion prfvA = versionBuilder.build();
+        ProfileVersion prfvA = ProfileVersionBuilder.Factory.create(version)
+                .withProfile("foo").and()
+                .build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfvA = prfManager.addProfileVersion(prfvA);
@@ -81,18 +76,17 @@ public class ProfileVersionOpenTypeTest {
         CompositeData cdata = prfvManagement.getProfileVersion(prfvA.getIdentity().toString());
         ProfileVersion prfvB = ProfileVersionOpenType.getProfileVersion(cdata);
         Assert.assertEquals(version, prfvB.getIdentity());
-        Assert.assertEquals(prfvA.getAttributes(), prfvB.getAttributes());
 
         prfManager.removeProfileVersion(version);
 
         // Test the {@link ProfileVersionOptionsProvider}
-        versionBuilder = ProfileVersionBuilder.Factory.create();
+        ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
         versionBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         ProfileVersion prfvC = versionBuilder.build();
 
         prfvC = prfManager.addProfileVersion(prfvC);
         Assert.assertEquals(prfvA.getIdentity(), prfvC.getIdentity());
-        Assert.assertEquals(prfvA.getAttributes(), prfvC.getAttributes());
+        Assert.assertEquals(prfvA.getProfileIdentities(), prfvC.getProfileIdentities());
 
         prfManager.removeProfileVersion(version);
     }
@@ -116,8 +110,10 @@ public class ProfileVersionOpenTypeTest {
         public ProfileVersionBuilder addBuilderOptions(ProfileVersionBuilder builder) {
             ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
             builder.identity(profileVersion.getIdentity());
-            return builder.addAttributes(profileVersion.getAttributes());
+            for (String profile : profileVersion.getProfileIdentities()) {
+                builder.withProfile(profile).and();
+            }
+            return builder;
         }
-
     }
 }

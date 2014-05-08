@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,9 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +51,7 @@ public final class ProfileVersionOpenType {
 
     public static final String TYPE_NAME = "ProfileVersionType";
     public static final String ITEM_IDENTITY = "identity";
-    public static final String ITEM_ATTRIBUTES = "attributes";
+    public static final String ITEM_PROFILES = "profiles";
 
     // Hide ctor
     private ProfileVersionOpenType() {
@@ -69,9 +72,11 @@ public final class ProfileVersionOpenType {
 
     public static CompositeData getCompositeData(ProfileVersion pversion) {
         String identity = pversion.getIdentity().toString();
+        Set<String> prfset = pversion.getProfileIdentities();
+        String[] profiles = prfset.toArray(new String[prfset.size()]);
         List<Object> items = new ArrayList<Object>();
         items.add(identity);
-        items.add(AttributesOpenType.getCompositeData(pversion.getAttributes()));
+        items.add(profiles);
         Object[] itemValues = items.toArray(new Object[items.size()]);
         try {
             return new CompositeDataSupport(compositeType, getItemNames(), itemValues);
@@ -89,23 +94,21 @@ public final class ProfileVersionOpenType {
     }
 
     public static String[] getItemNames() {
-        return new String[] { ITEM_IDENTITY, ITEM_ATTRIBUTES };
+        return new String[] { ITEM_IDENTITY, ITEM_PROFILES };
     }
 
     public static OpenType<?>[] getItemTypes() throws OpenDataException {
-        ArrayType<CompositeType> attsType = AttributesOpenType.getArrayType();
-        return new OpenType<?>[] { SimpleType.STRING, attsType };
+        return new OpenType<?>[] { SimpleType.STRING, new ArrayType<>(SimpleType.STRING, false) };
     }
 
     static class CompositeDataProfileVersion extends AttributeSupport implements ProfileVersion {
 
         private final Version identity;
+        private final Set<String> profiles;
 
         private CompositeDataProfileVersion(CompositeData cdata, ClassLoader classLoader) {
             identity = Version.parseVersion((String) cdata.get(ProfileVersionOpenType.ITEM_IDENTITY));
-            for (CompositeData attData : (CompositeData[]) cdata.get(ProfileVersionOpenType.ITEM_ATTRIBUTES)) {
-                AttributesOpenType.addAttribute(this, attData, classLoader);
-            }
+            profiles = new HashSet<>(Arrays.asList((String[])cdata.get(ProfileVersionOpenType.ITEM_PROFILES)));
         }
 
         @Override
@@ -115,12 +118,12 @@ public final class ProfileVersionOpenType {
 
         @Override
         public Set<String> getProfileIdentities() {
-            throw new UnsupportedOperationException();
+            return Collections.unmodifiableSet(profiles);
         }
 
         @Override
         public String toString() {
-            return "ProfileVersion[" + identity + "]";
+            return "ProfileVersion[" + identity + "," + profiles + "]";
         }
     }
 }

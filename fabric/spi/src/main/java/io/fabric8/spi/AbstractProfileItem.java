@@ -23,7 +23,7 @@ import io.fabric8.api.ProfileItem;
 
 import org.jboss.gravia.utils.NotNullException;
 
-public abstract class AbstractProfileItem extends AttributeSupport implements ProfileItem {
+public abstract class AbstractProfileItem implements ProfileItem {
 
     private final String identity;
 

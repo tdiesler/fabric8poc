@@ -19,7 +19,7 @@
  */
 package io.fabric8.test.smoke;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -78,7 +78,7 @@ public final class PrePostConditions {
         Set<ProfileItem> profileItems = defaultProfile.getProfileItems(null);
         Assert.assertEquals("One profile item", 1, profileItems.size());
         ProfileItem profileItem = profileItems.iterator().next();
-        ConfigurationProfileItem configItem = (ConfigurationProfileItem) profileItem;
+        ConfigurationItem configItem = (ConfigurationItem) profileItem;
         Map<String, Object> config = configItem.getConfiguration();
         Assert.assertEquals("One config entry", 1, config.size());
         Assert.assertEquals("default", config.get("config.token"));

@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.spi.utils.IllegalStateAssertion;
@@ -40,16 +39,15 @@ import org.jboss.gravia.resource.Version;
  *
  * @Immutable
  */
-public final class ImmutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
+public final class ImmutableProfileVersion implements LinkedProfileVersion {
 
     private final Version identity;
     private final Set<String> profileIdentities = new HashSet<String>();
     private Map<String, Profile> linkedProfiles;
 
-    public ImmutableProfileVersion(Version identity, Map<AttributeKey<?>, Object> attributes, Set<String> profileIds, Map<String, Profile> linkedProfiles) {
-        super(attributes);
-        this.identity = identity;
-        this.profileIdentities.addAll(profileIds);
+    public ImmutableProfileVersion(Version version, Set<String> profileIdentities, Map<String, Profile> linkedProfiles) {
+        this.identity = version;
+        this.profileIdentities.addAll(profileIdentities);
         if (linkedProfiles != null) {
             this.linkedProfiles = new HashMap<>();
             this.linkedProfiles.putAll(linkedProfiles);

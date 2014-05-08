@@ -19,8 +19,8 @@
  */
 package io.fabric8.test.smoke.embedded;
 
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-import io.fabric8.api.Constants;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
@@ -101,14 +101,16 @@ public class ComplexContainerTest {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
 
         // Verify that the parent has the default profile assigned
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
-        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
 
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
-        ProfileVersionBuilder pvbuilder = ProfileVersionBuilder.Factory.createFrom(version20);
-        ProfileVersion profVersion20 = pvbuilder.build();
+        ProfileVersion profVersion20 = ProfileVersionBuilder.Factory.create(version20)
+                .withProfile("dummy")
+                .and()
+                .build();
 
         // Verify that the version cannot be set
         // because it is not registered with the {@link ProfileManager}
@@ -132,7 +134,7 @@ public class ComplexContainerTest {
         }
 
         // Build a new profile and associated it with 2.0
-        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(Constants.DEFAULT_PROFILE_IDENTITY);
+        ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY);
         Profile default20 = profileBuilder.build();
         prfManager.addProfile(version20, default20);
 
@@ -152,7 +154,7 @@ public class ComplexContainerTest {
         cntParent = cntManager.setProfileVersion(idParent, version20, listener);
         Assert.assertTrue("ProvisionEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Create profile foo
@@ -171,7 +173,7 @@ public class ComplexContainerTest {
 
         // Add profile foo to 2.0
         prfManager.addProfile(version20, fooProfile);
-        Assert.assertEquals(2, prfManager.getProfileIdentities(version20).size());
+        Assert.assertEquals(3, prfManager.getProfileIdentities(version20).size());
 
         // Verify that the profile cannot be added again
         try {
@@ -197,7 +199,7 @@ public class ComplexContainerTest {
         cntParent = cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
         Assert.assertTrue("ProvisionEvent received", latchB.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertTrue(cntParent.getProfileIdentities().contains(fooProfile.getIdentity()));
         Assert.assertEquals(2, cntParent.getProfileIdentities().size());
 
@@ -217,9 +219,9 @@ public class ComplexContainerTest {
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
 
         // Verify that the child has the default profile assigned
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntChild.getProfileVersion());
         Assert.assertEquals(1, cntChild.getProfileIdentities().size());
-        Assert.assertTrue(cntChild.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntChild.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
 
         // Verify that the profile cannot be removed
         // because it is still used by a container
@@ -254,12 +256,12 @@ public class ComplexContainerTest {
         cntParent = cntManager.removeProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
         Assert.assertTrue("ProvisionEvent received", latchC.await(100, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Remove profile foo from 2.0
         prfManager.removeProfile(version20, fooProfile.getIdentity());
-        Assert.assertEquals(1, prfManager.getProfileIdentities(version20).size());
+        Assert.assertEquals(2, prfManager.getProfileIdentities(version20).size());
 
         // Verify that the profile version cannot be removed
         // because it is still used by a container
@@ -288,10 +290,10 @@ public class ComplexContainerTest {
         };
 
         // Set the default profile version
-        cntParent = cntManager.setProfileVersion(idParent, Constants.DEFAULT_PROFILE_VERSION, listener);
+        cntParent = cntManager.setProfileVersion(idParent, DEFAULT_PROFILE_VERSION, listener);
         Assert.assertTrue("ProvisionEvent received", latchD.await(100, TimeUnit.MILLISECONDS));
-        Assert.assertEquals(Constants.DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
-        Assert.assertTrue(cntParent.getProfileIdentities().contains(Constants.DEFAULT_PROFILE_IDENTITY));
+        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
+        Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
 
         // Remove profile version 2.0

@@ -29,7 +29,7 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ConfigurationProfileItem extends ProfileItem {
+public interface ConfigurationItem extends ProfileItem {
 
     Map<String, Object> getConfiguration();
 }

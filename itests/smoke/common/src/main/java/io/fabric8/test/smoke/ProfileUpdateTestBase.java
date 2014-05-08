@@ -23,7 +23,7 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.ComponentEvent;
 import io.fabric8.api.ComponentEventListener;
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerManager;
@@ -81,7 +81,7 @@ public abstract class ProfileUpdateTestBase  {
         final String identity = "foo";
 
         // Build a profile version
-        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.createFrom(version12)
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
                 .withProfile(DEFAULT_PROFILE_IDENTITY)
                 .and()
                 .withProfile(identity)
@@ -99,7 +99,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertNotNull("Profile added", profile);
         Assert.assertEquals(identity, profile.getIdentity());
         Assert.assertEquals(1, profile.getProfileItems(null).size());
-        ConfigurationProfileItem profileItem = profile.getProfileItem("some.pid", ConfigurationProfileItem.class);
+        ConfigurationItem profileItem = profile.getProfileItem("some.pid", ConfigurationItem.class);
         Assert.assertEquals("yyy", profileItem.getConfiguration().get("xxx"));
 
         Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identity)
@@ -109,7 +109,7 @@ public abstract class ProfileUpdateTestBase  {
         // Verify update profile
         Assert.assertEquals(identity, updateProfile.getIdentity());
         Assert.assertEquals(1, updateProfile.getProfileItems(null).size());
-        profileItem = updateProfile.getProfileItem("some.pid", ConfigurationProfileItem.class);
+        profileItem = updateProfile.getProfileItem("some.pid", ConfigurationItem.class);
         Assert.assertEquals("zzz", profileItem.getConfiguration().get("xxx"));
 
         // Setup the profile listener
@@ -145,9 +145,9 @@ public abstract class ProfileUpdateTestBase  {
         sregB.unregister();
 
         // Verify profile
-        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
+        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationProfileItem citem = items.iterator().next();
+        ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
         Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
 
@@ -226,9 +226,9 @@ public abstract class ProfileUpdateTestBase  {
         sregC.unregister();
 
         // Verify profile
-        Set<ConfigurationProfileItem> items = profile.getProfileItems(ConfigurationProfileItem.class);
+        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
-        ConfigurationProfileItem citem = items.iterator().next();
+        ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());
         Assert.assertEquals("bar", citem.getConfiguration().get("config.token"));
 

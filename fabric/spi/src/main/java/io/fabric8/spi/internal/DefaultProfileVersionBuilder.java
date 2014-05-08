@@ -23,8 +23,6 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.spi.AbstractAttributableBuilder;
-import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ImmutableProfileVersion;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
@@ -35,7 +33,7 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<ProfileVersionBuilder> implements ProfileVersionBuilder {
+final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
 
     private final MutableProfileVersion mutableVersion;
 
@@ -61,7 +59,14 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     @Override
     public NestedProfileBuilder withProfile(String identity) {
         Profile linkedProfile = mutableVersion.getLinkedProfile(identity);
-        DefaultProfileBuilder profileBuilder = linkedProfile != null ? new DefaultProfileBuilder(linkedProfile) : new DefaultProfileBuilder(identity);
+        DefaultProfileBuilder profileBuilder;
+        if (linkedProfile != null) {
+            profileBuilder = new DefaultProfileBuilder(linkedProfile);
+        } else {
+            Version version = mutableVersion.getIdentity();
+            profileBuilder = new DefaultProfileBuilder(identity);
+            profileBuilder.profileVersion(version);
+        }
         return new DefaultNestedProfileBuilder(this, profileBuilder);
     }
 
@@ -83,22 +88,26 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
     }
 
     private void validate() {
-        IllegalStateAssertion.assertNotNull(mutableVersion.getIdentity(), "Identity cannot be null");
+        Version version = mutableVersion.getIdentity();
+        IllegalStateAssertion.assertNotNull(version, "Identity cannot be null");
         Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
+        IllegalStateAssertion.assertFalse(linkedProfiles.isEmpty(), "Profile version must have at least one profile");
         for (String profileid : linkedProfiles.keySet()) {
-            validateLinkedProfile(profileid, linkedProfiles);
+            validateLinkedProfile(version, profileid, linkedProfiles);
         }
     }
 
-    private void validateLinkedProfile(String profileid, Map<String, Profile> linkedProfiles) {
+    private void validateLinkedProfile(Version version, String profileid, Map<String, Profile> linkedProfiles) {
         Profile profile = linkedProfiles.get(profileid);
         IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
+        IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
+        IllegalStateAssertion.assertEquals(version, profile.getVersion(), "Profile not linked to version: " + version);
         for (String parentid : profile.getParents()) {
-            validateLinkedProfile(parentid, linkedProfiles);
+            validateLinkedProfile(version, parentid, linkedProfiles);
         }
     }
 
-    private static class MutableProfileVersion extends AttributeSupport implements LinkedProfileVersion {
+    private static class MutableProfileVersion implements LinkedProfileVersion {
 
         private final Map<String, Profile> linkedProfiles = new HashMap<>();
         private Version identity;
@@ -108,12 +117,11 @@ final class DefaultProfileVersionBuilder extends AbstractAttributableBuilder<Pro
         }
 
         public MutableProfileVersion(LinkedProfileVersion linkedVersion) {
-            super(linkedVersion.getAttributes());
             linkedProfiles.putAll(linkedVersion.getLinkedProfiles());
         }
 
         private LinkedProfileVersion immutableProfileVersion() {
-            return new ImmutableProfileVersion(identity, getAttributes(), linkedProfiles.keySet(), linkedProfiles);
+            return new ImmutableProfileVersion(identity, linkedProfiles.keySet(), linkedProfiles);
         }
 
         @Override

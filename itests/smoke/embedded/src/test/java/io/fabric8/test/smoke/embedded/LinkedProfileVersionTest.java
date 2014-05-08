@@ -19,7 +19,7 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
@@ -84,7 +84,7 @@ public class LinkedProfileVersionTest {
     @Test
     public void testLinkedProfileVersion() {
 
-        LinkedProfileVersion linkedVersion = ProfileVersionBuilder.Factory.createFrom(version)
+        LinkedProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
                 .withProfile(identityA)
                 .addConfigurationItem("confItem", configA)
                 .addConfigurationItem("confItemA", configA)
@@ -127,16 +127,16 @@ public class LinkedProfileVersionTest {
         Assert.assertTrue("No attributes", profileA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", profileA.getParents().isEmpty());
         Assert.assertEquals(2, profileA.getProfileItems(null).size());
-        Assert.assertEquals(configA, profileA.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configA, profileA.getProfileItem("confItemA", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configA, profileA.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configA, profileA.getProfileItem("confItemA", ConfigurationItem.class).getConfiguration());
 
         Profile profileB = linkedVersion.getLinkedProfile(identityB);
         Assert.assertTrue("No attributes", profileB.getAttributes().isEmpty());
         Assert.assertEquals(1, profileB.getParents().size());
         Assert.assertTrue(profileB.getParents().contains(identityA));
         Assert.assertEquals(2, profileB.getProfileItems(null).size());
-        Assert.assertEquals(configB, profileB.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configB, profileB.getProfileItem("confItemB", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configB, profileB.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configB, profileB.getProfileItem("confItemB", ConfigurationItem.class).getConfiguration());
 
         Profile profileC = linkedVersion.getLinkedProfile(identityC);
         Assert.assertTrue("No attributes", profileC.getAttributes().isEmpty());
@@ -144,8 +144,8 @@ public class LinkedProfileVersionTest {
         Assert.assertTrue(profileC.getParents().contains(identityA));
         Assert.assertTrue(profileC.getParents().contains(identityB));
         Assert.assertEquals(2, profileC.getProfileItems(null).size());
-        Assert.assertEquals(configC, profileC.getProfileItem("confItem", ConfigurationProfileItem.class).getConfiguration());
-        Assert.assertEquals(configC, profileC.getProfileItem("confItemC", ConfigurationProfileItem.class).getConfiguration());
+        Assert.assertEquals(configC, profileC.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configC, profileC.getProfileItem("confItemC", ConfigurationItem.class).getConfiguration());
 
         prfManager.removeProfileVersion(version);
     }

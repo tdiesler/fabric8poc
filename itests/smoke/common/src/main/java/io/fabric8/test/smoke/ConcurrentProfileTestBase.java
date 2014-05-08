@@ -20,7 +20,7 @@
 package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
-import io.fabric8.api.ConfigurationProfileItem;
+import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
@@ -94,7 +94,7 @@ public abstract class ConcurrentProfileTestBase {
         // Build a profile version with two profiles
         // A <= B
 
-        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.createFrom(version)
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
                 .withProfile(DEFAULT_PROFILE_IDENTITY)
                 .and()
                 .withProfile("prfA")
@@ -111,9 +111,9 @@ public abstract class ConcurrentProfileTestBase {
         prfManager.addProfileVersion(profileVersion);
 
         Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
-        Set<ConfigurationProfileItem> items = effectiveB.getProfileItems(ConfigurationProfileItem.class);
+        Set<ConfigurationItem> items = effectiveB.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals(1, items.size());
-        ConfigurationProfileItem item = effectiveB.getProfileItem(PID, ConfigurationProfileItem.class);
+        ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
         Map<String, Object> config = item.getConfiguration();
         Assert.assertEquals(2, config.size());
         Assert.assertEquals(0, config.get("keyA"));
@@ -172,7 +172,7 @@ public abstract class ConcurrentProfileTestBase {
 
                     // Verify that the effective profile is consistent
                     Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
-                    ConfigurationProfileItem item = effectiveB.getProfileItem(PID, ConfigurationProfileItem.class);
+                    ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
                     Map<String, Object> config = item.getConfiguration();
 
                     Integer valA = (Integer) config.get("keyA");
@@ -218,14 +218,14 @@ public abstract class ConcurrentProfileTestBase {
                     LinkedProfile linkedA = linkedB.getLinkedParent("prfA");
 
                     ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(linkedA);
-                    ConfigurationProfileItem prfItem = linkedA.getProfileItem(PID, ConfigurationProfileItem.class);
+                    ConfigurationItem prfItem = linkedA.getProfileItem(PID, ConfigurationItem.class);
                     Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyA", new Integer(i + 1));
 
                     Profile prfA = prfBuilder.addConfigurationItem(PID, config).build();
 
                     prfBuilder = ProfileBuilder.Factory.createFrom(linkedB);
-                    prfItem = linkedB.getProfileItem(PID, ConfigurationProfileItem.class);
+                    prfItem = linkedB.getProfileItem(PID, ConfigurationItem.class);
                     config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyB", new Integer(i + 1));
 
