@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,14 +23,21 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
+import java.util.Map;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.provision.ResourceInstaller;
+import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
+import org.jboss.gravia.provision.spi.RuntimeEnvironment;
 import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
+import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.Module;
+import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.ModuleException;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -51,21 +58,31 @@ import org.jboss.gravia.runtime.spi.RuntimeFactory;
 public class EmbeddedUtils {
 
     public static Runtime getEmbeddedRuntime() {
-        Runtime runtime = RuntimeLocator.getRuntime();
-        if (runtime == null) {
-            RuntimeFactory factory = new RuntimeFactory() {
-                @Override
-                public Runtime createRuntime(PropertiesProvider propertiesProvider) {
-                    return new EmbeddedRuntime(propertiesProvider, null) {
-                        @Override
-                        protected ModuleEntriesProvider getDefaultEntriesProvider(Module module, Attachable context) {
-                            return new ClassLoaderEntriesProvider(module);
-                        }
-                    };
-                }
-            };
-            runtime = RuntimeLocator.createRuntime(factory, new DefaultPropertiesProvider());
-            runtime.init();
+        Runtime runtime;
+        synchronized (RuntimeLocator.class) {
+            runtime = RuntimeLocator.getRuntime();
+            if (runtime == null) {
+                RuntimeFactory factory = new RuntimeFactory() {
+                    @Override
+                    public Runtime createRuntime(PropertiesProvider propertiesProvider) {
+                        return new EmbeddedRuntime(propertiesProvider, null) {
+                            @Override
+                            protected ModuleEntriesProvider getDefaultEntriesProvider(Module module, Attachable context) {
+                                return new ClassLoaderEntriesProvider(module);
+                            }
+                        };
+                    }
+                };
+
+                runtime = RuntimeLocator.createRuntime(factory, new DefaultPropertiesProvider());
+                runtime.init();
+
+                ModuleContext syscontext = runtime.getModuleContext();
+                RuntimeEnvironment environment = new RuntimeEnvironment(runtime);
+                EmbeddedResourceInstaller resourceInstaller = new EmbeddedResourceInstaller(environment);
+                syscontext.registerService(RuntimeEnvironment.class, environment, null);
+                syscontext.registerService(ResourceInstaller.class, resourceInstaller, null);
+            }
         }
         return runtime;
     }
@@ -117,5 +134,51 @@ public class EmbeddedUtils {
 
     private static File getModuleFile(String modname) {
         return new File("target/modules/" + modname + ".jar").getAbsoluteFile();
+    }
+
+    static final class EmbeddedResourceInstaller extends AbstractResourceInstaller {
+
+        private final RuntimeEnvironment environment;
+
+        EmbeddedResourceInstaller(RuntimeEnvironment environment) {
+            this.environment = environment;
+        }
+
+        @Override
+        public RuntimeEnvironment getEnvironment() {
+            return environment;
+        }
+
+        @Override
+        public ResourceHandle installSharedResource(final Resource resource, Map<Requirement, Resource> mapping) throws Exception {
+            final Runtime runtime = environment.getRuntime();
+            final Module module = runtime.installModule(EmbeddedRuntime.class.getClassLoader(), resource, null);
+
+            // Autostart the module
+            module.start();
+
+            return new ResourceHandle() {
+
+                @Override
+                public Resource getResource() {
+                    return resource;
+                }
+
+                @Override
+                public Module getModule() {
+                    return module;
+                }
+
+                @Override
+                public void uninstall() {
+                    module.uninstall();
+                }
+            };
+        }
+
+        @Override
+        public ResourceHandle installUnsharedResource(Resource resource, Map<Requirement, Resource> mapping) throws Exception {
+            return installSharedResource(resource, mapping);
+        }
     }
 }

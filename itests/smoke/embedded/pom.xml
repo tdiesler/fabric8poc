@@ -45,6 +45,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-itests-smoke-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-runtime-api</artifactId>
         </dependency>
@@ -70,12 +75,6 @@
         </dependency>
         
         <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-itests-smoke-common</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.junit</groupId>
             <artifactId>arquillian-junit-container</artifactId>
@@ -116,6 +115,21 @@
                                     <groupId>io.fabric8.poc</groupId>
                                     <artifactId>fabric8-core</artifactId>
                                     <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-provision</artifactId>
+                                    <version>${version.jboss.gravia}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-resolver</artifactId>
+                                    <version>${version.jboss.gravia}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-repository</artifactId>
+                                    <version>${version.jboss.gravia}</version>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

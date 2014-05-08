@@ -15,6 +15,7 @@
 
 package io.fabric8.api;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
@@ -30,6 +31,8 @@ public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends Att
     B removeProfileItem(String identity);
 
     B addConfigurationItem(String identity, Map<String, Object> config);
+
+    B addResourceItem(String identity, InputStream inputStream);
 
     B addParentProfile(String identity);
 

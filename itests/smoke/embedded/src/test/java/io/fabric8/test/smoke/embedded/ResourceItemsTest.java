@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,12 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.ProfileItemsTestBase;
+import io.fabric8.test.smoke.ResourceItemsTestBase;
 
+import java.io.InputStream;
+
+import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -31,7 +35,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ProfileItemsTest extends ProfileItemsTestBase {
+public class ResourceItemsTest extends ResourceItemsTestBase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -41,5 +45,15 @@ public class ProfileItemsTest extends ProfileItemsTestBase {
     @AfterClass
     public static void afterClass() throws Exception {
         EmbeddedTestSupport.afterClass();
+    }
+
+    @Override
+    protected InputStream getDeployment(String name) {
+        InputStream inputStream = null;
+        if (DEPLOYMENT_A.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getDeploymentA();
+            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+        }
+        return inputStream;
     }
 }

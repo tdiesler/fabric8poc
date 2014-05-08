@@ -23,7 +23,7 @@ import org.jboss.gravia.resource.Version;
 
 
 /**
- * A builder for a fabric profile
+ * A profile builder.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014

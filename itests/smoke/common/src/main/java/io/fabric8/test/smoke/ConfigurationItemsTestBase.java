@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.runtime.ModuleContext;
-import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.After;
@@ -58,7 +57,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public abstract class ProfileItemsTestBase {
+public abstract class ConfigurationItemsTestBase {
 
     @Before
     public void preConditions() {
@@ -72,9 +71,6 @@ public abstract class ProfileItemsTestBase {
 
     @Test
     public void testConfigurationItem() throws Exception {
-
-        Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        ModuleContext syscontext = runtime.getModuleContext();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -115,6 +111,7 @@ public abstract class ProfileItemsTestBase {
                 }
             }
         };
+        ModuleContext syscontext = RuntimeLocator.getRequiredRuntime().getModuleContext();
         ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         // Verify that the configuration does not exist

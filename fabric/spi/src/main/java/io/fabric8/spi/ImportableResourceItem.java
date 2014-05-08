@@ -17,17 +17,19 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
-import java.net.URL;
+import io.fabric8.api.ResourceItem;
+
+import java.io.InputStream;
 
 /**
- * A resource item targeted for deployment
+ * An importable resource item
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 08-May-2014
  */
-public interface ResourceItem extends ProfileItem {
+public interface ImportableResourceItem extends ResourceItem {
 
-    URL getURL();
+    InputStream getInputStream();
 }

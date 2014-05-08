@@ -22,6 +22,7 @@ import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilder.NestedProfileBuilder;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
@@ -75,6 +76,12 @@ final class DefaultNestedProfileBuilder implements NestedProfileBuilder {
     @Override
     public DefaultNestedProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
         nested.addConfigurationItem(identity, config);
+        return this;
+    }
+
+    @Override
+    public DefaultNestedProfileBuilder addResourceItem(String identity, InputStream inputStream) {
+        nested.addResourceItem(identity, inputStream);
         return this;
     }
 

@@ -25,6 +25,7 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,6 +78,12 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     @Override
     public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
         mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, config));
+        return this;
+    }
+
+    @Override
+    public ProfileBuilder addResourceItem(String identity, InputStream inputStream) {
+        mutableProfile.addProfileItem(new DefaultResourceItem(identity, inputStream));
         return this;
     }
 

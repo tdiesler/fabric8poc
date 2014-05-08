@@ -103,36 +103,13 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <overWrite>true</overWrite>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-core</artifactId>
-                                    <version>${project.version}</version>
-                                    <includes>OSGI-INF/io.fabric8.**</includes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>OSGI-INF/io.fabric8.core.internal.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.internal.BootstrapService.xml,OSGI-INF/io.fabric8.core.internal.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.internal.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.internal.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.internal.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.internal.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.internal.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.core.internal.MBeansProvider.xml,OSGI-INF/io.fabric8.core.internal.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.internal.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.internal.ProfileRegistry.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuilderService.xml,OSGI-INF/io.fabric8.spi.internal.ProfileVersionBuilderService.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml</Service-Component>
+                            <Service-Component>OSGI-INF/io.fabric8.core.internal.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.internal.BootstrapService.xml,OSGI-INF/io.fabric8.core.internal.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.internal.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.internal.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.internal.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.internal.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.internal.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.core.internal.MBeansProvider.xml,OSGI-INF/io.fabric8.core.internal.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.internal.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.internal.ProfileRegistry.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuilderService.xml,OSGI-INF/io.fabric8.spi.internal.ProfileVersionBuilderService.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/org.jboss.gravia.provision.internal.ProvisionerService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryMBeanService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryService.xml,OSGI-INF/org.jboss.gravia.resolver.internal.ResolverService.xml</Service-Component>
                         </manifestEntries>
                     </archive>
                 </configuration>

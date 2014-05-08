@@ -63,7 +63,7 @@ public final class ProfileUtils {
         // Add profile items
         for (ProfileItem item : profile.getProfileItems(null)) {
 
-            // Merge with ConfigurationProfileItem
+            // Merge with existing {@link ConfigurationItem}
             if (item instanceof ConfigurationItem) {
                 String itemId = item.getIdentity();
                 ConfigurationItem prevItem = builder.build().getProfileItem(itemId, ConfigurationItem.class);
@@ -71,10 +71,12 @@ public final class ProfileUtils {
                     Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
                     config.putAll(((ConfigurationItem) item).getConfiguration());
                     builder.addConfigurationItem(itemId, config);
-                } else {
-                    builder.addProfileItem(profile.getProfileItem(itemId, ConfigurationItem.class));
+                    continue;
                 }
             }
+
+            // Add unmodified
+            builder.addProfileItem(item);
         }
     }
 }

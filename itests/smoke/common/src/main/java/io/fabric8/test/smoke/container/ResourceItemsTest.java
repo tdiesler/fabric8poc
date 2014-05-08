@@ -22,13 +22,15 @@ package io.fabric8.test.smoke.container;
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.smoke.PrePostConditions;
-import io.fabric8.test.smoke.ProfileItemsTestBase;
+import io.fabric8.test.smoke.ResourceItemsTestBase;
 
 import java.io.InputStream;
 
+import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.osgi.StartLevelAware;
+import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -39,23 +41,25 @@ import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.junit.runner.RunWith;
-import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Test profile items functionality.
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 08-May-2014
  */
 @RunWith(Arquillian.class)
-public class ProfileItemsTest extends ProfileItemsTestBase {
+public class ResourceItemsTest extends ResourceItemsTestBase {
+
+    @ArquillianResource
+    Deployer deployer;
 
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
-        final ArchiveBuilder archive = new ArchiveBuilder("profile-items-test");
+        final ArchiveBuilder archive = new ArchiveBuilder("resource-items-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ProfileItemsTestBase.class, PrePostConditions.class);
+        archive.addClasses(ResourceItemsTestBase.class, PrePostConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -66,7 +70,6 @@ public class ProfileItemsTest extends ProfileItemsTestBase {
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
                     builder.addImportPackages(BootstrapComplete.class);
-                    builder.addImportPackages(ConfigurationAdmin.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
@@ -77,5 +80,10 @@ public class ProfileItemsTest extends ProfileItemsTestBase {
             }
         });
         return archive.getArchive();
+    }
+
+    @Override
+    protected InputStream getDeployment(String name) {
+        return deployer.getDeployment(name);
     }
 }

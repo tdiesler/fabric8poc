@@ -1,15 +1,15 @@
 /*
  * #%L
- * Fabric8 :: API
+ * Fabric8 :: Testsuite :: Smoke :: Embedded
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,29 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.test.smoke.embedded;
 
-import java.net.URL;
+import io.fabric8.test.embedded.support.EmbeddedTestSupport;
+import io.fabric8.test.smoke.ConfigurationItemsTestBase;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
- * A resource item targeted for deployment
+ * Test profile items functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ResourceItem extends ProfileItem {
+public class ConfigurationItemsTest extends ConfigurationItemsTestBase {
 
-    URL getURL();
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        EmbeddedTestSupport.beforeClass();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        EmbeddedTestSupport.afterClass();
+    }
 }

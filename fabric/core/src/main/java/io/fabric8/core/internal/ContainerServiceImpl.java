@@ -20,6 +20,7 @@
 package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Container;
@@ -38,6 +39,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.ServiceLocator;
@@ -59,18 +61,25 @@ import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ProfileUtils;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -80,7 +89,14 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.provision.ProvisionException;
+import org.jboss.gravia.provision.Provisioner;
+import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.provision.ResourceInstaller;
+import org.jboss.gravia.resource.ManifestResourceBuilder;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -131,6 +147,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    @Reference(referenceInterface = Provisioner.class)
+    private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<Provisioner>();
     @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<ContainerCreateHandler>();
 
@@ -490,13 +508,37 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
-        // Do the provisioning
+        // Get the effective profile
         Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
+
+        // Apply the configuration items
         Set<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
         configurationManager.get().applyConfigurationItems(configItems);
 
+        // Install the resource items
+        Set<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
+        installResourceItems(cntState, resourceItems);
+
         event = new ProvisionEvent(container, EventType.PROVISIONED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
+    }
+
+    private void installResourceItems(ContainerState cntState, Set<ResourceItem> resourceItems) {
+        ResourceInstaller installer = provisioner.get().getResourceInstaller();
+        Map<String, ResourceHandle> handles = new HashMap<>();
+        for (ResourceItem item : resourceItems) {
+            try {
+                ResourceItemHandler handler = new ResourceItemHandler(item);
+                handles.put(item.getIdentity(), handler.installResource(installer));
+            } catch (Exception ex) {
+                for (Entry<String, ResourceHandle> entry : handles.entrySet()) {
+                    entry.getValue().uninstall();
+                    cntState.removeResourceHandle(entry.getKey());
+                }
+                throw new IllegalStateException("Cannot install resource item: " + item, ex);
+            }
+        }
+        cntState.addResourceHandles(handles);
     }
 
     private void unprovisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
@@ -508,18 +550,31 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void unprovisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
-        LOGGER.info("Unprovision profile: {} => {}", cntState, identity);
 
         Version cntVersion = cntState.getProfileVersion().getIdentity();
-        Profile profile = profileService.get().getRequiredProfile(cntVersion, identity);
+        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(cntVersion, identity);
+        LOGGER.info("Unprovision profile: {} => {}", cntState, identity);
+
         Container container = cntState.immutableContainer();
-        ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, profile);
+        ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
-        // do the removing
+        // Get the effective profile
+        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
 
-        event = new ProvisionEvent(container, EventType.REMOVED, profile);
+        // Uninstall the resource items
+        Set<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
+        uninstallResourceItems(cntState, resourceItems);
+
+        event = new ProvisionEvent(container, EventType.REMOVED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
+    }
+
+    private void uninstallResourceItems(ContainerState cntState, Set<ResourceItem> resourceItems) {
+        for (ResourceItem item : resourceItems) {
+            ResourceHandle handle = cntState.removeResourceHandle(item.getIdentity());
+            handle.uninstall();
+        }
     }
 
     @Override
@@ -607,14 +662,22 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         profileService.unbind(service);
     }
 
+    void bindProvisioner(Provisioner service) {
+        provisioner.bind(service);
+    }
+    void unbindProvisioner(Provisioner service) {
+        provisioner.unbind(service);
+    }
+
     static final class ContainerState {
 
         private final ContainerState parentState;
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
         private final Set<String> profiles = new HashSet<>();
-        private final List<ContainerHandle> handles = new ArrayList<>();
+        private final List<ContainerHandle> containerHandles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
+        private final Map<String, ResourceHandle> resourceHandles = new HashMap<>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
@@ -626,7 +689,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.parentState = parentState;
             this.identity = identity;
             this.state = State.CREATED;
-            this.handles.addAll(handles);
+            this.containerHandles.addAll(handles);
             this.attributes = new AttributeSupport(options.getAttributes());
             if (parentState != null) {
                 parentState.addChild(this);
@@ -772,7 +835,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         Map<ServiceEndpointIdentity<?>, ServiceEndpoint> getServiceEndpoints() {
             Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
-            for (ContainerHandle handle : handles) {
+            for (ContainerHandle handle : containerHandles) {
                 for (ServiceEndpoint ep : handle.getServiceEndpoints()) {
                     endpoints.put(ep.getIdentity(), ep);
                 }
@@ -795,8 +858,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
+        void addResourceHandles(Map<String, ResourceHandle> handles) {
+            resourceHandles.putAll(handles);
+        }
+
+        void addResourceHandle(String itemId, ResourceHandle handle) {
+            resourceHandles.put(itemId, handle);
+        }
+
+        ResourceHandle removeResourceHandle(String itemId) {
+            return resourceHandles.remove(itemId);
+        }
+
         private List<ContainerHandle> getContainerHandles() {
-            return Collections.unmodifiableList(handles);
+            return Collections.unmodifiableList(containerHandles);
         }
 
         // NOTE - Methods that mutate this objects should be private
@@ -896,6 +971,74 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         public String toString() {
             Version profileVersion = versionState != null ? versionState.getIdentity() : null;
             return "Container[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
+        }
+    }
+
+    static class ResourceItemHandler {
+
+        private final ResourceItem item;
+        private Path tempPath;
+
+        ResourceItemHandler(ResourceItem item) {
+            this.item = item;
+        }
+
+        ResourceItem getItem() {
+            return item;
+        }
+
+        ResourceHandle installResource(ResourceInstaller installer) throws ProvisionException {
+            LOGGER.info("Install resource item: {}", item);
+
+            // Copy the {@link ResourceItem} to temp storage & get the {@link Manifest}
+            URL contentURL;
+            Manifest manifest;
+            try {
+                tempPath = Files.createTempFile(item.getIdentity(), null);
+                Files.copy(item.getURL().openStream(), tempPath, REPLACE_EXISTING);
+                contentURL = tempPath.toUri().toURL();
+
+                JarFile jarFile = new JarFile(tempPath.toFile());
+                try {
+                    manifest = jarFile.getManifest();
+                } finally {
+                    jarFile.close();
+                }
+            } catch (IOException ex) {
+                throw new ProvisionException(ex);
+            }
+            IllegalStateAssertion.assertNotNull(manifest, "Cannot obtain manifest from: " + item.getURL());
+
+            // Build the {@link Resource}
+            ManifestResourceBuilder builder = new ManifestResourceBuilder().load(manifest);
+            builder.addContentCapability(contentURL);
+            Resource resource = builder.getResource();
+
+            // Install the {@link Resource}
+            final ResourceHandle handle = installer.installResource(resource, null);
+
+            return new ResourceHandle() {
+                @Override
+                public Resource getResource() {
+                    return handle.getResource();
+                }
+
+                @Override
+                public Module getModule() {
+                    return handle.getModule();
+                }
+
+                @Override
+                public void uninstall() {
+                    LOGGER.info("Uninstall resource item: {}", item);
+                    handle.uninstall();
+                    try {
+                        Files.delete(tempPath);
+                    } catch (IOException ex) {
+                        LOGGER.warn("Cannot delete temp file: {}", tempPath);
+                    }
+                }
+            };
         }
     }
 }

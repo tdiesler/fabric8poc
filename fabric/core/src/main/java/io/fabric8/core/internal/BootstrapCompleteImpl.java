@@ -24,12 +24,14 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.scr.AbstractComponent;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.provision.Provisioner;
 
 /**
  * Implementation of the the {@link BootstrapComplete} marker service
@@ -51,6 +53,8 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     private MBeansProvider mBeansProvider;
     @Reference
     private ProfileManager profileManager;
+    @Reference
+    private Provisioner provisioner;
 
     @Activate
     void activate() throws Exception {

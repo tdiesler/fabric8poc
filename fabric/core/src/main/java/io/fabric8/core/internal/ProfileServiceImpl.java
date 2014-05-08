@@ -265,10 +265,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     private ProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
-        LOGGER.info("Add profile version: {}", profileVersion.getIdentity());
-        LockHandle writeLock = aquireWriteLock(profileVersion.getIdentity());
+        Version version = profileVersion.getIdentity();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
-            return profileRegistry.get().addProfileVersion(profileVersion);
+            ProfileRegistry registry = profileRegistry.get();
+            IllegalStateAssertion.assertNull(registry.getProfileVersion(version), "ProfileVersion already exists: " + profileVersion);
+            IllegalStateAssertion.assertFalse(profileVersion.getProfileIdentities().isEmpty(), "ProfileVersion must contain at least one profile: " + profileVersion);
+            LOGGER.info("Add profile version: {}", version);
+            return registry.addProfileVersion(profileVersion);
         } finally {
             writeLock.unlock();
         }
@@ -390,8 +394,10 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle writeLock = aquireWriteLock(version);
         try {
             getRequiredProfileVersion(version);
+            Version pversion = profile.getVersion();
+            IllegalStateAssertion.assertTrue(pversion == null || version.equals(pversion), "Unexpected profile version: " + profile);
+            IllegalStateAssertion.assertNull(getProfile(version, profile.getIdentity()), "Profile already exists: " + profile);
             LOGGER.info("Add profile to version: {} <= {}", version, profile);
-            profile = new ImmutableProfile(version, profile.getIdentity(), profile.getAttributes(), profile.getParents(), profile.getProfileItems(null), null);
             return profileRegistry.get().addProfile(version, profile);
         } finally {
             writeLock.unlock();
