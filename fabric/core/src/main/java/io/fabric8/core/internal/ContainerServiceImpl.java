@@ -72,18 +72,20 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.utils.NotNullException;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,16 +114,26 @@ import org.slf4j.LoggerFactory;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(service = { ContainerService.class }, configurationPid = Container.CONTAINER_SERVICE_PID, configurationPolicy = ConfigurationPolicy.REQUIRE, immediate = true)
+@Component(configurationPid = Container.CONTAINER_SERVICE_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
+@Service(ContainerService.class)
+@References({
+        @Reference(referenceInterface = EventDispatcher.class),
+        @Reference(referenceInterface = PermitManager.class)})
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
-    private final ValidatingReference<ClusterDataStore> clusterData = new ValidatingReference<ClusterDataStore>();
-    private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
+    @Reference(referenceInterface = ClusterDataStore.class)
+    private final ValidatingReference<ClusterDataStore> clusterDataStore = new ValidatingReference<ClusterDataStore>();
+    @Reference(referenceInterface = ConfigurationManager.class)
+    private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<ConfigurationManager>();
+    @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
+    @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<ContainerCreateHandler>();
+
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
     @Activate
@@ -242,7 +254,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
         ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
-        ContainerIdentity identity = clusterData.get().createContainerIdentity(parentId, options.getIdentityPrefix());
+        ContainerIdentity identity = clusterDataStore.get().createContainerIdentity(parentId, options.getIdentityPrefix());
         ContainerState cntState = new ContainerState(parentState, identity, options, handles);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
@@ -481,7 +493,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Do the provisioning
         Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
         Set<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
-        configManager.get().applyConfigurationItems(configItems);
+        configurationManager.get().applyConfigurationItems(configItems);
 
         event = new ProvisionEvent(container, EventType.PROVISIONED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
@@ -555,35 +567,32 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         return containerRegistry.get().getRequiredContainer(identity);
     }
 
-    @Reference
+
     void bindConfigurationManager(ConfigurationManager service) {
-        this.configManager.bind(service);
+        this.configurationManager.bind(service);
     }
     void unbindConfigurationManager(ConfigurationManager service) {
-        this.configManager.unbind(service);
+        this.configurationManager.unbind(service);
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE)
-    void bindContainerLifecycleHandler(ContainerCreateHandler service) {
+    void bindCreateHandlers(ContainerCreateHandler service) {
         synchronized (createHandlers) {
             createHandlers.add(service);
         }
     }
-    void unbindContainerLifecycleHandler(ContainerCreateHandler service) {
+    void unbindCreateHandlers(ContainerCreateHandler service) {
         synchronized (createHandlers) {
             createHandlers.remove(service);
         }
     }
 
-    @Reference
     void bindClusterDataStore(ClusterDataStore service) {
-        clusterData.bind(service);
+        clusterDataStore.bind(service);
     }
     void unbindClusterDataStore(ClusterDataStore service) {
-        clusterData.unbind(service);
+        clusterDataStore.unbind(service);
     }
 
-    @Reference
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
@@ -591,23 +600,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         containerRegistry.unbind(service);
     }
 
-    @Reference
-    void bindEventDispatcher(EventDispatcher service) {
-        eventDispatcher.bind(service);
-    }
-    void unbindEventDispatcher(EventDispatcher service) {
-        eventDispatcher.unbind(service);
-    }
-
-    @Reference
-    void bindPermitManager(PermitManager service) {
-        permitManager.bind(service);
-    }
-    void unbindPermitManager(PermitManager service) {
-        permitManager.unbind(service);
-    }
-
-    @Reference
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }

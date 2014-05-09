@@ -23,11 +23,13 @@ import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.concurrent.TimeUnit;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 
-@Component(service = { PermitManager.class }, immediate = true)
+@Component(immediate = true)
+@Service(PermitManager.class)
 public final class PermitManagerImpl extends AbstractComponent implements PermitManager {
 
     private final PermitManager delegate = new DefaultPermitManager();

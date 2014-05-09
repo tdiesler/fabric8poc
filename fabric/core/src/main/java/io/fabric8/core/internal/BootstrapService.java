@@ -28,11 +28,12 @@ import io.fabric8.spi.scr.ValidatingReference;
 import java.io.IOException;
 import java.util.Set;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
 /**
  * Initial bootstrap of the system
@@ -40,10 +41,13 @@ import org.osgi.service.component.annotations.Reference;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(service = { BootstrapService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(BootstrapService.class)
 public final class BootstrapService extends AbstractComponent {
 
-    private final ValidatingReference<ConfigurationManager> configManager = new ValidatingReference<ConfigurationManager>();
+    @Reference(referenceInterface = ConfigurationManager.class)
+    private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<ConfigurationManager>();
+    @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
     @Activate
@@ -62,19 +66,17 @@ public final class BootstrapService extends AbstractComponent {
         // Apply default {@link ConfigurationProfileItem}s
         Profile profile = profileService.get().getDefaultProfile();
         Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
-        configManager.get().applyConfigurationItems(items);
+        configurationManager.get().applyConfigurationItems(items);
     }
 
-    @Reference
     void bindConfigurationManager(ConfigurationManager service) {
-        this.configManager.bind(service);
+        this.configurationManager.bind(service);
     }
 
     void unbindConfigurationManager(ConfigurationManager service) {
-        this.configManager.unbind(service);
+        this.configurationManager.unbind(service);
     }
 
-    @Reference
     void bindProfileService(ProfileService service) {
         this.profileService.bind(service);
     }

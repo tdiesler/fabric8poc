@@ -21,6 +21,7 @@ package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
+
 import io.fabric8.api.Container;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
@@ -52,13 +53,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,15 +92,21 @@ import org.slf4j.LoggerFactory;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(service = { ProfileService.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ProfileService.class)
+@References({
+        @Reference(referenceInterface = EventDispatcher.class),
+        @Reference(referenceInterface = PermitManager.class)})
 public final class ProfileServiceImpl extends AbstractProtectedComponent<ProfileService> implements ProfileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
-    private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
-    private final ValidatingReference<ProfileRegistry> profileRegistry = new ValidatingReference<ProfileRegistry>();
+    @Reference(referenceInterface = ContainerRegistry.class)
+    private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
+    @Reference(referenceInterface = ProfileRegistry.class)
+    private final ValidatingReference<ProfileRegistry> profileRegistry = new ValidatingReference<>();
 
-    private final Map<Version, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<Version, ReentrantReadWriteLock>();
+    private final Map<Version, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<>();
 
     @Activate
     void activate() {
@@ -459,34 +468,18 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         return new ProfileVersionState(getRequiredProfileVersion(version));
     }
 
-    @Reference
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
+
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
 
-    @Reference
-    void bindEventDispatcher(EventDispatcher service) {
-        eventDispatcher.bind(service);
-    }
-    void unbindEventDispatcher(EventDispatcher service) {
-        eventDispatcher.unbind(service);
-    }
-
-    @Reference
-    void bindPermitManager(PermitManager stateService) {
-        this.permitManager.bind(stateService);
-    }
-    void unbindPermitManager(PermitManager stateService) {
-        this.permitManager.unbind(stateService);
-    }
-
-    @Reference
     void bindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.bind(service);
     }
+
     void unbindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.unbind(service);
     }

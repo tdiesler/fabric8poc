@@ -25,11 +25,12 @@ import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.utils.NotNullException;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * A host wide data store
@@ -37,7 +38,8 @@ import org.osgi.service.component.annotations.Deactivate;
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-@Component(service = { HostDataStore.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(HostDataStore.class)
 public final class HostDataStoreImpl extends AbstractComponent implements HostDataStore {
 
     // [TODO] Real host wide identities

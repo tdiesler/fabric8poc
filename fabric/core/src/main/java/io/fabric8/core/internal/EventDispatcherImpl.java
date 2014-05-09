@@ -39,15 +39,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.runtime.ServiceTracker;
 import org.jboss.gravia.utils.NotNullException;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,8 @@ import org.slf4j.LoggerFactory;
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(service = { EventDispatcher.class }, immediate = true)
+@Component(immediate = true)
+@Service(EventDispatcher.class)
 public final class EventDispatcherImpl extends AbstractComponent implements EventDispatcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcherImpl.class);
