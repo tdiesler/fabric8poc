@@ -24,7 +24,6 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.scr.AbstractComponent;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
