@@ -130,7 +130,7 @@ public final class ProfileRegistry extends AbstractComponent {
         for (ProfileItem item : profile.getProfileItems(null)) {
             if (item instanceof ImportableResourceItem) {
                 URL resourceURL = addImportableResourceItem(profile, (ImportableResourceItem) item);
-                item = new DefaultResourceItem(item.getIdentity(), resourceURL);
+                item = new DefaultResourceItem(item.getIdentity(), item.getAttributes(), resourceURL);
             }
             profileItems.add(item);
         }

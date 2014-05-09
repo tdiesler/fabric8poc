@@ -19,14 +19,18 @@
  */
 package io.fabric8.api;
 
+import java.io.InputStream;
+
+
 
 
 /**
- * A profile item
+ * A profile item builder
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileItem extends Attributable, Identifiable<String> {
+public interface ResourceItemBuilder<B extends ProfileBuilderBase<B>> extends ProfileItemBuilder<ResourceItemBuilder<B>, B> {
 
+    ResourceItemBuilder<B> imputStream(InputStream importStream);
 }

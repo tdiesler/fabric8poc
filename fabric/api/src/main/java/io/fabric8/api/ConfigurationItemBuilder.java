@@ -19,14 +19,18 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
+
 
 
 /**
- * A profile item
+ * A profile item builder
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileItem extends Attributable, Identifiable<String> {
+public interface ConfigurationItemBuilder<B extends ProfileBuilderBase<B>> extends ProfileItemBuilder<ConfigurationItemBuilder<B>, B> {
 
+    ConfigurationItemBuilder<B> configuration(Map<String, Object> configuration);
 }

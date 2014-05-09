@@ -28,5 +28,7 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileItemBuilder<B extends ProfileItemBuilder<B, T>, T extends ProfileItem> extends Builder<B, T> {
+public interface ProfileItemBuilder<I extends ProfileItemBuilder<I, B>, B extends ProfileBuilderBase<B>> extends AttributableBuilder<I> {
+
+    B and();
 }

@@ -19,10 +19,14 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileBuilderBase;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.api.ResourceItemBuilder;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.InputStream;
@@ -77,14 +81,24 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
-        mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, config));
+        mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, new HashMap<AttributeKey<?>, Object>(), config));
         return this;
     }
 
     @Override
+    public ConfigurationItemBuilder<ProfileBuilder> withConfigurationItem(String identity) {
+        return new DefaultConfigurationItemBuilder<ProfileBuilder>(this, identity);
+    }
+
+    @Override
     public ProfileBuilder addResourceItem(String identity, InputStream inputStream) {
-        mutableProfile.addProfileItem(new DefaultResourceItem(identity, inputStream));
+        mutableProfile.addProfileItem(new DefaultResourceItem(identity, new HashMap<AttributeKey<?>, Object>(), inputStream));
         return this;
+    }
+
+    @Override
+    public ResourceItemBuilder<ProfileBuilder> withResourceItem(String identity) {
+        return new DefaultResourceItemBuilder<ProfileBuilder>(this, identity);
     }
 
     @Override
@@ -107,6 +121,54 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
+    }
+
+    static class DefaultConfigurationItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ConfigurationItemBuilder<B>> implements ConfigurationItemBuilder<B> {
+
+        private final String identity;
+        private final B profileBuilder;
+        private Map<String, Object> configuration;
+
+        DefaultConfigurationItemBuilder(B profileBuilder, String identity) {
+            this.profileBuilder = profileBuilder;
+            this.identity = identity;
+        }
+
+        @Override
+        public ConfigurationItemBuilder<B> configuration(Map<String, Object> config) {
+            configuration = new HashMap<>(config);
+            return this;
+        }
+
+        @Override
+        public B and() {
+            profileBuilder.addProfileItem(new DefaultConfigurationItem(identity, getAttributes(), configuration));
+            return profileBuilder;
+        }
+    }
+
+    static class DefaultResourceItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ResourceItemBuilder<B>> implements ResourceItemBuilder<B> {
+
+        private final String identity;
+        private final B profileBuilder;
+        private InputStream importStream;
+
+        DefaultResourceItemBuilder(B profileBuilder, String identity) {
+            this.profileBuilder = profileBuilder;
+            this.identity = identity;
+        }
+
+        @Override
+        public ResourceItemBuilder<B> imputStream(InputStream importStream) {
+            this.importStream = importStream;
+            return this;
+        }
+
+        @Override
+        public B and() {
+            profileBuilder.addProfileItem(new DefaultResourceItem(identity, getAttributes(), importStream));
+            return profileBuilder;
+        }
     }
 
     private static class MutableProfile extends AttributeSupport implements Profile {

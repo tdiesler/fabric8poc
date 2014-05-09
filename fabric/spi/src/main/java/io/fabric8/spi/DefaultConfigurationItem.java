@@ -1,5 +1,6 @@
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationItem;
 
 import java.util.Collections;
@@ -13,8 +14,8 @@ public final class DefaultConfigurationItem extends AbstractProfileItem implemen
 
     private final Map<String, Object> configuration = new HashMap<String, Object>();
 
-    public DefaultConfigurationItem(String identity, Map<String, Object> configuration) {
-        super(identity);
+    public DefaultConfigurationItem(String identity, Map<AttributeKey<?>, Object> attributes, Map<String, Object> configuration) {
+        super(identity, attributes);
         this.configuration.putAll(configuration);
     }
 

@@ -32,7 +32,11 @@ public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends Att
 
     B addConfigurationItem(String identity, Map<String, Object> config);
 
+    ConfigurationItemBuilder<B> withConfigurationItem(String identity);
+
     B addResourceItem(String identity, InputStream inputStream);
+
+    ResourceItemBuilder<B> withResourceItem(String identity);
 
     B addParentProfile(String identity);
 

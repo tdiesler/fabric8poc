@@ -1,7 +1,10 @@
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
+
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 
 import org.jboss.gravia.utils.NotNullException;
 
@@ -16,15 +19,15 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Im
     private final InputStream inputStream;
     private final URL resourceURL;
 
-    public DefaultResourceItem(String identity, InputStream inputStream) {
-        super(identity);
+    public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, InputStream inputStream) {
+        super(identity, attributes);
         NotNullException.assertValue(inputStream, "inputStream");
         this.inputStream = inputStream;
         this.resourceURL = null;
     }
 
-    public DefaultResourceItem(String identity, URL resourceURL) {
-        super(identity);
+    public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, URL resourceURL) {
+        super(identity, attributes);
         NotNullException.assertValue(resourceURL, "resourceURL");
         this.resourceURL = resourceURL;
         this.inputStream = null;
