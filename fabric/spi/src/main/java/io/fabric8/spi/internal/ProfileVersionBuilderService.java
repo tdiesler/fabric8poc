@@ -22,6 +22,7 @@ package io.fabric8.spi.internal;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProfileVersionBuilderFactory;
+import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;

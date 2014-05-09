@@ -17,16 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.spi.AbstractAttributableBuilder;
-import io.fabric8.spi.AttributeSupport;
-import io.fabric8.spi.DefaultConfigurationItem;
-import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;

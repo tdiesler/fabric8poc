@@ -26,12 +26,11 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileBuilderFactory;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ProfileVersionBuilderFactory;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
+import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.ImmutableProfileVersion;
@@ -95,8 +94,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
-    private final ValidatingReference<ProfileBuilderFactory> profileBuilderFactory = new ValidatingReference<ProfileBuilderFactory>();
-    private final ValidatingReference<ProfileVersionBuilderFactory> versionBuilderFactory = new ValidatingReference<ProfileVersionBuilderFactory>();
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
     private final ValidatingReference<ProfileRegistry> profileRegistry = new ValidatingReference<ProfileRegistry>();
 
@@ -116,8 +113,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     private void activateInternal() {
 
         // Add the default profile version
-        LinkedProfileVersion profileVersion = versionBuilderFactory.get()
-                .create(DEFAULT_PROFILE_VERSION)
+        LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
                 .withProfile(DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
                 .and().build();
@@ -488,27 +484,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Reference
-    void bindProfileBuilderFactory(ProfileBuilderFactory service) {
-        this.profileBuilderFactory.bind(service);
-    }
-    void unbindProfileBuilderFactory(ProfileBuilderFactory service) {
-        this.profileBuilderFactory.unbind(service);
-    }
-
-    @Reference
     void bindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.bind(service);
     }
     void unbindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.unbind(service);
-    }
-
-    @Reference
-    void bindProfileVersionBuilderFactory(ProfileVersionBuilderFactory service) {
-        this.versionBuilderFactory.bind(service);
-    }
-    void unbindProfileVersionBuilderFactory(ProfileVersionBuilderFactory service) {
-        this.versionBuilderFactory.unbind(service);
     }
 
     final class ProfileVersionState {

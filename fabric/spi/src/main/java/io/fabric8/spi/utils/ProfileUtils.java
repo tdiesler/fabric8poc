@@ -25,7 +25,7 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.spi.internal.DefaultProfileBuilder;
+import io.fabric8.spi.DefaultProfileBuilder;
 
 import java.util.HashMap;
 import java.util.Map;

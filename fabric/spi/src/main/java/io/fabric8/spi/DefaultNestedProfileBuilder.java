@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.spi.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.OptionsProvider;

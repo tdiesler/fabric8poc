@@ -17,13 +17,12 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.spi;
 
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.spi.ImmutableProfileVersion;
 import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
@@ -33,15 +32,15 @@ import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 
-final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
+public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
 
     private final MutableProfileVersion mutableVersion;
 
-    DefaultProfileVersionBuilder(Version identity) {
+    public DefaultProfileVersionBuilder(Version identity) {
         mutableVersion = new MutableProfileVersion(identity);
     }
 
-    DefaultProfileVersionBuilder(LinkedProfileVersion linkedVersion) {
+    public DefaultProfileVersionBuilder(LinkedProfileVersion linkedVersion) {
         mutableVersion = new MutableProfileVersion(linkedVersion);
     }
 
