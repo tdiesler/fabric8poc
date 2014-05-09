@@ -27,14 +27,15 @@ import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
  * A provider service for the {@link ProfileVersionBuilderFactory}
@@ -42,9 +43,11 @@ import org.osgi.service.component.annotations.ReferencePolicy;
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(service = { ProfileVersionBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ProfileVersionBuilderFactory.class)
 public final class ProfileVersionBuilderService extends AbstractComponent implements ProfileVersionBuilderFactory {
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
     @Activate
@@ -82,7 +85,6 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
         return new DefaultProfileVersionBuilder(linkedVersion);
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }

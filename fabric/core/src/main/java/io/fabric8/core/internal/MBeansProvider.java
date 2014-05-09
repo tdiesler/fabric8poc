@@ -43,12 +43,13 @@ import javax.management.MBeanServer;
 import javax.management.StandardMBean;
 import javax.management.openmbean.CompositeData;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * A provider of system MBeans
@@ -56,11 +57,15 @@ import org.osgi.service.component.annotations.Reference;
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(service = { MBeansProvider.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(MBeansProvider.class)
 public final class MBeansProvider extends AbstractComponent {
 
+    @Reference(referenceInterface = MBeanServer.class)
     private final ValidatingReference<MBeanServer> mbeanServer = new ValidatingReference<MBeanServer>();
+    @Reference(referenceInterface = ContainerManager.class)
     private final ValidatingReference<ContainerManager> containerManager = new ValidatingReference<ContainerManager>();
+    @Reference(referenceInterface = ProfileManager.class)
     private final ValidatingReference<ProfileManager> profileManager = new ValidatingReference<ProfileManager>();
 
     @Activate
@@ -102,7 +107,6 @@ public final class MBeansProvider extends AbstractComponent {
         }
     }
 
-    @Reference
     void bindContainerManager(ContainerManager service) {
         this.containerManager.bind(service);
     }
@@ -111,16 +115,14 @@ public final class MBeansProvider extends AbstractComponent {
         this.containerManager.unbind(service);
     }
 
-    @Reference
-    void bindMBeanServer(MBeanServer service) {
+    void bindMbeanServer(MBeanServer service) {
         this.mbeanServer.bind(service);
     }
 
-    void unbindMBeanServer(MBeanServer service) {
+    void unbindMbeanServer(MBeanServer service) {
         this.mbeanServer.unbind(service);
     }
 
-    @Reference
     void bindProfileManager(ProfileManager service) {
         this.profileManager.bind(service);
     }

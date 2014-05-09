@@ -24,6 +24,10 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.utils.IllegalStateAssertion;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,9 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * A registry of stateful {@link Container} instances
@@ -41,7 +42,8 @@ import org.osgi.service.component.annotations.Deactivate;
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(service = { ContainerRegistry.class }, immediate = true)
+@Component(immediate = true)
+@Service(ContainerRegistry.class)
 public final class ContainerRegistry extends AbstractComponent {
 
     private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();

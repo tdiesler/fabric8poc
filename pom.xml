@@ -56,7 +56,7 @@
         <version.apache.felix.metatype>1.0.8</version.apache.felix.metatype>
         <version.apache.felix.http>2.2.1</version.apache.felix.http>
         <version.apache.felix.scr>1.6.2</version.apache.felix.scr>
-        <version.apache.felix.scr.ds.annotations>1.2.4</version.apache.felix.scr.ds.annotations>
+        <version.apache.felix.scr.annotations>1.9.8</version.apache.felix.scr.annotations>
         <version.apache.felix.scr.generator>1.8.0</version.apache.felix.scr.generator>
         <version.apache.karaf>2.3.3</version.apache.karaf>
         <version.apache.tomcat>7.0.42</version.apache.tomcat>
@@ -138,8 +138,9 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
-                <version>${version.apache.felix.scr.ds.annotations}</version>
+                <artifactId>org.apache.felix.scr.annotations</artifactId>
+                <version>${version.apache.felix.scr.annotations}</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>

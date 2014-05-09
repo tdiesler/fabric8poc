@@ -40,13 +40,13 @@
             <artifactId>fabric8-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- Provided Dependencies -->
+
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
-            <scope>provided</scope>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+        
+        <!-- Provided Dependencies -->
         <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-provision</artifactId>

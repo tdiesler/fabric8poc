@@ -27,12 +27,13 @@ import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * A provider service for the {@link ProfileBuilderFactory}
@@ -40,10 +41,12 @@ import org.osgi.service.component.annotations.Reference;
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(service = { ProfileBuilderFactory.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component( policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ProfileBuilderFactory.class)
 public final class ProfileBuilderService extends AbstractComponent implements ProfileBuilderFactory {
 
-    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    @Reference(referenceInterface = ProfileService.class)
+    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
 
     @Activate
     void activate() throws Exception {
@@ -78,10 +81,10 @@ public final class ProfileBuilderService extends AbstractComponent implements Pr
         return new DefaultProfileBuilder(linkedProfile);
     }
 
-    @Reference
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }
+
     void unbindProfileService(ProfileService service) {
         profileService.unbind(service);
     }

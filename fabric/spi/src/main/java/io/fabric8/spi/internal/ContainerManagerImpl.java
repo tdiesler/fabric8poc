@@ -39,16 +39,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
-@Component(service = { ContainerManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ContainerManager.class)
 public final class ContainerManagerImpl extends AbstractComponent implements ContainerManager {
 
+    @Reference(referenceInterface = PermitManager.class)
     private final ValidatingReference<PermitManager> permitManager = new ValidatingReference<PermitManager>();
 
     @Activate
@@ -284,7 +287,6 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
         }
     }
 
-    @Reference
     void bindPermitManager(PermitManager service) {
         this.permitManager.bind(service);
     }

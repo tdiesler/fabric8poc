@@ -27,10 +27,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 
 /**
  * A host wide port manager
@@ -38,7 +39,8 @@ import org.osgi.service.component.annotations.Deactivate;
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-@Component(service = { PortManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy= ConfigurationPolicy.IGNORE, immediate = true)
+@Service(PortManager.class)
 public final class PortManagerImpl extends AbstractComponent implements PortManager {
 
     @Activate

@@ -32,12 +32,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.NotNullException;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * The internal profile registry
@@ -45,7 +46,8 @@ import org.osgi.service.component.annotations.Deactivate;
  * @author thomas.diesler@jboss.com
  * @since 07-May-2014
  */
-@Component(service = { ProfileRegistry.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ProfileRegistry.class)
 public final class ProfileRegistry extends AbstractComponent {
 
     private Map<Version, Map<String, Profile>> profileVersions = new HashMap<>();

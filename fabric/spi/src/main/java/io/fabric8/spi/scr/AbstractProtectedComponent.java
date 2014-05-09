@@ -65,4 +65,18 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
     protected final void deactivateComponent() {
         throw new UnsupportedOperationException();
     }
+
+    public void bindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.bind(service);
+    }
+    public void unbindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.unbind(service);
+    }
+
+    public void bindPermitManager(PermitManager service) {
+        permitManager.bind(service);
+    }
+    public void unbindPermitManager(PermitManager service) {
+        permitManager.unbind(service);
+    }
 }
