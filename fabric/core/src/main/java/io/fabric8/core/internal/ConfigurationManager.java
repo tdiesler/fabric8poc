@@ -32,14 +32,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +51,13 @@ import org.slf4j.LoggerFactory;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(service = { ConfigurationManager.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ConfigurationManager.class)
 public final class ConfigurationManager extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationManager.class);
 
+    @Reference(referenceInterface = ConfigurationAdmin.class)
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<ConfigurationAdmin>();
 
     @Activate
@@ -112,12 +116,11 @@ public final class ConfigurationManager extends AbstractComponent {
         return result;
     }
 
-    @Reference
-    void bindConfigurationAdmin(ConfigurationAdmin service) {
+    void bindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.bind(service);
     }
 
-    void unbindConfigurationAdmin(ConfigurationAdmin service) {
+    void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
     }
 }

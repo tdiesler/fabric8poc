@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,5 +64,19 @@ public abstract class AbstractProtectedComponent<T> extends AbstractComponent {
 
     protected final void deactivateComponent() {
         throw new UnsupportedOperationException();
+    }
+
+    protected void bindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.bind(service);
+    }
+    protected void unbindEventDispatcher(EventDispatcher service) {
+        eventDispatcher.unbind(service);
+    }
+
+    protected void bindPermitManager(PermitManager service) {
+        permitManager.bind(service);
+    }
+    protected void unbindPermitManager(PermitManager service) {
+        permitManager.unbind(service);
     }
 }

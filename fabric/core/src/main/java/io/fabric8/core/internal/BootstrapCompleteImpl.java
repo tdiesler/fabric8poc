@@ -24,12 +24,12 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.scr.AbstractComponent;
-
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 
 /**
  * Implementation of the the {@link BootstrapComplete} marker service
@@ -37,8 +37,20 @@ import org.osgi.service.component.annotations.Reference;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(service = { BootstrapComplete.class }, configurationPolicy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(BootstrapComplete.class)
 public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
+
+    @Reference
+    private BootstrapService bootstrapService;
+    @Reference
+    private ContainerManager containerManager;
+    @Reference
+    private ContainerService containerService;
+    @Reference
+    private MBeansProvider mBeansProvider;
+    @Reference
+    private ProfileManager profileManager;
 
     @Activate
     void activate() throws Exception {
@@ -53,54 +65,4 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
 
     private void activateInternal() {
     }
-
-    @Reference
-    void bindBootstrapService(BootstrapService service) {
-    }
-    void unbindBootstrapService(BootstrapService service) {
-    }
-
-    @Reference
-    void bindContainerManager(ContainerManager service) {
-    }
-    void unbindContainerManager(ContainerManager service) {
-    }
-
-    @Reference
-    void bindContainerService(ContainerService service) {
-    }
-    void unbindContainerService(ContainerService service) {
-    }
-
-    @Reference
-    void bindMBeansProvider(MBeansProvider service) {
-    }
-    void unbindMBeansProvider(MBeansProvider service) {
-    }
-
-    @Reference
-    void bindProfileManager(ProfileManager service) {
-    }
-    void unbindProfileManager(ProfileManager service) {
-    }
-
-    /*
-    @Reference
-    void bindProvisioner(Provisioner service) {
-    }
-    void unbindProvisioner(Provisioner service) {
-    }
-
-    @Reference
-    void bindResolver(Resolver service) {
-    }
-    void unbindResolver(Resolver service) {
-    }
-
-    @Reference
-    void bindRepository(Repository service) {
-    }
-    void unbindRepository(Repository service) {
-    }
-    */
 }
