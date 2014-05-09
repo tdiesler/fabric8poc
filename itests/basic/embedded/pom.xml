@@ -105,6 +105,21 @@
                                     <artifactId>fabric8-core</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-provision</artifactId>
+                                    <version>${version.jboss.gravia}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-resolver</artifactId>
+                                    <version>${version.jboss.gravia}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.jboss.gravia</groupId>
+                                    <artifactId>gravia-repository</artifactId>
+                                    <version>${version.jboss.gravia}</version>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>

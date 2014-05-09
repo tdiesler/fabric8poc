@@ -32,5 +32,5 @@ import java.io.InputStream;
  */
 public interface ResourceItemBuilder<B extends ProfileBuilderBase<B>> extends ProfileItemBuilder<ResourceItemBuilder<B>, B> {
 
-    ResourceItemBuilder<B> imputStream(InputStream importStream);
+    ResourceItemBuilder<B> importFrom(InputStream importStream);
 }

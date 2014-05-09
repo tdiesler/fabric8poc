@@ -159,7 +159,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public ResourceItemBuilder<B> imputStream(InputStream importStream) {
+        public ResourceItemBuilder<B> importFrom(InputStream importStream) {
             this.importStream = importStream;
             return this;
         }
