@@ -26,6 +26,8 @@ import io.fabric8.test.smoke.ResourceItemsTestBase;
 
 import java.io.InputStream;
 
+import javax.management.MBeanServer;
+
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -69,7 +71,7 @@ public class ResourceItemsTest extends ResourceItemsTestBase {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
-                    builder.addImportPackages(BootstrapComplete.class);
+                    builder.addImportPackages(BootstrapComplete.class, MBeanServer.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();

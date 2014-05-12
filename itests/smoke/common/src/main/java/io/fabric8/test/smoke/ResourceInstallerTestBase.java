@@ -28,21 +28,18 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ResourceItem;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.smoke.suba.SimpleModuleActivator;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
 
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
+import javax.servlet.Servlet;
+import javax.servlet.http.HttpServlet;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
-import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.resource.ManifestBuilder;
-import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Module;
@@ -54,22 +51,28 @@ import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.test.gravia.itests.support.AnnotatedProxyListener;
+import org.jboss.test.gravia.itests.support.AnnotatedProxyServlet;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.service.http.HttpService;
 
 /**
- * Test {@link ResourceInstaller} functionality
+ * Test {@link ResourceItem} functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 08-May-2014
  */
-public abstract class ResourceItemsTestBase {
+public abstract class ResourceInstallerTestBase {
 
     public static final String DEPLOYMENT_A = "resource-itemA";
 
@@ -106,14 +109,53 @@ public abstract class ResourceItemsTestBase {
      */
     @Test
     @Ignore
-    public void testSharedFeature() throws Exception {
+    public void testSharedProfileResourceFromStream() throws Exception {
+    }
+
+    /**
+     * Install a shared profile resource from maven coordinates
+     */
+    @Test
+    @Ignore
+    public void testSharedProfileResourceFromMaven() throws Exception {
     }
 
     /**
      * Install a unshared resource from input stream
      */
     @Test
+    @Ignore
     public void testUnsharedStreamResource() throws Exception {
+    }
+
+    /**
+     * Install a unshared resource from maven coordinates
+     */
+    @Test
+    @Ignore
+    public void testUnsharedMavenResource() throws Exception {
+    }
+
+    /**
+     * Install a unshared profile resource from input stream
+     */
+    @Test
+    @Ignore
+    public void testUnsharedProfileResourceFromStream() throws Exception {
+    }
+
+    /**
+     * Install a unshared profile resource from maven coordinates
+     */
+    @Test
+    @Ignore
+    public void testUnsharedProfileResourceFromMaven() throws Exception {
+    }
+
+    @Test
+    @Ignore
+    public void testImportableResourceItem() throws Exception {
+
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
@@ -137,46 +179,21 @@ public abstract class ResourceItemsTestBase {
 
         cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
 
-        // Verify that the module got installed
+        // Verify that the module got installed and is active
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         Module module = runtime.getModule(ResourceIdentity.create(DEPLOYMENT_A, Version.emptyVersion));
         Assert.assertNotNull("Module not null", module);
         Assert.assertEquals(State.ACTIVE, module.getState());
 
-        // Verify that the module activator was called
-        MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
-        Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(module)));
-        Assert.assertEquals(State.ACTIVE, server.getAttribute(getObjectName(module), "ModuleState"));
-
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
-    /**
-     * Install a unshared resource from maven coordinates
-     */
-    @Test
-    @Ignore
-    public void testUnsharedMavenResource() throws Exception {
-    }
-
-    /**
-     * Install a unshared profile resource from input stream
-     */
-    @Test
-    @Ignore
-    public void testUnsharedFeature() throws Exception {
-    }
-
-    private static ObjectName getObjectName(Module module) throws MalformedObjectNameException {
-        ResourceIdentity identity = module.getIdentity();
-        return new ObjectName("test:name=" + identity.getSymbolicName() + ",version=" + identity.getVersion());
-    }
-
     @Deployment(name = DEPLOYMENT_A, managed = false, testable = false)
     public static Archive<?> getDeploymentA() {
-        final ArchiveBuilder archive = new ArchiveBuilder(DEPLOYMENT_A);
-        archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
+        final WebArchive archive = ShrinkWrap.create(WebArchive.class, DEPLOYMENT_A + ".war");
+        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
+        archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(ModuleActivatorBridge.class, SimpleModuleActivator.class);
         archive.setManifest(new Asset() {
             @Override
@@ -187,17 +204,18 @@ public abstract class ResourceItemsTestBase {
                     builder.addBundleSymbolicName(DEPLOYMENT_A);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
-                    builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class, MBeanServer.class);
+                    builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
+                    builder.addBundleClasspath("WEB-INF/classes");
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(DEPLOYMENT_A, Version.emptyVersion);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api");
                     return builder.openStream();
                 }
             }
         });
-        return archive.getArchive();
+        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
+        archive.addAsLibraries(libs);
+        return archive;
     }
 }

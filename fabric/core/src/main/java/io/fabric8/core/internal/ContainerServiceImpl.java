@@ -93,6 +93,8 @@ import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
+import org.jboss.gravia.provision.ResourceInstaller.Context;
+import org.jboss.gravia.provision.spi.DefaultInstallerContext;
 import org.jboss.gravia.resource.ManifestResourceBuilder;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
@@ -1014,8 +1016,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             builder.addContentCapability(contentURL);
             Resource resource = builder.getResource();
 
+            // Add the manifest to the installer context for embedded usage
+            Context context = new DefaultInstallerContext(resource);
+            context.getProperties().put(Manifest.class.getName(), manifest);
+
             // Install the {@link Resource}
-            final ResourceHandle handle = installer.installResource(resource, null);
+            final ResourceHandle handle = installer.installResource(context, resource);
 
             return new ResourceHandle() {
                 @Override

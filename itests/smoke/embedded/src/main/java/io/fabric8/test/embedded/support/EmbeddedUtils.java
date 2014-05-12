@@ -19,11 +19,14 @@
  */
 package io.fabric8.test.embedded.support;
 
+import io.fabric8.spi.utils.IllegalStateAssertion;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
-import java.util.Map;
+import java.util.Hashtable;
+import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -33,7 +36,6 @@ import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
 import org.jboss.gravia.provision.spi.RuntimeEnvironment;
 import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
-import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.Module;
@@ -150,9 +152,16 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle installSharedResource(final Resource resource, Map<Requirement, Resource> mapping) throws Exception {
-            final Runtime runtime = environment.getRuntime();
-            final Module module = runtime.installModule(EmbeddedRuntime.class.getClassLoader(), resource, null);
+        public ResourceHandle processSharedResource(Context context, final Resource resource) throws Exception {
+
+            Manifest manifest = (Manifest) context.getProperties().get(Manifest.class.getName());
+            IllegalStateAssertion.assertNotNull(manifest, "Cannot obtain manifest from installer context");
+
+            // Install the module
+            Runtime runtime = environment.getRuntime();
+            ClassLoader classLoader = EmbeddedRuntime.class.getClassLoader();
+            Dictionary<String, String> headers = getManifestHeaders(manifest);
+            final Module module = runtime.installModule(classLoader, resource, headers);
 
             // Autostart the module
             module.start();
@@ -177,8 +186,19 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle installUnsharedResource(Resource resource, Map<Requirement, Resource> mapping) throws Exception {
-            return installSharedResource(resource, mapping);
+        public ResourceHandle processUnsharedResource(Context context, Resource resource) throws Exception {
+            return installSharedResource(context, resource);
         }
-    }
+
+        private Dictionary<String, String> getManifestHeaders(Manifest manifest) {
+            Hashtable<String, String> headers = new Hashtable<String, String>();
+            Attributes mainatts = manifest.getMainAttributes();
+            for (Object key : mainatts.keySet()) {
+                String name = key.toString();
+                String value = mainatts.getValue(name);
+                headers.put(name, value);
+            }
+            return headers;
+        }
+}
 }
