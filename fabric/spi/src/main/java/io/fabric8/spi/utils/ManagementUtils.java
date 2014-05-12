@@ -64,13 +64,13 @@ public final class ManagementUtils {
                 }
             }
         }
-        IllegalStateAssertion.assertNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
+        IllegalStateAssertion.requireNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
         return mbeanProxy;
     }
 
     public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
         String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.requireNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
     }
 

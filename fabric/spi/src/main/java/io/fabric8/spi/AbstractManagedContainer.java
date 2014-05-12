@@ -124,10 +124,10 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
         for (MavenCoordinates artefact : getCreateOptions().getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
-            IllegalStateAssertion.assertNotNull(resource, "Cannot find maven resource: " + artefact);
+            IllegalStateAssertion.requireNotNull(resource, "Cannot find maven resource: " + artefact);
 
             ResourceContent resourceContent = resource.adapt(ResourceContent.class);
-            IllegalStateAssertion.assertNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
+            IllegalStateAssertion.requireNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
 
             try {
                 ArchiveInputStream ais;
@@ -249,7 +249,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     protected JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
         String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.requireNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 

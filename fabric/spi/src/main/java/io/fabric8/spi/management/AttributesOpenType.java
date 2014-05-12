@@ -90,8 +90,8 @@ public final class AttributesOpenType {
         String valStr = (String) attData.get(AttributeType.ITEM_VALUE);
         String typeName = (String) attData.get(AttributeType.ITEM_TYPE);
         String factoryName = (String) attData.get(AttributeType.ITEM_FACTORY);
-        IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain type name");
-        IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain factory name");
+        IllegalStateAssertion.requireNotNull(typeName, "Cannot obtain type name");
+        IllegalStateAssertion.requireNotNull(typeName, "Cannot obtain factory name");
         AttributeKey key;
         ValueFactory factory;
         Class type;

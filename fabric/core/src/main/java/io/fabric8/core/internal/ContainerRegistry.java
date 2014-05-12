@@ -100,7 +100,7 @@ public final class ContainerRegistry extends AbstractComponent {
     ContainerState getRequiredContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState container = getContainerInternal(identity);
-        IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
+        IllegalStateAssertion.requireNotNull(container, "Container not registered: " + identity);
         return container;
     }
 
