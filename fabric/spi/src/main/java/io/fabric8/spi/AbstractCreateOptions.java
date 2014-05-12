@@ -59,7 +59,7 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     }
 
     protected void validate() {
-        IllegalStateAssertion.assertNotNull(identityPrefix, "Identity prefix cannot be null");
+        IllegalStateAssertion.requireNotNull(identityPrefix, "Identity prefix cannot be null");
     }
 
     // Setters are protected

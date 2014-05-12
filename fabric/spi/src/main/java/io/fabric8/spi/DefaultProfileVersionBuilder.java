@@ -96,7 +96,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     private void validate() {
         Version version = mutableVersion.getIdentity();
-        IllegalStateAssertion.assertNotNull(version, "Identity cannot be null");
+        IllegalStateAssertion.requireNotNull(version, "Identity cannot be null");
         Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
         IllegalStateAssertion.assertFalse(linkedProfiles.isEmpty(), "Profile version must have at least one profile");
         for (String profileid : linkedProfiles.keySet()) {
@@ -106,8 +106,8 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     private void validateLinkedProfile(Version version, String profileid, Map<String, Profile> linkedProfiles) {
         Profile profile = linkedProfiles.get(profileid);
-        IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
-        IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
+        IllegalStateAssertion.requireNotNull(profile, "Profile not linked to version: " + profileid);
+        IllegalStateAssertion.requireNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
         IllegalStateAssertion.assertEquals(version, profile.getVersion(), "Profile not linked to version: " + version);
         for (String parentid : profile.getParents()) {
             validateLinkedProfile(version, parentid, linkedProfiles);

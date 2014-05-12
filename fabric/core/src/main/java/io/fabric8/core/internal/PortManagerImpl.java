@@ -64,7 +64,7 @@ public final class PortManagerImpl extends AbstractComponent implements PortMana
                 portValue++;
             }
         }
-        IllegalStateAssertion.assertNotNull(socket, "Cannot obtain next available port");
+        IllegalStateAssertion.requireNotNull(socket, "Cannot obtain next available port");
         int resultPort = socket.getLocalPort();
         try {
             socket.close();

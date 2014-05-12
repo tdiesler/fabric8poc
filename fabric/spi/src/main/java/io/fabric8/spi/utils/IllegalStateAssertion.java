@@ -35,18 +35,22 @@ public final class IllegalStateAssertion {
 
     /**
      * Throws an IllegalStateException when the given value is not null.
+     * @return the value
      */
-    public static void assertNull(Object value, String message) {
+    public static <T> T requireNull(T value, String message) {
         if (value != null)
             throw new IllegalStateException(message);
+        return value;
     }
 
     /**
      * Throws an IllegalStateException when the given value is null.
+     * @return the value
      */
-    public static void assertNotNull(Object value, String message) {
+    public static <T> T requireNotNull(T value, String message) {
         if (value == null)
             throw new IllegalStateException(message);
+        return value;
     }
 
     /**
@@ -68,8 +72,8 @@ public final class IllegalStateAssertion {
      * Throws an IllegalStateException when the given values are not equal.
      */
     public static void assertEquals(Object exp, Object was, String message) {
-        assertNotNull(exp, message);
-        assertNotNull(was, message);
+        requireNotNull(exp, message);
+        requireNotNull(was, message);
         assertTrue(exp.equals(was), message);
     }
 
@@ -77,8 +81,8 @@ public final class IllegalStateAssertion {
      * Throws an IllegalStateException when the given values are not equal.
      */
     public static void assertSame(Object exp, Object was, String message) {
-        assertNotNull(exp, message);
-        assertNotNull(was, message);
+        requireNotNull(exp, message);
+        requireNotNull(was, message);
         assertTrue(exp == was, message);
     }
 }

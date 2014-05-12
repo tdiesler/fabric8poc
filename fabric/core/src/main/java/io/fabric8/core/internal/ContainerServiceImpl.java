@@ -1007,7 +1007,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             } catch (IOException ex) {
                 throw new ProvisionException(ex);
             }
-            IllegalStateAssertion.assertNotNull(manifest, "Cannot obtain manifest from: " + item.getURL());
+            IllegalStateAssertion.requireNotNull(manifest, "Cannot obtain manifest from: " + item.getURL());
 
             // Build the {@link Resource}
             ManifestResourceBuilder builder = new ManifestResourceBuilder().load(manifest);
