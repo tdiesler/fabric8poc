@@ -23,8 +23,8 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -43,6 +43,8 @@ import org.jboss.gravia.provision.Provisioner;
 @Service(BootstrapComplete.class)
 public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
 
+    @Reference
+    private RuntimeService runtimeService;
     @Reference
     private BootstrapService bootstrapService;
     @Reference

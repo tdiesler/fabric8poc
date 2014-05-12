@@ -66,13 +66,13 @@ public final class ImmutableProfileVersion implements LinkedProfileVersion {
 
     @Override
     public Profile getLinkedProfile(String identity) {
-        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
+        IllegalStateAssertion.requireNotNull(linkedProfiles, "Linked profiles not available");
         return linkedProfiles.get(identity);
     }
 
     @Override
     public Map<String, Profile> getLinkedProfiles() {
-        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
+        IllegalStateAssertion.requireNotNull(linkedProfiles, "Linked profiles not available");
         return Collections.unmodifiableMap(linkedProfiles);
     }
 

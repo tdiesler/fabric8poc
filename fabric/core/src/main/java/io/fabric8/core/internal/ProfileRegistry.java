@@ -147,7 +147,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     private URL addImportableResourceItem(Profile profile, ImportableResourceItem item) {
         InputStream inputStream = item.getInputStream();
-        IllegalStateAssertion.assertNotNull(inputStream, "No input stream for: " + item);
+        IllegalStateAssertion.requireNotNull(inputStream, "No input stream for: " + item);
         String identity = item.getIdentity();
         File targetFile = copyResourceItem(profile, identity, inputStream);
         return getResourceItemURL(profile, identity, targetFile);

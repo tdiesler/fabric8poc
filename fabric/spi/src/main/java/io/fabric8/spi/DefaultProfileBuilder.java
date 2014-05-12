@@ -120,7 +120,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     private void validate() {
-        IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
+        IllegalStateAssertion.requireNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
     }
 
     static class DefaultConfigurationItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ConfigurationItemBuilder<B>> implements ConfigurationItemBuilder<B> {

@@ -39,6 +39,7 @@
   <property name="output.dir" value="${basedir}/target" />
   <property name="resources.dir" value="${basedir}/src/main/resources" />
   <property name="tomcat.patch.dir" value="${output.dir}/tomcat-patch" />
+  <property name="tomcat.source.dir" value="${output.dir}/tomcat-base/apache-tomcat-${version.apache.tomcat}" />
   <property name="deploy.artifacts.dir" value="${output.dir}/deploy-artifacts" />
   <property name="deploy.artifacts.lib" value="${deploy.artifacts.dir}/lib" />
   <property name="deploy.artifacts.resources" value="${deploy.artifacts.dir}/resources" />
@@ -66,6 +67,14 @@
 	<copy todir="${tomcat.patch.dir}" overwrite="true">
         <fileset dir="${etc.dir}/tomcat"/>
 	</copy>
+
+      <copy file="${tomcat.source.dir}/conf/catalina.properties" todir="${tomcat.patch.dir}/conf" overwrite="true"/>
+      <echo file="${tomcat.patch.dir}/conf/catalina.properties" append="true">
+          runtime.id=tomcat
+          runtime.home=${catalina.home}
+          runtime.conf=${catalina.home}/conf
+          runtime.data=${catalina.home}/work
+      </echo>
   	
   	<!-- Copy gravia patch -->
     <copy todir="${tomcat.patch.dir}" overwrite="true">
