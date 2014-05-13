@@ -23,11 +23,12 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.utils.IllegalStateAssertion;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,7 +101,7 @@ public final class ContainerRegistry extends AbstractComponent {
     ContainerState getRequiredContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState container = getContainerInternal(identity);
-        IllegalStateAssertion.requireNotNull(container, "Container not registered: " + identity);
+        IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
         return container;
     }
 

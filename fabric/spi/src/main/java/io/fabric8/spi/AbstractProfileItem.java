@@ -24,7 +24,7 @@ import java.util.Map;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileItem;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 public abstract class AbstractProfileItem extends AttributeSupport implements ProfileItem {
 
@@ -32,7 +32,7 @@ public abstract class AbstractProfileItem extends AttributeSupport implements Pr
 
     protected AbstractProfileItem(String identity, Map<AttributeKey<?>, Object> attributes) {
         super(attributes);
-        NotNullException.assertValue(identity, "identity");
+        IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
     }
 

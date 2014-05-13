@@ -20,15 +20,14 @@
 
 package io.fabric8.core.internal;
 
-import io.fabric8.spi.utils.IllegalStateAssertion;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * The URLStreamHandler for protocol profile://
@@ -46,7 +45,7 @@ final class ProfileURLStreamHandler extends URLStreamHandler {
 
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-        NotNullException.assertValue(url, "url");
+        IllegalArgumentAssertion.assertNotNull(url, "url");
         IllegalStateAssertion.assertEquals("profile", url.getProtocol(), "Invalid protocol: " + url);
         return targetFile.toURI().toURL().openConnection();
     }

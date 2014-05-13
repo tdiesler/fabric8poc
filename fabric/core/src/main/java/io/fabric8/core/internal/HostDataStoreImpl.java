@@ -30,7 +30,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A host wide data store
@@ -57,7 +57,7 @@ public final class HostDataStoreImpl extends AbstractComponent implements HostDa
 
     @Override
     public ContainerIdentity createManagedContainerIdentity(String prefix) {
-        NotNullException.assertValue(prefix, "prefix");
+        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
         return ContainerIdentity.create(prefix + "#" + uniqueTokenGenerator.incrementAndGet());
     }
 }

@@ -19,7 +19,7 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
 
@@ -40,7 +40,7 @@ public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Id
 
     private ServiceEndpointIdentity(String symbolicName, Class<T> type) {
         super(symbolicName);
-        NotNullException.assertValue(type, "type");
+        IllegalArgumentAssertion.assertNotNull(type, "type");
         this.type = type;
         this.canonicalForm = "[name=" + getSymbolicName() + ",type=" + type.getName() + "]";
     }

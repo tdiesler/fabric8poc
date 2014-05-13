@@ -35,8 +35,9 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.MBeanProxy;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A set of management utils
@@ -64,18 +65,18 @@ public final class ManagementUtils {
                 }
             }
         }
-        IllegalStateAssertion.requireNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
+        IllegalStateAssertion.assertNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
         return mbeanProxy;
     }
 
     public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
         String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        IllegalStateAssertion.requireNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
     }
 
     public static JMXConnector getJMXConnector(String jmxServiceURL, String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-        NotNullException.assertValue(jmxServiceURL, "jmxServiceURL");
+        IllegalArgumentAssertion.assertNotNull(jmxServiceURL, "jmxServiceURL");
         Map<String, Object> env = new HashMap<String, Object>();
         if (jmxUsername != null && jmxPassword != null) {
             String[] credentials = new String[] { jmxUsername, jmxPassword };

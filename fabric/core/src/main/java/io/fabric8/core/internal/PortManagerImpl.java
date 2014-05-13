@@ -21,7 +21,6 @@ package io.fabric8.core.internal;
 
 import io.fabric8.spi.PortManager;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,6 +31,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * A host wide port manager
@@ -64,7 +64,7 @@ public final class PortManagerImpl extends AbstractComponent implements PortMana
                 portValue++;
             }
         }
-        IllegalStateAssertion.requireNotNull(socket, "Cannot obtain next available port");
+        IllegalStateAssertion.assertNotNull(socket, "Cannot obtain next available port");
         int resultPort = socket.getLocalPort();
         try {
             socket.close();

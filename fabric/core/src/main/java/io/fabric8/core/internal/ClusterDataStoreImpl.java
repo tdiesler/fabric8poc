@@ -30,7 +30,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A cluster wide data store
@@ -57,7 +57,7 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
 
     @Override
     public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
-        NotNullException.assertValue(prefix, "prefix");
+        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
         String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
         ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
         return containerId;

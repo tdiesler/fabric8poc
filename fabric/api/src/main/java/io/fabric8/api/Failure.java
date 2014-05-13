@@ -20,7 +20,7 @@
 
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A container failure abstraction.
@@ -39,7 +39,7 @@ public final class Failure {
     }
 
     public Failure(String message, Throwable cause) {
-        NotNullException.assertValue(message, "message");
+        IllegalArgumentAssertion.assertNotNull(message, "message");
         this.timestamp = System.currentTimeMillis();
         this.message = message;
         this.cause = cause;

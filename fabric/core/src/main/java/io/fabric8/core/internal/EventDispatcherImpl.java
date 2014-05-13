@@ -48,7 +48,7 @@ import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.runtime.ServiceTracker;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +104,7 @@ public final class EventDispatcherImpl extends AbstractComponent implements Even
     }
 
     private <E extends FabricEvent<?, ?>, L extends FabricEventListener<E>> void dispatchEvent(final E event, Class<L> listenerType, L listener) {
-        NotNullException.assertValue(event, "event");
+        IllegalArgumentAssertion.assertNotNull(event, "event");
         Set<L> listeners = getEventListeners(listenerType, listener);
         if (listeners != null) {
             for (final L aux : listeners) {

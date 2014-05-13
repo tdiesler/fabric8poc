@@ -21,7 +21,6 @@ package io.fabric8.spi;
 
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * An immutable profile version
@@ -66,13 +66,13 @@ public final class ImmutableProfileVersion implements LinkedProfileVersion {
 
     @Override
     public Profile getLinkedProfile(String identity) {
-        IllegalStateAssertion.requireNotNull(linkedProfiles, "Linked profiles not available");
+        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return linkedProfiles.get(identity);
     }
 
     @Override
     public Map<String, Profile> getLinkedProfiles() {
-        IllegalStateAssertion.requireNotNull(linkedProfiles, "Linked profiles not available");
+        IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return Collections.unmodifiableMap(linkedProfiles);
     }
 

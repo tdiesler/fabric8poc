@@ -21,7 +21,6 @@ package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-
 import io.fabric8.api.Container;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
@@ -39,7 +38,6 @@ import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.Collections;
@@ -61,7 +59,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,7 +176,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     private ReentrantReadWriteLock getReadWriteLock(Version version) {
-        NotNullException.assertValue(version, "version");
+        IllegalArgumentAssertion.assertNotNull(version, "version");
         ReentrantReadWriteLock readWriteLock;
         synchronized (versionLocks) {
             readWriteLock = versionLocks.get(version);
@@ -269,7 +268,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ProfileRegistry registry = profileRegistry.get();
-            IllegalStateAssertion.requireNull(registry.getProfileVersion(version), "ProfileVersion already exists: " + profileVersion);
+            IllegalStateAssertion.assertNull(registry.getProfileVersion(version), "ProfileVersion already exists: " + profileVersion);
             IllegalStateAssertion.assertFalse(profileVersion.getProfileIdentities().isEmpty(), "ProfileVersion must contain at least one profile: " + profileVersion);
             LOGGER.info("Add profile version: {}", version);
             return registry.addProfileVersion(profileVersion);
@@ -396,7 +395,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             getRequiredProfileVersion(version);
             Version pversion = profile.getVersion();
             IllegalStateAssertion.assertTrue(pversion == null || version.equals(pversion), "Unexpected profile version: " + profile);
-            IllegalStateAssertion.requireNull(getProfile(version, profile.getIdentity()), "Profile already exists: " + profile);
+            IllegalStateAssertion.assertNull(getProfile(version, profile.getIdentity()), "Profile already exists: " + profile);
             LOGGER.info("Add profile to version: {} <= {}", version, profile);
             return profileRegistry.get().addProfile(version, profile);
         } finally {
@@ -451,7 +450,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle readLock = aquireReadLock(version);
         try {
             ProfileVersion profileVersion = profileRegistry.get().getProfileVersion(version);
-            IllegalStateAssertion.requireNotNull(profileVersion, "Cannot obtain profile version: " + version);
+            IllegalStateAssertion.assertNotNull(profileVersion, "Cannot obtain profile version: " + version);
             return profileVersion;
         } finally {
             readLock.unlock();
@@ -463,7 +462,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle readLock = aquireReadLock(version);
         try {
             Profile profile = profileRegistry.get().getProfile(version, identity);
-            IllegalStateAssertion.requireNotNull(profile, "Cannot obtain profile: " + version + ":" + identity);
+            IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile: " + version + ":" + identity);
             return profile;
         } finally {
             readLock.unlock();
@@ -495,7 +494,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         private final ProfileVersion profileVersion;
 
         ProfileVersionState(ProfileVersion profileVersion) {
-            NotNullException.assertValue(profileVersion, "profileVersion");
+            IllegalArgumentAssertion.assertNotNull(profileVersion, "profileVersion");
             this.profileVersion = profileVersion;
         }
 

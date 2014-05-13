@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * The default resource item
@@ -21,14 +21,14 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Im
 
     public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, InputStream inputStream) {
         super(identity, attributes);
-        NotNullException.assertValue(inputStream, "inputStream");
+        IllegalArgumentAssertion.assertNotNull(inputStream, "inputStream");
         this.inputStream = inputStream;
         this.resourceURL = null;
     }
 
     public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, URL resourceURL) {
         super(identity, attributes);
-        NotNullException.assertValue(resourceURL, "resourceURL");
+        IllegalArgumentAssertion.assertNotNull(resourceURL, "resourceURL");
         this.resourceURL = resourceURL;
         this.inputStream = null;
     }

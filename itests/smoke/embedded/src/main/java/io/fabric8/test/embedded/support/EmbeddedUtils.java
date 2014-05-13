@@ -19,14 +19,10 @@
  */
 package io.fabric8.test.embedded.support;
 
-import io.fabric8.spi.utils.IllegalStateAssertion;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -152,15 +148,11 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle processSharedResource(Context context, final Resource resource) throws Exception {
-
-            Manifest manifest = (Manifest) context.getProperties().get(Manifest.class.getName());
-            IllegalStateAssertion.assertNotNull(manifest, "Cannot obtain manifest from installer context");
+        public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared, Dictionary<String, String> headers) throws Exception {
 
             // Install the module
             Runtime runtime = environment.getRuntime();
             ClassLoader classLoader = EmbeddedRuntime.class.getClassLoader();
-            Dictionary<String, String> headers = getManifestHeaders(manifest);
             final Module module = runtime.installModule(classLoader, resource, headers);
 
             // Autostart the module
@@ -184,21 +176,5 @@ public class EmbeddedUtils {
                 }
             };
         }
-
-        @Override
-        public ResourceHandle processUnsharedResource(Context context, Resource resource) throws Exception {
-            return installSharedResource(context, resource);
-        }
-
-        private Dictionary<String, String> getManifestHeaders(Manifest manifest) {
-            Hashtable<String, String> headers = new Hashtable<String, String>();
-            Attributes mainatts = manifest.getMainAttributes();
-            for (Object key : mainatts.keySet()) {
-                String name = key.toString();
-                String value = mainatts.getValue(name);
-                headers.put(name, value);
-            }
-            return headers;
-        }
-}
+    }
 }

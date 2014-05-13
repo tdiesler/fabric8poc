@@ -21,7 +21,7 @@ package io.fabric8.api;
 
 import java.util.EventObject;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
 /**
@@ -38,8 +38,8 @@ public abstract class FabricEvent<S, T> extends EventObject {
 
     public FabricEvent(S source, T type, Throwable error) {
         super(source);
-        NotNullException.assertValue(source, "source");
-        NotNullException.assertValue(type, "type");
+        IllegalArgumentAssertion.assertNotNull(source, "source");
+        IllegalArgumentAssertion.assertNotNull(type, "type");
         this.error = error;
         this.type = type;
     }

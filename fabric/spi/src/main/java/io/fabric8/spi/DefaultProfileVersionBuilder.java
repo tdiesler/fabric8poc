@@ -30,7 +30,6 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ResourceItemBuilder;
 import io.fabric8.spi.DefaultProfileBuilder.DefaultConfigurationItemBuilder;
 import io.fabric8.spi.DefaultProfileBuilder.DefaultResourceItemBuilder;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -39,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
 
@@ -96,7 +96,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     private void validate() {
         Version version = mutableVersion.getIdentity();
-        IllegalStateAssertion.requireNotNull(version, "Identity cannot be null");
+        IllegalStateAssertion.assertNotNull(version, "Identity cannot be null");
         Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
         IllegalStateAssertion.assertFalse(linkedProfiles.isEmpty(), "Profile version must have at least one profile");
         for (String profileid : linkedProfiles.keySet()) {
@@ -106,8 +106,8 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
     private void validateLinkedProfile(Version version, String profileid, Map<String, Profile> linkedProfiles) {
         Profile profile = linkedProfiles.get(profileid);
-        IllegalStateAssertion.requireNotNull(profile, "Profile not linked to version: " + profileid);
-        IllegalStateAssertion.requireNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
+        IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
+        IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
         IllegalStateAssertion.assertEquals(version, profile.getVersion(), "Profile not linked to version: " + version);
         for (String parentid : profile.getParents()) {
             validateLinkedProfile(version, parentid, linkedProfiles);

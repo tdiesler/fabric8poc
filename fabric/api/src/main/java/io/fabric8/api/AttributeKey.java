@@ -19,7 +19,7 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A typed attribute key
@@ -49,7 +49,7 @@ public final class AttributeKey<T> {
     private final String tostring;
 
     public static <T> AttributeKey<T> create(Class<T> type) {
-        NotNullException.assertValue(type, "type");
+        IllegalArgumentAssertion.assertNotNull(type, "type");
         return new AttributeKey<T>(type.getName(), type, null);
     }
 
@@ -62,8 +62,8 @@ public final class AttributeKey<T> {
     }
 
     private AttributeKey(String name, Class<T> type, ValueFactory<T> factory) {
-        NotNullException.assertValue(name, "name");
-        NotNullException.assertValue(type, "type");
+        IllegalArgumentAssertion.assertNotNull(name, "name");
+        IllegalArgumentAssertion.assertNotNull(type, "type");
         this.name = name;
         this.type = type;
         this.factory = factory;

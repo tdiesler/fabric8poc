@@ -26,7 +26,6 @@ import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceLocator;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
@@ -53,7 +52,8 @@ import org.jboss.gravia.repository.MavenDelegateRepository;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.runtime.spi.DefaultPropertiesProvider;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * The managed root container
@@ -72,7 +72,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     private Process process;
 
     protected AbstractManagedContainer(C options) {
-        NotNullException.assertValue(options, "options");
+        IllegalArgumentAssertion.assertNotNull(options, "options");
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
         HostDataStore dataStore = ServiceLocator.getRequiredService(HostDataStore.class);
         this.identity = dataStore.createManagedContainerIdentity(options.getIdentityPrefix());
@@ -124,10 +124,10 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
         for (MavenCoordinates artefact : getCreateOptions().getMavenCoordinates()) {
             Resource resource = mavenRepository.findMavenResource(artefact);
-            IllegalStateAssertion.requireNotNull(resource, "Cannot find maven resource: " + artefact);
+            IllegalStateAssertion.assertNotNull(resource, "Cannot find maven resource: " + artefact);
 
             ResourceContent resourceContent = resource.adapt(ResourceContent.class);
-            IllegalStateAssertion.requireNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
+            IllegalStateAssertion.assertNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
 
             try {
                 ArchiveInputStream ais;
@@ -249,7 +249,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     protected JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
         String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        IllegalStateAssertion.requireNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
+        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 

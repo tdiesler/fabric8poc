@@ -23,7 +23,6 @@ import io.fabric8.api.Attributable;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.spi.AttributeSupport;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +34,8 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
+
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * Open MBean support for an {@link Attributable}.
@@ -90,8 +91,8 @@ public final class AttributesOpenType {
         String valStr = (String) attData.get(AttributeType.ITEM_VALUE);
         String typeName = (String) attData.get(AttributeType.ITEM_TYPE);
         String factoryName = (String) attData.get(AttributeType.ITEM_FACTORY);
-        IllegalStateAssertion.requireNotNull(typeName, "Cannot obtain type name");
-        IllegalStateAssertion.requireNotNull(typeName, "Cannot obtain factory name");
+        IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain type name");
+        IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain factory name");
         AttributeKey key;
         ValueFactory factory;
         Class type;

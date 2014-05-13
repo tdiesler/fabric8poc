@@ -19,7 +19,7 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
 
@@ -44,7 +44,7 @@ public class ProvisionEvent extends FabricEvent<Container, ProvisionEvent.EventT
 
     public ProvisionEvent(Container source, EventType type, Profile profile, Throwable error) {
         super(source, type, error);
-        NotNullException.assertValue(profile, "profile");
+        IllegalArgumentAssertion.assertNotNull(profile, "profile");
         this.profile = profile;
     }
 

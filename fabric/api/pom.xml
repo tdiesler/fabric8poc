@@ -37,7 +37,7 @@
     <dependencies>
         <dependency>
             <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-repository</artifactId>
+            <artifactId>gravia-provision</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.gravia</groupId>

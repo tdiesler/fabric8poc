@@ -19,7 +19,7 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
 /**
@@ -33,7 +33,7 @@ abstract class Identity {
     private final String symbolicName;
 
     Identity(String symbolicName) {
-        NotNullException.assertValue(symbolicName, "symbolicName");
+        IllegalArgumentAssertion.assertNotNull(symbolicName, "symbolicName");
         this.symbolicName = symbolicName;
     }
 

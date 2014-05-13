@@ -22,7 +22,6 @@ package io.fabric8.container.karaf;
 
 import io.fabric8.api.Constants;
 import io.fabric8.spi.AbstractManagedContainer;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import javax.management.remote.JMXConnector;
 
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * The Karaf managed container

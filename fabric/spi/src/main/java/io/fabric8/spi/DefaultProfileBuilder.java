@@ -27,7 +27,6 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderBase;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItemBuilder;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -37,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
 
@@ -120,7 +120,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     private void validate() {
-        IllegalStateAssertion.requireNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
+        IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
     }
 
     static class DefaultConfigurationItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ConfigurationItemBuilder<B>> implements ConfigurationItemBuilder<B> {

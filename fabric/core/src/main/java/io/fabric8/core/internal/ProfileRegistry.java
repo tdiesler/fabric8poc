@@ -29,7 +29,6 @@ import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.ImmutableProfileVersion;
 import io.fabric8.spi.ImportableResourceItem;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +50,8 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * The internal profile registry
@@ -147,7 +147,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     private URL addImportableResourceItem(Profile profile, ImportableResourceItem item) {
         InputStream inputStream = item.getInputStream();
-        IllegalStateAssertion.requireNotNull(inputStream, "No input stream for: " + item);
+        IllegalStateAssertion.assertNotNull(inputStream, "No input stream for: " + item);
         String identity = item.getIdentity();
         File targetFile = copyResourceItem(profile, identity, inputStream);
         return getResourceItemURL(profile, identity, targetFile);
@@ -166,9 +166,9 @@ public final class ProfileRegistry extends AbstractComponent {
     }
 
     private URL getResourceItemURL(Profile profile, String itemid, File targetFile) {
-        NotNullException.assertValue(profile, "profile");
-        NotNullException.assertValue(profile.getVersion(), "version");
-        NotNullException.assertValue(itemid, "itemid");
+        IllegalArgumentAssertion.assertNotNull(profile, "profile");
+        IllegalArgumentAssertion.assertNotNull(profile.getVersion(), "version");
+        IllegalArgumentAssertion.assertNotNull(itemid, "itemid");
         try {
             String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + itemid;
             return new URL(null, spec, new ProfileURLStreamHandler(targetFile));

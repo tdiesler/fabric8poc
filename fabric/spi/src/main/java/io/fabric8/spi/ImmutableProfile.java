@@ -23,7 +23,6 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.Collections;
@@ -33,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * An immutable profile
@@ -81,19 +81,19 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
 
     @Override
     public LinkedProfile getLinkedParent(String identity) {
-        IllegalStateAssertion.requireNotNull(parentProfiles, "Linked parents not available");
+        IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return parentProfiles.get(identity);
     }
 
     @Override
     public Map<String, LinkedProfile> getLinkedParents() {
-        IllegalStateAssertion.requireNotNull(parentProfiles, "Linked parents not available");
+        IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return Collections.unmodifiableMap(parentProfiles);
     }
 
     @Override
     public Profile getEffectiveProfile() {
-        IllegalStateAssertion.requireNotNull(parentProfiles, "Linked parents not available");
+        IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return ProfileUtils.getEffectiveProfile(this);
     }
 

@@ -19,8 +19,6 @@
  */
 package io.fabric8.spi.permit;
 
-import io.fabric8.spi.utils.IllegalStateAssertion;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -32,7 +30,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +75,7 @@ public final class DefaultPermitManager implements PermitManager {
 
     @SuppressWarnings("unchecked")
     private <T> PermitState<T> getPermitState(PermitKey<T> key) {
-        NotNullException.assertValue(key, "key");
+        IllegalArgumentAssertion.assertNotNull(key, "key");
         synchronized (permits) {
             PermitState<?> permitState = permits.get(key);
             if (permitState == null) {

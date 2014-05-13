@@ -19,7 +19,7 @@
  */
 package io.fabric8.spi.permit;
 
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * Represents a system state
@@ -39,8 +39,8 @@ public final class PermitKey<T> {
     }
 
     public PermitKey(Class<T> type, String name) {
-        NotNullException.assertValue(type, "type");
-        NotNullException.assertValue(name, "name");
+        IllegalArgumentAssertion.assertNotNull(type, "type");
+        IllegalArgumentAssertion.assertNotNull(name, "name");
         this.type = type;
         this.name = name;
     }

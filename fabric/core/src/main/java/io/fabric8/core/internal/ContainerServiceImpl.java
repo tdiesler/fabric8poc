@@ -20,7 +20,6 @@
 package io.fabric8.core.internal;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Container;
@@ -58,13 +57,10 @@ import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,8 +74,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -92,18 +86,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
-import org.jboss.gravia.provision.ResourceInstaller;
-import org.jboss.gravia.provision.ResourceInstaller.Context;
-import org.jboss.gravia.provision.spi.DefaultInstallerContext;
-import org.jboss.gravia.resource.ManifestResourceBuilder;
-import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
-import org.jboss.gravia.utils.NotNullException;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -235,6 +224,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 throw new IllegalStateException(ex);
             }
         }
+    }
+
+    @Override
+    public Provisioner getProvisioner(ContainerIdentity identity) {
+        assertValid();
+        return provisioner.get();
     }
 
     @Override
@@ -526,12 +521,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void installResourceItems(ContainerState cntState, Set<ResourceItem> resourceItems) {
-        ResourceInstaller installer = provisioner.get().getResourceInstaller();
         Map<String, ResourceHandle> handles = new HashMap<>();
         for (ResourceItem item : resourceItems) {
             try {
                 ResourceItemHandler handler = new ResourceItemHandler(item);
-                handles.put(item.getIdentity(), handler.installResource(installer));
+                handles.put(item.getIdentity(), handler.installResource(provisioner.get()));
             } catch (Exception ex) {
                 for (Entry<String, ResourceHandle> entry : handles.entrySet()) {
                     entry.getValue().uninstall();
@@ -685,9 +679,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private State state;
 
         private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles) {
-            NotNullException.assertValue(identity, "identity");
-            NotNullException.assertValue(options, "options");
-            NotNullException.assertValue(handles, "handles");
+            IllegalArgumentAssertion.assertNotNull(identity, "identity");
+            IllegalArgumentAssertion.assertNotNull(options, "options");
+            IllegalArgumentAssertion.assertNotNull(handles, "handles");
             this.parentState = parentState;
             this.identity = identity;
             this.state = State.CREATED;
@@ -815,7 +809,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         @SuppressWarnings("unchecked")
         <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
-            NotNullException.assertValue(type, "type");
+            IllegalArgumentAssertion.assertNotNull(type, "type");
             T endpoint = null;
             for (ServiceEndpoint ep : getServiceEndpoints().values()) {
                 if (type.isAssignableFrom(ep.getClass())) {
@@ -979,7 +973,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     static class ResourceItemHandler {
 
         private final ResourceItem item;
-        private Path tempPath;
 
         ResourceItemHandler(ResourceItem item) {
             this.item = item;
@@ -989,62 +982,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             return item;
         }
 
-        ResourceHandle installResource(ResourceInstaller installer) throws ProvisionException {
+        ResourceHandle installResource(Provisioner provisioner) throws ProvisionException {
             LOGGER.info("Install resource item: {}", item);
-
-            // Copy the {@link ResourceItem} to temp storage & get the {@link Manifest}
-            URL contentURL;
-            Manifest manifest;
+            InputStream inputStream;
             try {
-                tempPath = Files.createTempFile(item.getIdentity(), null);
-                Files.copy(item.getURL().openStream(), tempPath, REPLACE_EXISTING);
-                contentURL = tempPath.toUri().toURL();
-
-                JarFile jarFile = new JarFile(tempPath.toFile());
-                try {
-                    manifest = jarFile.getManifest();
-                } finally {
-                    jarFile.close();
-                }
+                inputStream = item.getURL().openStream();
             } catch (IOException ex) {
                 throw new ProvisionException(ex);
             }
-            IllegalStateAssertion.requireNotNull(manifest, "Cannot obtain manifest from: " + item.getURL());
-
-            // Build the {@link Resource}
-            ManifestResourceBuilder builder = new ManifestResourceBuilder().load(manifest);
-            builder.addContentCapability(contentURL);
-            Resource resource = builder.getResource();
-
-            // Add the manifest to the installer context for embedded usage
-            Context context = new DefaultInstallerContext(resource);
-            context.getProperties().put(Manifest.class.getName(), manifest);
-
-            // Install the {@link Resource}
-            final ResourceHandle handle = installer.installResource(context, resource);
-
-            return new ResourceHandle() {
-                @Override
-                public Resource getResource() {
-                    return handle.getResource();
-                }
-
-                @Override
-                public Module getModule() {
-                    return handle.getModule();
-                }
-
-                @Override
-                public void uninstall() {
-                    LOGGER.info("Uninstall resource item: {}", item);
-                    handle.uninstall();
-                    try {
-                        Files.delete(tempPath);
-                    } catch (IOException ex) {
-                        LOGGER.warn("Cannot delete temp file: {}", tempPath);
-                    }
-                }
-            };
+            return provisioner.installResource(item.getIdentity(), inputStream, null);
         }
     }
 }

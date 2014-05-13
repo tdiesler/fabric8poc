@@ -22,7 +22,6 @@ package io.fabric8.container.tomcat;
 
 import io.fabric8.api.Constants;
 import io.fabric8.spi.AbstractManagedContainer;
-import io.fabric8.spi.utils.IllegalStateAssertion;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +45,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
