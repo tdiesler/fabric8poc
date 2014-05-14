@@ -33,7 +33,6 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceLocator;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -43,6 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.After;
 import org.junit.Assert;

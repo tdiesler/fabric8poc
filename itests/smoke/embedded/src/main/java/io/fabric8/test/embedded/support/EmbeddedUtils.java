@@ -33,6 +33,7 @@ import org.jboss.gravia.provision.spi.RuntimeEnvironment;
 import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
@@ -46,6 +47,8 @@ import org.jboss.gravia.runtime.spi.ManifestHeadersProvider;
 import org.jboss.gravia.runtime.spi.ModuleEntriesProvider;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.runtime.spi.RuntimeFactory;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.ManifestUtils;
 
 /**
  * Utility for embedded runtime tests
@@ -148,7 +151,14 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared, Dictionary<String, String> headers) throws Exception {
+        public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared, String runtimeName) throws Exception {
+
+            ResourceContent content = resource.adapt(ResourceContent.class);
+            IllegalStateAssertion.assertNotNull(content, "Resource has no content: " + resource);
+
+            Manifest manifest = ManifestUtils.getManifest(content.getContent());
+            IllegalStateAssertion.assertNotNull(manifest, "Resource has no manifest: " + resource);
+            Dictionary<String, String> headers = ManifestUtils.getManifestHeaders(manifest);
 
             // Install the module
             Runtime runtime = environment.getRuntime();

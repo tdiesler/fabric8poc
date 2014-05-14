@@ -21,7 +21,7 @@ package io.fabric8.spi;
 
 import java.io.File;
 
-import org.jboss.gravia.repository.MavenCoordinates;
+import org.jboss.gravia.resource.MavenCoordinates;
 
 public abstract class AbstractManagedContainerBuilder<B extends ManagedContainerBuilder<B, T>, T extends AbstractManagedCreateOptions> extends AbstractContainerBuilder<B, T> implements ManagedContainerBuilder<B, T> {
 

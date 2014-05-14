@@ -20,6 +20,7 @@
 package io.fabric8.api;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.ServiceLocator;
 
 /**
  * A builder for a profile version

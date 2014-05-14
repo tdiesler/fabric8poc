@@ -27,13 +27,13 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.BootstrapComplete;
 
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.Assert;
 
 /**

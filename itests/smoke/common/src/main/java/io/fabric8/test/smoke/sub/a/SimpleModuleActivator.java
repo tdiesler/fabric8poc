@@ -17,9 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test.smoke.suba;
+package io.fabric8.test.smoke.sub.a;
 
-import io.fabric8.api.ServiceLocator;
+import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -28,33 +28,28 @@ import javax.management.StandardMBean;
 
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.Module;
-import org.jboss.gravia.runtime.Module.State;
 import org.jboss.gravia.runtime.ModuleActivator;
 import org.jboss.gravia.runtime.ModuleContext;
+import org.jboss.gravia.runtime.ServiceLocator;
 
 public class SimpleModuleActivator implements ModuleActivator {
-
-    public interface ModuleState {
-        ResourceIdentity getResourceIdentity();
-        State getModuleState();
-    }
 
     @Override
     public void start(final ModuleContext context) throws Exception {
         MBeanServer server = ServiceLocator.getRequiredService(context, MBeanServer.class);
-        ModuleState moduleState = new ModuleState() {
+        SimpleModuleState moduleState = new SimpleModuleState() {
 
             @Override
-            public ResourceIdentity getResourceIdentity() {
-                return context.getModule().getIdentity();
+            public String getResourceIdentity() {
+                return context.getModule().getIdentity().getCanonicalForm();
             }
 
             @Override
-            public State getModuleState() {
-                return context.getModule().getState();
+            public String getModuleState() {
+                return context.getModule().getState().toString();
             }
         };
-        StandardMBean mbean = new StandardMBean(moduleState, ModuleState.class);
+        StandardMBean mbean = new StandardMBean(moduleState, SimpleModuleState.class);
         server.registerMBean(mbean, getObjectName(context.getModule()));
     }
 

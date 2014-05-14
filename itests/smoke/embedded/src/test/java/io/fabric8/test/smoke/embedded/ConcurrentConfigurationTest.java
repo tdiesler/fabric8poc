@@ -25,7 +25,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
@@ -38,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;

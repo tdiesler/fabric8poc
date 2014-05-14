@@ -41,7 +41,6 @@ import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
@@ -86,10 +85,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.resource.ResourceBuilder;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
@@ -990,7 +992,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             } catch (IOException ex) {
                 throw new ProvisionException(ex);
             }
-            return provisioner.installResource(item.getIdentity(), inputStream, null);
+            ResourceIdentity resid = ResourceIdentity.fromString(item.getIdentity());
+            ResourceBuilder builder = provisioner.getContentResourceBuilder(resid, inputStream);
+            return provisioner.installResource(builder.getResource());
         }
     }
 }

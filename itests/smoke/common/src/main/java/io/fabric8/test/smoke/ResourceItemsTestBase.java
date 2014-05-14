@@ -28,8 +28,8 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ResourceItem;
-import io.fabric8.api.ServiceLocator;
-import io.fabric8.test.smoke.suba.SimpleModuleActivator;
+import io.fabric8.test.smoke.sub.a.SimpleModuleActivator;
+import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -51,6 +51,7 @@ import org.jboss.gravia.runtime.ModuleActivatorBridge;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
@@ -146,7 +147,7 @@ public abstract class ResourceItemsTestBase {
         // Verify that the module activator was called
         MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(module)));
-        Assert.assertEquals(State.ACTIVE, server.getAttribute(getObjectName(module), "ModuleState"));
+        Assert.assertEquals("ACTIVE" + module, "ACTIVE", server.getAttribute(getObjectName(module), "ModuleState"));
 
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
@@ -177,7 +178,8 @@ public abstract class ResourceItemsTestBase {
     public static Archive<?> getDeploymentA() {
         final ArchiveBuilder archive = new ArchiveBuilder(DEPLOYMENT_A);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
-        archive.addClasses(ModuleActivatorBridge.class, SimpleModuleActivator.class);
+        archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
+        archive.addClasses(SimpleModuleActivator.class, SimpleModuleState.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {

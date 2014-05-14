@@ -25,7 +25,7 @@ import io.fabric8.spi.ContainerCreateHandler;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.jboss.gravia.repository.MavenCoordinates;
+import org.jboss.gravia.resource.MavenCoordinates;
 
 
 public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {

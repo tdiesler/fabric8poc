@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<!--
+  #%L
+  Gravia :: Integration Tests :: Common
+  %%
+  Copyright (C) 2010 - 2014 JBoss by Red Hat
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
+
+<repository xmlns="http://www.osgi.org/xmlns/repository/v1.0.0" name="PersistentRepository">
+
+  <!-- 
+    camel.core.feature 
+  -->
+  <resource>
+    <capability namespace="gravia.identity">
+      <attribute name="gravia.identity" value="camel.core.feature" />
+      <attribute name="type" value="abstract" />
+    </capability>
+    <requirement namespace="gravia.identity">
+      <attribute name="gravia.identity" value="org.apache.camel.core" />
+      <attribute name="version" value="[2.11,3.0)" />
+    </requirement>
+  </resource>
+  <!-- 
+    org.apache.camel.core
+  -->
+  <resource>
+    <capability namespace="gravia.identity">
+      <attribute name="gravia.identity" value="org.apache.camel.core" />
+      <attribute name="maven.identity" value="org.apache.camel:camel-core:jar:${version.apache.camel}" />
+      <attribute name="version" value="${version.apache.camel}" />
+      <attribute name="shared" value="true" />
+    </capability>
+    <requirement namespace="gravia.identity">
+      <attribute name="gravia.identity" value="javax.api" />
+    </requirement>
+    <requirement namespace="gravia.identity">
+      <attribute name="gravia.identity" value="org.slf4j" />
+    </requirement>
+  </resource>
+</repository>

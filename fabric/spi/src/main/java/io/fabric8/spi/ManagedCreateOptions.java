@@ -24,7 +24,7 @@ import io.fabric8.api.CreateOptions;
 import java.io.File;
 import java.util.List;
 
-import org.jboss.gravia.repository.MavenCoordinates;
+import org.jboss.gravia.resource.MavenCoordinates;
 
 /**
  * Managed container create options

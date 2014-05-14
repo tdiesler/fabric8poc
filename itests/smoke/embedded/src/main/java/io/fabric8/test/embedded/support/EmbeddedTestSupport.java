@@ -19,13 +19,13 @@
  */
 package io.fabric8.test.embedded.support;
 
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.Assert;
 
 /**

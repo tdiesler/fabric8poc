@@ -20,7 +20,6 @@
 
 package org.wildfly.extension.fabric.service;
 
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.container.karaf.KarafContainerCreateHandler;
 import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
 import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
@@ -51,6 +50,7 @@ import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.runtime.ServiceTracker;

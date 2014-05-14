@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import org.jboss.gravia.runtime.ServiceLocator;
+
 /**
  * The container manager locator
  *

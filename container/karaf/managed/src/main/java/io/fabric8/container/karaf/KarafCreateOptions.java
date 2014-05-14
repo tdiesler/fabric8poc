@@ -22,7 +22,7 @@ package io.fabric8.container.karaf;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.jboss.gravia.repository.MavenCoordinates;
+import org.jboss.gravia.resource.MavenCoordinates;
 
 import io.fabric8.spi.AbstractManagedCreateOptions;
 import io.fabric8.spi.ContainerCreateHandler;

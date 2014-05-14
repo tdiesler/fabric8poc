@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test.smoke.suba;
+package io.fabric8.test.smoke.sub.a;
 
 import java.io.IOException;
 

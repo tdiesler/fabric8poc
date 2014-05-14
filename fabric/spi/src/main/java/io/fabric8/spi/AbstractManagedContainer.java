@@ -25,7 +25,6 @@ import io.fabric8.api.Constants;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LifecycleException;
-import io.fabric8.api.ServiceLocator;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
@@ -47,10 +46,11 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.jboss.gravia.repository.DefaultMavenDelegateRepository;
-import org.jboss.gravia.repository.MavenCoordinates;
 import org.jboss.gravia.repository.MavenDelegateRepository;
+import org.jboss.gravia.resource.MavenCoordinates;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.spi.DefaultPropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -126,16 +126,16 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
             Resource resource = mavenRepository.findMavenResource(artefact);
             IllegalStateAssertion.assertNotNull(resource, "Cannot find maven resource: " + artefact);
 
-            ResourceContent resourceContent = resource.adapt(ResourceContent.class);
-            IllegalStateAssertion.assertNotNull(resourceContent, "Cannot obtain resource content for: " + artefact);
+            ResourceContent content = resource.adapt(ResourceContent.class);
+            IllegalStateAssertion.assertNotNull(content, "Cannot obtain resource content for: " + artefact);
 
             try {
                 ArchiveInputStream ais;
                 if ("tar.gz".equals(artefact.getType())) {
-                    InputStream inputStream = resourceContent.getContent();
+                    InputStream inputStream = content.getContent();
                     ais = new TarArchiveInputStream(new GZIPInputStream(inputStream));
                 } else {
-                    InputStream inputStream = resourceContent.getContent();
+                    InputStream inputStream = content.getContent();
                     ais = new ArchiveStreamFactory().createArchiveInputStream(artefact.getType(), inputStream);
                 }
                 ArchiveEntry entry = null;
