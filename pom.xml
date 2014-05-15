@@ -52,6 +52,7 @@
     <properties>
         <version.apache.camel>2.11.0</version.apache.camel>
         <version.apache.commons.compress>1.8</version.apache.commons.compress>
+        <version.apache.curator>2.4.2</version.apache.curator>
         <version.apache.felix.eventadmin>1.3.0</version.apache.felix.eventadmin>
         <version.apache.felix.log>1.0.1</version.apache.felix.log>
         <version.apache.felix.metatype>1.0.8</version.apache.felix.metatype>
@@ -61,6 +62,8 @@
         <version.apache.felix.scr.generator>1.8.0</version.apache.felix.scr.generator>
         <version.apache.karaf>2.3.3</version.apache.karaf>
         <version.apache.tomcat>7.0.42</version.apache.tomcat>
+        <version.apache.zookeeper>3.4.6</version.apache.zookeeper>
+        <version.guava>14.0.1</version.guava>
         <version.javax.servlet30.api>3.0.1</version.javax.servlet30.api>
         <version.jboss.arquillian.core>1.1.2.Final-wildfly-1</version.jboss.arquillian.core>
         <version.jboss.arquillian.osgi>2.1.0.CR15</version.jboss.arquillian.osgi>
@@ -368,6 +371,25 @@
                 <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-server</artifactId>
                 <version>${version.jboss.wildfly}</version>
+            </dependency>
+
+            <!-- ZooKeeper -->
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${version.apache.zookeeper}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-framework</artifactId>
+                <version>${version.apache.curator}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-recipes</artifactId>
+                <version>${version.apache.curator}</version>
             </dependency>
             
             <!-- Other -->

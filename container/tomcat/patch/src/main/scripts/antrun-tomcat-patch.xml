@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  #%L
+  Fabric8 :: Container :: Tomcat :: Patch
+  %%
+  Copyright (C) 2014 Red Hat
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
+
+
+<!-- ====================================================================== -->
+<!--                                                                        -->
+<!--  JBoss, the OpenSource J2EE webOS                                      -->
+<!--                                                                        -->
+<!--  Distributable under LGPL license.                                     -->
+<!--  See terms of license at http://www.gnu.org.                           -->
+<!--                                                                        -->
+<!-- ====================================================================== -->
+
+<project default="build">
+
+  <!-- ================================================================== -->
+  <!-- Setup                                                              -->
+  <!-- ================================================================== -->
+  <property name="etc.dir" value="${basedir}/target/etc" />
+  <property name="bin.dir" value="${basedir}/bin" />
+  <property name="output.dir" value="${basedir}/target" />
+  <property name="resources.dir" value="${basedir}/src/main/resources" />
+  <property name="tomcat.patch.dir" value="${output.dir}/tomcat-patch" />
+  <property name="tomcat.source.dir" value="${output.dir}/tomcat-base/apache-tomcat-${version.apache.tomcat}" />
+  <property name="deploy.artifacts.dir" value="${output.dir}/deploy-artifacts" />
+  <property name="deploy.artifacts.lib" value="${deploy.artifacts.dir}/lib" />
+  <property name="deploy.artifacts.resources" value="${deploy.artifacts.dir}/resources" />
+
+  <!-- ================================================================== -->
+  <!-- Initialization                                                     -->
+  <!-- ================================================================== -->
+  <target name="init">
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Distribution                                                       -->
+  <!-- ================================================================== -->
+  <target name="build" depends="init">
+
+  	<!-- Filter fabric resources -->
+    <copy todir="${tomcat.patch.dir}" overwrite="true">
+        <fileset dir="${etc.dir}/tomcat" />
+    		<filterset>
+	        <filter token="project.version" value="${project.version}" />
+      	</filterset>
+    </copy>
+
+	<!-- Copy to conf -->
+	<copy todir="${tomcat.patch.dir}" overwrite="true">
+        <fileset dir="${etc.dir}/tomcat"/>
+	</copy>
+
+      <copy file="${tomcat.source.dir}/conf/catalina.properties" todir="${tomcat.patch.dir}/conf" overwrite="true"/>
+      <echo file="${tomcat.patch.dir}/conf/catalina.properties" append="true">
+          runtime.id=tomcat
+          runtime.home=${catalina.home}
+          runtime.conf=${catalina.home}/conf
+          runtime.data=${catalina.home}/work
+      </echo>
+  	
+  	<!-- Copy gravia patch -->
+    <copy todir="${tomcat.patch.dir}" overwrite="true">
+        <fileset dir="${output.dir}/gravia-tomcat-patch">
+       		<exclude name="webapps/**"/>
+        </fileset>
+    </copy>
+  	
+  	<!-- Copy to libs -->
+    <copy todir="${tomcat.patch.dir}/lib" overwrite="true">
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="commons-compress-*"/>
+        	<include name="fabric8-api-*"/>
+        	<include name="fabric8-spi-*"/>
+        	<include name="fabric8-container-karaf-managed-*"/>
+        	<include name="fabric8-container-tomcat-managed-*"/>
+        	<include name="fabric8-container-wildfly-connector-*"/>
+            <include name="fabric8-container-wildfly-managed-*"/>
+        </fileset>
+    </copy>
+    <copy tofile="${tomcat.patch.dir}/webapps/fabric.war" overwrite="true">
+        <fileset file="${deploy.artifacts.lib}/fabric8-container-tomcat-webapp-${project.version}.war" />
+    </copy>
+
+  	<!-- Zip the tomcat patch -->
+  	<tar destfile="${output.dir}/${project.artifactId}-${project.version}.tar.gz" basedir="${tomcat.patch.dir}" compression="gzip"/>
+  </target>
+</project>

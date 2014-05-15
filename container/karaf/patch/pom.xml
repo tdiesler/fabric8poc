@@ -57,6 +57,14 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>karaf-features</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <classifier>features</classifier>
+            <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-tomcat-managed</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -122,6 +130,27 @@
 	<build>
 		<plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -146,22 +175,26 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.apache.karaf.tooling</groupId>
+                <artifactId>features-maven-plugin</artifactId>
+                <version>${version.apache.karaf}</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
-                        <phase>process-resources</phase>
+                        <id>add-features-to-repo</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>directory-single</goal>
+                            <goal>add-features-to-repo</goal>
                         </goals>
                         <configuration>
-                            <finalName>deploy-artifacts</finalName>
-                            <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
-                            <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>scripts/assembly-deploy-artifacts.xml</descriptor>
+                                <descriptor>mvn:io.fabric8.poc/karaf-features/${project.version}/xml/features</descriptor>
                             </descriptors>
+                            <features>
+                                <feature>fabric8</feature>
+                                <feature>gravia</feature>
+                                <feature>curator</feature>
+                            </features>
+                            <repository>target/karaf-patch/system</repository>
                         </configuration>
                     </execution>
                 </executions>
@@ -179,7 +212,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-karaf-patch.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/src/main/scripts/antrun-karaf-patch.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

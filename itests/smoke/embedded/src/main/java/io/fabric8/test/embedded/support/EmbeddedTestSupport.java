@@ -36,7 +36,8 @@ import org.junit.Assert;
  */
 public abstract class EmbeddedTestSupport {
 
-    private static String[] moduleNames = new String[] { "gravia-provision", "gravia-resolver", "gravia-repository", "fabric8-api", "fabric8-spi", "fabric8-core" };
+    private static String[] moduleNames = new String[] { "gravia-provision", "gravia-resolver", "gravia-repository",
+            "fabric8-api", "fabric8-spi", "fabric8-core" };
 
     public static void beforeClass() throws Exception {
 

@@ -45,6 +45,16 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+        </dependency>
         
         <!-- Provided Dependencies -->
         <dependency>
@@ -94,6 +104,11 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Import-Package>
+                            !org.apache.zookeeper.server.quorum.flexible,
+                            org.apache.zookeeper*,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
