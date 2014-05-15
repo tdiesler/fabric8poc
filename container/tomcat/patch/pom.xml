@@ -83,6 +83,27 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -140,7 +161,7 @@
                             <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>scripts/assembly-deploy-artifacts.xml</descriptor>
+                                <descriptor>src/main/scripts/assembly-deploy-artifacts.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>
@@ -159,7 +180,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-tomcat-patch.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/src/main/scripts/antrun-tomcat-patch.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

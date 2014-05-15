@@ -98,7 +98,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-karaf-distro.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/src/main/scripts/antrun-karaf-distro.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

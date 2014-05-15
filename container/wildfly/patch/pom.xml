@@ -76,10 +76,63 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${version.guava}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>${version.apache.curator}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>${version.apache.curator}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>${version.apache.curator}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${version.apache.zookeeper}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-resources</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -119,7 +172,7 @@
                             <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
-                                <descriptor>scripts/assembly-deploy-artifacts.xml</descriptor>
+                                <descriptor>src/main/scripts/assembly-deploy-artifacts.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>
@@ -138,7 +191,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-wildfly-patch.xml" inheritRefs="true" />
+                                <ant antfile="${project.basedir}/src/main/scripts/antrun-wildfly-patch.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

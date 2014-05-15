@@ -36,8 +36,10 @@
 
     <modules>
         <module>distro</module>
+        <module>features</module>
         <module>managed</module>
         <module>patch</module>
+
     </modules>
 
 </project>

@@ -97,7 +97,7 @@
                         <phase>package</phase>
                         <configuration>
                             <target>
-                                <ant antfile="${basedir}/scripts/antrun-tomcat-distro.xml" inheritRefs="true" />
+                                <ant antfile="${basedir}/src/main/scripts/antrun-tomcat-distro.xml" inheritRefs="true" />
                             </target>
                         </configuration>
                     </execution>

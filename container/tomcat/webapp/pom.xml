@@ -218,6 +218,9 @@
                                 OSGI-INF/io.fabric8.core.internal.PortManagerImpl.xml,\
                                 OSGI-INF/io.fabric8.core.internal.ProfileServiceImpl.xml,\
                                 OSGI-INF/io.fabric8.core.internal.ProfileRegistry.xml,\
+                                OSGI-INF/io.fabric8.core.internal.zookeeper.FabricZooKeeperServer.xml,\
+                                OSGI-INF/io.fabric8.core.internal.curator.FabricACLProvider.xml,\
+                                OSGI-INF/io.fabric8.core.internal.curator.ManagedCuratorFramework.xml,\
                                 OSGI-INF/io.fabric8.spi.internal.BasicRuntimeService.xml,\
                                 OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,\
                                 OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,\
