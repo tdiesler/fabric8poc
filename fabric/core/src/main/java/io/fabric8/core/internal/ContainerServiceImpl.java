@@ -992,8 +992,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             } catch (IOException ex) {
                 throw new ProvisionException(ex);
             }
-            ResourceIdentity resid = ResourceIdentity.fromString(item.getIdentity());
-            ResourceBuilder builder = provisioner.getContentResourceBuilder(resid, inputStream);
+            String itemid = item.getIdentity();
+            ResourceIdentity resid = ResourceIdentity.fromString(itemid);
+            ResourceBuilder builder = provisioner.getContentResourceBuilder(resid, itemid, inputStream);
             return provisioner.installResource(builder.getResource());
         }
     }

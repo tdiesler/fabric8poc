@@ -151,7 +151,7 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared, String runtimeName) throws Exception {
+        public ResourceHandle installResourceProtected(Context context, String runtimeName, final Resource resource, boolean shared) throws Exception {
 
             ResourceContent content = resource.adapt(ResourceContent.class);
             IllegalStateAssertion.assertNotNull(content, "Resource has no content: " + resource);
