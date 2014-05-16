@@ -21,13 +21,19 @@ package io.fabric8.api;
 
 import java.net.URL;
 
+import org.jboss.gravia.resource.Resource;
+
 /**
- * A resource item targeted for deployment
+ * A resource profile item
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 public interface ResourceItem extends ProfileItem {
+
+    Resource getResource();
+
+    boolean isShared();
 
     URL getURL();
 }

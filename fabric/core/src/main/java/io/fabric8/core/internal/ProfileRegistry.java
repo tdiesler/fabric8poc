@@ -24,17 +24,17 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ResourceItem;
 import io.fabric8.spi.DefaultResourceItem;
 import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.ImmutableProfileVersion;
-import io.fabric8.spi.ImportableResourceItem;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,9 +49,15 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.ContentNamespace;
+import org.jboss.gravia.resource.DefaultResourceBuilder;
+import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * The internal profile registry
@@ -81,97 +87,135 @@ public final class ProfileRegistry extends AbstractComponent {
         profilesDir = Paths.get(".", "target", "profiles").toAbsolutePath();
     }
 
-    synchronized Set<Version> getVersions() {
+    Set<Version> getVersions() {
         assertValid();
-        return Collections.unmodifiableSet(new HashSet<>(profileVersions.keySet()));
+        synchronized (profileVersions) {
+            return Collections.unmodifiableSet(new HashSet<>(profileVersions.keySet()));
+        }
     }
 
-    synchronized ProfileVersion getProfileVersion(Version version) {
+    ProfileVersion getProfileVersion(Version version) {
         assertValid();
         ProfileVersion profileVersion = null;
-        Map<String, Profile> profiles = profileVersions.get(version);
-        if (profiles != null) {
-            profileVersion = new ImmutableProfileVersion(version, profiles.keySet(), null);
-        }
-        return profileVersion;
-    }
-
-    synchronized ProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
-        assertValid();
-        Version version = profileVersion.getIdentity();
-        Map<String, Profile> linkedProfiles = profileVersion.getLinkedProfiles();
-        for (Profile profile : linkedProfiles.values()) {
-            addProfile(version, profile);
-        }
-        return getProfileVersion(version);
-    }
-
-    synchronized ProfileVersion removeProfileVersion(Version version) {
-        assertValid();
-        ProfileVersion profileVersion = getProfileVersion(version);
-        profileVersions.remove(version);
-        return profileVersion;
-    }
-
-    synchronized Profile getProfile(Version version, String identity) {
-        assertValid();
-        Map<String, Profile> profiles = profileVersions.get(version);
-        return profiles != null ? profiles.get(identity) : null;
-    }
-
-    synchronized Profile addProfile(Version version, Profile profile) {
-        assertValid();
-        Map<String, Profile> profiles = profileVersions.get(version);
-        if (profiles == null) {
-            profiles = new HashMap<>();
-            profileVersions.put(version, profiles);
-        }
-        Set<ProfileItem> profileItems = new HashSet<>();
-        for (ProfileItem item : profile.getProfileItems(null)) {
-            if (item instanceof ImportableResourceItem) {
-                URL resourceURL = addImportableResourceItem(profile, (ImportableResourceItem) item);
-                item = new DefaultResourceItem(item.getIdentity(), item.getAttributes(), resourceURL);
+        synchronized (profileVersions) {
+            Map<String, Profile> profiles = profileVersions.get(version);
+            if (profiles != null) {
+                profileVersion = new ImmutableProfileVersion(version, profiles.keySet(), null);
             }
-            profileItems.add(item);
         }
-        profile = new ImmutableProfile(version, profile.getIdentity(), profile.getAttributes(), profile.getParents(), profileItems, null);
-        profiles.put(profile.getIdentity(), profile);
-        return profile;
+        return profileVersion;
     }
 
-    synchronized Profile removeProfile(Version version, String identity) {
+    ProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
-        Map<String, Profile> profiles = profileVersions.get(version);
-        return profiles != null ? profiles.remove(identity) : null;
+        synchronized (profileVersions) {
+            Version version = profileVersion.getIdentity();
+            Map<String, Profile> linkedProfiles = profileVersion.getLinkedProfiles();
+            for (Profile profile : linkedProfiles.values()) {
+                addProfile(version, profile);
+            }
+            return getProfileVersion(version);
+        }
     }
 
-    private URL addImportableResourceItem(Profile profile, ImportableResourceItem item) {
-        InputStream inputStream = item.getInputStream();
-        IllegalStateAssertion.assertNotNull(inputStream, "No input stream for: " + item);
-        String identity = item.getIdentity();
-        File targetFile = copyResourceItem(profile, identity, inputStream);
-        return getResourceItemURL(profile, identity, targetFile);
+    ProfileVersion removeProfileVersion(Version version) {
+        assertValid();
+        synchronized (profileVersions) {
+            ProfileVersion profileVersion = getProfileVersion(version);
+            profileVersions.remove(version);
+            return profileVersion;
+        }
     }
 
-    private File copyResourceItem(Profile profile, String identity, InputStream inputStream) {
-        Path targetPath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity(), identity);
+    Profile getProfile(Version version, String identity) {
+        assertValid();
+        synchronized (profileVersions) {
+            Map<String, Profile> profiles = profileVersions.get(version);
+            return profiles != null ? profiles.get(identity) : null;
+        }
+    }
+
+    Profile addProfile(Version version, Profile profile) {
+        assertValid();
+        synchronized (profileVersions) {
+            Map<String, Profile> profiles = profileVersions.get(version);
+            if (profiles == null) {
+                profiles = new HashMap<>();
+                profileVersions.put(version, profiles);
+            }
+            Set<ProfileItem> profileItems = new HashSet<>();
+            for (ProfileItem item : profile.getProfileItems(null)) {
+                if (item instanceof ResourceItem) {
+                    ResourceItem resitem = (ResourceItem) item;
+                    Resource resource = processResourceItem(profile, resitem);
+                    item = new DefaultResourceItem(resource, resitem.isShared());
+                }
+                profileItems.add(item);
+            }
+            profile = new ImmutableProfile(version, profile.getIdentity(), profile.getAttributes(), profile.getParents(), profileItems, null);
+            profiles.put(profile.getIdentity(), profile);
+            return profile;
+        }
+    }
+
+    Profile removeProfile(Version version, String identity) {
+        assertValid();
+        synchronized (profileVersions) {
+            Map<String, Profile> profiles = profileVersions.get(version);
+            return profiles != null ? profiles.remove(identity) : null;
+        }
+    }
+
+    URLConnection getProfileURLConnection(URL url) throws IOException {
+        String path = url.getPath();
+        String version = url.getHost();
+        String profile = path.substring(1, path.lastIndexOf('/'));
+        String item = path.substring(path.lastIndexOf('/') + 1);
+        Path versionPath = Paths.get(profilesDir.toString(), version);
+        IllegalStateAssertion.assertTrue(versionPath.toFile().isDirectory(), "Cannot find version directory: " + versionPath);
+        Path profilePath = Paths.get(versionPath.toString(), profile);
+        IllegalStateAssertion.assertTrue(profilePath.toFile().isDirectory(), "Cannot find profile directory: " + profilePath);
+        Path itemPath = Paths.get(profilePath.toString(), item);
+        IllegalStateAssertion.assertTrue(itemPath.toFile().isFile(), "Cannot find item file: " + itemPath);
+        return itemPath.toFile().toURI().toURL().openConnection();
+    }
+
+    private Resource processResourceItem(Profile profile, ResourceItem item) {
+        Resource resource = item.getResource();
+        URL itemURL = copyResourceContent(profile, item);
+        DefaultResourceBuilder builder = new DefaultResourceBuilder();
+        for (Capability cap : resource.getCapabilities(null)) {
+            if (ContentNamespace.CONTENT_NAMESPACE.equals(cap.getNamespace())) {
+                Map<String, Object> atts = new HashMap<>(cap.getAttributes());
+                atts.remove(ContentNamespace.CAPABILITY_STREAM_ATTRIBUTE);
+                builder.addContentCapability(itemURL, atts, cap.getDirectives());
+            } else {
+                builder.addCapability(cap.getNamespace(), cap.getAttributes(), cap.getDirectives());
+            }
+        }
+        for (Requirement req : resource.getRequirements(null)) {
+            builder.addRequirement(req.getNamespace(), req.getAttributes(), req.getDirectives());
+        }
+        return builder.getResource();
+    }
+
+    private URL copyResourceContent(Profile profile, ResourceItem item) {
+        IllegalArgumentAssertion.assertNotNull(profile, "profile");
+        IllegalArgumentAssertion.assertNotNull(item, "item");
+        Resource resource = item.getResource();
+        ResourceContent content = resource.adapt(ResourceContent.class);
+        IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + item);
+        Path targetPath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity(), item.getIdentity());
         try {
             File targetDir = targetPath.toFile().getParentFile();
             IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create directory: " + targetDir);
-            Files.copy(inputStream, targetPath, REPLACE_EXISTING);
-            return targetPath.toFile();
+            Files.copy(content.getContent(), targetPath, REPLACE_EXISTING);
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-    }
-
-    private URL getResourceItemURL(Profile profile, String itemid, File targetFile) {
-        IllegalArgumentAssertion.assertNotNull(profile, "profile");
-        IllegalArgumentAssertion.assertNotNull(profile.getVersion(), "version");
-        IllegalArgumentAssertion.assertNotNull(itemid, "itemid");
         try {
-            String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + itemid;
-            return new URL(null, spec, new ProfileURLStreamHandler(targetFile));
+            String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getIdentity();
+            return new URL(null, spec, new ProfileURLStreamHandler(targetPath.toFile()));
         } catch (MalformedURLException ex) {
             throw new IllegalArgumentException(ex);
         }

@@ -38,6 +38,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
@@ -58,15 +59,12 @@ import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.ProfileUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -85,8 +83,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
-import org.jboss.gravia.resource.ResourceBuilder;
-import org.jboss.gravia.resource.ResourceIdentity;
+import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
@@ -231,6 +228,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Provisioner getProvisioner(ContainerIdentity identity) {
         assertValid();
+        IllegalArgumentAssertion.assertTrue(CURRENT_CONTAINER_IDENTITY.equals(identity), "Provisioner for '" + identity + "' not supported");
         return provisioner.get();
     }
 
@@ -514,29 +512,48 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         Set<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
         configurationManager.get().applyConfigurationItems(configItems);
 
+        // Provision requirement items
+        // [TODO] uninstall of provisioned resources
+        provisionRequirements(effectiveProfile);
+
         // Install the resource items
-        Set<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
-        installResourceItems(cntState, resourceItems);
+        Map<String, ResourceHandle> handles = new HashMap<>();
+        for (ResourceItem item : effectiveProfile.getProfileItems(ResourceItem.class)) {
+            handles.put(item.getIdentity(), installResourceItem(item));
+        }
+        cntState.addResourceHandles(handles);
 
         event = new ProvisionEvent(container, EventType.PROVISIONED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
-    private void installResourceItems(ContainerState cntState, Set<ResourceItem> resourceItems) {
-        Map<String, ResourceHandle> handles = new HashMap<>();
-        for (ResourceItem item : resourceItems) {
+    private void provisionRequirements(Profile effectiveProfile) {
+        Set<RequirementItem> reqItems = effectiveProfile.getProfileItems(RequirementItem.class);
+        if (!reqItems.isEmpty()) {
+            Set<Requirement> reqs = new HashSet<>();
+            for (RequirementItem item : reqItems) {
+                reqs.add(item.getRequirement());
+            }
+            LOGGER.info("Provision requirements items: {}", reqs);
             try {
-                ResourceItemHandler handler = new ResourceItemHandler(item);
-                handles.put(item.getIdentity(), handler.installResource(provisioner.get()));
-            } catch (Exception ex) {
-                for (Entry<String, ResourceHandle> entry : handles.entrySet()) {
-                    entry.getValue().uninstall();
-                    cntState.removeResourceHandle(entry.getKey());
-                }
-                throw new IllegalStateException("Cannot install resource item: " + item, ex);
+                provisioner.get().provisionResources(reqs);
+            } catch (ProvisionException ex) {
+                throw new IllegalStateException("Cannot provision requirements", ex);
             }
         }
-        cntState.addResourceHandles(handles);
+    }
+
+    private ResourceHandle installResourceItem(ResourceItem item) {
+        LOGGER.info("Install resource item: {}", item);
+        try {
+            if (item.isShared()) {
+                return provisioner.get().installSharedResource(item.getResource());
+            } else {
+                return provisioner.get().installResource(item.getResource());
+            }
+        } catch (ProvisionException ex) {
+            throw new IllegalStateException("Cannot install resource item: " + item, ex);
+        }
     }
 
     private void unprovisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
@@ -969,33 +986,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         public String toString() {
             Version profileVersion = versionState != null ? versionState.getIdentity() : null;
             return "Container[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
-        }
-    }
-
-    static class ResourceItemHandler {
-
-        private final ResourceItem item;
-
-        ResourceItemHandler(ResourceItem item) {
-            this.item = item;
-        }
-
-        ResourceItem getItem() {
-            return item;
-        }
-
-        ResourceHandle installResource(Provisioner provisioner) throws ProvisionException {
-            LOGGER.info("Install resource item: {}", item);
-            InputStream inputStream;
-            try {
-                inputStream = item.getURL().openStream();
-            } catch (IOException ex) {
-                throw new ProvisionException(ex);
-            }
-            String itemid = item.getIdentity();
-            ResourceIdentity resid = ResourceIdentity.fromString(itemid);
-            ResourceBuilder builder = provisioner.getContentResourceBuilder(resid, itemid, inputStream);
-            return provisioner.installResource(builder.getResource());
         }
     }
 }

@@ -24,6 +24,7 @@ import io.fabric8.test.smoke.ResourceItemsTestBase;
 
 import java.io.InputStream;
 
+import org.jboss.gravia.arquillian.container.ContainerSetup;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.junit.AfterClass;
@@ -35,6 +36,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@ContainerSetup(ResourceItemsTestBase.Setup.class)
 public class ResourceItemsTest extends ResourceItemsTestBase {
 
     @BeforeClass
@@ -50,8 +52,20 @@ public class ResourceItemsTest extends ResourceItemsTestBase {
     @Override
     protected InputStream getDeployment(String name) {
         InputStream inputStream = null;
-        if (DEPLOYMENT_A.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getDeploymentA();
+        if (RESOURCE_A.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getResourceA();
+            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+        } else if (RESOURCE_B.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getResourceB();
+            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+        } else if (RESOURCE_B1.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getResourceB1();
+            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+        } else if (RESOURCE_C.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getResourceC();
+            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+        } else if (RESOURCE_D.equals(name)) {
+            Archive<?> archive = ResourceItemsTestBase.getResourceD();
             inputStream = archive.as(ZipExporter.class).exportAsInputStream();
         }
         return inputStream;

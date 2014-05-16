@@ -20,14 +20,16 @@
 
 package io.fabric8.core.internal;
 
+import io.fabric8.spi.PermitManagerLocator;
+import io.fabric8.spi.ProfileService;
+import io.fabric8.spi.permit.PermitManager;
+import io.fabric8.spi.permit.PermitManager.Permit;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-
-import org.jboss.gravia.utils.IllegalStateAssertion;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * The URLStreamHandler for protocol profile://
@@ -37,17 +39,31 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  */
 final class ProfileURLStreamHandler extends URLStreamHandler {
 
+    static final String PROTOCOL_NAME = "profile";
+
     private final File targetFile;
 
-    ProfileURLStreamHandler(File targetFile) {
+    public ProfileURLStreamHandler() {
+        this.targetFile = null;
+    }
+
+    public ProfileURLStreamHandler(File targetFile) {
         this.targetFile = targetFile;
     }
 
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-        IllegalArgumentAssertion.assertNotNull(url, "url");
-        IllegalStateAssertion.assertEquals("profile", url.getProtocol(), "Invalid protocol: " + url);
-        return targetFile.toURI().toURL().openConnection();
+        if (targetFile != null) {
+            return targetFile.toURI().toURL().openConnection();
+        } else {
+            PermitManager permitManager = PermitManagerLocator.getPermitManager();
+            Permit<ProfileService> permit = permitManager.aquirePermit(ProfileService.PERMIT, false);
+            try {
+                ProfileService service = permit.getInstance();
+                return service.getProfileURLConnection(url);
+            } finally {
+                permit.release();
+            }
+        }
     }
-
 }

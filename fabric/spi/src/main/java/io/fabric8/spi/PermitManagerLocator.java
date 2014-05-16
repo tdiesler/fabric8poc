@@ -19,17 +19,26 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ResourceItem;
+import io.fabric8.spi.permit.PermitManager;
 
-import java.io.InputStream;
+import org.jboss.gravia.runtime.ServiceLocator;
 
 /**
- * An importable resource item
+ * The permit manager locator
  *
  * @author thomas.diesler@jboss.com
- * @since 08-May-2014
+ * @since 16-May-2014
  */
-public interface ImportableResourceItem extends ResourceItem {
+public final class PermitManagerLocator {
 
-    InputStream getInputStream();
+    /**
+     * Locate the container manager
+     */
+    public static PermitManager getPermitManager() {
+        return ServiceLocator.getRequiredService(PermitManager.class);
+    }
+
+    // Hide ctor
+    private PermitManagerLocator() {
+    }
 }

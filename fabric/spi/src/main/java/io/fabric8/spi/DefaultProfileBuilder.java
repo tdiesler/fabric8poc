@@ -26,15 +26,15 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderBase;
 import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ResourceItemBuilder;
 
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -91,14 +91,21 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder addResourceItem(String identity, InputStream inputStream) {
-        mutableProfile.addProfileItem(new DefaultResourceItem(identity, new HashMap<AttributeKey<?>, Object>(), inputStream));
+    public ProfileBuilder addResourceItem(Resource resource) {
+        mutableProfile.addProfileItem(new DefaultResourceItem(resource, false));
         return this;
     }
 
     @Override
-    public ResourceItemBuilder<ProfileBuilder> withResourceItem(String identity) {
-        return new DefaultResourceItemBuilder<ProfileBuilder>(this, identity);
+    public ProfileBuilder addSharedResourceItem(Resource resource) {
+        mutableProfile.addProfileItem(new DefaultResourceItem(resource, true));
+        return this;
+    }
+
+    @Override
+    public ProfileBuilder addRequirementItem(Requirement requirement) {
+        mutableProfile.addProfileItem(new DefaultRequirementItem(requirement));
+        return this;
     }
 
     @Override
@@ -143,30 +150,6 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         @Override
         public B and() {
             profileBuilder.addProfileItem(new DefaultConfigurationItem(identity, getAttributes(), configuration));
-            return profileBuilder;
-        }
-    }
-
-    static class DefaultResourceItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ResourceItemBuilder<B>> implements ResourceItemBuilder<B> {
-
-        private final String identity;
-        private final B profileBuilder;
-        private InputStream importStream;
-
-        DefaultResourceItemBuilder(B profileBuilder, String identity) {
-            this.profileBuilder = profileBuilder;
-            this.identity = identity;
-        }
-
-        @Override
-        public ResourceItemBuilder<B> importFrom(InputStream importStream) {
-            this.importStream = importStream;
-            return this;
-        }
-
-        @Override
-        public B and() {
-            profileBuilder.addProfileItem(new DefaultResourceItem(identity, getAttributes(), importStream));
             return profileBuilder;
         }
     }

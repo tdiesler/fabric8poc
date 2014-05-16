@@ -47,6 +47,8 @@ import org.jboss.gravia.runtime.spi.ManifestHeadersProvider;
 import org.jboss.gravia.runtime.spi.ModuleEntriesProvider;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.runtime.spi.RuntimeFactory;
+import org.jboss.gravia.runtime.spi.URLStreamHandlerFactoryProxy;
+import org.jboss.gravia.runtime.spi.URLStreamHandlerTracker;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ManifestUtils;
 
@@ -67,6 +69,15 @@ public class EmbeddedUtils {
                     @Override
                     public Runtime createRuntime(PropertiesProvider propertiesProvider) {
                         return new EmbeddedRuntime(propertiesProvider, null) {
+
+                            @Override
+                            public void init() {
+                                URLStreamHandlerTracker tracker = new URLStreamHandlerTracker(getModuleContext());
+                                URLStreamHandlerFactoryProxy.setDelegate(tracker);
+                                URLStreamHandlerFactoryProxy.register();
+                                super.init();
+                            }
+
                             @Override
                             protected ModuleEntriesProvider getDefaultEntriesProvider(Module module, Attachable context) {
                                 return new ClassLoaderEntriesProvider(module);

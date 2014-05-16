@@ -1,12 +1,17 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ResourceItem;
 
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
+import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.ContentNamespace;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * The default resource item
@@ -14,33 +19,34 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 08-May-2014
  */
-public final class DefaultResourceItem extends AbstractProfileItem implements ImportableResourceItem {
+public final class DefaultResourceItem extends AbstractProfileItem implements ResourceItem {
 
-    private final InputStream inputStream;
-    private final URL resourceURL;
+    private final Resource resource;
+    private final boolean shared;
 
-    public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, InputStream inputStream) {
-        super(identity, attributes);
-        IllegalArgumentAssertion.assertNotNull(inputStream, "inputStream");
-        this.inputStream = inputStream;
-        this.resourceURL = null;
-    }
-
-    public DefaultResourceItem(String identity, Map<AttributeKey<?>, Object> attributes, URL resourceURL) {
-        super(identity, attributes);
-        IllegalArgumentAssertion.assertNotNull(resourceURL, "resourceURL");
-        this.resourceURL = resourceURL;
-        this.inputStream = null;
+    public DefaultResourceItem(Resource resource, boolean shared) {
+        super(resource.getIdentity().getSymbolicName(), new HashMap<AttributeKey<?>, Object>());
+        IllegalArgumentAssertion.assertNotNull(resource, "resource");
+        this.resource = resource;
+        this.shared = shared;
     }
 
     @Override
-    public InputStream getInputStream() {
-        return inputStream;
+    public Resource getResource() {
+        return resource;
+    }
+
+    @Override
+    public boolean isShared() {
+        return shared;
     }
 
     @Override
     public URL getURL() {
-        return resourceURL;
+        List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
+        IllegalStateAssertion.assertFalse(ccaps.isEmpty(), "Cannot obtain content capability from: " + resource);
+        URL contentURL = (URL) ccaps.get(0).getAttribute(ContentNamespace.CAPABILITY_URL_ATTRIBUTE);
+        return contentURL;
     }
 
     @Override
@@ -58,6 +64,6 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Im
 
     @Override
     public String toString() {
-        return "ResourceItem[id=" + getIdentity() + ",url=" + resourceURL + "]";
+        return "ResourceItem[id=" + getIdentity() + ",url=" + getURL() + "]";
     }
 }

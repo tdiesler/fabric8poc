@@ -26,6 +26,9 @@ import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
 import java.io.IOException;
+import java.net.URLStreamHandler;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -34,6 +37,10 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.Constants;
+import org.jboss.gravia.runtime.ModuleContext;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceRegistration;
 
 /**
  * Initial bootstrap of the system
@@ -50,6 +57,8 @@ public final class BootstrapService extends AbstractComponent {
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
+    private ServiceRegistration<URLStreamHandler> streamHandler;
+
     @Activate
     void activate() throws Exception {
         activateInternal();
@@ -59,9 +68,18 @@ public final class BootstrapService extends AbstractComponent {
     @Deactivate
     void deactivate() {
         deactivateComponent();
+        if (streamHandler != null) {
+            streamHandler.unregister();
+        }
     }
 
     private void activateInternal() throws IOException {
+
+        // Register the URLStreamHandler services
+        Dictionary<String, Object> props = new Hashtable<>();
+        props.put(Constants.URL_HANDLER_PROTOCOL, ProfileURLStreamHandler.PROTOCOL_NAME);
+        ModuleContext syscontext = RuntimeLocator.getRequiredRuntime().getModuleContext();
+        streamHandler = syscontext.registerService(URLStreamHandler.class, new ProfileURLStreamHandler(), props);
 
         // Apply default {@link ConfigurationProfileItem}s
         Profile profile = profileService.get().getDefaultProfile();

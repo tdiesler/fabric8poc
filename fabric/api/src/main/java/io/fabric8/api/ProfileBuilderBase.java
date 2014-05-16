@@ -15,9 +15,10 @@
 
 package io.fabric8.api;
 
-import java.io.InputStream;
 import java.util.Map;
 
+import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 
 public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends AttributableBuilder<B> {
@@ -34,9 +35,11 @@ public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends Att
 
     ConfigurationItemBuilder<B> withConfigurationItem(String identity);
 
-    B addResourceItem(String identity, InputStream inputStream);
+    B addResourceItem(Resource resource);
 
-    ResourceItemBuilder<B> withResourceItem(String identity);
+    B addSharedResourceItem(Resource resource);
+
+    B addRequirementItem(Requirement requirement);
 
     B addParentProfile(String identity);
 

@@ -19,6 +19,7 @@
  */
 package io.fabric8.test.smoke;
 
+import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerManager;
@@ -27,22 +28,43 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.test.smoke.container.ProvisionerTest;
+import io.fabric8.test.smoke.sub.a.CamelTransformHttpActivator;
 import io.fabric8.test.smoke.sub.a.SimpleModuleActivator;
 import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
 
+import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.servlet.Servlet;
+import javax.servlet.http.HttpServlet;
 
+import org.apache.camel.CamelContext;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.model.RouteDefinition;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
+import org.jboss.gravia.arquillian.container.ContainerSetupTask;
+import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceInstaller;
+import org.jboss.gravia.resource.IdentityNamespace;
+import org.jboss.gravia.resource.IdentityRequirementBuilder;
 import org.jboss.gravia.resource.ManifestBuilder;
+import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Module;
@@ -55,14 +77,23 @@ import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.test.gravia.itests.support.AnnotatedProxyListener;
+import org.jboss.test.gravia.itests.support.AnnotatedProxyServlet;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
+import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.service.http.HttpService;
 
 /**
  * Test {@link ResourceInstaller} functionality
@@ -72,7 +103,28 @@ import org.junit.Test;
  */
 public abstract class ResourceItemsTestBase {
 
-    public static final String DEPLOYMENT_A = "resource-itemA";
+    protected static final String RESOURCE_A = "resitemA";
+    protected static final String RESOURCE_B = "resitemB";
+    protected static final String RESOURCE_B1 = "resitemB1";
+    protected static final String RESOURCE_C = "resitemC";
+    protected static final String RESOURCE_D = "resitemD";
+
+    public static class Setup extends ContainerSetupTask {
+
+        Set<ResourceIdentity> identities;
+
+        @Override
+        protected void setUp(Context context) throws Exception {
+            String resname = "META-INF/repository-content/camel.core.feature.xml";
+            URL resurl = getClass().getClassLoader().getResource(resname);
+            identities = addRepositoryContent(context, resurl);
+        }
+
+        @Override
+        protected void tearDown(Context context) throws Exception {
+            removeRepositoryContent(context, identities);
+        }
+    }
 
     @Before
     public void preConditions() {
@@ -87,86 +139,259 @@ public abstract class ResourceItemsTestBase {
     protected abstract InputStream getDeployment(String name);
 
     /**
-     * Install a shared resource from input stream
+     * @see ProvisionerTest#testStreamResource()
      */
     @Test
-    @Ignore
-    public void testSharedStreamResource() throws Exception {
-    }
+    public void testStreamResource() throws Exception {
 
-    /**
-     * Install a shared resource from maven coordinates
-     */
-    @Test
-    @Ignore
-    public void testSharedMavenResource() throws Exception {
-    }
-
-    /**
-     * Install a shared profile resource from input stream
-     */
-    @Test
-    @Ignore
-    public void testSharedFeature() throws Exception {
-    }
-
-    /**
-     * Install a unshared resource from input stream
-     */
-    @Test
-    public void testUnsharedStreamResource() throws Exception {
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
-        // Get current container
-        Container cnt = cntManager.getCurrentContainer();
-        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cnt.getProfileVersion());
+        // Build the resitem
+        ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
+        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, runtimeName(RESOURCE_A), getDeployment(RESOURCE_A));
+        Resource resourceA = builderA.getResource();
 
         // Build a profile
-        InputStream inputStream = getDeployment(DEPLOYMENT_A);
         Profile profile = ProfileBuilder.Factory.create("foo")
                 .profileVersion(DEFAULT_PROFILE_VERSION)
-                .addResourceItem(DEPLOYMENT_A, inputStream)
+                .addResourceItem(resourceA)
                 .build();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem resItem = profile.getProfileItem(DEPLOYMENT_A, ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resource-itemA", resItem.getURL().toExternalForm());
-        Assert.assertNotNull("URL stream not null", resItem.getURL().openStream());
+        ResourceItem itemA = profile.getProfileItem(RESOURCE_A, ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/resitemA", itemA.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemA.getURL().openStream());
 
+        // Add the profile to the current coontainer
+        Container cnt = cntManager.getCurrentContainer();
         cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        Module module = runtime.getModule(ResourceIdentity.create(DEPLOYMENT_A, Version.emptyVersion));
-        Assert.assertNotNull("Module not null", module);
-        Assert.assertEquals(State.ACTIVE, module.getState());
+        Module moduleA = runtime.getModule(identityA);
+        Assert.assertNotNull("Module not null", moduleA);
+        Assert.assertEquals(State.ACTIVE, moduleA.getState());
 
         // Verify that the module activator was called
         MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
-        Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(module)));
-        Assert.assertEquals("ACTIVE" + module, "ACTIVE", server.getAttribute(getObjectName(module), "ModuleState"));
+        Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleA)));
+        Assert.assertEquals("ACTIVE" + moduleA, "ACTIVE", server.getAttribute(getObjectName(moduleA), "ModuleState"));
 
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
     /**
-     * Install a unshared resource from maven coordinates
+     * @see ProvisionerTest#testSharedStreamResource()
      */
     @Test
-    @Ignore
-    public void testUnsharedMavenResource() throws Exception {
+    public void testSharedStreamResource() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
+        // Build the resources
+        ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
+        ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, RESOURCE_B + ".jar", getDeployment(RESOURCE_B));
+        Resource resourceB = builderB.getResource();
+        ResourceIdentity identityB1 = ResourceIdentity.fromString(RESOURCE_B1);
+        ResourceBuilder builderB1 = provisioner.getContentResourceBuilder(identityB1, runtimeName(RESOURCE_B1), getDeployment(RESOURCE_B1));
+        Resource resourceB1 = builderB1.getResource();
+
+        // Build a profile
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .profileVersion(DEFAULT_PROFILE_VERSION)
+                .addSharedResourceItem(resourceB)
+                .addResourceItem(resourceB1)
+                .build();
+
+        // Add the profile and verify the item URL
+        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
+        Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemB = profile.getProfileItem(RESOURCE_B, ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/resitemB", itemB.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemB.getURL().openStream());
+        ResourceItem itemB1 = profile.getProfileItem(RESOURCE_B1, ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/resitemB1", itemB1.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemB1.getURL().openStream());
+
+        // Add the profile to the current coontainer
+        Container cnt = cntManager.getCurrentContainer();
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+
+        // Verify that the module got installed
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        Module moduleB = runtime.getModule(identityB);
+        Assert.assertNotNull("Module not null", moduleB);
+        Assert.assertEquals(State.ACTIVE, moduleB.getState());
+        Module moduleB1 = runtime.getModule(identityB1);
+        Assert.assertNotNull("Module not null", moduleB1);
+        Assert.assertEquals(State.ACTIVE, moduleB1.getState());
+
+        // Verify that the module activator was called
+        MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
+        Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleB1)));
+        Assert.assertEquals("ACTIVE" + moduleB, "ACTIVE", server.getAttribute(getObjectName(moduleB1), "ModuleState"));
+
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
     /**
-     * Install a unshared profile resource from input stream
+     * @see ProvisionerTest#testMavenResource()
+     */
+    @Test
+    public void testMavenResource() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
+        // Tomcat does not support jar deployments
+        Assume.assumeFalse(RuntimeType.TOMCAT == RuntimeType.getRuntimeType());
+
+        // Build the resource
+        ResourceIdentity identityA = ResourceIdentity.fromString("resitem.camel.core");
+        MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
+        ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
+        Resource resourceA = builderA.getResource();
+
+        // Build a profile
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .profileVersion(DEFAULT_PROFILE_VERSION)
+                .addResourceItem(resourceA)
+                .build();
+
+        // Add the profile and verify the item URL
+        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
+        Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = profile.getProfileItem(identityA.getSymbolicName(), ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/resitem.camel.core", itemA.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemA.getURL().openStream());
+
+        // Add the profile to the current coontainer
+        Container cnt = cntManager.getCurrentContainer();
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+
+        // Verify that the module got installed
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        Module moduleA = runtime.getModule(identityA);
+        Assert.assertNotNull("Module not null", moduleA);
+        Assert.assertEquals(State.ACTIVE, moduleA.getState());
+
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+    }
+
+    /**
+     * @see ProvisionerTest#testSharedMavenResource()
+     */
+    @Test
+    public void testSharedMavenResource() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
+        // Build the resources
+        ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.resitem");
+        MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
+        ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
+        builderA.getCurrentResource().getIdentityCapability().getAttributes().put(IdentityNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-item-2.11.0.jar");
+        builderA.addIdentityRequirement("javax.api");
+        builderA.addIdentityRequirement("org.slf4j");
+        Resource resourceA = builderA.getResource();
+        ResourceIdentity identityC = ResourceIdentity.fromString(RESOURCE_C);
+        ResourceBuilder builderC = provisioner.getContentResourceBuilder(identityC, RESOURCE_C + ".war", getDeployment(RESOURCE_C));
+        Resource resourceC = builderC.getResource();
+
+        // Build a profile
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .profileVersion(DEFAULT_PROFILE_VERSION)
+                .addSharedResourceItem(resourceA)
+                .addResourceItem(resourceC)
+                .build();
+
+        // Add the profile and verify the item URL
+        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
+        Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = profile.getProfileItem(identityA.getSymbolicName(), ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/camel.core.resitem", itemA.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemA.getURL().openStream());
+        ResourceItem itemC = profile.getProfileItem(identityC.getSymbolicName(), ResourceItem.class);
+        Assert.assertEquals("profile://1.0.0/foo/resitemC", itemC.getURL().toExternalForm());
+        Assert.assertNotNull("URL stream not null", itemC.getURL().openStream());
+
+        Assert.assertNotNull("URL stream not null", new URL(itemC.getURL().toExternalForm()).openStream());
+
+        // Add the profile to the current coontainer
+        Container cnt = cntManager.getCurrentContainer();
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+
+        // Make a call to the HttpService endpoint that goes through a Camel route
+        if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
+            String reqspec = "/service?test=Kermit";
+            String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_C;
+            Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+        }
+
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+ }
+
+    /**
+     * @see ProvisionerTest#testAbstractFeature()
      */
     @Test
     @Ignore
-    public void testUnsharedFeature() throws Exception {
+    public void testAbstractFeature() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
+        // Build the requirement & client resource
+        ResourceIdentity featureId = ResourceIdentity.fromString("camel.core.feature:0.0.0");
+        Requirement requirement = new IdentityRequirementBuilder(featureId).getRequirement();
+        ResourceIdentity identityD = ResourceIdentity.fromString(RESOURCE_D);
+        ResourceBuilder builderD = provisioner.getContentResourceBuilder(identityD, RESOURCE_D + ".war", getDeployment(RESOURCE_D));
+        Resource resourceD = builderD.getResource();
+
+        // Build a profile
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .profileVersion(DEFAULT_PROFILE_VERSION)
+                .addRequirementItem(requirement)
+                .addResourceItem(resourceD)
+                .build();
+
+        // Add the profile and verify the item URL
+        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
+        Assert.assertEquals(1, profile.getProfileItems(RequirementItem.class).size());
+        RequirementItem itemA = profile.getProfileItem(featureId.getSymbolicName(), RequirementItem.class);
+        Assert.assertNotNull("Requirement not null", itemA.getRequirement());
+
+        // Add the profile to the current coontainer
+        Container cnt = cntManager.getCurrentContainer();
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+
+        // Make a call to the HttpService endpoint that goes through a Camel route
+        if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
+            String reqspec = "/service?test=Kermit";
+            String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_D;
+            Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+        }
+
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+    }
+
+    private String runtimeName(String resname) {
+        return resname + (RuntimeType.TOMCAT == RuntimeType.getRuntimeType() ? ".war" : ".jar");
     }
 
     private static ObjectName getObjectName(Module module) throws MalformedObjectNameException {
@@ -174,9 +399,17 @@ public abstract class ResourceItemsTestBase {
         return new ObjectName("test:name=" + identity.getSymbolicName() + ",version=" + identity.getVersion());
     }
 
-    @Deployment(name = DEPLOYMENT_A, managed = false, testable = false)
-    public static Archive<?> getDeploymentA() {
-        final ArchiveBuilder archive = new ArchiveBuilder(DEPLOYMENT_A);
+    private String performCall(String context, String path) throws Exception {
+        return performCall(context, path, null, 2, TimeUnit.SECONDS);
+    }
+
+    private String performCall(String context, String path, Map<String, String> headers, long timeout, TimeUnit unit) throws Exception {
+        return HttpRequest.get("http://localhost:8080" + context + path, headers, timeout, unit);
+    }
+
+    @Deployment(name = RESOURCE_A, managed = false, testable = false)
+    public static Archive<?> getResourceA() {
+        final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_A);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
         archive.addClasses(SimpleModuleActivator.class, SimpleModuleState.class);
@@ -186,20 +419,136 @@ public abstract class ResourceItemsTestBase {
                 if (ArchiveBuilder.getTargetContainer() == RuntimeType.KARAF) {
                     OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                     builder.addBundleManifestVersion(2);
-                    builder.addBundleSymbolicName(DEPLOYMENT_A);
+                    builder.addBundleSymbolicName(RESOURCE_A);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
                     builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class, MBeanServer.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
-                    builder.addIdentityCapability(DEPLOYMENT_A, Version.emptyVersion);
+                    builder.addIdentityCapability(RESOURCE_A, Version.emptyVersion);
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
-                    builder.addManifestHeader("Dependencies", "org.jboss.gravia,io.fabric8.api");
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia");
                     return builder.openStream();
                 }
             }
         });
         return archive.getArchive();
+    }
+
+    @Deployment(name = RESOURCE_B, managed = false, testable = false)
+    public static Archive<?> getResourceB() {
+        JavaArchive archive = ShrinkWrap.create(JavaArchive.class, RESOURCE_B + ".jar");
+        archive.addClasses(SimpleModuleState.class);
+        archive.setManifest(new Asset() {
+            @Override
+            public InputStream openStream() {
+                OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
+                builder.addBundleManifestVersion(2);
+                builder.addBundleSymbolicName(RESOURCE_B);
+                builder.addExportPackages(SimpleModuleState.class);
+                builder.addImportPackages(Runtime.class, Resource.class);
+                return builder.openStream();
+            }
+        });
+        return archive;
+    }
+
+    @Deployment(name = RESOURCE_B1, managed = false, testable = false)
+    public static Archive<?> getResourceB1() {
+        final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_B1);
+        archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
+        archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
+        archive.addClasses(SimpleModuleActivator.class);
+        archive.setManifest(new Asset() {
+            @Override
+            public InputStream openStream() {
+                if (ArchiveBuilder.getTargetContainer() == RuntimeType.KARAF) {
+                    OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
+                    builder.addBundleManifestVersion(2);
+                    builder.addBundleSymbolicName(RESOURCE_B1);
+                    builder.addBundleActivator(ModuleActivatorBridge.class);
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class);
+                    builder.addImportPackages(MBeanServer.class, SimpleModuleState.class);
+                    return builder.openStream();
+                } else {
+                    ManifestBuilder builder = new ManifestBuilder();
+                    builder.addIdentityCapability(RESOURCE_B1, Version.emptyVersion);
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addManifestHeader("Dependencies", "org.jboss.gravia," + RESOURCE_B);
+                    return builder.openStream();
+                }
+            }
+        });
+        return archive.getArchive();
+    }
+
+    @Deployment(name = RESOURCE_C, managed = false, testable = false)
+    public static Archive<?> getResourceC() {
+        final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_C + ".war");
+        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
+        archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
+        archive.addClasses(CamelTransformHttpActivator.class, ModuleActivatorBridge.class);
+        archive.setManifest(new Asset() {
+            @Override
+            public InputStream openStream() {
+                if (ArchiveBuilder.getTargetContainer() == RuntimeType.KARAF) {
+                    OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
+                    builder.addBundleManifestVersion(2);
+                    builder.addBundleSymbolicName(RESOURCE_C);
+                    builder.addBundleActivator(ModuleActivatorBridge.class);
+                    builder.addManifestHeader(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
+                    builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
+                    builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);
+                    builder.addBundleClasspath("WEB-INF/classes");
+                    return builder.openStream();
+                } else {
+                    ManifestBuilder builder = new ManifestBuilder();
+                    builder.addIdentityCapability(RESOURCE_C, Version.emptyVersion);
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
+                    builder.addManifestHeader("Dependencies", "camel.core.resitem");
+                    return builder.openStream();
+                }
+            }
+        });
+        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
+        archive.addAsLibraries(libs);
+        return archive;
+    }
+
+    @Deployment(name = RESOURCE_D, managed = false, testable = false)
+    public static Archive<?> getResourceD() {
+        final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_D + ".war");
+        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
+        archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
+        archive.addClasses(CamelTransformHttpActivator.class, ModuleActivatorBridge.class);
+        archive.setManifest(new Asset() {
+            @Override
+            public InputStream openStream() {
+                if (ArchiveBuilder.getTargetContainer() == RuntimeType.KARAF) {
+                    OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
+                    builder.addBundleManifestVersion(2);
+                    builder.addBundleSymbolicName(RESOURCE_D);
+                    builder.addBundleActivator(ModuleActivatorBridge.class);
+                    builder.addManifestHeader(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
+                    builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
+                    builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);
+                    builder.addBundleClasspath("WEB-INF/classes");
+                    return builder.openStream();
+                } else {
+                    ManifestBuilder builder = new ManifestBuilder();
+                    builder.addIdentityCapability(RESOURCE_D, Version.emptyVersion);
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
+                    builder.addManifestHeader("Dependencies", "org.apache.camel.core");
+                    return builder.openStream();
+                }
+            }
+        });
+        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
+        archive.addAsLibraries(libs);
+        return archive;
     }
 }

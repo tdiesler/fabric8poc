@@ -27,16 +27,15 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ResourceItemBuilder;
 import io.fabric8.spi.DefaultProfileBuilder.DefaultConfigurationItemBuilder;
-import io.fabric8.spi.DefaultProfileBuilder.DefaultResourceItemBuilder;
 
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -222,14 +221,21 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
 
         @Override
-        public DefaultNestedProfileBuilder addResourceItem(String identity, InputStream inputStream) {
-            nested.addResourceItem(identity, inputStream);
+        public NestedProfileBuilder addResourceItem(Resource resource) {
+            nested.addResourceItem(resource);
             return this;
         }
 
         @Override
-        public ResourceItemBuilder<NestedProfileBuilder> withResourceItem(String identity) {
-            return new DefaultResourceItemBuilder<NestedProfileBuilder>(this, identity);
+        public NestedProfileBuilder addSharedResourceItem(Resource resource) {
+            nested.addSharedResourceItem(resource);
+            return this;
+        }
+
+        @Override
+        public NestedProfileBuilder addRequirementItem(Requirement requirement) {
+            nested.addRequirementItem(requirement);
+            return this;
         }
 
         @Override

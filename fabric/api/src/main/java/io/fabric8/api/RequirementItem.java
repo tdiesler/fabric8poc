@@ -19,18 +19,15 @@
  */
 package io.fabric8.api;
 
-import java.io.InputStream;
-
-
-
+import org.jboss.gravia.resource.Requirement;
 
 /**
- * A profile item builder
+ * A requirement profile item.
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 15-May-2014
  */
-public interface ResourceItemBuilder<B extends ProfileBuilderBase<B>> extends ProfileItemBuilder<ResourceItemBuilder<B>, B> {
+public interface RequirementItem extends ProfileItem {
 
-    ResourceItemBuilder<B> importFrom(InputStream importStream);
+    Requirement getRequirement();
 }

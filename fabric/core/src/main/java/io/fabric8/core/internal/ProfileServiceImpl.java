@@ -40,6 +40,9 @@ import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.ProfileUtils;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -464,6 +467,17 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             Profile profile = profileRegistry.get().getProfile(version, identity);
             IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile: " + version + ":" + identity);
             return profile;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public URLConnection getProfileURLConnection(URL url) throws IOException {
+        Version version = new Version(url.getHost());
+        LockHandle readLock = aquireReadLock(version);
+        try {
+            return profileRegistry.get().getProfileURLConnection(url);
         } finally {
             readLock.unlock();
         }

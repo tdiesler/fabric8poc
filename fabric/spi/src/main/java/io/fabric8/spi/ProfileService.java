@@ -19,6 +19,10 @@
  */
 package io.fabric8.spi;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
+
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
@@ -42,4 +46,6 @@ public interface ProfileService extends ProfileManager {
     ProfileVersion getRequiredProfileVersion(Version version);
 
     Profile getRequiredProfile(Version version, String identity);
+
+    URLConnection getProfileURLConnection(URL url) throws IOException;
 }

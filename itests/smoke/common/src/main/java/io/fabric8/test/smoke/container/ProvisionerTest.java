@@ -19,6 +19,11 @@
  */
 package io.fabric8.test.smoke.container;
 
+import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
+import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ContainerManagerLocator;
+import io.fabric8.spi.BootstrapComplete;
+import io.fabric8.test.smoke.PrePostConditions;
 import io.fabric8.test.smoke.sub.a.CamelTransformHttpActivator;
 import io.fabric8.test.smoke.sub.a.SimpleModuleActivator;
 import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
@@ -89,8 +94,10 @@ import org.jboss.test.gravia.itests.support.AnnotatedProxyListener;
 import org.jboss.test.gravia.itests.support.AnnotatedProxyServlet;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.jboss.test.gravia.itests.support.HttpRequest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.service.http.HttpService;
@@ -102,8 +109,8 @@ import org.osgi.service.http.HttpService;
  * @since 19-Dec-2013
  */
 @RunWith(Arquillian.class)
-@ContainerSetup(ProvisionerServiceTest.Setup.class)
-public class ProvisionerServiceTest {
+@ContainerSetup(ProvisionerTest.Setup.class)
+public class ProvisionerTest {
 
     static final String RESOURCE_A = "resourceA";
     static final String RESOURCE_B = "resourceB";
@@ -129,13 +136,23 @@ public class ProvisionerServiceTest {
         }
     }
 
+    @Before
+    public void preConditions() {
+        PrePostConditions.assertPreConditions();
+    }
+
+    @After
+    public void postConditions() {
+        PrePostConditions.assertPostConditions();
+    }
+
     @ArquillianResource
     Deployer deployer;
 
     @Deployment
     public static Archive<?> deployment() {
         final ArchiveBuilder archive = new ArchiveBuilder("provisioner-service");
-        archive.addClasses(HttpRequest.class);
+        archive.addClasses(HttpRequest.class, PrePostConditions.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -143,13 +160,14 @@ public class ProvisionerServiceTest {
                     OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(archive.getName());
-                    builder.addBundleVersion("1.0.0");
+                    builder.addImportPackages(ContainerManager.class);
                     builder.addImportPackages(Runtime.class, Resource.class, Provisioner.class, Resolver.class, Repository.class);
-                    builder.addImportPackages(MBeanServer.class);
+                    builder.addImportPackages(BootstrapComplete.class, MBeanServer.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
-                    builder.addIdentityCapability(archive.getName(), "1.0.0");
+                    builder.addIdentityCapability(archive.getName(), Version.emptyVersion);
+                    builder.addManifestHeader("Dependencies", "io.fabric8.api,io.fabric8.spi");
                     return builder.openStream();
                 }
             }
@@ -164,8 +182,9 @@ public class ProvisionerServiceTest {
      * The installed resource is self sufficient - no additional dependency mapping needed.
      */
     @Test
-    public void testProvisionStreamResource() throws Exception {
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
+    public void testStreamResource() throws Exception {
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
         ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, runtimeName(RESOURCE_A), deployer.getDeployment(RESOURCE_A));
         ResourceHandle handle = provisioner.installResource(builderA.getResource());
@@ -193,9 +212,10 @@ public class ProvisionerServiceTest {
      * The installed resources are self sufficient - no additional dependency mapping needed.
      */
     @Test
-    public void testProvisionSharedStreamResource() throws Exception {
+    public void testSharedStreamResource() throws Exception {
         List<ResourceHandle> handles = new ArrayList<>();
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
         ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, RESOURCE_B + ".jar", deployer.getDeployment(RESOURCE_B));
         ResourceIdentity identityB1 = ResourceIdentity.fromString(RESOURCE_B1);
@@ -211,10 +231,10 @@ public class ProvisionerServiceTest {
                 Assert.assertEquals("ACTIVE " + identity, State.ACTIVE, handle.getModule().getState());
             }
             // Verify that the module activator was called
-            Module module = runtime.getModule(identityB1);
+            Module moduleB1 = runtime.getModule(identityB1);
             MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
-            Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(module)));
-            Assert.assertEquals("ACTIVE", server.getAttribute(getObjectName(module), "ModuleState"));
+            Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleB1)));
+            Assert.assertEquals("ACTIVE", server.getAttribute(getObjectName(moduleB1), "ModuleState"));
         } finally {
             for (ResourceHandle handle : handles) {
                 handle.uninstall();
@@ -229,10 +249,10 @@ public class ProvisionerServiceTest {
      * The installed resource is self sufficient - no additional dependency mapping needed.
      */
     @Test
-    public void testProvisionMavenResource() throws Exception {
+    public void testMavenResource() throws Exception {
 
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
-        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
         // Tomcat does not support jar deployments
         Assume.assumeFalse(RuntimeType.TOMCAT == RuntimeType.getRuntimeType());
@@ -242,6 +262,7 @@ public class ProvisionerServiceTest {
         ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
         ResourceHandle handleA = provisioner.installResource(builderA.getResource());
         try {
+            Runtime runtime = RuntimeLocator.getRequiredRuntime();
             Assert.assertSame(handleA.getModule(), runtime.getModule(identityA));
             Assert.assertEquals("ACTIVE " + identityA, State.ACTIVE, handleA.getModule().getState());
         } finally {
@@ -257,10 +278,10 @@ public class ProvisionerServiceTest {
      * The shared resource needs additional dependency mapping to work in wildfly.
      */
     @Test
-    public void testProvisionSharedMavenResource() throws Exception {
+    public void testSharedMavenResource() throws Exception {
 
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
-        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.shared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
@@ -270,6 +291,7 @@ public class ProvisionerServiceTest {
         builderA.addIdentityRequirement("org.slf4j");
         ResourceHandle handleA = provisioner.installSharedResource(builderA.getResource());
         try {
+            Runtime runtime = RuntimeLocator.getRequiredRuntime();
             Assert.assertSame(handleA.getModule(), runtime.getModule(identityA));
             Assert.assertEquals("ACTIVE " + identityA, State.ACTIVE, handleA.getModule().getState());
 
@@ -297,9 +319,10 @@ public class ProvisionerServiceTest {
      * Only the needed delta that is not already available in the runtime is provisioned.
      */
     @Test
-    public void testProvisionAbstractFeature() throws Exception {
+    public void testAbstractFeature() throws Exception {
 
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
         // Provision the camel.core feature
         ResourceIdentity identity = ResourceIdentity.fromString("camel.core.feature:0.0.0");
@@ -369,9 +392,10 @@ public class ProvisionerServiceTest {
      * The transitive set of dependencies is provisioned.
      */
     @Test
-    public void testProvisionRepositoryResourceWithDependency() throws Exception {
+    public void testRepositoryResourceWithDependency() throws Exception {
 
-        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
         // Build a resource that has a dependency on camel.core
         DefaultResourceBuilder builder = new DefaultResourceBuilder();
