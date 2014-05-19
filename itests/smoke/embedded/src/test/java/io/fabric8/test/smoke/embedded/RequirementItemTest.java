@@ -20,11 +20,14 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.ResourceItemsTestBase;
+import io.fabric8.test.embedded.support.EmbeddedUtils;
+import io.fabric8.test.smoke.RequirementItemTestBase;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Set;
 
-import org.jboss.gravia.arquillian.container.ContainerSetup;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.junit.AfterClass;
@@ -36,16 +39,22 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@ContainerSetup(ResourceItemsTestBase.Setup.class)
-public class ResourceItemsTest extends ResourceItemsTestBase {
+public class RequirementItemTest extends RequirementItemTestBase {
+
+    private static Set<ResourceIdentity> repositoryIdentities;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         EmbeddedTestSupport.beforeClass();
+
+        String resname = "META-INF/repository-content/camel.core.feature.xml";
+        URL resurl = RequirementItemTest.class.getClassLoader().getResource(resname);
+        repositoryIdentities = EmbeddedUtils.addRepositoryContent(resurl);
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
+        EmbeddedUtils.removeRepositoryContent(repositoryIdentities);
         EmbeddedTestSupport.afterClass();
     }
 
@@ -53,19 +62,7 @@ public class ResourceItemsTest extends ResourceItemsTestBase {
     protected InputStream getDeployment(String name) {
         InputStream inputStream = null;
         if (RESOURCE_A.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getResourceA();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
-        } else if (RESOURCE_B.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getResourceB();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
-        } else if (RESOURCE_B1.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getResourceB1();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
-        } else if (RESOURCE_C.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getResourceC();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
-        } else if (RESOURCE_D.equals(name)) {
-            Archive<?> archive = ResourceItemsTestBase.getResourceD();
+            Archive<?> archive = RequirementItemTestBase.getResourceA();
             inputStream = archive.as(ZipExporter.class).exportAsInputStream();
         }
         return inputStream;

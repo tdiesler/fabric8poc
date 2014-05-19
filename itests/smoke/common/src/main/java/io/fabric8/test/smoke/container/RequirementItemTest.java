@@ -22,11 +22,11 @@ package io.fabric8.test.smoke.container;
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.smoke.PrePostConditions;
-import io.fabric8.test.smoke.ResourceItemsTestBase;
+import io.fabric8.test.smoke.RequirementItemTestBase;
 
 import java.io.InputStream;
-
-import javax.management.MBeanServer;
+import java.net.URL;
+import java.util.Set;
 
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -34,9 +34,11 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.osgi.StartLevelAware;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.gravia.arquillian.container.ContainerSetup;
+import org.jboss.gravia.arquillian.container.ContainerSetupTask;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
@@ -54,8 +56,25 @@ import org.junit.runner.RunWith;
  * @since 08-May-2014
  */
 @RunWith(Arquillian.class)
-@ContainerSetup(ResourceItemsTestBase.Setup.class)
-public class ResourceItemsTest extends ResourceItemsTestBase {
+@ContainerSetup(RequirementItemTest.Setup.class)
+public class RequirementItemTest extends RequirementItemTestBase {
+
+    public static class Setup extends ContainerSetupTask {
+
+        Set<ResourceIdentity> identities;
+
+        @Override
+        protected void setUp(Context context) throws Exception {
+            String resname = "META-INF/repository-content/camel.core.feature.xml";
+            URL resurl = getClass().getClassLoader().getResource(resname);
+            identities = addRepositoryContent(context, resurl);
+        }
+
+        @Override
+        protected void tearDown(Context context) throws Exception {
+            removeRepositoryContent(context, identities);
+        }
+    }
 
     @ArquillianResource
     Deployer deployer;
@@ -63,9 +82,9 @@ public class ResourceItemsTest extends ResourceItemsTestBase {
     @Deployment
     @StartLevelAware(autostart = true)
     public static Archive<?> deployment() {
-        final ArchiveBuilder archive = new ArchiveBuilder("resource-items-test");
+        final ArchiveBuilder archive = new ArchiveBuilder("requirement-items-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
-        archive.addClasses(ResourceItemsTestBase.class, PrePostConditions.class);
+        archive.addClasses(RequirementItemTestBase.class, PrePostConditions.class);
         archive.addClasses(HttpRequest.class);
         archive.setManifest(new Asset() {
             @Override
@@ -76,7 +95,7 @@ public class ResourceItemsTest extends ResourceItemsTestBase {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class, Provisioner.class);
-                    builder.addImportPackages(BootstrapComplete.class, MBeanServer.class);
+                    builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();

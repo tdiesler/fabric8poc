@@ -21,8 +21,12 @@ package io.fabric8.test.embedded.support;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -30,6 +34,9 @@ import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
 import org.jboss.gravia.provision.spi.RuntimeEnvironment;
+import org.jboss.gravia.repository.DefaultRepositoryXMLReader;
+import org.jboss.gravia.repository.Repository;
+import org.jboss.gravia.repository.RepositoryReader;
 import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
 import org.jboss.gravia.resource.Resource;
@@ -40,6 +47,7 @@ import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.ModuleException;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.embedded.internal.EmbeddedRuntime;
 import org.jboss.gravia.runtime.spi.ClassLoaderEntriesProvider;
 import org.jboss.gravia.runtime.spi.DefaultPropertiesProvider;
@@ -49,6 +57,8 @@ import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.runtime.spi.RuntimeFactory;
 import org.jboss.gravia.runtime.spi.URLStreamHandlerFactoryProxy;
 import org.jboss.gravia.runtime.spi.URLStreamHandlerTracker;
+import org.jboss.gravia.utils.IOUtils;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ManifestUtils;
 
@@ -89,11 +99,27 @@ public class EmbeddedUtils {
                 runtime = RuntimeLocator.createRuntime(factory, new DefaultPropertiesProvider());
                 runtime.init();
 
+                // Register the {@link RuntimeEnvironment} and {@link ResourceInstaller}
                 ModuleContext syscontext = runtime.getModuleContext();
                 RuntimeEnvironment environment = new RuntimeEnvironment(runtime);
                 EmbeddedResourceInstaller resourceInstaller = new EmbeddedResourceInstaller(environment);
                 syscontext.registerService(RuntimeEnvironment.class, environment, null);
                 syscontext.registerService(ResourceInstaller.class, resourceInstaller, null);
+
+                // Add initial runtime resources
+                String resname = "environment.xml";
+                URL resurl = EmbeddedUtils.class.getClassLoader().getResource(resname);
+                if (resurl != null) {
+                    InputStream input = null;
+                    try {
+                        input = resurl.openStream();
+                        environment.initDefaultContent(input);
+                    } catch (IOException ex) {
+                        throw new IllegalStateException(ex);
+                    } finally {
+                        IOUtils.safeClose(input);
+                    }
+                }
             }
         }
         return runtime;
@@ -142,6 +168,38 @@ public class EmbeddedUtils {
         Module module = getEmbeddedRuntime().installModule(classLoader, resource, headers);
         module.start();
         return module;
+    }
+
+    public static Set<ResourceIdentity> addRepositoryContent(URL resurl) throws IOException {
+        IllegalArgumentAssertion.assertNotNull(resurl, "resurl");
+        Repository repository = ServiceLocator.getRequiredService(Repository.class);
+
+        Set<ResourceIdentity> result = new HashSet<>();
+        InputStream input = resurl.openStream();
+        try {
+            RepositoryReader reader = new DefaultRepositoryXMLReader(input);
+            Resource auxres = reader.nextResource();
+            while (auxres != null) {
+                ResourceIdentity identity = auxres.getIdentity();
+                if (repository.getResource(identity) == null) {
+                    repository.addResource(auxres);
+                    result.add(identity);
+                }
+                auxres = reader.nextResource();
+            }
+        } finally {
+            IOUtils.safeClose(input);
+        }
+        return Collections.unmodifiableSet(result);
+    }
+
+    public static void removeRepositoryContent(Set<ResourceIdentity> identities) throws IOException {
+        if (identities != null) {
+            Repository repository = ServiceLocator.getRequiredService(Repository.class);
+            for (ResourceIdentity resid : identities) {
+                repository.removeResource(resid);
+            }
+        }
     }
 
     private static File getModuleFile(String modname) {
