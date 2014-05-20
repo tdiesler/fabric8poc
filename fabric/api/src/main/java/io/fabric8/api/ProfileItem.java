@@ -27,6 +27,6 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileItem extends Attributable, Identifiable<String> {
+public interface ProfileItem extends Identifiable<String> {
 
 }

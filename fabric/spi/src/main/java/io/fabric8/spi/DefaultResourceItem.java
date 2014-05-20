@@ -1,9 +1,6 @@
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ResourceItem;
-
-import java.util.HashMap;
 
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -20,7 +17,7 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Re
     private final boolean shared;
 
     public DefaultResourceItem(Resource resource, boolean shared) {
-        super(resource.getIdentity().getSymbolicName(), new HashMap<AttributeKey<?>, Object>());
+        super(resource.getIdentity().getSymbolicName());
         IllegalArgumentAssertion.assertNotNull(resource, "resource");
         this.resource = resource;
         this.shared = shared;

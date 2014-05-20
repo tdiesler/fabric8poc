@@ -19,19 +19,15 @@
  */
 package io.fabric8.spi;
 
-import java.util.Map;
-
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ProfileItem;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
-public abstract class AbstractProfileItem extends AttributeSupport implements ProfileItem {
+public abstract class AbstractProfileItem implements ProfileItem {
 
     private final String identity;
 
-    protected AbstractProfileItem(String identity, Map<AttributeKey<?>, Object> attributes) {
-        super(attributes);
+    protected AbstractProfileItem(String identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
     }

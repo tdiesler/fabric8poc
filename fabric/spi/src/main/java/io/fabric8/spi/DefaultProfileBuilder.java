@@ -19,17 +19,13 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
-import io.fabric8.api.ProfileBuilderBase;
 import io.fabric8.api.ProfileItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,13 +80,8 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
-        mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, new HashMap<AttributeKey<?>, Object>(), config));
+        mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, config));
         return this;
-    }
-
-    @Override
-    public ConfigurationItemBuilder<ProfileBuilder> withConfigurationItem(String identity) {
-        return new DefaultConfigurationItemBuilder<ProfileBuilder>(this, identity);
     }
 
     @Override
@@ -131,30 +122,6 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     private void validate() {
         IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
-    }
-
-    static class DefaultConfigurationItemBuilder<B extends ProfileBuilderBase<B>> extends AbstractAttributableBuilder<ConfigurationItemBuilder<B>> implements ConfigurationItemBuilder<B> {
-
-        private final String identity;
-        private final B profileBuilder;
-        private Map<String, Object> configuration;
-
-        DefaultConfigurationItemBuilder(B profileBuilder, String identity) {
-            this.profileBuilder = profileBuilder;
-            this.identity = identity;
-        }
-
-        @Override
-        public ConfigurationItemBuilder<B> configuration(Map<String, Object> config) {
-            configuration = new HashMap<>(config);
-            return this;
-        }
-
-        @Override
-        public B and() {
-            profileBuilder.addProfileItem(new DefaultConfigurationItem(identity, getAttributes(), configuration));
-            return profileBuilder;
-        }
     }
 
     private static class MutableProfile extends AttributeSupport implements Profile {

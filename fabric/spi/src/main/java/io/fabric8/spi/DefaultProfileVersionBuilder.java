@@ -20,14 +20,12 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.spi.DefaultProfileBuilder.DefaultConfigurationItemBuilder;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -213,11 +211,6 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         public DefaultNestedProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
             nested.addConfigurationItem(identity, config);
             return this;
-        }
-
-        @Override
-        public ConfigurationItemBuilder<NestedProfileBuilder> withConfigurationItem(String identity) {
-            return new DefaultConfigurationItemBuilder<NestedProfileBuilder>(this, identity);
         }
 
         @Override

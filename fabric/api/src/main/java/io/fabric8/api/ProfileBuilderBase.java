@@ -33,8 +33,6 @@ public interface ProfileBuilderBase<B extends ProfileBuilderBase<B>> extends Att
 
     B addConfigurationItem(String identity, Map<String, Object> config);
 
-    ConfigurationItemBuilder<B> withConfigurationItem(String identity);
-
     B addResourceItem(Resource resource);
 
     B addSharedResourceItem(Resource resource);

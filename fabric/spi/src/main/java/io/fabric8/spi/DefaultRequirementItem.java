@@ -1,9 +1,6 @@
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.RequirementItem;
-
-import java.util.HashMap;
 
 import org.jboss.gravia.resource.IdentityNamespace;
 import org.jboss.gravia.resource.Requirement;
@@ -19,7 +16,7 @@ public final class DefaultRequirementItem extends AbstractProfileItem implements
     private final Requirement requirement;
 
     public DefaultRequirementItem(Requirement requirement) {
-        super((String) requirement.getAttribute(IdentityNamespace.IDENTITY_NAMESPACE), new HashMap<AttributeKey<?>, Object>());
+        super((String) requirement.getAttribute(IdentityNamespace.IDENTITY_NAMESPACE));
         this.requirement = requirement;
     }
 
