@@ -19,6 +19,7 @@
  */
 package io.fabric8.api;
 
+import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -83,5 +84,5 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the associated list of profiles
      */
-    Set<String> getProfileIdentities();
+    List<String> getProfileIdentities();
 }

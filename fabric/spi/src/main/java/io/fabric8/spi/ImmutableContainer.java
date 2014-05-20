@@ -26,8 +26,10 @@ import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,7 +51,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private Version profileVersion;
     private Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
     private Set<ContainerIdentity> children = new HashSet<>();
-    private Set<String> profiles = new HashSet<>();
+    private List<String> profiles = new ArrayList<>();
     private ContainerIdentity parent;
 
     private ImmutableContainer(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
@@ -84,8 +86,8 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public Set<String> getProfileIdentities() {
-        return Collections.unmodifiableSet(profiles);
+    public List<String> getProfileIdentities() {
+        return Collections.unmodifiableList(profiles);
     }
 
     @Override

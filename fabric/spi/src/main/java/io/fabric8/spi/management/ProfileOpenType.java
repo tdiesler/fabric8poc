@@ -25,7 +25,6 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.management.openmbean.ArrayType;
 import javax.management.openmbean.CompositeData;
@@ -120,7 +119,7 @@ public final class ProfileOpenType {
         }
 
         @Override
-        public Set<String> getParents() {
+        public List<String> getParents() {
             throw new UnsupportedOperationException();
         }
 

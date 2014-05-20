@@ -26,11 +26,9 @@ import io.fabric8.api.ProfileItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
@@ -126,7 +124,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     private static class MutableProfile extends AttributeSupport implements Profile {
 
-        private final Set<String> parentProfiles = new HashSet<>();
+        private final List<String> parentProfiles = new ArrayList<>();
         private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
         private String identity;
         private Version version;
@@ -168,8 +166,8 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public Set<String> getParents() {
-            return Collections.unmodifiableSet(parentProfiles);
+        public List<String> getParents() {
+            return Collections.unmodifiableList(parentProfiles);
         }
 
         private void addParentProfile(String identity) {

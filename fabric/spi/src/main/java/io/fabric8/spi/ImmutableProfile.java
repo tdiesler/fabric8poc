@@ -28,11 +28,9 @@ import io.fabric8.spi.utils.ProfileUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
@@ -49,11 +47,11 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
 
     private final Version version;
     private final String identity;
-    private final Set<String> parentIdentities = new HashSet<>();
+    private final List<String> parentIdentities = new ArrayList<>();
     private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
     private Map<String, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, Set<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, List<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
         super(attributes);
         this.identity = identity;
         this.version = version;
@@ -78,8 +76,8 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public Set<String> getParents() {
-        return Collections.unmodifiableSet(parentIdentities);
+    public List<String> getParents() {
+        return Collections.unmodifiableList(parentIdentities);
     }
 
     @Override
