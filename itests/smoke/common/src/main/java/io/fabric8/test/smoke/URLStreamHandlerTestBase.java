@@ -82,6 +82,9 @@ public class URLStreamHandlerTestBase {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             IOUtils.copyStream(new URL("foo://somehost").openStream(), baos);
             Assert.assertEquals("somehost", new String(baos.toByteArray()));
+
+            URL url = new URL("foo:///somepath");
+            Assert.assertEquals("", url.getHost());
         } finally {
             sreg.unregister();
         }

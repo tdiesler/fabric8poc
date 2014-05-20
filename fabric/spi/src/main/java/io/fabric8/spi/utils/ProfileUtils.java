@@ -43,7 +43,7 @@ public final class ProfileUtils {
     }
 
     public static Profile getEffectiveProfile(LinkedProfile profile) {
-        String identity = "effective:" + profile.getIdentity();
+        String identity = "effective#" + profile.getIdentity();
         ProfileBuilder prfBuilder = new DefaultProfileBuilder(identity);
         buildEffectiveProfile(prfBuilder, profile);
         return prfBuilder.build();

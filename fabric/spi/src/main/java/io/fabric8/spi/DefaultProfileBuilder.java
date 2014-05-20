@@ -37,6 +37,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder, Profile> implements ProfileBuilder {
 
+    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] {'\\', ':', ' ', '\t', '&', '?'};
+
     private final MutableProfile mutableProfile;
 
     public DefaultProfileBuilder(String identity) {
@@ -119,7 +121,15 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     private void validate() {
-        IllegalStateAssertion.assertNotNull(mutableProfile.getIdentity(), "Identity cannot be null");
+        String identity = mutableProfile.getIdentity();
+        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
+        for (char ch : ILLEGAL_IDENTITY_CHARS) {
+            IllegalStateAssertion.assertEquals(-1, identity.indexOf(ch), "Invalid character '" + ch + "' in identity: " + identity);
+        }
+        for (ProfileItem item : mutableProfile.getProfileItems(null)) {
+            AbstractProfileItem absitem = (AbstractProfileItem) item;
+            absitem.validate();
+        }
     }
 
     private static class MutableProfile extends AttributeSupport implements Profile {

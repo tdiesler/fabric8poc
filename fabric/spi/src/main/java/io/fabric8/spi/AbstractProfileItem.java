@@ -22,8 +22,11 @@ package io.fabric8.spi;
 import io.fabric8.api.ProfileItem;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public abstract class AbstractProfileItem implements ProfileItem {
+
+    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] {'/', '\\', ':', ' ', '\t', '&', '?'};
 
     private final String identity;
 
@@ -35,5 +38,11 @@ public abstract class AbstractProfileItem implements ProfileItem {
     @Override
     public String getIdentity() {
         return identity;
+    }
+
+    void validate() {
+        for (char ch : ILLEGAL_IDENTITY_CHARS) {
+            IllegalStateAssertion.assertEquals(-1, identity.indexOf(ch), "Invalid character '" + ch + "' in identity: " + identity);
+        }
     }
 }
