@@ -27,7 +27,7 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-public interface AttributableBuilder<B extends AttributableBuilder<B>> {
+public interface AttributableBuilder<B extends AttributableBuilder<B, T>, T> extends Builder<B, T>{
 
     <V> B addAttribute(AttributeKey<V> key, V value);
 

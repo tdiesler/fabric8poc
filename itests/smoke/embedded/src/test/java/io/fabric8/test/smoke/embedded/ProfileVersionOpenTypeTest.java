@@ -21,6 +21,8 @@ package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.OptionsProvider;
+import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -64,9 +66,9 @@ public class ProfileVersionOpenTypeTest {
 
         Version version = Version.parseVersion("2.0");
 
-        ProfileVersion prfvA = ProfileVersionBuilder.Factory.create(version)
-                .withProfile("foo").and()
-                .build();
+        Profile prfA = ProfileBuilder.Factory.create("foo").build();
+
+        ProfileVersion prfvA = ProfileVersionBuilder.Factory.create(version).addProfile(prfA).build();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfvA = prfManager.addProfileVersion(prfvA);
@@ -110,8 +112,9 @@ public class ProfileVersionOpenTypeTest {
         public ProfileVersionBuilder addBuilderOptions(ProfileVersionBuilder builder) {
             ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
             builder.identity(profileVersion.getIdentity());
-            for (String profile : profileVersion.getProfileIdentities()) {
-                builder.withProfile(profile).and();
+            for (String prfid : profileVersion.getProfileIdentities()) {
+                Profile prf = ProfileBuilder.Factory.create(prfid).build();
+                builder.addProfile(prf);
             }
             return builder;
         }

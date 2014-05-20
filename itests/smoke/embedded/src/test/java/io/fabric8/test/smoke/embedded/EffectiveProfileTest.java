@@ -22,6 +22,7 @@ package io.fabric8.test.smoke.embedded;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -84,20 +85,27 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
-        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
-                .withProfile(identityA).addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
-                .and()
-                .withProfile(identityB)
+        Profile prfA = ProfileBuilder.Factory.create(identityA)
+                .addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
+                .build();
+
+        Profile prfB = ProfileBuilder.Factory.create(identityB)
                 .addParentProfile(identityA)
                 .addConfigurationItem("confItem", configB)
                 .addConfigurationItem("confItemB", configB)
-                .and()
-                .withProfile(identityC)
+                .build();
+
+        Profile prfC = ProfileBuilder.Factory.create(identityC)
                 .addParentProfile(identityA)
                 .addParentProfile(identityB)
                 .addConfigurationItem("confItem", configC)
                 .addConfigurationItem("confItemC", configC)
-                .and()
+                .build();
+
+        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
+                .addProfile(prfA)
+                .addProfile(prfB)
+                .addProfile(prfC)
                 .build();
 
 

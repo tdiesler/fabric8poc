@@ -108,8 +108,7 @@ public class ComplexContainerTest {
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
         ProfileVersion profVersion20 = ProfileVersionBuilder.Factory.create(version20)
-                .withProfile("dummy")
-                .and()
+                .addProfile(ProfileBuilder.Factory.create("dummy").build())
                 .build();
 
         // Verify that the version cannot be set

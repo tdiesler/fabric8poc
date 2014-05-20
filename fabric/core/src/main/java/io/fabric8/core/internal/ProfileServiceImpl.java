@@ -30,6 +30,7 @@ import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
+import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableProfile;
@@ -62,8 +63,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,10 +125,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     private void activateInternal() {
 
         // Add the default profile version
-        LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
-                .withProfile(DEFAULT_PROFILE_IDENTITY)
+        Profile profile = new DefaultProfileBuilder(DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
-                .and().build();
+                .build();
+
+        LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
+                .addProfile(profile)
+                .build();
 
         addProfileVersionInternal(profileVersion);
     }

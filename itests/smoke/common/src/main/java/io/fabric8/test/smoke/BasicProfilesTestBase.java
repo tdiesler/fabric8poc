@@ -22,6 +22,7 @@ package io.fabric8.test.smoke;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -75,10 +76,12 @@ public abstract class BasicProfilesTestBase  {
 
         Version version = Version.parseVersion("1.1");
 
-        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
-                .withProfile("foo")
+        Profile profileFoo = ProfileBuilder.Factory.create("foo")
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                .and()
+                .build();
+
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
+                .addProfile(profileFoo)
                 .build();
 
         // Add a profile version
@@ -87,8 +90,8 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
 
         // Verify profile
-        Profile profile = prfManager.getProfile(version, "foo");
-        List<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        profileFoo = prfManager.getProfile(version, "foo");
+        List<ConfigurationItem> items = profileFoo.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());

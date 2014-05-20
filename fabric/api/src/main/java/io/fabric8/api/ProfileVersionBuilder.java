@@ -32,16 +32,9 @@ public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder, Li
 
     ProfileVersionBuilder identity(Version version);
 
-    NestedProfileBuilder withProfile(String identity);
+    ProfileVersionBuilder addProfile(Profile profile);
 
     ProfileVersionBuilder removeProfile(String identity);
-
-    interface NestedProfileBuilder extends ProfileBuilderBase<NestedProfileBuilder>  {
-
-        NestedProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider);
-
-        ProfileVersionBuilder and();
-    }
 
     final class Factory {
 

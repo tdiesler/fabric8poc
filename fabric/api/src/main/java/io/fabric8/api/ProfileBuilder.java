@@ -19,6 +19,10 @@
  */
 package io.fabric8.api;
 
+import java.util.Map;
+
+import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ServiceLocator;
 
@@ -29,7 +33,29 @@ import org.jboss.gravia.runtime.ServiceLocator;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends ProfileBuilderBase<ProfileBuilder>, Builder<ProfileBuilder, Profile> {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile> {
+
+    ProfileBuilder identity(String identity);
+
+    ProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider);
+
+    ProfileBuilder profileVersion(Version version);
+
+    ProfileBuilder addProfileItem(ProfileItem item);
+
+    ProfileBuilder removeProfileItem(String identity);
+
+    ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config);
+
+    ProfileBuilder addResourceItem(Resource resource);
+
+    ProfileBuilder addSharedResourceItem(Resource resource);
+
+    ProfileBuilder addRequirementItem(Requirement requirement);
+
+    ProfileBuilder addParentProfile(String identity);
+
+    ProfileBuilder removeParentProfile(String identity);
 
     final class Factory {
 

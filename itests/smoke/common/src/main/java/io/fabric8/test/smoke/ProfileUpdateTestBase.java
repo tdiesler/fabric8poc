@@ -78,15 +78,16 @@ public abstract class ProfileUpdateTestBase  {
     public void testProfileUpdate() throws Exception {
 
         final Version version12 = Version.parseVersion("1.2");
-        final String identity = "foo";
+        final String identityA = "foo";
 
         // Build a profile version
-        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
-                .withProfile(DEFAULT_PROFILE_IDENTITY)
-                .and()
-                .withProfile(identity)
+        Profile prfA = ProfileBuilder.Factory.create(identityA)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                .and()
+                .build();
+
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
+                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).build())
+                .addProfile(prfA)
                 .build();
 
         // Add a profile version
@@ -95,19 +96,19 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals(2, prfManager.getProfileVersions(null).size());
 
         // Verify that the profile also got added
-        Profile profile = prfManager.getProfile(version12, identity);
+        Profile profile = prfManager.getProfile(version12, identityA);
         Assert.assertNotNull("Profile added", profile);
-        Assert.assertEquals(identity, profile.getIdentity());
+        Assert.assertEquals(identityA, profile.getIdentity());
         Assert.assertEquals(1, profile.getProfileItems(null).size());
         ConfigurationItem profileItem = profile.getProfileItem("some.pid", ConfigurationItem.class);
         Assert.assertEquals("yyy", profileItem.getConfiguration().get("xxx"));
 
-        Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identity)
+        Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identityA)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "zzz"))
                 .build();
 
         // Verify update profile
-        Assert.assertEquals(identity, updateProfile.getIdentity());
+        Assert.assertEquals(identityA, updateProfile.getIdentity());
         Assert.assertEquals(1, updateProfile.getProfileItems(null).size());
         profileItem = updateProfile.getProfileItem("some.pid", ConfigurationItem.class);
         Assert.assertEquals("zzz", profileItem.getConfiguration().get("xxx"));
@@ -118,7 +119,7 @@ public abstract class ProfileUpdateTestBase  {
             @Override
             public void processEvent(ProfileEvent event) {
                 String prfid = event.getSource().getIdentity();
-                if (event.getType() == ProfileEvent.EventType.UPDATED && identity.equals(prfid)) {
+                if (event.getType() == ProfileEvent.EventType.UPDATED && identityA.equals(prfid)) {
                     latchA.countDown();
                 }
             }

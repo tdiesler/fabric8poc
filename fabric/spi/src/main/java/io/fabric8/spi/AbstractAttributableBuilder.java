@@ -24,7 +24,7 @@ import io.fabric8.api.AttributeKey;
 
 import java.util.Map;
 
-public abstract class AbstractAttributableBuilder<B extends AttributableBuilder<B>> implements AttributableBuilder<B> {
+public abstract class AbstractAttributableBuilder<B extends AttributableBuilder<B, T>, T> implements AttributableBuilder<B, T> {
 
     private final AttributeSupport attributes = new AttributeSupport();
 
