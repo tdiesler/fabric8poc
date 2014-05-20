@@ -19,8 +19,6 @@
  */
 package io.fabric8.api;
 
-import java.net.URL;
-
 import org.jboss.gravia.resource.Resource;
 
 /**
@@ -34,6 +32,4 @@ public interface ResourceItem extends ProfileItem {
     Resource getResource();
 
     boolean isShared();
-
-    URL getURL();
 }

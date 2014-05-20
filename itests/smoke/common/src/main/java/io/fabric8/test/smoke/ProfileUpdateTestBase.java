@@ -41,7 +41,7 @@ import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.ContainerService;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -145,7 +145,7 @@ public abstract class ProfileUpdateTestBase  {
         sregB.unregister();
 
         // Verify profile
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
@@ -226,7 +226,7 @@ public abstract class ProfileUpdateTestBase  {
         sregC.unregister();
 
         // Verify profile
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());

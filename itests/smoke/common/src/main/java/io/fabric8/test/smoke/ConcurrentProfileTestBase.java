@@ -40,8 +40,8 @@ import io.fabric8.api.ProvisionEventListener;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -111,7 +111,7 @@ public abstract class ConcurrentProfileTestBase {
         prfManager.addProfileVersion(profileVersion);
 
         Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
-        Set<ConfigurationItem> items = effectiveB.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> items = effectiveB.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals(1, items.size());
         ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
         Map<String, Object> config = item.getConfiguration();

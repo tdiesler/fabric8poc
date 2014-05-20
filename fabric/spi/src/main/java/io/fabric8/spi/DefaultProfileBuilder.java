@@ -27,9 +27,12 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilderBase;
 import io.fabric8.api.ProfileItem;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,7 +160,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     private static class MutableProfile extends AttributeSupport implements Profile {
 
         private final Set<String> parentProfiles = new HashSet<>();
-        private final Map<String, ProfileItem> profileItems = new HashMap<>();
+        private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
         private String identity;
         private Version version;
 
@@ -218,14 +221,14 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
         @Override
         @SuppressWarnings("unchecked")
-        public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
-            Set<T> result = new HashSet<T>();
+        public <T extends ProfileItem> List<T> getProfileItems(Class<T> type) {
+            List<T> result = new ArrayList<T>();
             for (ProfileItem item : profileItems.values()) {
                 if (type == null || type.isAssignableFrom(item.getClass())) {
                     result.add((T) item);
                 }
             }
-            return Collections.unmodifiableSet(result);
+            return Collections.unmodifiableList(result);
         }
 
         private void addProfileItem(ProfileItem item) {

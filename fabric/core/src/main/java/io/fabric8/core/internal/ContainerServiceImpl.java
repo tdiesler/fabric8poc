@@ -509,7 +509,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
 
         // Apply the configuration items
-        Set<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
         configurationManager.get().applyConfigurationItems(configItems);
 
         // Provision requirement items
@@ -528,7 +528,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void provisionRequirements(Profile effectiveProfile) {
-        Set<RequirementItem> reqItems = effectiveProfile.getProfileItems(RequirementItem.class);
+        List<RequirementItem> reqItems = effectiveProfile.getProfileItems(RequirementItem.class);
         if (!reqItems.isEmpty()) {
             Set<Requirement> reqs = new HashSet<>();
             for (RequirementItem item : reqItems) {
@@ -578,15 +578,17 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
 
         // Uninstall the resource items
-        Set<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
+        List<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
         uninstallResourceItems(cntState, resourceItems);
 
         event = new ProvisionEvent(container, EventType.REMOVED, linkedProfile);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
-    private void uninstallResourceItems(ContainerState cntState, Set<ResourceItem> resourceItems) {
-        for (ResourceItem item : resourceItems) {
+    private void uninstallResourceItems(ContainerState cntState, List<ResourceItem> resourceItems) {
+        List<ResourceItem> reverseItems = new ArrayList<>(resourceItems);
+        Collections.reverse(reverseItems);
+        for (ResourceItem item : reverseItems) {
             ResourceHandle handle = cntState.removeResourceHandle(item.getIdentity());
             handle.uninstall();
         }

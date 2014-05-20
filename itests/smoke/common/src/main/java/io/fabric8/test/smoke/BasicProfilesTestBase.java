@@ -28,6 +28,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
@@ -87,7 +88,7 @@ public abstract class BasicProfilesTestBase  {
 
         // Verify profile
         Profile profile = prfManager.getProfile(version, "foo");
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());

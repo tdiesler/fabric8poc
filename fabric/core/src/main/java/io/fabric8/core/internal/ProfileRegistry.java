@@ -32,15 +32,18 @@ import io.fabric8.spi.scr.AbstractComponent;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,11 +53,12 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.ContentCapability;
 import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
 import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
-import org.jboss.gravia.resource.ResourceContent;
+import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
@@ -143,7 +147,7 @@ public final class ProfileRegistry extends AbstractComponent {
                 profiles = new HashMap<>();
                 profileVersions.put(version, profiles);
             }
-            Set<ProfileItem> profileItems = new HashSet<>();
+            List<ProfileItem> profileItems = new ArrayList<>();
             for (ProfileItem item : profile.getProfileItems(null)) {
                 if (item instanceof ResourceItem) {
                     ResourceItem resitem = (ResourceItem) item;
@@ -176,48 +180,78 @@ public final class ProfileRegistry extends AbstractComponent {
         Path profilePath = Paths.get(versionPath.toString(), profile);
         IllegalStateAssertion.assertTrue(profilePath.toFile().isDirectory(), "Cannot find profile directory: " + profilePath);
         Path itemPath = Paths.get(profilePath.toString(), item);
-        IllegalStateAssertion.assertTrue(itemPath.toFile().isFile(), "Cannot find item file: " + itemPath);
-        return itemPath.toFile().toURI().toURL().openConnection();
+        IllegalStateAssertion.assertTrue(itemPath.toFile().isDirectory(), "Cannot find item file: " + itemPath);
+        Path contentPath = null;
+        if (url.getQuery() != null) {
+            String query = url.getQuery().substring(1);
+            for (String param : query.split("&")) {
+                String[] keyval = param.split("=");
+                IllegalStateAssertion.assertEquals(2, keyval.length, "Unexpected array length: " + Arrays.asList(keyval));
+                String key = keyval[0];
+                String val = keyval[1];
+                if ("cntindex".equals(key)) {
+                    contentPath = Paths.get(itemPath.toString(), "content" + val);
+                    break;
+                }
+            }
+        } else {
+            contentPath = Paths.get(itemPath.toString(), "content0");
+        }
+        IllegalStateAssertion.assertNotNull(contentPath, "Cannot obtain content path from: " + url);
+        IllegalStateAssertion.assertTrue(contentPath.toFile().isFile(), "Cannot find item file: " + contentPath);
+        return contentPath.toFile().toURI().toURL().openConnection();
     }
 
     private Resource processResourceItem(Profile profile, ResourceItem item) {
-        Resource resource = item.getResource();
-        URL itemURL = copyResourceContent(profile, item);
-        DefaultResourceBuilder builder = new DefaultResourceBuilder();
-        for (Capability cap : resource.getCapabilities(null)) {
-            if (ContentNamespace.CONTENT_NAMESPACE.equals(cap.getNamespace())) {
-                Map<String, Object> atts = new HashMap<>(cap.getAttributes());
-                atts.remove(ContentNamespace.CAPABILITY_STREAM_ATTRIBUTE);
-                builder.addContentCapability(itemURL, atts, cap.getDirectives());
-            } else {
-                builder.addCapability(cap.getNamespace(), cap.getAttributes(), cap.getDirectives());
-            }
-        }
-        for (Requirement req : resource.getRequirements(null)) {
-            builder.addRequirement(req.getNamespace(), req.getAttributes(), req.getDirectives());
-        }
-        return builder.getResource();
-    }
-
-    private URL copyResourceContent(Profile profile, ResourceItem item) {
         IllegalArgumentAssertion.assertNotNull(profile, "profile");
         IllegalArgumentAssertion.assertNotNull(item, "item");
         Resource resource = item.getResource();
-        ResourceContent content = resource.adapt(ResourceContent.class);
-        IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + item);
-        Path targetPath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity(), item.getIdentity());
-        try {
-            File targetDir = targetPath.toFile().getParentFile();
-            IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create directory: " + targetDir);
-            Files.copy(content.getContent(), targetPath, REPLACE_EXISTING);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
+
+        // Copy von-content capabilities
+        ResourceBuilder builder = new DefaultResourceBuilder();
+        for (Capability cap : resource.getCapabilities(null)) {
+            if (!ContentNamespace.CONTENT_NAMESPACE.equals(cap.getNamespace())) {
+                builder.addCapability(cap.getNamespace(), cap.getAttributes(), cap.getDirectives());
+            }
         }
-        try {
-            String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getIdentity();
-            return new URL(null, spec, new ProfileURLStreamHandler(targetPath.toFile()));
-        } catch (MalformedURLException ex) {
-            throw new IllegalArgumentException(ex);
+
+        // Process the content capabilities & update the contentURL
+        List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
+        for (int i = 0; i < ccaps.size(); i++) {
+            ContentCapability ccap = ccaps.get(i).adapt(ContentCapability.class);
+            Path targetPath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity(), item.getIdentity(), "content" + i);
+            URL contentURL;
+            try {
+                File targetDir = targetPath.toFile().getParentFile();
+                IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create directory: " + targetDir);
+                Files.copy(getRequiredCapabilityContent(ccap), targetPath, REPLACE_EXISTING);
+                String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getIdentity();
+                if (ccaps.size() > 1) {
+                    spec += "?cntindex=" + i;
+                }
+                contentURL = new URL(null, spec, new ProfileURLStreamHandler(targetPath.toFile()));
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
+            }
+            Map<String, Object> atts = new HashMap<>(ccap.getAttributes());
+            atts.remove(ContentNamespace.CAPABILITY_STREAM_ATTRIBUTE);
+            builder.addContentCapability(contentURL, atts, ccap.getDirectives());
         }
+
+        // Copy the requirements
+        for (Requirement req : resource.getRequirements(null)) {
+            builder.addRequirement(req.getNamespace(), req.getAttributes(), req.getDirectives());
+        }
+
+        return builder.getResource();
+    }
+
+    private InputStream getRequiredCapabilityContent(ContentCapability ccap) throws IOException {
+        InputStream content = ccap.getContentStream();
+        if (content == null) {
+            content = ccap.getContentURL().openStream();
+        }
+        IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + ccap);
+        return content;
     }
 }

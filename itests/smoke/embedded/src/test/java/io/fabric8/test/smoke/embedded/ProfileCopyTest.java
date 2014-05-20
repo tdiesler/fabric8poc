@@ -27,7 +27,7 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
-import java.util.Set;
+import java.util.List;
 
 import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
@@ -63,12 +63,12 @@ public class ProfileCopyTest {
         Profile profileA = prfManager.getDefaultProfile();
         Assert.assertEquals(version, profileA.getVersion());
         Assert.assertEquals(identity, profileA.getIdentity());
-        Set<ProfileItem> itemsA = profileA.getProfileItems(null);
+        List<ProfileItem> itemsA = profileA.getProfileItems(null);
 
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.createFrom(version, identity);
         Profile profileB = profileBuilder.build();
         Assert.assertEquals(version, profileB.getVersion());
-        Set<ProfileItem> itemsB = profileB.getProfileItems(null);
+        List<ProfileItem> itemsB = profileB.getProfileItems(null);
 
         Assert.assertEquals(profileA.getIdentity(), profileB.getIdentity());
         Assert.assertEquals(profileA.getAttributes(), profileB.getAttributes());

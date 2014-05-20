@@ -222,9 +222,7 @@ public class EmbeddedUtils {
         @Override
         public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared) throws Exception {
 
-            ResourceContent content = resource.adapt(ResourceContent.class);
-            IllegalStateAssertion.assertNotNull(content, "Resource has no content: " + resource);
-
+            ResourceContent content = getFirstRelevantResourceContent(resource);
             Manifest manifest = ManifestUtils.getManifest(content.getContent());
             IllegalStateAssertion.assertNotNull(manifest, "Resource has no manifest: " + resource);
             Dictionary<String, String> headers = ManifestUtils.getManifestHeaders(manifest);

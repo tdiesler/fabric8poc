@@ -25,9 +25,12 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.spi.utils.ProfileUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,10 +50,10 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     private final Version version;
     private final String identity;
     private final Set<String> parentIdentities = new HashSet<>();
-    private final Map<String, ProfileItem> profileItems = new HashMap<>();
+    private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
     private Map<String, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, Set<String> parents, Set<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, Set<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
         super(attributes);
         this.identity = identity;
         this.version = version;
@@ -105,14 +108,14 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends ProfileItem> Set<T> getProfileItems(Class<T> type) {
-        Set<T> result = new HashSet<T>();
+    public <T extends ProfileItem> List<T> getProfileItems(Class<T> type) {
+        List<T> result = new ArrayList<T>();
         for (ProfileItem item : profileItems.values()) {
             if (type == null || type.isAssignableFrom(item.getClass())) {
                 result.add((T) item);
             }
         }
-        return Collections.unmodifiableSet(result);
+        return Collections.unmodifiableList(result);
     }
 
     @Override

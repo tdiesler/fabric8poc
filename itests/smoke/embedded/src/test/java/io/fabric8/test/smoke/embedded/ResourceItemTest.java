@@ -49,20 +49,28 @@ public class ResourceItemTest extends ResourceItemTestBase {
 
     @Override
     protected InputStream getDeployment(String name) {
-        InputStream inputStream = null;
+        Archive<?> archive = null;
         if (RESOURCE_A.equals(name)) {
-            Archive<?> archive = ResourceItemTestBase.getResourceA();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+            archive = ResourceItemTestBase.getResourceA();
         } else if (RESOURCE_B.equals(name)) {
-            Archive<?> archive = ResourceItemTestBase.getResourceB();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+            archive = ResourceItemTestBase.getResourceB();
         } else if (RESOURCE_B1.equals(name)) {
-            Archive<?> archive = ResourceItemTestBase.getResourceB1();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+            archive = ResourceItemTestBase.getResourceB1();
         } else if (RESOURCE_C.equals(name)) {
-            Archive<?> archive = ResourceItemTestBase.getResourceC();
-            inputStream = archive.as(ZipExporter.class).exportAsInputStream();
+            archive = ResourceItemTestBase.getResourceC();
+        } else if (CONTENT_F1.equals(name)) {
+            archive = ResourceItemTestBase.getContentF1();
+        } else if (CONTENT_F2.equals(name)) {
+            archive = ResourceItemTestBase.getContentF2();
+        } else if (CONTENT_F3.equals(name)) {
+            archive = ResourceItemTestBase.getContentF3();
+        } else if (CONTENT_G1.equals(name)) {
+            archive = ResourceItemTestBase.getContentG1();
+        } else if (CONTENT_G2.equals(name)) {
+            archive = ResourceItemTestBase.getContentG2();
+        } else if (CONTENT_G3.equals(name)) {
+            archive = ResourceItemTestBase.getContentG3();
         }
-        return inputStream;
+        return archive.as(ZipExporter.class).exportAsInputStream();
     }
 }

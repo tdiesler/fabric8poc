@@ -297,7 +297,7 @@ public class ProvisionerTest {
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.shared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
         ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
-        builderA.getCurrentResource().getIdentityCapability().getAttributes().put(CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-2.11.0.jar");
+        builderA.getMutableResource().getIdentityCapability().getAttributes().put(CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-2.11.0.jar");
         builderA.addIdentityRequirement("javax.api");
         builderA.addIdentityRequirement("org.slf4j");
         ResourceHandle handleA = provisioner.installSharedResource(builderA.getResource());
@@ -477,14 +477,14 @@ public class ProvisionerTest {
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
-        DefaultResourceBuilder builderF = new DefaultResourceBuilder();
+        ResourceBuilder builderF = new DefaultResourceBuilder();
         ResourceIdentity identityF = ResourceIdentity.create(RESOURCE_F, Version.emptyVersion);
         builderF.addIdentityCapability(identityF);
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F1), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.TOMCAT.name()));
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F2), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.WILDFLY.name()));
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F3), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.KARAF.name()));
 
-        DefaultResourceBuilder builderG = new DefaultResourceBuilder();
+        ResourceBuilder builderG = new DefaultResourceBuilder();
         ResourceIdentity identityG = ResourceIdentity.create(RESOURCE_G, Version.emptyVersion);
         builderG.addIdentityCapability(identityG);
         builderG.addContentCapability(deployer.getDeployment(CONTENT_G1), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.TOMCAT.name()));

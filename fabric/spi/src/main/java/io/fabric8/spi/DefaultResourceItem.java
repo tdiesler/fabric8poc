@@ -3,15 +3,10 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ResourceItem;
 
-import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 
-import org.jboss.gravia.resource.Capability;
-import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
-import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
  * The default resource item
@@ -42,14 +37,6 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Re
     }
 
     @Override
-    public URL getURL() {
-        List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
-        IllegalStateAssertion.assertFalse(ccaps.isEmpty(), "Cannot obtain content capability from: " + resource);
-        URL contentURL = (URL) ccaps.get(0).getAttribute(ContentNamespace.CAPABILITY_URL_ATTRIBUTE);
-        return contentURL;
-    }
-
-    @Override
     public int hashCode() {
         return getIdentity().hashCode();
     }
@@ -64,6 +51,6 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Re
 
     @Override
     public String toString() {
-        return "ResourceItem[id=" + getIdentity() + ",url=" + getURL() + "]";
+        return "ResourceItem[id=" + getIdentity() + "]";
     }
 }

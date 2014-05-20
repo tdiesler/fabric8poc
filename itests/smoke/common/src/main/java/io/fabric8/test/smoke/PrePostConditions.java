@@ -29,6 +29,7 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,7 +76,7 @@ public final class PrePostConditions {
         Assert.assertEquals("Default version", defaultVersion, defaultProfile.getVersion());
         Assert.assertEquals("default", defaultProfile.getIdentity());
         Assert.assertTrue("No parents", defaultProfile.getParents().isEmpty());
-        Set<ProfileItem> profileItems = defaultProfile.getProfileItems(null);
+        List<ProfileItem> profileItems = defaultProfile.getProfileItems(null);
         Assert.assertEquals("One profile item", 1, profileItems.size());
         ProfileItem profileItem = profileItems.iterator().next();
         ConfigurationItem configItem = (ConfigurationItem) profileItem;

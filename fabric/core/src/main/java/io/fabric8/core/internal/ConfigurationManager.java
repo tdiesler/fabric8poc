@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,9 +28,9 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -41,7 +41,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +69,7 @@ public final class ConfigurationManager extends AbstractComponent {
         deactivateComponent();
     }
 
-    void applyConfigurationItems(Set<ConfigurationItem> items) {
+    void applyConfigurationItems(List<ConfigurationItem> items) {
         assertValid();
         for (ConfigurationItem item : items) {
             LOGGER.info("Apply configuration item: {}", item);

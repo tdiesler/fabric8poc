@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.net.URLStreamHandler;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Set;
+import java.util.List;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -83,7 +83,7 @@ public final class BootstrapService extends AbstractComponent {
 
         // Apply default {@link ConfigurationProfileItem}s
         Profile profile = profileService.get().getDefaultProfile();
-        Set<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> items = profile.getProfileItems(ConfigurationItem.class);
         configurationManager.get().applyConfigurationItems(items);
     }
 
