@@ -31,8 +31,8 @@ import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.test.smoke.container.ProvisionerTest;
 import io.fabric8.test.smoke.sub.a.CamelTransformHttpActivator;
-import io.fabric8.test.smoke.sub.a.SimpleModuleActivator;
-import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
+import io.fabric8.test.smoke.sub.a.ModuleActivatorA;
+import io.fabric8.test.smoke.sub.a1.ModuleStateA;
 
 import java.io.File;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceInstaller;
-import org.jboss.gravia.resource.IdentityNamespace;
+import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.MavenCoordinates;
 import org.jboss.gravia.resource.Resource;
@@ -278,7 +278,7 @@ public abstract class ResourceItemTestBase {
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.resitem");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
         ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
-        builderA.getCurrentResource().getIdentityCapability().getAttributes().put(IdentityNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-item-2.11.0.jar");
+        builderA.getCurrentResource().getIdentityCapability().getAttributes().put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-item-2.11.0.jar");
         builderA.addIdentityRequirement("javax.api");
         builderA.addIdentityRequirement("org.slf4j");
         Resource resourceA = builderA.getResource();
@@ -342,7 +342,7 @@ public abstract class ResourceItemTestBase {
         final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_A);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
-        archive.addClasses(SimpleModuleActivator.class, SimpleModuleState.class);
+        archive.addClasses(ModuleActivatorA.class, ModuleStateA.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -351,13 +351,13 @@ public abstract class ResourceItemTestBase {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_A);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
                     builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class, MBeanServer.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(RESOURCE_A, Version.emptyVersion);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
                     builder.addManifestHeader("Dependencies", "org.jboss.gravia");
                     return builder.openStream();
                 }
@@ -369,14 +369,14 @@ public abstract class ResourceItemTestBase {
     @Deployment(name = RESOURCE_B, managed = false, testable = false)
     public static Archive<?> getResourceB() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, RESOURCE_B + ".jar");
-        archive.addClasses(SimpleModuleState.class);
+        archive.addClasses(ModuleStateA.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
                 OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                 builder.addBundleManifestVersion(2);
                 builder.addBundleSymbolicName(RESOURCE_B);
-                builder.addExportPackages(SimpleModuleState.class);
+                builder.addExportPackages(ModuleStateA.class);
                 builder.addImportPackages(Runtime.class, Resource.class);
                 return builder.openStream();
             }
@@ -389,7 +389,7 @@ public abstract class ResourceItemTestBase {
         final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_B1);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
-        archive.addClasses(SimpleModuleActivator.class);
+        archive.addClasses(ModuleActivatorA.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -398,14 +398,14 @@ public abstract class ResourceItemTestBase {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_B1);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
                     builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class);
-                    builder.addImportPackages(MBeanServer.class, SimpleModuleState.class);
+                    builder.addImportPackages(MBeanServer.class, ModuleStateA.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(RESOURCE_B1, Version.emptyVersion);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, SimpleModuleActivator.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
                     builder.addManifestHeader("Dependencies", "org.jboss.gravia," + RESOURCE_B);
                     return builder.openStream();
                 }

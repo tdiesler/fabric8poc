@@ -1,7 +1,7 @@
 package io.fabric8.test.smoke.sub.a1;
 
 
-public interface SimpleModuleState {
+public interface ModuleStateA {
 
     String getResourceIdentity();
 

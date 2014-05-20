@@ -19,7 +19,7 @@
  */
 package io.fabric8.test.smoke.sub.a;
 
-import io.fabric8.test.smoke.sub.a1.SimpleModuleState;
+import io.fabric8.test.smoke.sub.a1.ModuleStateA;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -32,12 +32,12 @@ import org.jboss.gravia.runtime.ModuleActivator;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.ServiceLocator;
 
-public class SimpleModuleActivator implements ModuleActivator {
+public class ModuleActivatorA implements ModuleActivator {
 
     @Override
     public void start(final ModuleContext context) throws Exception {
         MBeanServer server = ServiceLocator.getRequiredService(context, MBeanServer.class);
-        SimpleModuleState moduleState = new SimpleModuleState() {
+        ModuleStateA moduleState = new ModuleStateA() {
 
             @Override
             public String getResourceIdentity() {
@@ -49,7 +49,7 @@ public class SimpleModuleActivator implements ModuleActivator {
                 return context.getModule().getState().toString();
             }
         };
-        StandardMBean mbean = new StandardMBean(moduleState, SimpleModuleState.class);
+        StandardMBean mbean = new StandardMBean(moduleState, ModuleStateA.class);
         server.registerMBean(mbean, getObjectName(context.getModule()));
     }
 

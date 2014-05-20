@@ -47,6 +47,7 @@ public class RequirementItemTest extends RequirementItemTestBase {
     public static void beforeClass() throws Exception {
         EmbeddedTestSupport.beforeClass();
 
+        // Add repository content
         String resname = "META-INF/repository-content/camel.core.feature.xml";
         URL resurl = RequirementItemTest.class.getClassLoader().getResource(resname);
         repositoryIdentities = EmbeddedUtils.addRepositoryContent(resurl);
