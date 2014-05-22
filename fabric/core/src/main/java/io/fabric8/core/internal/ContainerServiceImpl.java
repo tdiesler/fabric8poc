@@ -61,7 +61,11 @@ import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.ProfileUtils;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -89,6 +93,9 @@ import org.jboss.gravia.provision.ProvisionResult;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.resolver.Environment;
+import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.ContentCapability;
+import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceIdentity;
@@ -246,7 +253,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public LockHandle aquireContainerLock(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         return cntState.aquireWriteLock();
     }
 
@@ -259,7 +266,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container createContainer(ContainerIdentity parentId, CreateOptions options) {
         assertValid();
-        return createContainerInternal(getRequiredContainer(parentId), options);
+        return createContainerInternal(getRequiredContainerState(parentId), options);
     }
 
     private Container createContainerInternal(ContainerState parentState, CreateOptions options) {
@@ -305,7 +312,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         return startContainerInternal(cntState, listener);
     }
 
@@ -340,7 +347,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container stopContainer(ContainerIdentity identity) {
         assertValid();
         IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot stop current container");
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             LOGGER.info("Stop container: {}", cntState);
@@ -357,7 +364,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container destroyContainer(ContainerIdentity identity) {
         assertValid();
         IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot destroy current container");
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             IllegalStateAssertion.assertTrue(cntState.getChildIdentities().isEmpty(), "Cannot destroy a container that has active child containers: " + identity);
@@ -403,14 +410,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container getCurrentContainer() {
         assertValid();
-        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
-        return currentCnt.immutableContainer();
+        return getRequiredContainerState(CURRENT_CONTAINER_IDENTITY).immutableContainer();
     }
 
     @Override
     public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             return setVersionInternal(cntState, version, listener);
@@ -435,7 +441,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container addProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             return addProfilesInternal(cntState, identities, listener);
@@ -461,7 +467,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container removeProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             return removeProfilesInternal(cntState, identities, listener);
@@ -487,10 +493,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Profile getEffectiveProfile(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
-        Version version = cntState.getProfileVersion().getIdentity();
-        List<String> identities = cntState.getProfileIdentities();
-        return getEffectiveProfileInternal(cntState, version, identities);
+        ContainerState cntState = getRequiredContainerState(identity);
+        LockHandle readLock = cntState.aquireReadLock();
+        try {
+            Version version = cntState.getProfileVersion().getIdentity();
+            List<String> identities = cntState.getProfileIdentities();
+            return getEffectiveProfileInternal(cntState, version, identities);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     private Profile getEffectiveProfileInternal(ContainerState cntState, Version version, List<String> identities) {
@@ -626,13 +637,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     @Override
     public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
-        ContainerState containerState = getRequiredContainer(identity);
+        ContainerState containerState = getRequiredContainerState(identity);
         return containerState.getServiceEndpoint(type);
     }
 
     @Override
     public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
-        ContainerState containerState = getRequiredContainer(identity);
+        ContainerState containerState = getRequiredContainerState(identity);
         return containerState.getServiceEndpoint(endpointId);
     }
 
@@ -646,11 +657,63 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public URLConnection getContainerURLConnection(URL url) throws IOException {
+        assertValid();
+        String symbolicName = url.getHost();
+        Version resVersion = null;
+        if (url.getQuery() != null) {
+            String query = url.getQuery().substring(1);
+            for (String param : query.split("&")) {
+                String[] keyval = param.split("=");
+                IllegalStateAssertion.assertEquals(2, keyval.length, "Unexpected array length: " + Arrays.asList(keyval));
+                String key = keyval[0];
+                String val = keyval[1];
+                if ("version".equals(key)) {
+                    resVersion = Version.parseVersion(val);
+                }
+            }
+        }
+        ResourceIdentity explicitId = resVersion != null ? ResourceIdentity.create(symbolicName, resVersion) : null;
+        ContainerState cntState = getRequiredContainerState(CURRENT_CONTAINER_IDENTITY);
+        LockHandle readLock = cntState.aquireReadLock();
+        try {
+            Resource resource = null;
+            Version highestVersion = Version.emptyVersion;
+            Profile effective = getEffectiveProfile(CURRENT_CONTAINER_IDENTITY);
+            for (ResourceItem item : effective.getProfileItems(ResourceItem.class)) {
+                ResourceIdentity resid = item.getResource().getIdentity();
+                if (resid.equals(explicitId)) {
+                    resource = item.getResource();
+                    break;
+                }
+                if (resid.getSymbolicName().equals(symbolicName)) {
+                    if (resource == null || resid.getVersion().compareTo(highestVersion) > 1) {
+                        resource = item.getResource();
+                        highestVersion = resid.getVersion();
+                    }
+                }
+            }
+            IllegalStateAssertion.assertNotNull(resource, "Cannot find resource for: " + url);
+            List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
+            IllegalStateAssertion.assertFalse(ccaps.isEmpty(), "Cannot find content capability in: " + resource);
+            if (ccaps.size() > 1) {
+                LOGGER.warn("Multiple content capabilities in: " + resource);
+            }
+            ContentCapability ccap = ccaps.get(0).adapt(ContentCapability.class);
+            URL contentURL = ccap.getContentURL();
+            IllegalStateAssertion.assertNotNull(contentURL, "Cannot obtain content URL from: " + ccap);
+            return contentURL.openConnection();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
     private ContainerState getContainerState(ContainerIdentity identity) {
         return containerRegistry.get().getContainer(identity);
     }
 
-    private ContainerState getRequiredContainer(ContainerIdentity identity) {
+    private ContainerState getRequiredContainerState(ContainerIdentity identity) {
         return containerRegistry.get().getRequiredContainer(identity);
     }
 

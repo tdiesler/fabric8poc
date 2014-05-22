@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,10 @@
  * #L%
  */
 package io.fabric8.spi;
+
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import io.fabric8.api.ContainerManager;
 import io.fabric8.spi.permit.PermitKey;
@@ -34,4 +38,15 @@ public interface ContainerService extends ContainerManager {
      * The {@link PermitKey} that protects this service.
      */
     PermitKey<ContainerService> PERMIT = new PermitKey<ContainerService>(ContainerService.class);
+
+    /**
+     * Get an url connection to content in the current container's effective profile
+     *
+     * Accepted URL are formated like
+     *
+     * container://[symbolicName]?version=[version]
+     *
+     * The version parameters is optional. When missing it will use the higest version.
+     */
+    URLConnection getContainerURLConnection(URL url) throws IOException;
 }

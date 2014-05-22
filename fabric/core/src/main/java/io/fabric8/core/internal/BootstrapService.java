@@ -28,8 +28,10 @@ import io.fabric8.spi.scr.ValidatingReference;
 import java.io.IOException;
 import java.net.URLStreamHandler;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -57,7 +59,7 @@ public final class BootstrapService extends AbstractComponent {
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
 
-    private ServiceRegistration<URLStreamHandler> streamHandler;
+    private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
     @Activate
     void activate() throws Exception {
@@ -68,8 +70,8 @@ public final class BootstrapService extends AbstractComponent {
     @Deactivate
     void deactivate() {
         deactivateComponent();
-        if (streamHandler != null) {
-            streamHandler.unregister();
+        for(ServiceRegistration<?> sreg : registrations) {
+            sreg.unregister();
         }
     }
 
@@ -79,7 +81,9 @@ public final class BootstrapService extends AbstractComponent {
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(Constants.URL_HANDLER_PROTOCOL, ProfileURLStreamHandler.PROTOCOL_NAME);
         ModuleContext syscontext = RuntimeLocator.getRequiredRuntime().getModuleContext();
-        streamHandler = syscontext.registerService(URLStreamHandler.class, new ProfileURLStreamHandler(), props);
+        registrations.add(syscontext.registerService(URLStreamHandler.class, new ProfileURLStreamHandler(), props));
+        props.put(Constants.URL_HANDLER_PROTOCOL, ContainerURLStreamHandler.PROTOCOL_NAME);
+        registrations.add(syscontext.registerService(URLStreamHandler.class, new ContainerURLStreamHandler(), props));
 
         // Apply default {@link ConfigurationProfileItem}s
         Profile profile = profileService.get().getDefaultProfile();

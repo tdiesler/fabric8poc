@@ -47,5 +47,17 @@ public interface ProfileService extends ProfileManager {
 
     Profile getRequiredProfile(Version version, String identity);
 
+    /**
+     * Get an url connection to content in the profile registry
+     *
+     * Accepted URL are formated like
+     *
+     * profile://[profileVersion]/[profileName]/[symbolicName]?version=[version]&cntindex=[contentIndex]
+     *
+     * Both, the version and cntindex parameters are optional.
+     * If they are missing it will use the higest version and the first content respectively.
+     *
+     * [TODO] consider content selection based on runtime type
+     */
     URLConnection getProfileURLConnection(URL url) throws IOException;
 }

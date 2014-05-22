@@ -108,6 +108,9 @@ public abstract class ReferenceItemTestBase {
         Container cnt = cntManager.getCurrentContainer();
         cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
+        input = new URL("container://refitemA").openStream();
+        Assert.assertNotNull("URL stream not null", input);
+        Assert.assertEquals("Hello", new BufferedReader(new InputStreamReader(input)).readLine());
 
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
