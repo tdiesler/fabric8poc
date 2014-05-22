@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -141,7 +142,7 @@ public class ConcurrentConfigurationTest {
             return true;
         }
 
-        private ContainerIdentity createAndStart(ContainerManager cntManager, int index) throws InterruptedException {
+        private ContainerIdentity createAndStart(ContainerManager cntManager, int index) throws InterruptedException, ProvisionException {
             EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
             CreateOptions options = cntBuilder.identityPrefix(prefix + "#" + index).build();
             Container cnt = cntManager.createContainer(options);

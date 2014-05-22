@@ -220,7 +220,7 @@ public class EmbeddedUtils {
         }
 
         @Override
-        public ResourceHandle installResourceProtected(Context context, final Resource resource, boolean shared) throws Exception {
+        public ResourceHandle installResourceProtected(Context context, final Resource resource) throws Exception {
 
             ResourceContent content = getFirstRelevantResourceContent(resource);
             Manifest manifest = ManifestUtils.getManifest(content.getContent());

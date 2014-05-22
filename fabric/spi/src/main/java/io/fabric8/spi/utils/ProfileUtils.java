@@ -49,7 +49,7 @@ public final class ProfileUtils {
         return prfBuilder.build();
     }
 
-    private static void buildEffectiveProfile(ProfileBuilder builder, LinkedProfile profile) {
+    public static void buildEffectiveProfile(ProfileBuilder builder, LinkedProfile profile) {
 
         // Add parent content
         for (String identity : profile.getParents()) {

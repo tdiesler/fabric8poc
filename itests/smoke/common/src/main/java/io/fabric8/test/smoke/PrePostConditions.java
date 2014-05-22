@@ -29,11 +29,20 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.IdentityNamespace;
+import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.Module;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.Assert;
 
@@ -45,17 +54,26 @@ import org.junit.Assert;
  */
 public final class PrePostConditions {
 
+    private static ThreadLocal<Set<Module>> modulesAssociation = new ThreadLocal<>();
+
     public static void assertPreConditions() {
         ServiceLocator.awaitService(BootstrapComplete.class);
-        assertConditions();
+
+        modulesAssociation.set(getCurrentRuntimeModules());
+        assertContainers();
+        assertProfiles();
     }
 
     public static void assertPostConditions() {
-        assertConditions();
+
+        assertContainers();
+        assertProfiles();
+        assertRuntimeModules();
+
         ServiceLocator.awaitService(BootstrapComplete.class);
     }
 
-    private static void assertConditions() {
+    private static void assertContainers() {
 
         // No registered containers
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -63,6 +81,9 @@ public final class PrePostConditions {
         Assert.assertEquals("One container", 1, containers.size());
         Container currentContainer = containers.iterator().next();
         Assert.assertEquals(cntManager.getCurrentContainer(), currentContainer);
+    }
+
+    private static void assertProfiles() {
 
         // One (default) profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -83,5 +104,30 @@ public final class PrePostConditions {
         Map<String, Object> config = configItem.getConfiguration();
         Assert.assertEquals("One config entry", 1, config.size());
         Assert.assertEquals("default", config.get("config.token"));
+    }
+
+    private static void assertRuntimeModules() {
+        Set<Module> current = getCurrentRuntimeModules();
+        current.removeAll(modulesAssociation.get());
+
+        // [TODO] Runtime types that do not support uninstall of shared modules
+        List<RuntimeType> sharedUninstall = Arrays.asList(RuntimeType.TOMCAT, RuntimeType.WILDFLY);
+        if (sharedUninstall.contains(RuntimeType.getRuntimeType())) {
+            Iterator<Module> itmod = current.iterator();
+            while (itmod.hasNext()) {
+                Resource res = itmod.next().adapt(Resource.class);
+                Capability icap = res.getIdentityCapability();
+                Object attval = icap.getAttribute(IdentityNamespace.CAPABILITY_SHARED_ATTRIBUTE);
+                if (attval != null && Boolean.parseBoolean(attval.toString())) {
+                    itmod.remove();
+                }
+            }
+        }
+        Assert.assertEquals("Uninstalled modules left: " + current, 0, current.size());
+    }
+
+    private static Set<Module> getCurrentRuntimeModules() {
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        return runtime.getModules();
     }
 }

@@ -26,6 +26,7 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
 import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.Profile;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
@@ -45,6 +46,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.Version;
 
@@ -113,7 +115,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) {
+    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -190,7 +192,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
+    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -234,7 +236,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener) {
+    public Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
@@ -245,11 +247,22 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
             return service.removeProfiles(identity, profiles, listener);
+        } finally {
+            permit.release();
+        }
+    }
+
+    @Override
+    public Profile getEffectiveProfile(ContainerIdentity identity) {
+        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
+        try {
+            ContainerService service = permit.getInstance();
+            return service.getEffectiveProfile(identity);
         } finally {
             permit.release();
         }

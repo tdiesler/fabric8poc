@@ -143,7 +143,7 @@ public class ComplexContainerTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "default".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default]".equals(identity)) {
                     latchA.countDown();
                 }
             }
@@ -151,7 +151,7 @@ public class ComplexContainerTest {
 
         // Switch the container to version 2.0
         cntParent = cntManager.setProfileVersion(idParent, version20, listener);
-        Assert.assertTrue("ProvisionEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
@@ -164,7 +164,7 @@ public class ComplexContainerTest {
         // Verify that the profile cannot be added
         // because the profile version does not yet exist
         try {
-            cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), null);
+            cntManager.addProfiles(idParent, Collections.singletonList(fooProfile.getIdentity()), null);
             Assert.fail("IllegalStateException expected");
         } catch (IllegalStateException ex) {
             // expected
@@ -188,15 +188,15 @@ public class ComplexContainerTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "foo".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default,foo]".equals(identity)) {
                     latchB.countDown();
                 }
             }
         };
 
         // Add profile foo to parent container
-        cntParent = cntManager.addProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
-        Assert.assertTrue("ProvisionEvent received", latchB.await(100, TimeUnit.MILLISECONDS));
+        cntParent = cntManager.addProfiles(idParent, Collections.singletonList(fooProfile.getIdentity()), listener);
+        Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertTrue(cntParent.getProfileIdentities().contains(fooProfile.getIdentity()));
@@ -245,15 +245,15 @@ public class ComplexContainerTest {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.REMOVED && "foo".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default]".equals(identity)) {
                     latchC.countDown();
                 }
             }
         };
 
         // Remove profile foo from container
-        cntParent = cntManager.removeProfiles(idParent, Collections.singleton(fooProfile.getIdentity()), listener);
-        Assert.assertTrue("ProvisionEvent received", latchC.await(100, TimeUnit.MILLISECONDS));
+        cntParent = cntManager.removeProfiles(idParent, Collections.singletonList(fooProfile.getIdentity()), listener);
+        Assert.assertTrue("ProvisionEvent received", latchC.await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
@@ -272,17 +272,12 @@ public class ComplexContainerTest {
         }
 
         // Setup the provision listener
-        final CountDownLatch latchD = new CountDownLatch(2);
+        final CountDownLatch latchD = new CountDownLatch(1);
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                Profile profile = event.getProfile();
-                String version = profile.getVersion().toString();
-                String symbolicName = profile.getIdentity();
-                if (event.getType() == EventType.REMOVED && "2.0.0".equals(version) && "default".equals(symbolicName)) {
-                    latchD.countDown();
-                }
-                if (event.getType() == EventType.PROVISIONED && "1.0.0".equals(version) && "default".equals(symbolicName)) {
+                String identity = event.getProfile().getIdentity();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
                     latchD.countDown();
                 }
             }
@@ -290,7 +285,7 @@ public class ComplexContainerTest {
 
         // Set the default profile version
         cntParent = cntManager.setProfileVersion(idParent, DEFAULT_PROFILE_VERSION, listener);
-        Assert.assertTrue("ProvisionEvent received", latchD.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchD.await(200, TimeUnit.MILLISECONDS));
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());

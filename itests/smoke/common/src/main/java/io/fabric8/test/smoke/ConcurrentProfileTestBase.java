@@ -131,7 +131,7 @@ public abstract class ConcurrentProfileTestBase {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "prfB".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default,prfB]".equals(identity)) {
                     latchA.countDown();
                 }
             }
@@ -139,7 +139,7 @@ public abstract class ConcurrentProfileTestBase {
 
         // Add profile B to the container
         cntManager.setProfileVersion(cntId, version, null);
-        cntManager.addProfiles(cntId, Collections.singleton("prfB"), null);
+        cntManager.addProfiles(cntId, Collections.singletonList("prfB"), null);
 
         // Start the container
         cntManager.startContainer(cntId, listener);
@@ -170,7 +170,7 @@ public abstract class ConcurrentProfileTestBase {
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     // Add the profile
-                    cntManager.addProfiles(cntId, Collections.singleton("prfB"), null);
+                    cntManager.addProfiles(cntId, Collections.singletonList("prfB"), null);
 
                     // Verify that the effective profile is consistent
                     Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
@@ -196,7 +196,7 @@ public abstract class ConcurrentProfileTestBase {
                     Thread.sleep(10);
 
                     // Remove the profile
-                    cntManager.removeProfiles(cntId, Collections.singleton("prfB"), null);
+                    cntManager.removeProfiles(cntId, Collections.singletonList("prfB"), null);
                     Thread.sleep(10);
 
                 } catch (Exception ex) {

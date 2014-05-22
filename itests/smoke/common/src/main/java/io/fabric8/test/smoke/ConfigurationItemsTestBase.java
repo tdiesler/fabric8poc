@@ -23,6 +23,7 @@ import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
@@ -98,15 +99,12 @@ public abstract class ConfigurationItemsTestBase {
         };
 
         // Setup the provision listener
-        final AtomicReference<CountDownLatch> latchB = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
+        final AtomicReference<CountDownLatch> latchB = new AtomicReference<>(new CountDownLatch(1));
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(identity)) {
-                    latchB.get().countDown();
-                }
-                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
                     latchB.get().countDown();
                 }
             }
@@ -137,7 +135,7 @@ public abstract class ConfigurationItemsTestBase {
 
         // Update the default profile
         latchA.set(new CountDownLatch(1));
-        latchB.set(new CountDownLatch(2));
+        latchB.set(new CountDownLatch(1));
         defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));

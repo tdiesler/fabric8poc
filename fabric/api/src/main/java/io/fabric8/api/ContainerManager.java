@@ -22,6 +22,7 @@ package io.fabric8.api;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
@@ -75,7 +76,7 @@ public interface ContainerManager {
     /**
      * Start the container with the given identity
      */
-    Container startContainer(ContainerIdentity identity, ProvisionEventListener listener);
+    Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Stop the container with the given identity
@@ -108,17 +109,22 @@ public interface ContainerManager {
     /**
      * Set the profile version for the container with the given identity
      */
-    Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener);
+    Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Add profiles to the container with the given identity
      */
-    Container addProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener);
+    Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Remove profiles from the container with the given identity
      */
-    Container removeProfiles(ContainerIdentity identity, Set<String> profiles, ProvisionEventListener listener);
+    Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException;
+
+    /**
+     * Get the effective profile for the container with the given identity
+     */
+    Profile getEffectiveProfile(ContainerIdentity identity);
 
     /**
      * Get the a service endpoint for the given type

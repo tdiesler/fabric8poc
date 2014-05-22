@@ -141,7 +141,7 @@ public abstract class ResourceItemTestBase {
 
         // Build the resitem
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
-        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, runtimeName(RESOURCE_A), getDeployment(RESOURCE_A));
+        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, getDeployment(RESOURCE_A));
         Resource resourceA = builderA.getResource();
 
         // Build a profile
@@ -159,7 +159,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -172,7 +172,7 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleA)));
         Assert.assertEquals("ACTIVE" + moduleA, "ACTIVE", server.getAttribute(getObjectName(moduleA), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
@@ -188,10 +188,11 @@ public abstract class ResourceItemTestBase {
 
         // Build the resources
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
-        ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, RESOURCE_B + ".jar", getDeployment(RESOURCE_B));
+        ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, getDeployment(RESOURCE_B));
         Resource resourceB = builderB.getResource();
+
         ResourceIdentity identityB1 = ResourceIdentity.fromString(RESOURCE_B1);
-        ResourceBuilder builderB1 = provisioner.getContentResourceBuilder(identityB1, runtimeName(RESOURCE_B1), getDeployment(RESOURCE_B1));
+        ResourceBuilder builderB1 = provisioner.getContentResourceBuilder(identityB1, getDeployment(RESOURCE_B1));
         Resource resourceB1 = builderB1.getResource();
 
         // Build a profile
@@ -213,7 +214,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -229,7 +230,7 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleB1)));
         Assert.assertEquals("ACTIVE" + moduleB, "ACTIVE", server.getAttribute(getObjectName(moduleB1), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
@@ -267,7 +268,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -275,7 +276,7 @@ public abstract class ResourceItemTestBase {
         Assert.assertNotNull("Module not null", moduleA);
         Assert.assertEquals(State.ACTIVE, moduleA.getState());
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
@@ -297,8 +298,11 @@ public abstract class ResourceItemTestBase {
         builderA.addIdentityRequirement("javax.api");
         builderA.addIdentityRequirement("org.slf4j");
         Resource resourceA = builderA.getResource();
+
         ResourceIdentity identityC = ResourceIdentity.fromString(RESOURCE_C);
-        ResourceBuilder builderC = provisioner.getContentResourceBuilder(identityC, RESOURCE_C + ".war", getDeployment(RESOURCE_C));
+        ResourceBuilder builderC = provisioner.getContentResourceBuilder(identityC, getDeployment(RESOURCE_C));
+        Map<String, Object> attsC = builderC.getMutableResource().getIdentityCapability().getAttributes();
+        attsC.put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_C + ".war");
         Resource resourceC = builderC.getResource();
 
         // Build a profile
@@ -320,7 +324,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Make a call to the HttpService endpoint that goes through a Camel route
         if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
@@ -329,7 +333,7 @@ public abstract class ResourceItemTestBase {
             Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
         }
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
@@ -384,7 +388,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -397,7 +401,7 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleG)));
         Assert.assertEquals("ACTIVE" + moduleG, "ACTIVE", server.getAttribute(getObjectName(moduleG), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 

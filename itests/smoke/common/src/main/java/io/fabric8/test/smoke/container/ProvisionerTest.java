@@ -21,7 +21,6 @@ package io.fabric8.test.smoke.container;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
-import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
@@ -66,6 +65,7 @@ import org.jboss.gravia.repository.Repository;
 import org.jboss.gravia.resolver.Environment;
 import org.jboss.gravia.resolver.Resolver;
 import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.DefaultResourceBuilder;
 import org.jboss.gravia.resource.IdentityRequirementBuilder;
 import org.jboss.gravia.resource.ManifestBuilder;
@@ -194,11 +194,15 @@ public class ProvisionerTest {
      */
     @Test
     public void testStreamResource() throws Exception {
+
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
-        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, runtimeName(RESOURCE_A), deployer.getDeployment(RESOURCE_A));
-        ResourceHandle handle = provisioner.installResource(builderA.getResource());
+        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, deployer.getDeployment(RESOURCE_A));
+        Resource resourceA = builderA.getResource();
+
+        ResourceHandle handle = provisioner.installResource(resourceA);
         try {
             // Verify that the module got installed
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -224,15 +228,21 @@ public class ProvisionerTest {
      */
     @Test
     public void testSharedStreamResource() throws Exception {
-        List<ResourceHandle> handles = new ArrayList<>();
+
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
-        ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, RESOURCE_B + ".jar", deployer.getDeployment(RESOURCE_B));
+        ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, deployer.getDeployment(RESOURCE_B));
+        Resource resourceB = builderB.getResource();
+
         ResourceIdentity identityB1 = ResourceIdentity.fromString(RESOURCE_B1);
-        ResourceBuilder builderB1 = provisioner.getContentResourceBuilder(identityB1, runtimeName(RESOURCE_B1), deployer.getDeployment(RESOURCE_B1));
-        handles.add(provisioner.installSharedResource(builderB.getResource()));
-        handles.add(provisioner.installResource(builderB1.getResource()));
+        ResourceBuilder builderB1 = provisioner.getContentResourceBuilder(identityB1, deployer.getDeployment(RESOURCE_B1));
+        Resource resourceB1 = builderB1.getResource();
+
+        List<ResourceHandle> handles = new ArrayList<>();
+        handles.add(provisioner.installSharedResource(resourceB));
+        handles.add(provisioner.installResource(resourceB1));
         try {
             // Verify that the modules got installed
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -271,7 +281,9 @@ public class ProvisionerTest {
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.unshared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
         ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
-        ResourceHandle handleA = provisioner.installResource(builderA.getResource());
+        Resource resourceA = builderA.getResource();
+
+        ResourceHandle handleA = provisioner.installResource(resourceA);
         try {
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
             Assert.assertSame(handleA.getModule(), runtime.getModule(identityA));
@@ -297,18 +309,23 @@ public class ProvisionerTest {
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.shared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
         ResourceBuilder builderA = provisioner.getMavenResourceBuilder(identityA, mavenid);
-        builderA.getMutableResource().getIdentityCapability().getAttributes().put(CAPABILITY_RUNTIME_NAME_ATTRIBUTE, "camel-core-shared-2.11.0.jar");
         builderA.addIdentityRequirement("javax.api");
         builderA.addIdentityRequirement("org.slf4j");
-        ResourceHandle handleA = provisioner.installSharedResource(builderA.getResource());
+        Resource resourceA = builderA.getResource();
+
+        ResourceIdentity identityC = ResourceIdentity.fromString(RESOURCE_C);
+        ResourceBuilder builderC = provisioner.getContentResourceBuilder(identityC, deployer.getDeployment(RESOURCE_C));
+        Map<String, Object> attsC = builderC.getMutableResource().getIdentityCapability().getAttributes();
+        attsC.put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_C + ".war");
+        Resource resourceC = builderC.getResource();
+
+        ResourceHandle handleA = provisioner.installSharedResource(resourceA);
         try {
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
             Assert.assertSame(handleA.getModule(), runtime.getModule(identityA));
             Assert.assertEquals("ACTIVE " + identityA, State.ACTIVE, handleA.getModule().getState());
 
-            ResourceIdentity identityC = ResourceIdentity.fromString(RESOURCE_C);
-            ResourceBuilder builderC = provisioner.getContentResourceBuilder(identityC, RESOURCE_C + ".war", deployer.getDeployment(RESOURCE_C));
-            ResourceHandle handleC = provisioner.installResource(builderC.getResource());
+            ResourceHandle handleC = provisioner.installResource(resourceC);
             try {
                 // Make a call to the HttpService endpoint that goes through a Camel route
                 String reqspec = "/service?test=Kermit";
@@ -353,15 +370,15 @@ public class ProvisionerTest {
             Assert.assertEquals("Two required wires", 2, wiringA.getRequiredResourceWires(null).size());
 
             // Build a resource that has a class loading dependency
-            DefaultResourceBuilder builder = new DefaultResourceBuilder();
-            ResourceIdentity residB = ResourceIdentity.create(RESOURCE_D, Version.emptyVersion);
-            Capability icap = builder.addIdentityCapability(residB);
-            icap.getAttributes().put(CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_D + ".war");
-            builder.addContentCapability(deployer.getDeployment(RESOURCE_D));
-            Resource resB = builder.getResource();
+            DefaultResourceBuilder builderD = new DefaultResourceBuilder();
+            ResourceIdentity residD = ResourceIdentity.create(RESOURCE_D, Version.emptyVersion);
+            Map<String, Object> attsD = builderD.addIdentityCapability(residD).getAttributes();
+            attsD.put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_D + ".war");
+            builderD.addContentCapability(deployer.getDeployment(RESOURCE_D));
+            Resource resD = builderD.getResource();
 
             // Deploy a resource through the {@link ResourceInstaller}
-            handles.add(provisioner.installResource(resB));
+            handles.add(provisioner.installResource(resD));
             Assert.assertTrue("At least one resource", handles.size() > 0);
 
             // Make a call to the HttpService endpoint that goes through a Camel route
@@ -372,7 +389,7 @@ public class ProvisionerTest {
             // Verify module available
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
             Assert.assertNotNull("Module available", runtime.getModule(residA));
-            Assert.assertNotNull("Module available", runtime.getModule(residB));
+            Assert.assertNotNull("Module available", runtime.getModule(residD));
 
             // Verify the wiring
             wirings = environment.getWirings();
@@ -383,9 +400,9 @@ public class ProvisionerTest {
 
             // Deployment did not go through the {@link Provisioner} service
             // There is no wiring
-            resB = environment.getResource(residB);
-            Assert.assertNotNull("Resource in environment", resB);
-            Wiring wiringB = wirings.get(resB);
+            resD = environment.getResource(residD);
+            Assert.assertNotNull("Resource in environment", resD);
+            Wiring wiringB = wirings.get(resD);
             Assert.assertNull("Wiring not in environment", wiringB);
         } finally {
             for (ResourceHandle handle : handles) {
@@ -409,12 +426,12 @@ public class ProvisionerTest {
         Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
 
         // Build a resource that has a dependency on camel.core
-        DefaultResourceBuilder builder = new DefaultResourceBuilder();
-        Capability icap = builder.addIdentityCapability(RESOURCE_E, Version.emptyVersion);
-        icap.getAttributes().put(CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_E + ".war");
-        builder.addContentCapability(deployer.getDeployment(RESOURCE_E));
-        builder.addIdentityRequirement("org.apache.camel.core", new VersionRange("[2.11,3.0)"));
-        Resource res = builder.getResource();
+        DefaultResourceBuilder builderE = new DefaultResourceBuilder();
+        Capability icapE = builderE.addIdentityCapability(RESOURCE_E, Version.emptyVersion);
+        icapE.getAttributes().put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_E + ".war");
+        builderE.addContentCapability(deployer.getDeployment(RESOURCE_E));
+        builderE.addIdentityRequirement("org.apache.camel.core", new VersionRange("[2.11,3.0)"));
+        Resource res = builderE.getResource();
 
         // Add that resource to the repository
         Resource resB = provisioner.getRepository().addResource(res);
@@ -472,7 +489,7 @@ public class ProvisionerTest {
      * The installed resources are self sufficient - no additional dependency mapping needed.
      */
     @Test
-    public void testProvisionMultipleContentCapabilities() throws Exception {
+    public void testMultipleContentCapabilities() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
@@ -483,6 +500,7 @@ public class ProvisionerTest {
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F1), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.TOMCAT.name()));
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F2), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.WILDFLY.name()));
         builderF.addContentCapability(deployer.getDeployment(CONTENT_F3), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.KARAF.name()));
+        Resource resourceF = builderF.getResource();
 
         ResourceBuilder builderG = new DefaultResourceBuilder();
         ResourceIdentity identityG = ResourceIdentity.create(RESOURCE_G, Version.emptyVersion);
@@ -490,10 +508,11 @@ public class ProvisionerTest {
         builderG.addContentCapability(deployer.getDeployment(CONTENT_G1), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.TOMCAT.name()));
         builderG.addContentCapability(deployer.getDeployment(CONTENT_G2), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.WILDFLY.name()));
         builderG.addContentCapability(deployer.getDeployment(CONTENT_G3), null, Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, RuntimeType.KARAF.name()));
+        Resource resourceG = builderG.getResource();
 
         List<ResourceHandle> handles = new ArrayList<>();
-        handles.add(provisioner.installSharedResource(builderF.getResource()));
-        handles.add(provisioner.installResource(builderG.getResource()));
+        handles.add(provisioner.installSharedResource(resourceF));
+        handles.add(provisioner.installResource(resourceG));
         try {
             // Verify that the modules got installed
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -512,10 +531,6 @@ public class ProvisionerTest {
                 handle.uninstall();
             }
         }
-    }
-
-    private String runtimeName(String resname) {
-        return resname + (RuntimeType.TOMCAT == RuntimeType.getRuntimeType() ? ".war" : ".jar");
     }
 
     private String performCall(String context, String path) throws Exception {
@@ -563,14 +578,14 @@ public class ProvisionerTest {
     @Deployment(name = RESOURCE_B, managed = false, testable = false)
     public static Archive<?> getResourceB() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, RESOURCE_B + ".jar");
-        archive.addClasses(ModuleStateA.class);
+        archive.addClasses(ModuleStateB.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
                 OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                 builder.addBundleManifestVersion(2);
                 builder.addBundleSymbolicName(RESOURCE_B);
-                builder.addExportPackages(ModuleStateA.class);
+                builder.addExportPackages(ModuleStateB.class);
                 builder.addImportPackages(Runtime.class, Resource.class);
                 return builder.openStream();
             }
@@ -583,7 +598,7 @@ public class ProvisionerTest {
         final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_B1);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(RuntimeType.KARAF, ModuleActivatorBridge.class);
-        archive.addClasses(ModuleActivatorA.class);
+        archive.addClasses(ModuleActivatorB.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -592,14 +607,14 @@ public class ProvisionerTest {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_B1);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorB.class.getName());
                     builder.addImportPackages(Runtime.class, Resource.class, ServiceLocator.class);
-                    builder.addImportPackages(MBeanServer.class, ModuleStateA.class);
+                    builder.addImportPackages(MBeanServer.class, ModuleStateB.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(RESOURCE_B1, Version.emptyVersion);
-                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorA.class.getName());
+                    builder.addManifestHeader(Constants.MODULE_ACTIVATOR, ModuleActivatorB.class.getName());
                     builder.addManifestHeader("Dependencies", "org.jboss.gravia," + RESOURCE_B);
                     return builder.openStream();
                 }

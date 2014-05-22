@@ -131,7 +131,7 @@ public abstract class ProfileUpdateTestBase  {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(identity)) {
+                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(identity)) {
                     latchB.countDown();
                 }
             }
@@ -141,8 +141,8 @@ public abstract class ProfileUpdateTestBase  {
         ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         profile = prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.await(100, TimeUnit.MILLISECONDS));
-        Assert.assertFalse("ProvisionEvent not received", latchB.await(100, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertFalse("ProvisionEvent not received", latchB.await(200, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
         // Verify profile
@@ -187,15 +187,12 @@ public abstract class ProfileUpdateTestBase  {
         };
 
         // Setup the provision listener
-        final AtomicReference<CountDownLatch> latchB = new AtomicReference<CountDownLatch>(new CountDownLatch(2));
+        final AtomicReference<CountDownLatch> latchB = new AtomicReference<>(new CountDownLatch(1));
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
                 String identity = event.getProfile().getIdentity();
-                if (event.getType() == ProvisionEvent.EventType.REMOVED && "default".equals(identity)) {
-                    latchB.get().countDown();
-                }
-                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(identity)) {
+                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
                     latchB.get().countDown();
                 }
             }

@@ -32,6 +32,7 @@ import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
@@ -49,6 +50,7 @@ import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ManagedCreateOptions;
@@ -60,9 +62,11 @@ import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,9 +85,13 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
+import org.jboss.gravia.provision.ProvisionResult;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.resolver.Environment;
 import org.jboss.gravia.resource.Requirement;
+import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
@@ -145,7 +153,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
     @Activate
-    void activate(Map<String, ?> config) {
+    void activate(Map<String, ?> config) throws ProvisionException {
         activateInternal();
         activateComponent(PERMIT, this);
     }
@@ -160,7 +168,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private void activateInternal() {
+    private void activateInternal() throws ProvisionException {
 
         // Register a listener for profile update events
         ProfileEventListener listener = new ProfileEventListener() {
@@ -183,6 +191,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                             LockHandle writeLock = cntState.aquireWriteLock();
                             try {
                                 service.updateProfileInternal(cntState, profileId, null);
+                            } catch (ProvisionException ex) {
+                                LOGGER.error("Cannot update container profile: " + profile, ex);
                             } finally {
                                 writeLock.unlock();
                             }
@@ -292,13 +302,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) {
+    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         return startContainerInternal(cntState, listener);
     }
 
-    private Container startContainerInternal(ContainerState cntState, ProvisionEventListener listener) {
+    private Container startContainerInternal(ContainerState cntState, ProvisionEventListener listener) throws ProvisionException {
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             LOGGER.info("Start container: {}", cntState);
@@ -308,13 +318,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (cntState.getProfileVersion() == null) {
                 Profile defaultProfile = profileService.get().getDefaultProfile();
                 setVersionInternal(cntState, defaultProfile.getVersion(), listener);
-                addProfilesInternal(cntState, Collections.singleton(defaultProfile.getIdentity()), listener);
+                addProfilesInternal(cntState, Collections.singletonList(defaultProfile.getIdentity()), listener);
             }
 
-            // Start & provision the container profiles
+            // Start the container
             cntState.start();
-            Set<String> profiles = cntState.getProfileIdentities();
-            provisionProfilesInternal(cntState, profiles, listener);
+
+            // Provision the container profiles
+            Version version = cntState.getProfileVersion().getIdentity();
+            List<String> identities = cntState.getProfileIdentities();
+            provisionProfilesInternal(cntState, version, identities, listener);
 
             return cntState.immutableContainer();
         } finally {
@@ -351,12 +364,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             // Stop the container
             if (cntState.getState() == State.STARTED) {
                 stopContainer(identity);
-            }
-
-            // Unprovision the associated profiles
-            if (cntState.getProfileVersion() != null) {
-                Set<String> profiles = cntState.getProfileIdentities();
-                unprovisionProfilesInternal(cntState, profiles, null);
             }
 
             LOGGER.info("Destroy container: {}", cntState);
@@ -400,7 +407,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) {
+    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -411,27 +418,21 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionEventListener listener) {
+    private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionEventListener listener) throws ProvisionException {
 
-        ProfileVersion prevVersion = cntState.getProfileVersion();
         ProfileVersionState nextVersionState = ((ProfileServiceImpl)profileService.get()).getProfileVersionState(nextVersion);
-
         LOGGER.info("Set container version: {} <= {}", cntState, nextVersion);
 
-        // Unprovision the previous profiles
-        if (prevVersion != null) {
-            unprovisionProfilesInternal(cntState, cntState.getProfileIdentities(), listener);
-        }
-
         // Provision the next profiles
-        cntState.setProfileVersion(nextVersionState);
-        provisionProfilesInternal(cntState, cntState.getProfileIdentities(), listener);
+        List<String> identities = cntState.getProfileIdentities();
+        provisionProfilesInternal(cntState, nextVersion, identities, listener);
 
+        cntState.setProfileVersion(nextVersionState);
         return cntState.immutableContainer();
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
+    public Container addProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -442,11 +443,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container addProfilesInternal(ContainerState cntState, Set<String> identities, ProvisionEventListener listener) {
+    private Container addProfilesInternal(ContainerState cntState, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         LOGGER.info("Add container profiles: {} <= {}", cntState, identities);
 
         // Provision the profiles
-        provisionProfilesInternal(cntState, identities, listener);
+        Version version = cntState.getProfileVersion().getIdentity();
+        List<String> effective = new ArrayList<>(cntState.getProfileIdentities());
+        effective.addAll(identities);
+        provisionProfilesInternal(cntState, version, effective, listener);
 
         // Update the references
         cntState.addProfiles(identities);
@@ -454,7 +458,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, Set<String> identities, ProvisionEventListener listener) {
+    public Container removeProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainer(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
@@ -465,133 +469,148 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container removeProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
-        LOGGER.info("Remove container profiles: {} => {}", cntState, profiles);
+    private Container removeProfilesInternal(ContainerState cntState, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
+        LOGGER.info("Remove container profiles: {} => {}", cntState, identities);
 
         // Unprovision the profiles
-        unprovisionProfilesInternal(cntState, profiles, listener);
+        Version version = cntState.getProfileVersion().getIdentity();
+        List<String> effective = new ArrayList<>(cntState.getProfileIdentities());
+        effective.removeAll(identities);
+        provisionProfilesInternal(cntState, version, effective, listener);
 
         // Update the references
-        cntState.removeProfiles(profiles);
+        cntState.removeProfiles(identities);
         return cntState.immutableContainer();
     }
 
-    private void updateProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
+    @Override
+    public Profile getEffectiveProfile(ContainerIdentity identity) {
+        assertValid();
+        ContainerState cntState = getRequiredContainer(identity);
+        Version version = cntState.getProfileVersion().getIdentity();
+        List<String> identities = cntState.getProfileIdentities();
+        return getEffectiveProfileInternal(cntState, version, identities);
+    }
+
+    private Profile getEffectiveProfileInternal(ContainerState cntState, Version version, List<String> identities) {
+        LockHandle readLock = cntState.aquireReadLock();
+        try {
+            StringBuffer effectiveId = new StringBuffer("effective#" + version + "[");
+            for (int i = 0; i < identities.size(); i++) {
+                effectiveId.append((i > 0 ? "," : "") + identities.get(i));
+            }
+            effectiveId.append("]");
+            ProfileBuilder prfBuilder = new DefaultProfileBuilder(effectiveId.toString());
+            prfBuilder.profileVersion(version);
+            for (String profileId : identities) {
+                LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, profileId);
+                ProfileUtils.buildEffectiveProfile(prfBuilder, linkedProfile);
+            }
+            return prfBuilder.build();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    private void updateProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) throws ProvisionException {
 
         LOGGER.info("Update container profile: {} <= {}", cntState, identity);
 
-        // Unprovision the profile
-        unprovisionProfileInternal(cntState, identity, listener);
-
         // Provision the profile
-        provisionProfileInternal(cntState, identity, listener);
+        Version version = cntState.getProfileVersion().getIdentity();
+        List<String> identities = cntState.getProfileIdentities();
+        provisionProfilesInternal(cntState, version, identities, listener);
     }
 
-    private void provisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
+    private void provisionProfilesInternal(ContainerState cntState, Version version, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         if (cntState.getState() == State.STARTED) {
-            for (String profile : profiles) {
-                provisionProfileInternal(cntState, profile, listener);
-            }
+            Profile effective = getEffectiveProfileInternal(cntState, version, identities);
+            provisionEffectiveProfile(cntState, effective, listener);
         }
     }
 
-    private void provisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
+    private void provisionEffectiveProfile(ContainerState cntState, Profile effective, ProvisionEventListener listener) throws ProvisionException {
 
-        Version cntVersion = cntState.getProfileVersion().getIdentity();
-        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(cntVersion, identity);
-        LOGGER.info("Provision profile: {} <= {}", cntState, identity);
+        LOGGER.info("Provision profile: {} <= {}", cntState, effective.getIdentity());
 
         Container container = cntState.immutableContainer();
-        ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, linkedProfile);
+        ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, effective);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
-
-        // Get the effective profile
-        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
 
         // Apply the configuration items
-        List<ConfigurationItem> configItems = effectiveProfile.getProfileItems(ConfigurationItem.class);
+        List<ConfigurationItem> configItems = effective.getProfileItems(ConfigurationItem.class);
         configurationManager.get().applyConfigurationItems(configItems);
 
-        // Provision requirement items
-        // [TODO] uninstall of provisioned resources
-        provisionRequirements(effectiveProfile);
-
-        // Install the resource items
-        Map<String, ResourceHandle> handles = new HashMap<>();
-        for (ResourceItem item : effectiveProfile.getProfileItems(ResourceItem.class)) {
-            handles.put(item.getIdentity(), installResourceItem(item));
+        // Clone the runtime environment & add the explicit {@link ResourceItem}s
+        Map<ResourceIdentity, ResourceItem> explicitResources = new LinkedHashMap<>();
+        Environment envclone = provisioner.get().getEnvironment().cloneEnvironment();
+        for (ResourceItem item : effective.getProfileItems(ResourceItem.class)) {
+            Resource res = item.getResource();
+            explicitResources.put(res.getIdentity(), item);
+            envclone.addResource(res);
         }
-        cntState.addResourceHandles(handles);
 
-        event = new ProvisionEvent(container, EventType.PROVISIONED, linkedProfile);
-        eventDispatcher.get().dispatchProvisionEvent(event, listener);
-    }
-
-    private void provisionRequirements(Profile effectiveProfile) {
-        List<RequirementItem> reqItems = effectiveProfile.getProfileItems(RequirementItem.class);
-        if (!reqItems.isEmpty()) {
-            Set<Requirement> reqs = new HashSet<>();
-            for (RequirementItem item : reqItems) {
-                reqs.add(item.getRequirement());
-            }
-            LOGGER.info("Provision requirements items: {}", reqs);
-            try {
-                provisioner.get().provisionResources(reqs);
-            } catch (ProvisionException ex) {
-                throw new IllegalStateException("Cannot provision requirements", ex);
-            }
+        // Get the complete set of requirements
+        Set<Requirement> reqs = new HashSet<>();
+        for (RequirementItem item : effective.getProfileItems(RequirementItem.class)) {
+            Requirement req = item.getRequirement();
+            reqs.add(req);
         }
-    }
 
-    private ResourceHandle installResourceItem(ResourceItem item) {
-        LOGGER.info("Install resource item: {}", item);
-        try {
-            if (item.isShared()) {
-                return provisioner.get().installSharedResource(item.getResource());
-            } else {
-                return provisioner.get().installResource(item.getResource());
-            }
-        } catch (ProvisionException ex) {
-            throw new IllegalStateException("Cannot install resource item: " + item, ex);
+        // Resolve all requirements
+        ProvisionResult result = provisioner.get().findResources(envclone, reqs);
+        Set<Requirement> unsatisfied = result.getUnsatisfiedRequirements();
+        if (!unsatisfied.isEmpty()) {
+            throw new ProvisionException("Cannot resolve unsatisfied requirements: " + unsatisfied);
         }
-    }
 
-    private void unprovisionProfilesInternal(ContainerState cntState, Set<String> profiles, ProvisionEventListener listener) {
-        if (cntState.getState() == State.STARTED) {
-            for (String profileId : profiles) {
-                unprovisionProfileInternal(cntState, profileId, listener);
+        // Get map of all provisoned resources
+        Map<ResourceIdentity, Resource> allResources = new LinkedHashMap<>();
+        for (Resource res : result.getResources()) {
+            allResources.put(res.getIdentity(), res);
+        }
+        for (ResourceItem item : explicitResources.values()) {
+            Resource res = item.getResource();
+            allResources.put(res.getIdentity(), res);
+        }
+
+        // Get list of resources for removal
+        List<ResourceIdentity> removalPending = new ArrayList<>();
+        Map<ResourceIdentity, ResourceHandle> currentResources = cntState.getResourceHandles();
+        for (ResourceIdentity resid : currentResources.keySet()) {
+            if (allResources.get(resid) == null) {
+                removalPending.add(resid);
             }
         }
-    }
 
-    private void unprovisionProfileInternal(ContainerState cntState, String identity, ProvisionEventListener listener) {
-
-        Version cntVersion = cntState.getProfileVersion().getIdentity();
-        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(cntVersion, identity);
-        LOGGER.info("Unprovision profile: {} => {}", cntState, identity);
-
-        Container container = cntState.immutableContainer();
-        ProvisionEvent event = new ProvisionEvent(container, EventType.REMOVING, linkedProfile);
-        eventDispatcher.get().dispatchProvisionEvent(event, listener);
-
-        // Get the effective profile
-        Profile effectiveProfile = ProfileUtils.getEffectiveProfile(linkedProfile);
-
-        // Uninstall the resource items
-        List<ResourceItem> resourceItems = effectiveProfile.getProfileItems(ResourceItem.class);
-        uninstallResourceItems(cntState, resourceItems);
-
-        event = new ProvisionEvent(container, EventType.REMOVED, linkedProfile);
-        eventDispatcher.get().dispatchProvisionEvent(event, listener);
-    }
-
-    private void uninstallResourceItems(ContainerState cntState, List<ResourceItem> resourceItems) {
-        List<ResourceItem> reverseItems = new ArrayList<>(resourceItems);
-        Collections.reverse(reverseItems);
-        for (ResourceItem item : reverseItems) {
-            ResourceHandle handle = cntState.removeResourceHandle(item.getIdentity());
+        // Uninstall removed resources
+        Collections.reverse(removalPending);
+        for (ResourceIdentity resid : removalPending) {
+            ResourceHandle handle = currentResources.get(resid);
             handle.uninstall();
         }
+        cntState.removeResourceHandles(removalPending);
+
+        // Install added resources
+        Map<ResourceIdentity, ResourceHandle> addedResources = new LinkedHashMap<>();
+        for (Resource res : allResources.values()) {
+            ResourceIdentity resid = res.getIdentity();
+            if (currentResources.get(resid) == null) {
+                ResourceItem item = explicitResources.get(resid);
+                boolean shared = item != null && item.isShared();
+                ResourceHandle handle;
+                if (shared) {
+                    handle = provisioner.get().installSharedResource(res);
+                } else {
+                    handle = provisioner.get().installResource(res);
+                }
+                addedResources.put(resid, handle);
+            }
+        }
+        cntState.addResourceHandles(addedResources);
+
+        event = new ProvisionEvent(container, EventType.PROVISIONED, effective);
+        eventDispatcher.get().dispatchProvisionEvent(event, listener);
     }
 
     @Override
@@ -691,10 +710,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerState parentState;
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
-        private final Set<String> profiles = new HashSet<>();
+        private final List<String> profiles = new ArrayList<>();
         private final List<ContainerHandle> containerHandles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
-        private final Map<String, ResourceHandle> resourceHandles = new HashMap<>();
+        private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
         private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
@@ -815,10 +834,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             return versionState != null ? versionState.getProfileVersion() : null;
         }
 
-        Set<String> getProfileIdentities() {
+        List<String> getProfileIdentities() {
             LockHandle readLock = aquireReadLock();
             try {
-                return Collections.unmodifiableSet(new HashSet<>(profiles));
+                return Collections.unmodifiableList(new ArrayList<>(profiles));
             } finally {
                 readLock.unlock();
             }
@@ -875,17 +894,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        void addResourceHandles(Map<String, ResourceHandle> handles) {
+        Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
+            return Collections.unmodifiableMap(resourceHandles);
+        }
+
+        void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
             resourceHandles.putAll(handles);
         }
 
-        void addResourceHandle(String itemId, ResourceHandle handle) {
-            resourceHandles.put(itemId, handle);
+        void removeResourceHandles(Collection<ResourceIdentity> handles) {
+            for (ResourceIdentity resid : handles) {
+                resourceHandles.remove(resid);
+            }
         }
 
-        ResourceHandle removeResourceHandle(String itemId) {
-            return resourceHandles.remove(itemId);
-        }
 
         private List<ContainerHandle> getContainerHandles() {
             return Collections.unmodifiableList(containerHandles);
@@ -924,7 +946,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        private void addProfiles(Set<String> identities) {
+        private void addProfiles(List<String> identities) {
             assertNotDestroyed();
             LockHandle writeLock = aquireWriteLock();
             try {
@@ -934,7 +956,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        private void removeProfiles(Set<String> identities) {
+        private void removeProfiles(List<String> identities) {
             assertNotDestroyed();
             LockHandle writeLock = aquireWriteLock();
             try {

@@ -155,7 +155,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
             return this;
         }
 
-        public Builder addProfiles(Set<String> profiles) {
+        public Builder addProfiles(List<String> profiles) {
             container.profiles.addAll(profiles);
             return this;
         }

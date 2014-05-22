@@ -49,6 +49,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceInstaller;
+import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.IdentityRequirementBuilder;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Requirement;
@@ -113,7 +114,9 @@ public abstract class RequirementItemTestBase {
         ResourceIdentity featureId = ResourceIdentity.fromString("camel.core.feature:0.0.0");
         Requirement requirement = new IdentityRequirementBuilder(featureId).getRequirement();
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
-        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, RESOURCE_A + ".war", getDeployment(RESOURCE_A));
+        ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, getDeployment(RESOURCE_A));
+        Map<String, Object> attsA = builderA.getMutableResource().getIdentityCapability().getAttributes();
+        attsA.put(ContentNamespace.CAPABILITY_RUNTIME_NAME_ATTRIBUTE, RESOURCE_A + ".war");
         Resource resourceA = builderA.getResource();
 
         // Build a profile
@@ -131,7 +134,7 @@ public abstract class RequirementItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
 
         // Make a call to the HttpService endpoint that goes through a Camel route
         if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
@@ -140,7 +143,7 @@ public abstract class RequirementItemTestBase {
             Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
         }
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singleton("foo"), null);
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
     }
 
