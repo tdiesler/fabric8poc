@@ -153,8 +153,9 @@ public abstract class ResourceItemTestBase {
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(RESOURCE_A, ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resitemA", getItemURL(itemA, 0).toExternalForm());
+        ResourceItem itemA = profile.getProfileItem(identityA);
+        Assert.assertEquals("profile://1.0.0/foo/resitemA?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemA").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
 
         // Add the profile to the current coontainer
@@ -205,11 +206,13 @@ public abstract class ResourceItemTestBase {
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemB = profile.getProfileItem(RESOURCE_B, ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resitemB", getItemURL(itemB, 0).toExternalForm());
+        ResourceItem itemB = profile.getProfileItem(identityB);
+        Assert.assertEquals("profile://1.0.0/foo/resitemB?version=0.0.0", getItemURL(itemB, 0).toExternalForm());
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemB").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemB, 0).openStream());
-        ResourceItem itemB1 = profile.getProfileItem(RESOURCE_B1, ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resitemB1", getItemURL(itemB1, 0).toExternalForm());
+        ResourceItem itemB1 = profile.getProfileItem(identityB1);
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemB1").openStream());
+        Assert.assertEquals("profile://1.0.0/foo/resitemB1?version=0.0.0", getItemURL(itemB1, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", getItemURL(itemB1, 0).openStream());
 
         // Add the profile to the current coontainer
@@ -262,8 +265,9 @@ public abstract class ResourceItemTestBase {
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA.getSymbolicName(), ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resitem.camel.core", getItemURL(itemA, 0).toExternalForm());
+        ResourceItem itemA = profile.getProfileItem(identityA);
+        Assert.assertEquals("profile://1.0.0/foo/resitem.camel.core?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitem.camel.core").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
 
         // Add the profile to the current coontainer
@@ -315,11 +319,13 @@ public abstract class ResourceItemTestBase {
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA.getSymbolicName(), ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/camel.core.resitem", getItemURL(itemA, 0).toExternalForm());
+        ResourceItem itemA = profile.getProfileItem(identityA);
+        Assert.assertEquals("profile://1.0.0/foo/camel.core.resitem?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/camel.core.resitem").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
-        ResourceItem itemC = profile.getProfileItem(identityC.getSymbolicName(), ResourceItem.class);
-        Assert.assertEquals("profile://1.0.0/foo/resitemC", getItemURL(itemC, 0).toExternalForm());
+        ResourceItem itemC = profile.getProfileItem(identityC);
+        Assert.assertEquals("profile://1.0.0/foo/resitemC?version=0.0.0", getItemURL(itemC, 0).toExternalForm());
+        Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemC").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemC, 0).openStream());
 
         // Add the profile to the current coontainer
@@ -377,12 +383,14 @@ public abstract class ResourceItemTestBase {
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
         Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemF = profile.getProfileItem(identityF.getSymbolicName(), ResourceItem.class);
-        ResourceItem itemG = profile.getProfileItem(identityG.getSymbolicName(), ResourceItem.class);
+        ResourceItem itemF = profile.getProfileItem(identityF);
+        ResourceItem itemG = profile.getProfileItem(identityG);
         for (int i = 0; i < 3; i++) {
-            Assert.assertEquals("profile://1.0.0/foo/resitemF?cntindex=" + i, getItemURL(itemF, i).toExternalForm());
+            Assert.assertEquals("profile://1.0.0/foo/resitemF?version=0.0.0&cntindex=" + i, getItemURL(itemF, i).toExternalForm());
+            Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemF?cntindex=" + i).openStream());
             Assert.assertNotNull("URL stream not null", getItemURL(itemF, i).openStream());
-            Assert.assertEquals("profile://1.0.0/foo/resitemG?cntindex=" + i, getItemURL(itemG, i).toExternalForm());
+            Assert.assertEquals("profile://1.0.0/foo/resitemG?version=0.0.0&cntindex=" + i, getItemURL(itemG, i).toExternalForm());
+            Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemG?cntindex=" + i).openStream());
             Assert.assertNotNull("URL stream not null", getItemURL(itemG, i).openStream());
         }
 
@@ -403,10 +411,6 @@ public abstract class ResourceItemTestBase {
 
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
         prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
-    }
-
-    private String runtimeName(String resname) {
-        return resname + (RuntimeType.TOMCAT == RuntimeType.getRuntimeType() ? ".war" : ".jar");
     }
 
     private URL getItemURL(ResourceItem item, int index) {

@@ -21,6 +21,7 @@ package io.fabric8.api;
 
 import java.util.List;
 
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 
 
@@ -51,6 +52,11 @@ public interface Profile extends Attributable, Identifiable<String> {
      * Get the profile item for the given name
      */
     <T extends ProfileItem> T getProfileItem(String identity, Class<T> type);
+
+    /**
+     * Get the profile item for the given resource identity
+     */
+    ResourceItem getProfileItem(ResourceIdentity identity);
 
     /**
      * Get the set of profile items for the given type

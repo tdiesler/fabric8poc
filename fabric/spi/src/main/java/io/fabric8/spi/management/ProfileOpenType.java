@@ -21,6 +21,7 @@ package io.fabric8.spi.management;
 
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.api.ResourceItem;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 
 /**
@@ -125,6 +127,11 @@ public final class ProfileOpenType {
 
         @Override
         public <T extends ProfileItem> T getProfileItem(String identity, Class<T> type) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ResourceItem getProfileItem(ResourceIdentity identity) {
             throw new UnsupportedOperationException();
         }
 

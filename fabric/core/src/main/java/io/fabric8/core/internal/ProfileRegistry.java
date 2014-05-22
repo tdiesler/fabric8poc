@@ -152,7 +152,7 @@ public final class ProfileRegistry extends AbstractComponent {
                 if (item instanceof ResourceItem) {
                     ResourceItem resitem = (ResourceItem) item;
                     Resource resource = processResourceItem(profile, resitem);
-                    item = new DefaultResourceItem(resource, resitem.isShared());
+                    item = new DefaultResourceItem(resource);
                 }
                 profileItems.add(item);
             }
@@ -175,13 +175,14 @@ public final class ProfileRegistry extends AbstractComponent {
         String version = url.getHost();
         String profile = path.substring(1, path.lastIndexOf('/'));
         String item = path.substring(path.lastIndexOf('/') + 1);
-        Path versionPath = Paths.get(profilesDir.toString(), version);
-        IllegalStateAssertion.assertTrue(versionPath.toFile().isDirectory(), "Cannot find version directory: " + versionPath);
-        Path profilePath = Paths.get(versionPath.toString(), profile);
+        Path profileVersionPath = Paths.get(profilesDir.toString(), version);
+        IllegalStateAssertion.assertTrue(profileVersionPath.toFile().isDirectory(), "Cannot find version directory: " + profileVersionPath);
+        Path profilePath = Paths.get(profileVersionPath.toString(), profile);
         IllegalStateAssertion.assertTrue(profilePath.toFile().isDirectory(), "Cannot find profile directory: " + profilePath);
         Path itemPath = Paths.get(profilePath.toString(), item);
-        IllegalStateAssertion.assertTrue(itemPath.toFile().isDirectory(), "Cannot find item file: " + itemPath);
-        Path contentPath = null;
+        IllegalStateAssertion.assertTrue(itemPath.toFile().isDirectory(), "Cannot find item directory: " + itemPath);
+        int cntindex = 0;
+        Version resourceVersion = null;
         if (url.getQuery() != null) {
             String query = url.getQuery().substring(1);
             for (String param : query.split("&")) {
@@ -189,14 +190,28 @@ public final class ProfileRegistry extends AbstractComponent {
                 IllegalStateAssertion.assertEquals(2, keyval.length, "Unexpected array length: " + Arrays.asList(keyval));
                 String key = keyval[0];
                 String val = keyval[1];
-                if ("cntindex".equals(key)) {
-                    contentPath = Paths.get(itemPath.toString(), "content" + val);
-                    break;
+                if ("version".equals(key)) {
+                    resourceVersion = Version.parseVersion(val);
+                } else if ("cntindex".equals(key)) {
+                    cntindex = Integer.parseInt(val);
                 }
             }
-        } else {
-            contentPath = Paths.get(itemPath.toString(), "content0");
         }
+        Path versionPath;
+        if (resourceVersion != null) {
+            versionPath = Paths.get(itemPath.toString(), resourceVersion.toString());
+        } else {
+            Version higest = Version.emptyVersion;
+            for (String verstr : itemPath.toFile().list()) {
+                Version nextver = Version.parseVersion(verstr);
+                if (nextver.compareTo(higest) > 0) {
+                    higest = nextver;
+                }
+            }
+            versionPath = Paths.get(itemPath.toString(), higest.toString());
+        }
+        IllegalStateAssertion.assertTrue(versionPath.toFile().isDirectory(), "Cannot find version directory: " + versionPath);
+        Path contentPath = Paths.get(versionPath.toString(), "content" + cntindex);
         IllegalStateAssertion.assertNotNull(contentPath, "Cannot obtain content path from: " + url);
         IllegalStateAssertion.assertTrue(contentPath.toFile().isFile(), "Cannot find item file: " + contentPath);
         return contentPath.toFile().toURI().toURL().openConnection();
@@ -207,7 +222,7 @@ public final class ProfileRegistry extends AbstractComponent {
         IllegalArgumentAssertion.assertNotNull(item, "item");
         Resource resource = item.getResource();
 
-        // Copy von-content capabilities
+        // Copy non-content capabilities
         ResourceBuilder builder = new DefaultResourceBuilder();
         for (Capability cap : resource.getCapabilities(null)) {
             if (!ContentNamespace.CONTENT_NAMESPACE.equals(cap.getNamespace())) {
@@ -219,15 +234,16 @@ public final class ProfileRegistry extends AbstractComponent {
         List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
         for (int i = 0; i < ccaps.size(); i++) {
             ContentCapability ccap = ccaps.get(i).adapt(ContentCapability.class);
-            Path targetPath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity(), item.getIdentity(), "content" + i);
+            Path profilePath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity());
+            Path targetPath = Paths.get(profilePath.toString(), item.getSymbolicName(), item.getVersion().toString(), "content" + i);
             URL contentURL;
             try {
                 File targetDir = targetPath.toFile().getParentFile();
                 IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create directory: " + targetDir);
                 Files.copy(getRequiredCapabilityContent(ccap), targetPath, REPLACE_EXISTING);
-                String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getIdentity();
+                String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getSymbolicName() + "?version=" + item.getVersion();
                 if (ccaps.size() > 1) {
-                    spec += "?cntindex=" + i;
+                    spec += "&cntindex=" + i;
                 }
                 contentURL = new URL(null, spec, new ProfileURLStreamHandler(targetPath.toFile()));
             } catch (IOException ex) {

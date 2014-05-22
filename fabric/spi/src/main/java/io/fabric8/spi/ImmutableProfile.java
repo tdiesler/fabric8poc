@@ -23,6 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.api.ResourceItem;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -102,6 +104,11 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     @SuppressWarnings("unchecked")
     public <T extends ProfileItem> T getProfileItem(String identity, Class<T> type) {
         return (T) profileItems.get(identity);
+    }
+
+    @Override
+    public ResourceItem getProfileItem(ResourceIdentity identity) {
+        return (ResourceItem) profileItems.get(identity.getCanonicalForm());
     }
 
     @Override

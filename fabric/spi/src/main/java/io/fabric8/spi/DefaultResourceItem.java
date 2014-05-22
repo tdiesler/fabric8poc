@@ -3,7 +3,10 @@ package io.fabric8.spi;
 import io.fabric8.api.ResourceItem;
 
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.ResourceUtils;
 
 /**
  * The default resource item
@@ -13,14 +16,14 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  */
 public final class DefaultResourceItem extends AbstractProfileItem implements ResourceItem {
 
-    private final Resource resource;
-    private final boolean shared;
+    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] {'/', '\\', ':', ' ', '\t', '&', '?'};
 
-    public DefaultResourceItem(Resource resource, boolean shared) {
-        super(resource.getIdentity().getSymbolicName());
+    private final Resource resource;
+
+    public DefaultResourceItem(Resource resource) {
+        super(resource.getIdentity().getCanonicalForm());
         IllegalArgumentAssertion.assertNotNull(resource, "resource");
         this.resource = resource;
-        this.shared = shared;
     }
 
     @Override
@@ -29,8 +32,26 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Re
     }
 
     @Override
+    public String getSymbolicName() {
+        return resource.getIdentity().getSymbolicName();
+    }
+
+    @Override
+    public Version getVersion() {
+        return resource.getIdentity().getVersion();
+    }
+
+    @Override
     public boolean isShared() {
-        return shared;
+        return ResourceUtils.isShared(resource);
+    }
+
+    void validate() {
+        super.validate();
+        String symbolicName = getSymbolicName();
+        for (char ch : ILLEGAL_IDENTITY_CHARS) {
+            IllegalStateAssertion.assertEquals(-1, symbolicName.indexOf(ch), "Invalid character '" + ch + "' in identity: " + getIdentity());
+        }
     }
 
     @Override

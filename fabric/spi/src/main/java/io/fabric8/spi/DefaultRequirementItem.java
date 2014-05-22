@@ -15,6 +15,8 @@ public final class DefaultRequirementItem extends AbstractProfileItem implements
 
     private final Requirement requirement;
 
+    // Multiple req items with the same resource symbolic name, but different versions
+    // are not supported in the same profile. Also applies to the effective profile
     public DefaultRequirementItem(Requirement requirement) {
         super((String) requirement.getAttribute(IdentityNamespace.IDENTITY_NAMESPACE));
         this.requirement = requirement;

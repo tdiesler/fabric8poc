@@ -20,6 +20,7 @@
 package io.fabric8.api;
 
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.Version;
 
 /**
  * A resource profile item
@@ -30,6 +31,10 @@ import org.jboss.gravia.resource.Resource;
 public interface ResourceItem extends ProfileItem {
 
     Resource getResource();
+
+    String getSymbolicName();
+
+    Version getVersion();
 
     boolean isShared();
 }

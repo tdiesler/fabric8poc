@@ -23,6 +23,7 @@ import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
+import io.fabric8.api.ResourceItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,10 +31,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.gravia.resource.Capability;
+import org.jboss.gravia.resource.DefaultResourceBuilder;
+import org.jboss.gravia.resource.IdentityNamespace;
 import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
+import org.jboss.gravia.resource.ResourceBuilder;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.ResourceUtils;
 
 public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder, Profile> implements ProfileBuilder {
 
@@ -86,13 +93,19 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileBuilder addResourceItem(Resource resource) {
-        mutableProfile.addProfileItem(new DefaultResourceItem(resource, false));
+        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
         return this;
     }
 
     @Override
     public ProfileBuilder addSharedResourceItem(Resource resource) {
-        mutableProfile.addProfileItem(new DefaultResourceItem(resource, true));
+        if (!ResourceUtils.isShared(resource)) {
+            ResourceBuilder builder = new DefaultResourceBuilder().fromResource(resource);
+            Capability icap = builder.getMutableResource().getIdentityCapability();
+            icap.getAttributes().put(IdentityNamespace.CAPABILITY_SHARED_ATTRIBUTE, Boolean.TRUE);
+            resource = builder.getResource();
+        }
+        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
         return this;
     }
 
@@ -192,6 +205,11 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         @SuppressWarnings("unchecked")
         public <T extends ProfileItem> T getProfileItem(String identity, Class<T> type) {
             return (T) profileItems.get(identity);
+        }
+
+        @Override
+        public ResourceItem getProfileItem(ResourceIdentity identity) {
+            return (ResourceItem) profileItems.get(identity.getCanonicalForm());
         }
 
         @Override
