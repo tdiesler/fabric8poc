@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.curator;
+package io.fabric8.core.zookeeper;
 
 import io.fabric8.spi.scr.AbstractComponent;
 import org.apache.curator.framework.api.ACLProvider;

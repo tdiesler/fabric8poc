@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.core.internal.zookeeper;
+package io.fabric8.core.zookeeper;
 
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -41,7 +42,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
-import static io.fabric8.core.internal.zookeeper.Constants.ZOOKEEPER_SERVER_PID;
+
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
 
 @Component( label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
 @org.apache.felix.scr.annotations.Properties({

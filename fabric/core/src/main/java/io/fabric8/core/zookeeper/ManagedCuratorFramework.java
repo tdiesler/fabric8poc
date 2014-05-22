@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.core.internal.curator;
+package io.fabric8.core.zookeeper;
 
-import io.fabric8.core.internal.utils.PasswordEncoder;
-import io.fabric8.core.internal.utils.StringUtils;
+import io.fabric8.core.utils.PasswordEncoder;
+import io.fabric8.core.utils.StringUtils;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -51,13 +51,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.fabric8.core.internal.zookeeper.Constants.CONNECTION_TIMEOUT;
-import static io.fabric8.core.internal.zookeeper.Constants.RETRY_POLICY_INTERVAL_MS;
-import static io.fabric8.core.internal.zookeeper.Constants.RETRY_POLICY_MAX_RETRIES;
-import static io.fabric8.core.internal.zookeeper.Constants.SESSION_TIMEOUT;
-import static io.fabric8.core.internal.zookeeper.Constants.ZOOKEEPER_PASSWORD;
-import static io.fabric8.core.internal.zookeeper.Constants.ZOOKEEPER_PID;
-import static io.fabric8.core.internal.zookeeper.Constants.ZOOKEEPER_URL;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.CONNECTION_TIMEOUT;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_INTERVAL_MS;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_MAX_RETRIES;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.SESSION_TIMEOUT;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PASSWORD;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PID;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_URL;
 import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MULTIPLE;
 import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
 import static org.jboss.gravia.utils.IOUtils.safeClose;
@@ -91,12 +91,12 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     private AtomicReference<State> state = new AtomicReference<State>();
 
     class State implements ConnectionStateListener, Runnable {
-        final Config configuration;
+        final ZookeeperConfig configuration;
         final AtomicBoolean closed = new AtomicBoolean();
         ServiceRegistration<CuratorFramework> registration;
         CuratorFramework curator;
 
-        State(Config configuration) {
+        State(ZookeeperConfig configuration) {
             this.configuration = configuration;
         }
 
@@ -155,7 +155,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     @Activate
     void activate(BundleContext bundleContext, Map<String, ?> configuration) throws Exception {
         this.bundleContext = bundleContext;
-        Config config = new Config();
+        ZookeeperConfig config = new ZookeeperConfig();
         configurer.configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
@@ -169,13 +169,13 @@ public class ManagedCuratorFramework  extends AbstractComponent {
 
     @Modified
     void modified(Map<String, ?> configuration) throws Exception {
-        Config config = new Config();
+        ZookeeperConfig config = new ZookeeperConfig();
         configurer.configure(configuration, this);
         configurer.configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
             State prev = state.get();
-            Config oldConfiguration = prev != null ? prev.configuration : null;
+            ZookeeperConfig oldConfiguration = prev != null ? prev.configuration : null;
             if (!config.equals(oldConfiguration)) {
                 State next = new State(config);
                 if (state.compareAndSet(prev, next)) {
@@ -203,7 +203,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     /**
      * Builds a {@link org.apache.curator.framework.CuratorFramework} from the specified {@link java.util.Map<String, ?>}.
      */
-    private synchronized CuratorFramework buildCuratorFramework(Config curatorConfig) {
+    private synchronized CuratorFramework buildCuratorFramework(ZookeeperConfig curatorConfig) {
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
                 .ensembleProvider(new FixedEnsembleProvider(curatorConfig.getZookeeperUrl()))
                 .connectionTimeoutMs(curatorConfig.getZookeeperConnectionTimeOut())

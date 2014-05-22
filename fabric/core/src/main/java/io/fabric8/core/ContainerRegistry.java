@@ -17,11 +17,11 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
+import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.apache.felix.scr.annotations.Activate;

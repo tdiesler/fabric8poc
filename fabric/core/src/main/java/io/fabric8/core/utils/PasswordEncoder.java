@@ -12,26 +12,29 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.utils;
+package io.fabric8.core.utils;
 
 import org.jboss.gravia.utils.Base64Encoder;
 
-public class PasswordEncoder {  
+public final class PasswordEncoder {
 
     public static final String PREFIX = "ZKENC=";
-    
+
     private PasswordEncoder() {
     }
-    
+
     /**
      * Encodes a String into a base 64 String. The resulting encoding is chunked at 76 bytes.
-     * <p/>
-     *
-     * @param s String to encode.
-     * @return encoded string.
      */
-    public static String encode(String s) {        
+    public static String encode(String s) {
         return shouldEncodePassword(s) ? PREFIX + Base64Encoder.encode(s) : s;
+    }
+
+    /**
+     * Decodes a base 64 String into a String.
+     */
+    public static String decode(String s) throws IllegalArgumentException {
+        return shouldDecodePassword(s) ? Base64Encoder.decode(s.substring(PREFIX.length())) : s;
     }
 
     private static boolean shouldEncodePassword(String s) {
@@ -41,22 +44,8 @@ public class PasswordEncoder {
         } else {
             return false;
         }
-    }    
-    
-    /**
-     * Decodes a base 64 String into a String.
-     * <p/>
-     *
-     * @param s String to decode.
-     * @return encoded string.
-     * @throws IllegalArgumentException
-     *          thrown if the given byte array was not valid com.sun.syndication.io.impl.Base64 encoding.
-     */
-    public static String decode(String s)
-            throws IllegalArgumentException {
-        return shouldDecodePassword(s) ? Base64Encoder.decode(s.substring(PREFIX.length())) : s;
     }
-    
+
     private static boolean shouldDecodePassword(String s) {
         if (Boolean.parseBoolean(System.getProperty("zookeeper.password.encode", "true"))) {
             // don't want to decode password that is not encoded
@@ -64,6 +53,6 @@ public class PasswordEncoder {
         } else {
             return false;
         }
-    }    
-    
+    }
+
 }

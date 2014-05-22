@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,50 +17,36 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
-import io.fabric8.api.ContainerManager;
-import io.fabric8.api.ProfileManager;
-import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.RuntimeService;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
+
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.provision.Provisioner;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
- * Implementation of the the {@link BootstrapComplete} marker service
+ * A cluster wide data store
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 18-Apr-2014
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(BootstrapComplete.class)
-public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
+@Service(ClusterDataStore.class)
+public final class ClusterDataStoreImpl extends AbstractComponent implements ClusterDataStore {
 
-    @Reference
-    private RuntimeService runtimeService;
-    @Reference
-    private BootstrapService bootstrapService;
-    @Reference
-    private ContainerManager containerManager;
-    @Reference
-    private ContainerService containerService;
-    @Reference
-    private MBeansProvider mBeansProvider;
-    @Reference
-    private ProfileManager profileManager;
-    @Reference
-    private Provisioner provisioner;
+    // [TODO] Real cluster wide identities
+    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
 
     @Activate
-    void activate() throws Exception {
-        activateInternal();
+    void activate() {
         activateComponent();
     }
 
@@ -69,6 +55,11 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
         deactivateComponent();
     }
 
-    private void activateInternal() {
+    @Override
+    public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
+        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
+        String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
+        ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+        return containerId;
     }
 }

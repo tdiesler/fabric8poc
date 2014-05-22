@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Profile;

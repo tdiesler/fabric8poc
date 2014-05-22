@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import io.fabric8.api.AttributeKey;
@@ -43,7 +43,7 @@ import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.internal.ProfileServiceImpl.ProfileVersionState;
+import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ClusterDataStore;

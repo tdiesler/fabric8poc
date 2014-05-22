@@ -18,37 +18,52 @@
  * #L%
  */
 
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
-import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.PermitManagerLocator;
+import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
 /**
- * The URLStreamHandler for protocol container://
+ * The URLStreamHandler for protocol profile://
  *
  * @author thomas.diesler@jboss.com
- * @since 22-May-2014
+ * @since 08-May-2014
  */
-final class ContainerURLStreamHandler extends URLStreamHandler {
+final class ProfileURLStreamHandler extends URLStreamHandler {
 
-    static final String PROTOCOL_NAME = "container";
+    static final String PROTOCOL_NAME = "profile";
+
+    private final File targetFile;
+
+    ProfileURLStreamHandler() {
+        this.targetFile = null;
+    }
+
+    ProfileURLStreamHandler(File targetFile) {
+        this.targetFile = targetFile;
+    }
 
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-        PermitManager permitManager = PermitManagerLocator.getPermitManager();
-        Permit<ContainerService> permit = permitManager.aquirePermit(ContainerService.PERMIT, false);
-        try {
-            ContainerService service = permit.getInstance();
-            return service.getContainerURLConnection(url);
-        } finally {
-            permit.release();
+        if (targetFile != null) {
+            return targetFile.toURI().toURL().openConnection();
+        } else {
+            PermitManager permitManager = PermitManagerLocator.getPermitManager();
+            Permit<ProfileService> permit = permitManager.aquirePermit(ProfileService.PERMIT, false);
+            try {
+                ProfileService service = permit.getInstance();
+                return service.getProfileURLConnection(url);
+            } finally {
+                permit.release();
+            }
         }
     }
 }

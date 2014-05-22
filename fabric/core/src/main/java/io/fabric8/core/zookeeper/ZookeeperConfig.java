@@ -12,14 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.curator;
+package io.fabric8.core.zookeeper;
 
-import static io.fabric8.core.internal.zookeeper.Constants.DEFAULT_CONNECTION_TIMEOUT_MS;
-import static io.fabric8.core.internal.zookeeper.Constants.DEFAULT_RETRY_INTERVAL;
-import static io.fabric8.core.internal.zookeeper.Constants.DEFAULT_SESSION_TIMEOUT_MS;
-import static io.fabric8.core.internal.zookeeper.Constants.MAX_RETRIES_LIMIT;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.DEFAULT_CONNECTION_TIMEOUT_MS;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.DEFAULT_RETRY_INTERVAL;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.DEFAULT_SESSION_TIMEOUT_MS;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.MAX_RETRIES_LIMIT;
 
-class Config {
+final class ZookeeperConfig {
 
     private String zookeeperPassword;
     private int zookeeperRetryMax = MAX_RETRIES_LIMIT;
@@ -57,7 +57,7 @@ class Config {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Config that = (Config) o;
+        ZookeeperConfig that = (ZookeeperConfig) o;
 
         if (zookeeperConnectionTimeOut != that.zookeeperConnectionTimeOut) return false;
         if (zookeeperRetryInterval != that.zookeeperRetryInterval) return false;

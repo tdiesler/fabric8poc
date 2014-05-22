@@ -17,33 +17,31 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.spi.ClusterDataStore;
+import io.fabric8.spi.PortManager;
 import io.fabric8.spi.scr.AbstractComponent;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
- * A cluster wide data store
+ * A host wide port manager
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(ClusterDataStore.class)
-public final class ClusterDataStoreImpl extends AbstractComponent implements ClusterDataStore {
-
-    // [TODO] Real cluster wide identities
-    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
+@Component(policy= ConfigurationPolicy.IGNORE, immediate = true)
+@Service(PortManager.class)
+public final class PortManagerImpl extends AbstractComponent implements PortManager {
 
     @Activate
     void activate() {
@@ -56,10 +54,23 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
     }
 
     @Override
-    public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
-        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
-        String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
-        ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
-        return containerId;
+    public int nextAvailablePort(int portValue, InetAddress bindAddr) {
+        ServerSocket socket = null;
+        int endPort = portValue + 100;
+        while (socket == null && portValue < endPort) {
+            try {
+                socket = new ServerSocket(portValue, 0, bindAddr);
+            } catch (IOException ex) {
+                portValue++;
+            }
+        }
+        IllegalStateAssertion.assertNotNull(socket, "Cannot obtain next available port");
+        int resultPort = socket.getLocalPort();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            // ignore
+        }
+        return resultPort;
     }
 }

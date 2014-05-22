@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.utils;
+package io.fabric8.core.utils;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * Provides type coercion helper function for injecting fields with config admin values
  */
-public class ConverterUtils {
+final class ConverterUtils {
 
     /**
      * The separator used to separate list or array values in a Config Admin String value
@@ -39,7 +39,7 @@ public class ConverterUtils {
 
     protected static String[] EMPTY_STRING_ARRAY = new String[0];
 
-    public static Object convertValue(Object value, Type type) throws Exception {
+    static Object convertValue(Object value, Type type) throws Exception {
         Class<?> clazz = null;
         Class<?> componentType = Object.class;
 
@@ -47,7 +47,7 @@ public class ConverterUtils {
             clazz = (Class<?>) ((ParameterizedType) type).getRawType();
             componentType = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
         } else if (type instanceof Class) {
-            clazz = (Class) type;
+            clazz = (Class<?>) type;
         } else {
             throw new IllegalArgumentException();
         }
@@ -100,7 +100,7 @@ public class ConverterUtils {
                 }
                 return array;
             } else if (List.class.isAssignableFrom(clazz)) {
-                List list = new ArrayList();
+                List<Object> list = new ArrayList<>();
                 String[] tokens = splitValues(text);
                 for (String token : tokens) {
                     Object item = convertValue(token, componentType);
@@ -108,7 +108,7 @@ public class ConverterUtils {
                 }
                 return list;
             } else if (Set.class.isAssignableFrom(clazz)) {
-                Set set = new HashSet();
+                Set<Object> set = new HashSet<>();
                 String[] tokens = splitValues(text);
                 for (String token : tokens) {
                     Object item = convertValue(token, componentType);

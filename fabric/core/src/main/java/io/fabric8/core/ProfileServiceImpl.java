@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
@@ -29,7 +29,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.core.internal.ContainerServiceImpl.ContainerState;
+import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;

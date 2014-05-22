@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import io.fabric8.api.LinkedProfileVersion;

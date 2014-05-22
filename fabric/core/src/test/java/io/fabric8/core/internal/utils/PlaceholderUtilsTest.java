@@ -17,6 +17,8 @@ package io.fabric8.core.internal.utils;
 
 import org.junit.Test;
 
+import io.fabric8.core.utils.PlaceholderUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 

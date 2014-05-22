@@ -12,12 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.utils;
+package io.fabric8.core.utils;
 
 /**
  */
-public class StringUtils {
+public final class StringUtils {
 
+    // Hide ctor
+    private StringUtils() {
+    }
 
     public static boolean isNullOrBlank(String name) {
         return name == null || name.length() == 0;

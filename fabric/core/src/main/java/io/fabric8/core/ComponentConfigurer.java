@@ -12,15 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
-import io.fabric8.core.internal.utils.ConfigInjectionUtils;
-import io.fabric8.core.internal.utils.PlaceholderUtils;
-import io.fabric8.core.internal.utils.StringUtils;
+import io.fabric8.core.utils.ConfigInjectionUtils;
+import io.fabric8.core.utils.PlaceholderUtils;
+import io.fabric8.core.utils.StringUtils;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;

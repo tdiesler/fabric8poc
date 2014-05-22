@@ -17,31 +17,33 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
-import io.fabric8.spi.PortManager;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.spi.HostDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
- * A host wide port manager
+ * A host wide data store
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014
  */
-@Component(policy= ConfigurationPolicy.IGNORE, immediate = true)
-@Service(PortManager.class)
-public final class PortManagerImpl extends AbstractComponent implements PortManager {
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(HostDataStore.class)
+public final class HostDataStoreImpl extends AbstractComponent implements HostDataStore {
+
+    // [TODO] Real host wide identities
+    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
 
     @Activate
     void activate() {
@@ -54,23 +56,8 @@ public final class PortManagerImpl extends AbstractComponent implements PortMana
     }
 
     @Override
-    public int nextAvailablePort(int portValue, InetAddress bindAddr) {
-        ServerSocket socket = null;
-        int endPort = portValue + 100;
-        while (socket == null && portValue < endPort) {
-            try {
-                socket = new ServerSocket(portValue, 0, bindAddr);
-            } catch (IOException ex) {
-                portValue++;
-            }
-        }
-        IllegalStateAssertion.assertNotNull(socket, "Cannot obtain next available port");
-        int resultPort = socket.getLocalPort();
-        try {
-            socket.close();
-        } catch (IOException e) {
-            // ignore
-        }
-        return resultPort;
+    public ContainerIdentity createManagedContainerIdentity(String prefix) {
+        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
+        return ContainerIdentity.create(prefix + "#" + uniqueTokenGenerator.incrementAndGet());
     }
 }

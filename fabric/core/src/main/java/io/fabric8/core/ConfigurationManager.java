@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.core.internal;
+package io.fabric8.core;
 
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -94,7 +94,7 @@ public final class ConfigurationManager extends AbstractComponent {
     }
 
     private Dictionary<String, Object> toDictionary(Map<String, Object> config) {
-        Dictionary<String, Object> result = new Hashtable<String, Object>();
+        Dictionary<String, Object> result = new Hashtable<>();
         if (config != null) {
             for (Entry<String, Object> entry : config.entrySet()) {
                 result.put(entry.getKey(), entry.getValue());
@@ -104,7 +104,7 @@ public final class ConfigurationManager extends AbstractComponent {
     }
 
     private Map<String, Object> toMap(Dictionary<String, Object> config) {
-        Map<String, Object> result = new HashMap<String, Object>();
+        Map<String, Object> result = new HashMap<>();
         if (config != null) {
             Enumeration<String> keys = config.keys();
             while (keys.hasMoreElements()) {

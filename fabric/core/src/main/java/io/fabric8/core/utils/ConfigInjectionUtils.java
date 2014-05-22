@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package io.fabric8.core.internal.utils;
+package io.fabric8.core.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,17 +20,12 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public class ConfigInjectionUtils {
+public final class ConfigInjectionUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigInjectionUtils.class);
 
     /**
      * Applies configuration specified in {@link java.util.Map} to the specified target.
-     *
-     * @param configuration The configuration.
-     * @param target        The target.
-     * @param <T>
-     * @throws Exception
      */
     public static <T> void applyConfiguration(Map<String, ?> configuration, T target) throws Exception {
         Class<?> clazz = target.getClass();
@@ -42,19 +37,13 @@ public class ConfigInjectionUtils {
 
     /**
      * Applies configuration specified in {@link java.util.Map} to the specified target.
-     *
-     * @param configuration The configuration.
-     * @param target        The target.
-     * @param clazz         The target Class.
-     * @param <T>
-     * @throws Exception
      */
     private static <T> void applyConfiguration(Map<String, ?> configuration, T target, Class<?> clazz) throws Exception {
         injectValues(clazz, target, configuration);
 
     }
 
-    static void injectValues(Class<?> clazz, Object instance, Map<String, ?> configuration) throws Exception {
+    private static void injectValues(Class<?> clazz, Object instance, Map<String, ?> configuration) throws Exception {
         for (Map.Entry<String, ?> entry : configuration.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
@@ -75,10 +64,8 @@ public class ConfigInjectionUtils {
 
     /**
      * Utility to transform name containing dots to valid java identifiers.
-     * @param name
-     * @return
      */
-     static String normalizePropertyName(String name) {
+    private static String normalizePropertyName(String name) {
          if (name == null || name.isEmpty()) {
              return name;
          } else if (!name.contains(".") && !name.contains("-")) {
