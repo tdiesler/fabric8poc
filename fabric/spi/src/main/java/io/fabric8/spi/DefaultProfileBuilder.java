@@ -110,6 +110,18 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
+    public ProfileBuilder addReferenceResourceItem(Resource resource) {
+        if (!ResourceUtils.isShared(resource)) {
+            ResourceBuilder builder = new DefaultResourceBuilder().fromResource(resource);
+            Capability icap = builder.getMutableResource().getIdentityCapability();
+            icap.getAttributes().put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_REFERENCE);
+            resource = builder.getResource();
+        }
+        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
+        return this;
+    }
+
+    @Override
     public ProfileBuilder addRequirementItem(Requirement requirement) {
         mutableProfile.addProfileItem(new DefaultRequirementItem(requirement));
         return this;

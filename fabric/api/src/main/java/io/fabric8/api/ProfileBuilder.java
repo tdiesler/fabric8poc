@@ -51,6 +51,8 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Prof
 
     ProfileBuilder addSharedResourceItem(Resource resource);
 
+    ProfileBuilder addReferenceResourceItem(Resource resource);
+
     ProfileBuilder addRequirementItem(Requirement requirement);
 
     ProfileBuilder addParentProfile(String identity);

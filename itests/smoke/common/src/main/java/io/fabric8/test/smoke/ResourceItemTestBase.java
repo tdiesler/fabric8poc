@@ -58,7 +58,6 @@ import org.apache.camel.model.RouteDefinition;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
 import org.jboss.gravia.provision.Provisioner;
-import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.resource.Capability;
 import org.jboss.gravia.resource.ContentCapability;
 import org.jboss.gravia.resource.ContentNamespace;
@@ -97,7 +96,7 @@ import org.junit.Test;
 import org.osgi.service.http.HttpService;
 
 /**
- * Test {@link ResourceInstaller} functionality
+ * Test {@link ResourceItem} functionality
  *
  * @author thomas.diesler@jboss.com
  * @since 08-May-2014
@@ -417,6 +416,7 @@ public abstract class ResourceItemTestBase {
         List<Capability> ccaps = item.getResource().getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
         return ccaps.get(index).adapt(ContentCapability.class).getContentURL();
     }
+
     private ObjectName getObjectName(Module module) throws MalformedObjectNameException {
         ResourceIdentity identity = module.getIdentity();
         return new ObjectName("test:name=" + identity.getSymbolicName() + ",version=" + identity.getVersion());

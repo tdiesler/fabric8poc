@@ -100,6 +100,7 @@ import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -571,7 +572,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
         for (ResourceItem item : explicitResources.values()) {
             Resource res = item.getResource();
-            allResources.put(res.getIdentity(), res);
+            if (!ResourceUtils.isAbstract(res)) {
+                allResources.put(res.getIdentity(), res);
+            }
         }
 
         // Get list of resources for removal
@@ -596,14 +599,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         for (Resource res : allResources.values()) {
             ResourceIdentity resid = res.getIdentity();
             if (currentResources.get(resid) == null) {
-                ResourceItem item = explicitResources.get(resid);
-                boolean shared = item != null && item.isShared();
-                ResourceHandle handle;
-                if (shared) {
-                    handle = provisioner.get().installSharedResource(res);
-                } else {
-                    handle = provisioner.get().installResource(res);
-                }
+                ResourceHandle handle = provisioner.get().installResource(res);
                 addedResources.put(resid, handle);
             }
         }

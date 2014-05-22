@@ -29,7 +29,6 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,8 +110,7 @@ public final class PrePostConditions {
         current.removeAll(modulesAssociation.get());
 
         // [TODO] Runtime types that do not support uninstall of shared modules
-        List<RuntimeType> sharedUninstall = Arrays.asList(RuntimeType.TOMCAT, RuntimeType.WILDFLY);
-        if (sharedUninstall.contains(RuntimeType.getRuntimeType())) {
+        if (RuntimeType.WILDFLY == RuntimeType.getRuntimeType()) {
             Iterator<Module> itmod = current.iterator();
             while (itmod.hasNext()) {
                 Resource res = itmod.next().adapt(Resource.class);
