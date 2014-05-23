@@ -26,7 +26,9 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AttributableBuilder<B, T> {
+public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AttributableBuilder<B> {
 
     B identityPrefix(String prefix);
+
+    T getCreateOptions();
 }

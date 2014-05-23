@@ -66,9 +66,9 @@ public class ProfileVersionOpenTypeTest {
 
         Version version = Version.parseVersion("2.0");
 
-        Profile prfA = ProfileBuilder.Factory.create("foo").build();
+        Profile prfA = ProfileBuilder.Factory.create("foo").getProfile();
 
-        ProfileVersion prfvA = ProfileVersionBuilder.Factory.create(version).addProfile(prfA).build();
+        ProfileVersion prfvA = ProfileVersionBuilder.Factory.create(version).addProfile(prfA).getProfileVersion();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfvA = prfManager.addProfileVersion(prfvA);
@@ -84,7 +84,7 @@ public class ProfileVersionOpenTypeTest {
         // Test the {@link ProfileVersionOptionsProvider}
         ProfileVersionBuilder versionBuilder = ProfileVersionBuilder.Factory.create();
         versionBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
-        ProfileVersion prfvC = versionBuilder.build();
+        ProfileVersion prfvC = versionBuilder.getProfileVersion();
 
         prfvC = prfManager.addProfileVersion(prfvC);
         Assert.assertEquals(prfvA.getIdentity(), prfvC.getIdentity());
@@ -113,7 +113,7 @@ public class ProfileVersionOpenTypeTest {
             ProfileVersion profileVersion = ProfileVersionOpenType.getProfileVersion(cdata);
             builder.identity(profileVersion.getIdentity());
             for (String prfid : profileVersion.getProfileIdentities()) {
-                Profile prf = ProfileBuilder.Factory.create(prfid).build();
+                Profile prf = ProfileBuilder.Factory.create(prfid).getProfile();
                 builder.addProfile(prf);
             }
             return builder;

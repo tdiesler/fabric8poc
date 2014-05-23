@@ -127,11 +127,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         // Add the default profile version
         Profile profile = new DefaultProfileBuilder(DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
-                .build();
+                .getProfile();
 
         LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
                 .addProfile(profile)
-                .build();
+                .getProfileVersion();
 
         addProfileVersionInternal(profileVersion);
     }

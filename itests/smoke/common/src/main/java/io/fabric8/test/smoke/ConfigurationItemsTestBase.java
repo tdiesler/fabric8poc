@@ -84,7 +84,7 @@ public abstract class ConfigurationItemsTestBase {
         // Build an update profile
         Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem("some.pid", Collections.singletonMap("foo", (Object) "bar"))
-                .build();
+                .getProfile();
 
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
@@ -131,7 +131,7 @@ public abstract class ConfigurationItemsTestBase {
         // Build an update profile
         updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
                 .removeProfileItem("some.pid")
-                .build();
+                .getProfile();
 
         // Update the default profile
         latchA.set(new CountDownLatch(1));

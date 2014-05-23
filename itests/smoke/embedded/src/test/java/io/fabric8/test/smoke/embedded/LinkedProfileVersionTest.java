@@ -88,26 +88,26 @@ public class LinkedProfileVersionTest {
         Profile prfA = ProfileBuilder.Factory.create(identityA)
                 .addConfigurationItem("confItem", configA)
                 .addConfigurationItem("confItemA", configA)
-                .build();
+                .getProfile();
 
         Profile prfB = ProfileBuilder.Factory.create(identityB)
                 .addParentProfile(identityA)
                 .addConfigurationItem("confItem", configB)
                 .addConfigurationItem("confItemB", configB)
-                .build();
+                .getProfile();
 
         Profile prfC = ProfileBuilder.Factory.create(identityC)
                 .addParentProfile(identityA)
                 .addParentProfile(identityB)
                 .addConfigurationItem("confItem", configC)
                 .addConfigurationItem("confItemC", configC)
-                .build();
+                .getProfile();
 
         LinkedProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
                 .addProfile(prfA)
                 .addProfile(prfB)
                 .addProfile(prfC)
-                .build();
+                .getProfileVersion();
 
         Set<String> profileIdentities = linkedVersion.getProfileIdentities();
         Assert.assertEquals(3, profileIdentities.size());

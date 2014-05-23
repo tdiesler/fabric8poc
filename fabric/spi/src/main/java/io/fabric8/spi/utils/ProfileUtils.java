@@ -46,7 +46,7 @@ public final class ProfileUtils {
         String identity = "effective#" + profile.getIdentity();
         ProfileBuilder prfBuilder = new DefaultProfileBuilder(identity);
         buildEffectiveProfile(prfBuilder, profile);
-        return prfBuilder.build();
+        return prfBuilder.getProfile();
     }
 
     public static void buildEffectiveProfile(ProfileBuilder builder, LinkedProfile profile) {
@@ -66,7 +66,7 @@ public final class ProfileUtils {
             // Merge with existing {@link ConfigurationItem}
             if (item instanceof ConfigurationItem) {
                 String itemId = item.getIdentity();
-                ConfigurationItem prevItem = builder.build().getProfileItem(itemId, ConfigurationItem.class);
+                ConfigurationItem prevItem = builder.getProfile().getProfileItem(itemId, ConfigurationItem.class);
                 if (prevItem != null) {
                     Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
                     config.putAll(((ConfigurationItem) item).getConfiguration());

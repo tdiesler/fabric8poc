@@ -83,12 +83,12 @@ public abstract class ProfileUpdateTestBase  {
         // Build a profile version
         Profile prfA = ProfileBuilder.Factory.create(identityA)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                .build();
+                .getProfile();
 
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version12)
-                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).build())
+                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).getProfile())
                 .addProfile(prfA)
-                .build();
+                .getProfileVersion();
 
         // Add a profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -105,7 +105,7 @@ public abstract class ProfileUpdateTestBase  {
 
         Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identityA)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "zzz"))
-                .build();
+                .getProfile();
 
         // Verify update profile
         Assert.assertEquals(identityA, updateProfile.getIdentity());
@@ -172,7 +172,7 @@ public abstract class ProfileUpdateTestBase  {
 
         Profile updateProfile = ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "bar"))
-                .build();
+                .getProfile();
 
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
@@ -233,7 +233,7 @@ public abstract class ProfileUpdateTestBase  {
         // Build an update profile
         updateProfile =  ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
-                .build();
+                .getProfile();
 
         latchA.set(new CountDownLatch(1));
         prfManager.updateProfile(updateProfile, profileListener);

@@ -69,7 +69,7 @@ public class BasicContainerLifecycleTest {
     public void testContainerLifecycle() throws Exception {
 
         EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.build();
+        CreateOptions options = cntBuilder.getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);

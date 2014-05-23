@@ -26,7 +26,7 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 22-Apr-2014
  */
-public interface OptionsProvider<B extends Builder<B, ?>> {
+public interface OptionsProvider<B extends Builder<B>> {
 
     B addBuilderOptions(B builder);
 }

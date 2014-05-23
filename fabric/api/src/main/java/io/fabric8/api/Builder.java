@@ -23,9 +23,7 @@ package io.fabric8.api;
 /**
  * A generic builder
  */
-public interface Builder<B extends Builder<B, T>, T> {
+public interface Builder<B extends Builder<B>> {
 
     B addOptions(OptionsProvider<B> optionsProvider);
-
-    T build();
 }

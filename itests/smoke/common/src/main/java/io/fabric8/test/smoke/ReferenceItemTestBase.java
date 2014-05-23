@@ -93,7 +93,7 @@ public abstract class ReferenceItemTestBase {
         Profile profile = ProfileBuilder.Factory.create("foo")
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addReferenceResourceItem(resourceA)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);

@@ -518,7 +518,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, profileId);
                 ProfileUtils.buildEffectiveProfile(prfBuilder, linkedProfile);
             }
-            return prfBuilder.build();
+            return prfBuilder.getProfile();
         } finally {
             readLock.unlock();
         }

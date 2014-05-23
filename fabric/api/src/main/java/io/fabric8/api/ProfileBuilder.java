@@ -33,11 +33,9 @@ import org.jboss.gravia.runtime.ServiceLocator;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Profile> {
+public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder identity(String identity);
-
-    ProfileBuilder addOptions(OptionsProvider<ProfileBuilder> optionsProvider);
 
     ProfileBuilder profileVersion(Version version);
 
@@ -58,6 +56,8 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder, Prof
     ProfileBuilder addParentProfile(String identity);
 
     ProfileBuilder removeParentProfile(String identity);
+
+    Profile getProfile();
 
     final class Factory {
 

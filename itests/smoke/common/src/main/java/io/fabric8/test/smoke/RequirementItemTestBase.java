@@ -124,7 +124,7 @@ public abstract class RequirementItemTestBase {
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addRequirementItem(requirement)
                 .addResourceItem(resourceA)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);

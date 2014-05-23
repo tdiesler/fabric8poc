@@ -42,7 +42,7 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ResourceUtils;
 
-public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder, Profile> implements ProfileBuilder {
+public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
 
     static final char[] ILLEGAL_IDENTITY_CHARS = new char[] {'\\', ':', ' ', '\t', '&', '?'};
 
@@ -140,7 +140,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public Profile build() {
+    public Profile getProfile() {
         validate();
         return mutableProfile.immutableProfile();
     }

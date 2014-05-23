@@ -95,18 +95,18 @@ public abstract class ConcurrentProfileTestBase {
         // A <= B
         Profile prfA = ProfileBuilder.Factory.create("prfA")
                 .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(0)))
-                .build();
+                .getProfile();
 
         Profile prfB = ProfileBuilder.Factory.create("prfB")
                 .addParentProfile("prfA")
                 .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
-                .build();
+                .getProfile();
 
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
-                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).build())
+                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).getProfile())
                 .addProfile(prfA)
                 .addProfile(prfB)
-                .build();
+                .getProfileVersion();
 
         // Add the profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
@@ -224,14 +224,14 @@ public abstract class ConcurrentProfileTestBase {
                     Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyA", new Integer(i + 1));
 
-                    Profile prfA = prfBuilder.addConfigurationItem(PID, config).build();
+                    Profile prfA = prfBuilder.addConfigurationItem(PID, config).getProfile();
 
                     prfBuilder = ProfileBuilder.Factory.createFrom(linkedB);
                     prfItem = linkedB.getProfileItem(PID, ConfigurationItem.class);
                     config = new HashMap<>(prfItem.getConfiguration());
                     config.put("keyB", new Integer(i + 1));
 
-                    Profile prfB = prfBuilder.addConfigurationItem(PID, config).build();
+                    Profile prfB = prfBuilder.addConfigurationItem(PID, config).getProfile();
 
                     LockHandle lock = prfManager.aquireProfileVersionLock(version);
                     try {

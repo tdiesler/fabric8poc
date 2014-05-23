@@ -130,7 +130,7 @@ public class ConfiguredComponentTest {
         sregB.unregister();
 
         EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);

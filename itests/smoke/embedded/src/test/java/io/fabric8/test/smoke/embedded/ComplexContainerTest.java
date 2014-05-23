@@ -88,7 +88,7 @@ public class ComplexContainerTest {
 
         // Create parent container
         EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").build();
+        CreateOptions options = cntBuilder.identityPrefix("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
@@ -108,8 +108,8 @@ public class ComplexContainerTest {
         // Build a new profile version
         Version version20 = Version.parseVersion("2.0");
         ProfileVersion profVersion20 = ProfileVersionBuilder.Factory.create(version20)
-                .addProfile(ProfileBuilder.Factory.create("dummy").build())
-                .build();
+                .addProfile(ProfileBuilder.Factory.create("dummy").getProfile())
+                .getProfileVersion();
 
         // Verify that the version cannot be set
         // because it is not registered with the {@link ProfileManager}
@@ -134,7 +134,7 @@ public class ComplexContainerTest {
 
         // Build a new profile and associated it with 2.0
         ProfileBuilder profileBuilder = ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY);
-        Profile default20 = profileBuilder.build();
+        Profile default20 = profileBuilder.getProfile();
         prfManager.addProfile(version20, default20);
 
         // Setup the provision listener
@@ -159,7 +159,7 @@ public class ComplexContainerTest {
         // Create profile foo
         Profile fooProfile = ProfileBuilder.Factory.create("foo")
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("confKey", (Object) "bar"))
-                .build();
+                .getProfile();
 
         // Verify that the profile cannot be added
         // because the profile version does not yet exist
@@ -204,7 +204,7 @@ public class ComplexContainerTest {
 
         // Create child container
         cntBuilder = EmbeddedContainerBuilder.create();
-        options = cntBuilder.identityPrefix("cntB").build();
+        options = cntBuilder.identityPrefix("cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity

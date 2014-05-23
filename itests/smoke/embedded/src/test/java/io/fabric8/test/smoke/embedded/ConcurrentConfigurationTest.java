@@ -144,7 +144,7 @@ public class ConcurrentConfigurationTest {
 
         private ContainerIdentity createAndStart(ContainerManager cntManager, int index) throws InterruptedException, ProvisionException {
             EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-            CreateOptions options = cntBuilder.identityPrefix(prefix + "#" + index).build();
+            CreateOptions options = cntBuilder.identityPrefix(prefix + "#" + index).getCreateOptions();
             Container cnt = cntManager.createContainer(options);
             ContainerIdentity cntId = cnt.getIdentity();
             //System.out.println(cnt);

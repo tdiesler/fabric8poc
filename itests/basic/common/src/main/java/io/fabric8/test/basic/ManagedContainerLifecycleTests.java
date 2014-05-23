@@ -78,7 +78,7 @@ public class ManagedContainerLifecycleTests  {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
         KarafContainerBuilder cntBuilder = KarafContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
-        CreateOptions options = cntBuilder.build();
+        CreateOptions options = cntBuilder.getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
@@ -101,7 +101,7 @@ public class ManagedContainerLifecycleTests  {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
         TomcatContainerBuilder cntBuilder = TomcatContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
-        CreateOptions options = cntBuilder.build();
+        CreateOptions options = cntBuilder.getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
@@ -127,7 +127,7 @@ public class ManagedContainerLifecycleTests  {
         // [TODO] The default port of the running server is available, why?
         cntBuilder.managementNativePort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_NATIVE_PORT + 1);
         cntBuilder.managementHttpPort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_HTTP_PORT + 1);
-        CreateOptions options = cntBuilder.build();
+        CreateOptions options = cntBuilder.getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);

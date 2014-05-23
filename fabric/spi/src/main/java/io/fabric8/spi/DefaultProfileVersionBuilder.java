@@ -71,7 +71,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     }
 
     @Override
-    public LinkedProfileVersion build() {
+    public LinkedProfileVersion getProfileVersion() {
         validate();
         return mutableVersion.immutableProfileVersion();
     }

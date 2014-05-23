@@ -28,13 +28,15 @@ import org.jboss.gravia.runtime.ServiceLocator;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder, LinkedProfileVersion> {
+public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder> {
 
     ProfileVersionBuilder identity(Version version);
 
     ProfileVersionBuilder addProfile(Profile profile);
 
     ProfileVersionBuilder removeProfile(String identity);
+
+    LinkedProfileVersion getProfileVersion();
 
     final class Factory {
 

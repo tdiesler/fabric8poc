@@ -147,7 +147,7 @@ public abstract class ResourceItemTestBase {
         Profile profile = ProfileBuilder.Factory.create("foo")
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addResourceItem(resourceA)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
@@ -200,7 +200,7 @@ public abstract class ResourceItemTestBase {
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceB)
                 .addResourceItem(resourceB1)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
@@ -259,7 +259,7 @@ public abstract class ResourceItemTestBase {
         Profile profile = ProfileBuilder.Factory.create("foo")
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addResourceItem(resourceA)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
@@ -313,7 +313,7 @@ public abstract class ResourceItemTestBase {
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceA)
                 .addResourceItem(resourceC)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
@@ -377,7 +377,7 @@ public abstract class ResourceItemTestBase {
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceF)
                 .addResourceItem(resourceG)
-                .build();
+                .getProfile();
 
         // Add the profile and verify the item URL
         profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);

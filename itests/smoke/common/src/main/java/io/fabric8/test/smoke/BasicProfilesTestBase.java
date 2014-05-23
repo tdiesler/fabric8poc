@@ -78,11 +78,11 @@ public abstract class BasicProfilesTestBase  {
 
         Profile profileFoo = ProfileBuilder.Factory.create("foo")
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))
-                .build();
+                .getProfile();
 
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
                 .addProfile(profileFoo)
-                .build();
+                .getProfileVersion();
 
         // Add a profile version
         prfManager.addProfileVersion(profileVersion);
