@@ -52,7 +52,7 @@ import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
         @Property(name = "dataDir", value = "${runtime.data}/zookeeper/00000/data", label = "Data Directory", description = "The location to store the in-memory database snapshots and, unless specified otherwise, the transaction log of updates to the database"),
         @Property(name = "initLimit", intValue = FabricZooKeeperServer.DEFAULT_INIT_LIMIT, label = "Init Limit", description = "The amount of time in ticks (see tickTime), to allow followers to connect and sync to a leader. Increased this value as needed, if the amount of data managed by ZooKeeper is large"),
         @Property(name = "syncLimit", intValue = FabricZooKeeperServer.DEFAULT_SYNC_LIMIT, label = "Sync Limit", description = "The amount of time, in ticks (see tickTime), to allow followers to sync with ZooKeeper. If followers fall too far behind a leader, they will be dropped"),
-        @Property(name = "dataLogDir", value = "${runtime.data}/zookeeper/00000/data", label = "Data Log Directory", description = "This option will direct the machine to write the transaction log to the dataLogDir rather than the dataDir. This allows a dedicated log device to be used, and helps avoid competition between logging and snaphots"),
+        @Property(name = "dataLogDir", value = "${runtime.data}/zookeeper/00000/log", label = "Data Log Directory", description = "This option will direct the machine to write the transaction log to the dataLogDir rather than the dataDir. This allows a dedicated log device to be used, and helps avoid competition between logging and snaphots"),
 
         @Property(name = "maxClientCnxns", intValue = FabricZooKeeperServer.DEFAULT_MAX_CLIENT_CNXNS, label = "Maximum Client Connections Per Host", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"),
         @Property(name = "clientPortAddress", value = FabricZooKeeperServer.DEFAULT_CLIENT_PORT_ADDRESS, label = "Client Port Address", description = "The address (ipv4, ipv6 or hostname) to listen for client connections; that is, the address that clients attempt to connect to"),
@@ -79,13 +79,14 @@ public class FabricZooKeeperServer extends AbstractComponent {
     @Reference
     private Configurer configurer;
     private File dataDir;
+    private File dataLogDir;
 
     private Destroyable destroyable;
 
     @Activate
     void activate(Map<String, ?> configuration) throws Exception {
         configurer.configure(configuration, this);
-        activateInternal(configuration);
+        destroyable = activateInternal(configuration);
         activateComponent();
     }
 
@@ -107,6 +108,15 @@ public class FabricZooKeeperServer extends AbstractComponent {
         Properties props = new Properties();
         for (Map.Entry<String, ?> entry : configuration.entrySet()) {
             props.put(entry.getKey(), entry.getValue());
+        }
+
+        //Check required directories exist or create them.
+        if (!dataDir.exists() && !dataDir.mkdirs()) {
+            throw new IOException("Failed to create ZooKeeper dataDir at: " + dataDir.getAbsolutePath());
+        }
+
+        if (!dataLogDir.exists() && !dataLogDir.mkdirs()) {
+            throw new IOException("Failed to create ZooKeeper dataLogDir at: " + dataLogDir.getAbsolutePath());
         }
 
         // Create myid file
@@ -234,6 +244,7 @@ public class FabricZooKeeperServer extends AbstractComponent {
         public void destroy() throws Exception {
             cnxnFactory.shutdown();
             cnxnFactory.join();
+
         }
 
         @Override

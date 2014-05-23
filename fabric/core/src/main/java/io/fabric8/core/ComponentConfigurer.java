@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component(immediate = true)
-@Service(ComponentConfigurer.class)
+@Service(Configurer.class)
 public class ComponentConfigurer extends AbstractComponent implements Configurer {
 
     @Reference(referenceInterface = RuntimeService.class)
@@ -61,7 +61,7 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
     public <T> void configure(Map<String, ?> configuration, T target) throws Exception {
         assertValid();
 
-        Map<String, Object> result = new HashMap<String, Object>();
+        Map<String, Object> result = new HashMap<>();
 
         for (Map.Entry<String, ?> entry : configuration.entrySet()) {
             String key = entry.getKey();
@@ -69,7 +69,7 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
             if (value.getClass().isArray()) {
                 //do nothing
             } else if (value instanceof String) {
-                String substitutedValue = PlaceholderUtils.substitute((String) value, (Map<String, String>) null);
+                String substitutedValue = PlaceholderUtils.substitute((String) value, new HashMap<String, String>());
                 //We don't want to inject blanks. If substitution fails, do not inject.
                 if (!StringUtils.isNullOrBlank(substitutedValue)) {
                     result.put(key, substitutedValue);

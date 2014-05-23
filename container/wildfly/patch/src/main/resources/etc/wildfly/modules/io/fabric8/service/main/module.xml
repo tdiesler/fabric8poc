@@ -35,6 +35,7 @@
         <module name="io.fabric8.api"/>
         <module name="io.fabric8.spi"/>
         <module name="org.apache.curator"/>
+        <module name="org.apache.zookeeper"/>
         <module name="org.jboss.gravia"/>
         <module name="org.osgi.enterprise"/>
         <module name="org.osgi.core"/>
