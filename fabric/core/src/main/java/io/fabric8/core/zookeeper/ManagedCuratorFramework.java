@@ -17,7 +17,6 @@ package io.fabric8.core.zookeeper;
 
 import io.fabric8.core.utils.PasswordEncoder;
 import io.fabric8.core.utils.StringUtils;
-import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -82,8 +81,6 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     private final ValidatingReference<ACLProvider> aclProvider = new ValidatingReference<ACLProvider>();
     @Reference(referenceInterface = ConnectionStateListener.class, bind = "bindConnectionStateListener", unbind = "unbindConnectionStateListener", cardinality = OPTIONAL_MULTIPLE, policy = DYNAMIC)
     private final List<ConnectionStateListener> connectionStateListeners = new CopyOnWriteArrayList<ConnectionStateListener>();
-    @Reference(referenceInterface = BootstrapComplete.class)
-    private final ValidatingReference<BootstrapComplete> bootstrapComplete = new ValidatingReference<BootstrapComplete>();
 
     private BundleContext bundleContext;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -135,7 +132,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
             if (newState == ConnectionState.LOST) {
                 run();
             }
-        }
+      }
 
         public void close() {
             closed.set(true);
@@ -149,7 +146,6 @@ public class ManagedCuratorFramework  extends AbstractComponent {
                 LOGGER.warn("Error while closing curator", e);
             }
         }
-
     }
 
     @Activate
