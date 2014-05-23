@@ -32,9 +32,9 @@ import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.wildfly.extension.fabric.service.FabricBootstrapService;
-import org.wildfly.extension.fabric.service.FabricRuntimeService;
 import org.wildfly.extension.gravia.parser.GraviaSubsystemBootstrap;
 import org.jboss.gravia.runtime.Runtime;
+import org.wildfly.extension.gravia.service.RuntimeService;
 
 /**
  * The fabric subsystem add update handler.
@@ -88,7 +88,7 @@ final class FabricSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
         @Override
         protected ServiceController<Runtime> getRuntimeService(OperationContext context, ServiceVerificationHandler verificationHandler) {
-            return new FabricRuntimeService().install(context.getServiceTarget(), verificationHandler);
+            return new RuntimeService().install(context.getServiceTarget(), verificationHandler);
         }
     }
 }
