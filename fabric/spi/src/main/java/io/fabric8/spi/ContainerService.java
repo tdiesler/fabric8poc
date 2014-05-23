@@ -44,7 +44,7 @@ public interface ContainerService extends ContainerManager {
      *
      * Accepted URL are formated like
      *
-     * container://[symbolicName]?version=[version]
+     * container://[symbolicName]?version=[version]&cntindex=[contentIndex]
      *
      * The version parameters is optional. When missing it will use the higest version.
      */
