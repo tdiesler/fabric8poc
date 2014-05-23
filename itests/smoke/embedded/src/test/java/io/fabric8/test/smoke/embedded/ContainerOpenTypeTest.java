@@ -88,7 +88,7 @@ public class ContainerOpenTypeTest {
 
         cntManager.destroyContainer(idA);
 
-        // Test the {@link CreateOptionsProvider}
+        // Test the {@link CompositeDataOptionsProvider}
         cntBuilder = EmbeddedContainerBuilder.create();
         cntBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         options = cntBuilder.getCreateOptions();
