@@ -67,7 +67,7 @@ org/jboss/gravia/gravia-provision/${version.jboss.gravia}/gravia-provision-${ver
 #
 # Curator ZooKeeper
 #
-io/fabric8/poc/bundles/io.fabric8.poc.bundles.zookeeper/${project.version}/io.fabric8.poc.bundles.zookeeper-${project.version}.jar=42
+io/fabric8/poc/fabric8-zookeeper/${project.version}/fabric8-zookeeper-${project.version}.jar=42
 com/google/guava/guava/${version.guava}/guava-${version.guava}.jar=42
 org/apache/curator/curator-client/${version.apache.curator}/curator-client-${version.apache.curator}.jar=43
 org/apache/curator/curator-framework/${version.apache.curator}/curator-framework-${version.apache.curator}.jar=43

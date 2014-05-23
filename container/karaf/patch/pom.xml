@@ -51,17 +51,17 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-karaf-managed</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>karaf-features</artifactId>
+            <artifactId>fabric8-container-karaf-features</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
             <classifier>features</classifier>
             <type>xml</type>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-karaf-managed</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
@@ -187,7 +187,7 @@
                         </goals>
                         <configuration>
                             <descriptors>
-                                <descriptor>mvn:io.fabric8.poc/karaf-features/${project.version}/xml/features</descriptor>
+                                <descriptor>mvn:io.fabric8.poc/fabric8-container-karaf-features/${project.version}/xml/features</descriptor>
                             </descriptors>
                             <features>
                                 <feature>fabric8</feature>

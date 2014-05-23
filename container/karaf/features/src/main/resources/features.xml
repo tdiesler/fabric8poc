@@ -30,7 +30,7 @@
 
     <feature name="curator" version="${project.version}" resolver="(obr)">
         <bundle dependency="true">mvn:com.google.guava/guava/${version.guava}</bundle>
-        <bundle>mvn:io.fabric8.poc.bundles/io.fabric8.poc.bundles.zookeeper/${project.version}</bundle>
+        <bundle>mvn:io.fabric8.poc/fabric8-zookeeper/${project.version}</bundle>
         <bundle>mvn:org.apache.curator/curator-client/${version.apache.curator}</bundle>
         <bundle>mvn:org.apache.curator/curator-framework/${version.apache.curator}</bundle>
         <bundle>mvn:org.apache.curator/curator-recipes/${version.apache.curator}</bundle>

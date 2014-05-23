@@ -375,27 +375,19 @@
 
             <!-- ZooKeeper -->
             <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${version.apache.zookeeper}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.fabric8.poc.bundles</groupId>
-                <artifactId>io.fabric8.poc.bundles.zookeeper</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
                 <version>${version.apache.curator}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-recipes</artifactId>
                 <version>${version.apache.curator}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${version.apache.zookeeper}</version>
             </dependency>
             
             <!-- Other -->
