@@ -1,15 +1,15 @@
 /*
  * #%L
- * Fabric8 :: Container :: Tomcat :: WebApp
+ * Fabric8 :: Container :: WildFly :: Extension
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,41 +17,41 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.container.tomcat.webapp;
+
+package org.wildfly.extension.fabric.service;
 
 import io.fabric8.spi.SystemProperties;
 
 import java.io.File;
 import java.util.Properties;
 
-import javax.servlet.ServletContext;
-
-import org.jboss.gravia.container.tomcat.support.TomcatPropertiesProvider;
-import org.jboss.gravia.runtime.spi.PropertiesProvider;
+import org.jboss.as.server.ServerEnvironment;
+import org.wildfly.extension.gravia.service.RuntimeService;
 
 /**
- * The Fabric {@link PropertiesProvider}
+ * Service responsible for creating and managing the life-cycle of the gravia subsystem.
+ *
+ * @since 19-Apr-2013
  */
-public class FabricPropertiesProvider extends TomcatPropertiesProvider {
-
-    public FabricPropertiesProvider(ServletContext servletContext) {
-        super(servletContext);
-    }
+public final class FabricRuntimeService extends RuntimeService {
 
     @Override
-    protected Properties initialProperties(ServletContext servletContext) {
-        Properties properties = super.initialProperties(servletContext);
+    protected Properties getRuntimeProperties() {
+
+        Properties properties = super.getRuntimeProperties();
 
         // Setup the karaf.home directory
-        File karafBase = new File(getCatalinaWork().getPath() + File.separator + "karaf-base");
-        File karafData = new File(karafBase.getPath() + File.separator + "data");
-        File karafEtc = new File(karafBase.getPath() + File.separator + "etc");
+        ServerEnvironment serverEnv = getServerEnvironment();
+        File karafBase = new File(serverEnv.getServerDataDir(), "karaf-base");
+        File karafData = new File(karafBase, "data");
+        File karafEtc = new File(karafBase, "etc");
 
-        // [TODO] Derive port from tomcat config
-        // https://issues.jboss.org/browse/FABRIC-761
+        // [TODO] Derive port from wildfly config
+        // https://issues.jboss.org/browse/FABRIC-762
         properties.setProperty("org.osgi.service.http.port", "8080");
 
         // Karaf integration properties
+        // [TODO] Abstract references to Karaf sysprops
         properties.setProperty(SystemProperties.KARAF_HOME, karafBase.getAbsolutePath());
         properties.setProperty(SystemProperties.KARAF_BASE, karafBase.getAbsolutePath());
         properties.setProperty(SystemProperties.KARAF_DATA, karafData.getAbsolutePath());
@@ -60,5 +60,4 @@ public class FabricPropertiesProvider extends TomcatPropertiesProvider {
 
         return properties;
     }
-
 }

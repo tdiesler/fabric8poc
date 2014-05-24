@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,9 @@ import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.wildfly.extension.fabric.service.FabricBootstrapService;
+import org.wildfly.extension.fabric.service.FabricRuntimeService;
 import org.wildfly.extension.gravia.parser.GraviaSubsystemBootstrap;
+import org.jboss.gravia.runtime.Runtime;
 
 /**
  * The fabric subsystem add update handler.
@@ -82,6 +84,11 @@ final class FabricSubsystemAdd extends AbstractBoottimeAddStepHandler {
         @Override
         protected ServiceController<?> getBoostrapService(OperationContext context, ServiceVerificationHandler verificationHandler) {
             return new FabricBootstrapService().install(context.getServiceTarget(), verificationHandler);
+        }
+
+        @Override
+        protected ServiceController<Runtime> getRuntimeService(OperationContext context, ServiceVerificationHandler verificationHandler) {
+            return new FabricRuntimeService().install(context.getServiceTarget(), verificationHandler);
         }
     }
 }
