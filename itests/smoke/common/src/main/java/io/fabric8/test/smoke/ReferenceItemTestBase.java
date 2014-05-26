@@ -21,7 +21,6 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -85,8 +84,6 @@ public abstract class ReferenceItemTestBase {
         // Build the resitem
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
         ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, new ByteArrayInputStream("Hello".getBytes()));
-        Capability ccap = builderA.getMutableResource().getCapabilities(ContentNamespace.CONTENT_NAMESPACE).get(0);
-        ccap.getAttributes().put(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, "tomcat");
         Resource resourceA = builderA.getResource();
 
         // Build a profile
