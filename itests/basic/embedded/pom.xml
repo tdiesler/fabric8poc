@@ -130,6 +130,10 @@
                 <configuration>
                     <systemPropertyVariables>
                         <basedir>${basedir}</basedir>
+                        <runtime.id>embedded</runtime.id>
+                        <runtime.home>${project.build.directory}/home</runtime.home>
+                        <runtime.data>${project.build.directory}/home/data</runtime.data>
+                        <runtime.conf>${project.build.directory}/home/conf</runtime.conf>
                         <log4j.configuration>file://${basedir}/src/test/resources/logging.properties</log4j.configuration>
                     </systemPropertyVariables>
                 </configuration>

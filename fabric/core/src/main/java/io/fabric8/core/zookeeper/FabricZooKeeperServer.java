@@ -84,22 +84,29 @@ public class FabricZooKeeperServer extends AbstractComponent {
     private Destroyable destroyable;
 
     @Activate
-    void activate(Map<String, ?> configuration) throws Exception {
-        configurer.configure(configuration, this);
-        destroyable = activateInternal(configuration);
+    void activate(Map<String, Object> configuration) throws Exception {
+        destroyable = activateInternal(configurer.configure(configuration, this));
         activateComponent();
     }
 
     @Modified
-    void modified(Map<String, ?> configuration) throws Exception {
+    void modified(Map<String, Object> configuration) throws Exception {
         deactivateInternal();
-        destroyable = activateInternal(configuration);
+        destroyable = activateInternal(configurer.configure(configuration, this));
     }
 
     @Deactivate
     void deactivate() throws Exception {
         deactivateComponent();
         deactivateInternal();
+    }
+
+    void bindConfigurer(Configurer configurer) {
+        this.configurer = configurer;
+    }
+
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer = null;
     }
 
     private Destroyable activateInternal(Map<String, ?> configuration) throws Exception {

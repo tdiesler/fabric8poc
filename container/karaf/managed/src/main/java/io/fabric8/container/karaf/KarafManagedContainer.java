@@ -84,6 +84,12 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         File managementFile = new File(karafHome, "etc/org.apache.karaf.management.cfg");
         IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
 
+        // etc/io.fabric8.zookeeper.server-0000.cfg
+        File zooKeeperServerFile = new File(karafHome, "etc/io.fabric8.zookeeper.server-0000.cfg");
+        if (!getCreateOptions().isZooKeeperServer()) {
+            zooKeeperServerFile.delete();
+        }
+
         Properties props = new Properties();
         props.load(new FileReader(managementFile));
         int rmiRegistryPort = nextAvailablePort(getCreateOptions().getRmiRegistryPort());
@@ -105,8 +111,8 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
     @Override
     protected void doStart() throws Exception {
 
-        File karafHome = getContainerHome();
-        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Not a valid Karaf home dir: " + karafHome);
+        File home = getContainerHome();
+        IllegalStateAssertion.assertTrue(home.isDirectory(), "Not a valid home dir: " + home);
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
@@ -116,22 +122,22 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         // Karaf properties
-        cmd.add("-Dkaraf.home=" + karafHome);
-        cmd.add("-Dkaraf.base=" + karafHome);
-        cmd.add("-Dkaraf.etc=" + karafHome + "/etc");
-        cmd.add("-Dkaraf.data=" + karafHome + "/data");
-        cmd.add("-Dkaraf.instances=" + karafHome + "/instances");
+        cmd.add("-Druntime.home=" + home);
+        cmd.add("-Druntime.base=" + home);
+        cmd.add("-Druntime.conf=" + home + "/etc");
+        cmd.add("-Druntime.data=" + home + "/data");
+        cmd.add("-Dkaraf.instances=" + home + "/instances");
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
 
         // Java properties
-        cmd.add("-Djava.io.tmpdir=" + new File(karafHome, "data/tmp"));
-        cmd.add("-Djava.util.logging.config.file=" + new File(karafHome, "etc/java.util.logging.properties"));
-        cmd.add("-Djava.endorsed.dirs=" + new File(karafHome, "lib/endorsed"));
+        cmd.add("-Djava.io.tmpdir=" + new File(home, "data/tmp"));
+        cmd.add("-Djava.util.logging.config.file=" + new File(home, "etc/java.util.logging.properties"));
+        cmd.add("-Djava.endorsed.dirs=" + new File(home, "lib/endorsed"));
 
         // Classpath
         StringBuffer classPath = new StringBuffer();
-        File karafLibDir = new File(karafHome, "lib");
+        File karafLibDir = new File(home, "lib");
         String[] libs = karafLibDir.list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -140,7 +146,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         });
         for (String lib : libs) {
             String separator = classPath.length() > 0 ? File.pathSeparator : "";
-            classPath.append(separator + new File(karafHome, "lib/" + lib));
+            classPath.append(separator + new File(home, "lib/" + lib));
         }
         cmd.add("-classpath");
         cmd.add(classPath.toString());
@@ -155,7 +161,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.directory(karafHome);
+        processBuilder.directory(home);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
     }

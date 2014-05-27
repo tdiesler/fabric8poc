@@ -56,4 +56,11 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
         options.setOutputToConsole(outputToConsole);
         return (B) this;
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B zooKeeperServer(boolean zooKeeperServer) {
+        options.setZooKeeperServer(zooKeeperServer);
+        return (B) this;
+    }
 }

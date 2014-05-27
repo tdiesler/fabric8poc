@@ -25,6 +25,8 @@ public interface RuntimeService {
     String DATA_DIR = "runtime.data";
     String CONF_DIR = "runtime.conf";
 
+    String DEFAULT_ENV_PREFIX = "FABRIC8_";
+
     /**
      * @return The unqiue runtime id.
      */

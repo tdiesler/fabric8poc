@@ -57,6 +57,12 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         if (!jbossHome.isDirectory())
             throw new IllegalStateException("Not a valid WildFly home dir: " + jbossHome);
 
+        // standalone/configuration/gravia.configs/io.fabric8.zookeeper.server-0000.cfg
+        File zooKeeperServerFile = new File(jbossHome, "standalone/configuration/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
+        if (!getCreateOptions().isZooKeeperServer()) {
+            zooKeeperServerFile.delete();
+        }
+
         File modulesPath = new File(jbossHome, "modules");
         File modulesJar = new File(jbossHome, "jboss-modules.jar");
         if (!modulesJar.exists())

@@ -25,7 +25,7 @@ import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
 import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerCreateHandler;
-import io.fabric8.spi.SystemProperties;
+import io.fabric8.spi.RuntimeService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -196,17 +196,17 @@ public class FabricBootstrapService extends AbstractService<Void> {
     private void initConfigurationAdmin(Runtime runtime) {
         ModuleContext syscontext = runtime.getModuleContext();
         ConfigurationAdmin configAdmin = syscontext.getService(syscontext.getServiceReference(ConfigurationAdmin.class));
-        File karafEtc = new File((String) runtime.getProperty(SystemProperties.KARAF_ETC));
+        File confDir = new File((String) runtime.getProperty(RuntimeService.CONF_DIR));
         FilenameFilter filter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 return name.endsWith(".cfg");
             }
         };
-        for (String name : karafEtc.list(filter)) {
+        for (String name : confDir.list(filter)) {
             String pid = name.substring(0, name.length() - 4);
             try {
-                FileInputStream fis = new FileInputStream(new File(karafEtc, name));
+                FileInputStream fis = new FileInputStream(new File(confDir, name));
                 Properties props = new Properties();
                 props.load(fis);
                 fis.close();

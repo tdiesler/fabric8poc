@@ -34,6 +34,7 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
     private boolean outputToConsole;
     private String javaVmArguments;
     private File targetDirectory;
+    private boolean zooKeeperServer;
 
     /**
      * Get the array of maven artefacts that are getting unpacked
@@ -55,6 +56,10 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
         return outputToConsole;
     }
 
+    public boolean isZooKeeperServer() {
+        return zooKeeperServer;
+    }
+
     /*
      * Setters are protected
      */
@@ -73,6 +78,10 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
 
     protected void setOutputToConsole(boolean outputToConsole) {
         this.outputToConsole = outputToConsole;
+    }
+
+    protected void setZooKeeperServer(boolean zooKeeperServer) {
+        this.zooKeeperServer = zooKeeperServer;
     }
 
     @Override
