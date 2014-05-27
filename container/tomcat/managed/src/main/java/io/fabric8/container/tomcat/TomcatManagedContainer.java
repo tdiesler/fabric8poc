@@ -78,6 +78,12 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         Document document = builder.parse(fis);
         fis.close();
 
+        // etc/io.fabric8.zookeeper.server-0000.cfg
+        File zooKeeperServerFile = new File(catalinaHome, "conf/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
+        if (!getCreateOptions().isZooKeeperServer()) {
+            zooKeeperServerFile.delete();
+        }
+
         replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", "${tomcat.http.port}");
         replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", "${tomcat.https.port}");
         replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", "${tomcat.ajp.port}");

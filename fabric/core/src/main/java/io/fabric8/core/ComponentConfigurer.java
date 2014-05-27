@@ -15,8 +15,6 @@
 package io.fabric8.core;
 
 import io.fabric8.core.utils.ConfigInjectionUtils;
-import io.fabric8.core.utils.PlaceholderUtils;
-import io.fabric8.core.utils.StringUtils;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -27,6 +25,12 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.spi.CompositePropertiesProvider;
+import org.jboss.gravia.runtime.spi.MapPropertiesProvider;
+import org.jboss.gravia.runtime.spi.PropertiesProvider;
+import org.jboss.gravia.runtime.spi.SubstitutionPropertiesProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,24 +62,28 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
     }
 
     @Override
-    public <T> void configure(Map<String, ?> configuration, T target) throws Exception {
+    public <T> Map<String, Object> configure(final Map<String, Object> configuration, T target) throws Exception {
         assertValid();
-
         Map<String, Object> result = new HashMap<>();
+        final Runtime runtime = RuntimeLocator.getRuntime();
+        PropertiesProvider provider = new SubstitutionPropertiesProvider(new CompositePropertiesProvider(new MapPropertiesProvider(configuration), new PropertiesProvider() {
+            @Override
+            public Object getProperty(String key) {
+                return runtime.getProperty(key);
+            }
+
+            @Override
+            public Object getProperty(String key, Object defaultValue) {
+                return runtime.getProperty(key, defaultValue);
+            }
+        }));
 
         for (Map.Entry<String, ?> entry : configuration.entrySet()) {
             String key = entry.getKey();
-            Object value = entry.getValue();
-            if (value.getClass().isArray()) {
-                //do nothing
-            } else if (value instanceof String) {
-                String substitutedValue = PlaceholderUtils.substitute((String) value, new HashMap<String, String>());
-                //We don't want to inject blanks. If substitution fails, do not inject.
-                if (!StringUtils.isNullOrBlank(substitutedValue)) {
-                    result.put(key, substitutedValue);
-                }
-            }
+            Object value = provider.getProperty(key);
+            result.put(key, value);
         }
         ConfigInjectionUtils.applyConfiguration(result, target);
+        return result;
     }
 }

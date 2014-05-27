@@ -22,7 +22,6 @@ public interface Configurer {
      * Configures the specified instance with the provided configuration.
      * @param configuration The configuration.
      * @param target        The target that will receive the configuration.
-     * @param <T>
      */
-    <T> void configure(Map<String, ?> configuration, T target) throws Exception;
+    <T> Map<String, Object> configure(Map<String, Object> configuration, T target) throws Exception;
 }

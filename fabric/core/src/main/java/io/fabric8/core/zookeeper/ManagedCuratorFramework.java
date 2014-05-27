@@ -99,9 +99,6 @@ public class ManagedCuratorFramework  extends AbstractComponent {
 
         public void run() {
             try {
-                if (curator != null) {
-                        safeClose(curator.getZookeeperClient());
-                }
                 if (registration != null) {
                     registration.unregister();
                     registration = null;
@@ -149,7 +146,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     }
 
     @Activate
-    void activate(BundleContext bundleContext, Map<String, ?> configuration) throws Exception {
+    void activate(BundleContext bundleContext, Map<String, Object> configuration) throws Exception {
         this.bundleContext = bundleContext;
         ZookeeperConfig config = new ZookeeperConfig();
         configurer.configure(configuration, config);
@@ -164,7 +161,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     }
 
     @Modified
-    void modified(Map<String, ?> configuration) throws Exception {
+    void modified(Map<String, Object> configuration) throws Exception {
         ZookeeperConfig config = new ZookeeperConfig();
         configurer.configure(configuration, this);
         configurer.configure(configuration, config);
@@ -239,5 +236,13 @@ public class ManagedCuratorFramework  extends AbstractComponent {
 
     void unbindAclProvider(ACLProvider aclProvider) {
         this.aclProvider.unbind(aclProvider);
+    }
+
+    void bindConfigurer(Configurer configurer) {
+        this.configurer = configurer;
+    }
+
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer = null;
     }
 }

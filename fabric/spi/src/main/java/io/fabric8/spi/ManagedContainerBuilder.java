@@ -39,5 +39,7 @@ public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>
 
     B outputToConsole(boolean outputToConsole);
 
+    B zooKeeperServer(boolean zooKeeperServer);
+
     ManagedContainer<C> getManagedContainer();
 }

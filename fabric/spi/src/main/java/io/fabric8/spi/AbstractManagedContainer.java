@@ -73,7 +73,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
 
     protected AbstractManagedContainer(C options) {
         IllegalArgumentAssertion.assertNotNull(options, "options");
-        this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider());
+        this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider(new HashMap<String, Object>(), true, RuntimeService.DEFAULT_ENV_PREFIX));
         HostDataStore dataStore = ServiceLocator.getRequiredService(HostDataStore.class);
         this.identity = dataStore.createManagedContainerIdentity(options.getIdentityPrefix());
         this.attributes.putAllAttributes(options.getAttributes());

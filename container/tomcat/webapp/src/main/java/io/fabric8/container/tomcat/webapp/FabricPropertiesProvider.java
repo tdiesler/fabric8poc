@@ -19,46 +19,42 @@
  */
 package io.fabric8.container.tomcat.webapp;
 
-import io.fabric8.spi.SystemProperties;
-
-import java.io.File;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
+import io.fabric8.spi.RuntimeService;
 import org.jboss.gravia.container.tomcat.support.TomcatPropertiesProvider;
+import org.jboss.gravia.runtime.spi.CompositePropertiesProvider;
+import org.jboss.gravia.runtime.spi.EnvPropertiesProvider;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
+import org.jboss.gravia.runtime.spi.SubstitutionPropertiesProvider;
+import org.jboss.gravia.runtime.spi.SystemPropertiesProvider;
 
 /**
  * The Fabric {@link PropertiesProvider}
  */
-public class FabricPropertiesProvider extends TomcatPropertiesProvider {
+public class FabricPropertiesProvider implements PropertiesProvider {
+
+    private final PropertiesProvider delegate;
 
     public FabricPropertiesProvider(ServletContext servletContext) {
-        super(servletContext);
+        delegate = new SubstitutionPropertiesProvider(
+                new CompositePropertiesProvider(
+                        new TomcatPropertiesProvider(servletContext),
+                        new SystemPropertiesProvider(),
+                        new EnvPropertiesProvider(RuntimeService.DEFAULT_ENV_PREFIX)
+                )
+        );
     }
 
     @Override
-    protected Properties initialProperties(ServletContext servletContext) {
-        Properties properties = super.initialProperties(servletContext);
-
-        // Setup the karaf.home directory
-        File karafBase = new File(getCatalinaWork().getPath() + File.separator + "karaf-base");
-        File karafData = new File(karafBase.getPath() + File.separator + "data");
-        File karafEtc = new File(karafBase.getPath() + File.separator + "etc");
-
-        // [TODO] Derive port from tomcat config
-        // https://issues.jboss.org/browse/FABRIC-761
-        properties.setProperty("org.osgi.service.http.port", "8080");
-
-        // Karaf integration properties
-        properties.setProperty(SystemProperties.KARAF_HOME, karafBase.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_BASE, karafBase.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_DATA, karafData.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_ETC, karafEtc.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_NAME, "root");
-
-        return properties;
+    public Object getProperty(String key) {
+        return delegate.getProperty(key);
     }
 
+    @Override
+    public Object getProperty(String key, Object defaultValue) {
+        return delegate.getProperty(key, defaultValue);
+    }
 }

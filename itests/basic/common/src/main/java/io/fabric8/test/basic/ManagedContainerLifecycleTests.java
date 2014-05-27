@@ -36,7 +36,7 @@ import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyCreateOptions;
-import io.fabric8.spi.SystemProperties;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.IOException;
@@ -73,10 +73,9 @@ public class ManagedContainerLifecycleTests  {
 
     @Test
     public void testManagedKaraf() throws Exception {
-
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
+        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
         KarafContainerBuilder cntBuilder = KarafContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
         CreateOptions options = cntBuilder.getCreateOptions();
 
@@ -99,7 +98,7 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
+        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
         TomcatContainerBuilder cntBuilder = TomcatContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
         CreateOptions options = cntBuilder.getCreateOptions();
 
@@ -122,7 +121,7 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(SystemProperties.KARAF_DATA);
+        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
         WildFlyContainerBuilder cntBuilder = WildFlyContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
         // [TODO] The default port of the running server is available, why?
         cntBuilder.managementNativePort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_NATIVE_PORT + 1);

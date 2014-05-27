@@ -25,11 +25,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import io.fabric8.spi.RuntimeService;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
@@ -96,7 +98,7 @@ public class EmbeddedUtils {
                     }
                 };
 
-                runtime = RuntimeLocator.createRuntime(factory, new DefaultPropertiesProvider());
+                runtime = RuntimeLocator.createRuntime(factory, new DefaultPropertiesProvider(new HashMap<String, Object>(), true, RuntimeService.DEFAULT_ENV_PREFIX));
                 runtime.init();
 
                 // Register the {@link RuntimeEnvironment} and {@link ResourceInstaller}

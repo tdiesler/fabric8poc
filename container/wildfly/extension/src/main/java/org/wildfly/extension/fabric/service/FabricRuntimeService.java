@@ -20,12 +20,9 @@
 
 package org.wildfly.extension.fabric.service;
 
-import io.fabric8.spi.SystemProperties;
 
-import java.io.File;
 import java.util.Properties;
 
-import org.jboss.as.server.ServerEnvironment;
 import org.wildfly.extension.gravia.service.RuntimeService;
 
 /**
@@ -37,27 +34,10 @@ public final class FabricRuntimeService extends RuntimeService {
 
     @Override
     protected Properties getRuntimeProperties() {
-
         Properties properties = super.getRuntimeProperties();
-
-        // Setup the karaf.home directory
-        ServerEnvironment serverEnv = getServerEnvironment();
-        File karafBase = new File(serverEnv.getServerDataDir(), "karaf-base");
-        File karafData = new File(karafBase, "data");
-        File karafEtc = new File(karafBase, "etc");
-
         // [TODO] Derive port from wildfly config
         // https://issues.jboss.org/browse/FABRIC-762
         properties.setProperty("org.osgi.service.http.port", "8080");
-
-        // Karaf integration properties
-        // [TODO] Abstract references to Karaf sysprops
-        properties.setProperty(SystemProperties.KARAF_HOME, karafBase.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_BASE, karafBase.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_DATA, karafData.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_ETC, karafEtc.getAbsolutePath());
-        properties.setProperty(SystemProperties.KARAF_NAME, "root");
-
         return properties;
     }
 }
