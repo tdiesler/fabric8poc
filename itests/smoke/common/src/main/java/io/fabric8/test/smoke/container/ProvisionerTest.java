@@ -19,8 +19,8 @@
  */
 package io.fabric8.test.smoke.container;
 
-import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
@@ -196,7 +196,8 @@ public class ProvisionerTest {
     public void testStreamResource() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
         ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, deployer.getDeployment(RESOURCE_A));
@@ -230,7 +231,8 @@ public class ProvisionerTest {
     public void testSharedStreamResource() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
         ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, deployer.getDeployment(RESOURCE_B));
@@ -273,7 +275,8 @@ public class ProvisionerTest {
     public void testMavenResource() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         // Tomcat does not support jar deployments
         Assume.assumeFalse(RuntimeType.TOMCAT == RuntimeType.getRuntimeType());
@@ -304,7 +307,8 @@ public class ProvisionerTest {
     public void testSharedMavenResource() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.shared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
@@ -350,7 +354,8 @@ public class ProvisionerTest {
     public void testAbstractFeature() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         // Provision the camel.core feature
         ResourceIdentity identity = ResourceIdentity.fromString("camel.core.feature:0.0.0");
@@ -423,7 +428,8 @@ public class ProvisionerTest {
     public void testRepositoryResourceWithDependency() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         // Build a resource that has a dependency on camel.core
         DefaultResourceBuilder builderE = new DefaultResourceBuilder();
@@ -492,7 +498,8 @@ public class ProvisionerTest {
     public void testMultipleContentCapabilities() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Provisioner provisioner = cntManager.getProvisioner(CURRENT_CONTAINER_IDENTITY);
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
+        Provisioner provisioner = cntManager.getProvisioner(cntId);
 
         ResourceBuilder builderF = new DefaultResourceBuilder();
         ResourceIdentity identityF = ResourceIdentity.create(RESOURCE_F, Version.emptyVersion);

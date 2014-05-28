@@ -15,7 +15,6 @@
 
 package io.fabric8.spi.internal;
 
-import static java.util.Objects.requireNonNull;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
 
@@ -27,28 +26,24 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.osgi.service.component.ComponentContext;
 
 @Component(immediate = true)
 @Service(RuntimeService.class)
-public class BasicRuntimeService extends AbstractComponent implements RuntimeService {
+public class RuntimeServiceImpl extends AbstractComponent implements RuntimeService {
 
-    private final String id;
-    private final Path home;
-    private final Path data;
-    private final Path conf;
-
-
-    public BasicRuntimeService() {
-        //These properties are not modifiable and need to be pre-configured.
-        this.id = requireNonNull(getProperty(ID), "Runtime ID cannot be null.");
-        this.home = Paths.get(requireNonNull(getProperty(HOME_DIR), "Runtime home directory cannot be null."));
-        this.data = Paths.get(requireNonNull(getProperty(DATA_DIR), "Runtime data directory cannot be null."));
-        this.conf = Paths.get(requireNonNull(getProperty(CONF_DIR), "Runtime conf directory cannot be null."));
-    }
+    private String identity;
+    private Path homePath;
+    private Path dataPath;
+    private Path confPath;
 
     @Activate
     void activate(ComponentContext componentContext) throws Exception {
+        identity = IllegalStateAssertion.assertNotNull(getProperty(RUNTIME_IDENTITY), "Runtime ID cannot be null.");
+        homePath = Paths.get(IllegalStateAssertion.assertNotNull(getProperty(RUNTIME_HOME_DIR), "Runtime home directory cannot be null."));
+        dataPath = Paths.get(IllegalStateAssertion.assertNotNull(getProperty(RUNTIME_DATA_DIR), "Runtime data directory cannot be null."));
+        confPath = Paths.get(IllegalStateAssertion.assertNotNull(getProperty(RUNTIME_CONF_DIR), "Runtime conf directory cannot be null."));
         activateComponent();
     }
 
@@ -58,23 +53,23 @@ public class BasicRuntimeService extends AbstractComponent implements RuntimeSer
     }
 
     @Override
-    public String getId() {
-        return id;
+    public String getIdentity() {
+        return identity;
     }
 
     @Override
     public Path getHomePath() {
-        return home;
+        return homePath;
     }
 
     @Override
     public Path getConfPath() {
-        return conf;
+        return confPath;
     }
 
     @Override
     public Path getDataPath() {
-        return data;
+        return dataPath;
     }
 
     @Override
@@ -87,12 +82,8 @@ public class BasicRuntimeService extends AbstractComponent implements RuntimeSer
         return getPropertyInternal(key, defaultValue);
     }
 
-    private synchronized String getPropertyInternal(String key, String defaultValue) {
+    private String getPropertyInternal(String key, String defaultValue) {
         Object raw = RuntimeLocator.getRequiredRuntime().getProperty(key);
-        if (raw == null) {
-            return defaultValue;
-        } else {
-            return String.valueOf(raw);
-        }
+        return raw != null ? String.valueOf(raw) : defaultValue;
     }
 }

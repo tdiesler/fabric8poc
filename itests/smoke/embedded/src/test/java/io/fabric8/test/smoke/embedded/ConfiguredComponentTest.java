@@ -129,14 +129,13 @@ public class ConfiguredComponentTest {
         Assert.assertTrue("ComponentEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
-        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").getCreateOptions();
+        CreateOptions options = EmbeddedContainerBuilder.create("cntA").getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("cntA#"));
+        Assert.assertTrue(cntIdA.getCanonicalForm().equals("cntA"));
         Assert.assertSame(State.CREATED, cntA.getState());
 
         cntA = cntManager.startContainer(cntIdA, null);

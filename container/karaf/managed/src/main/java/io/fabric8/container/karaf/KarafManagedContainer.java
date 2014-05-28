@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -111,8 +111,8 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
     @Override
     protected void doStart() throws Exception {
 
-        File home = getContainerHome();
-        IllegalStateAssertion.assertTrue(home.isDirectory(), "Not a valid home dir: " + home);
+        File karafHome = getContainerHome();
+        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Not a valid home dir: " + karafHome);
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
@@ -122,22 +122,23 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         // Karaf properties
-        cmd.add("-Druntime.home=" + home);
-        cmd.add("-Druntime.base=" + home);
-        cmd.add("-Druntime.conf=" + home + "/etc");
-        cmd.add("-Druntime.data=" + home + "/data");
-        cmd.add("-Dkaraf.instances=" + home + "/instances");
+        cmd.add("-Druntime.id=" + getIdentity());
+        cmd.add("-Druntime.home=" + karafHome);
+        cmd.add("-Druntime.base=" + karafHome);
+        cmd.add("-Druntime.conf=" + karafHome + "/etc");
+        cmd.add("-Druntime.data=" + karafHome + "/data");
+        cmd.add("-Dkaraf.instances=" + karafHome + "/instances");
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
 
         // Java properties
-        cmd.add("-Djava.io.tmpdir=" + new File(home, "data/tmp"));
-        cmd.add("-Djava.util.logging.config.file=" + new File(home, "etc/java.util.logging.properties"));
-        cmd.add("-Djava.endorsed.dirs=" + new File(home, "lib/endorsed"));
+        cmd.add("-Djava.io.tmpdir=" + new File(karafHome, "data/tmp"));
+        cmd.add("-Djava.util.logging.config.file=" + new File(karafHome, "etc/java.util.logging.properties"));
+        cmd.add("-Djava.endorsed.dirs=" + new File(karafHome, "lib/endorsed"));
 
         // Classpath
         StringBuffer classPath = new StringBuffer();
-        File karafLibDir = new File(home, "lib");
+        File karafLibDir = new File(karafHome, "lib");
         String[] libs = karafLibDir.list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -146,7 +147,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         });
         for (String lib : libs) {
             String separator = classPath.length() > 0 ? File.pathSeparator : "";
-            classPath.append(separator + new File(home, "lib/" + lib));
+            classPath.append(separator + new File(karafHome, "lib/" + lib));
         }
         cmd.add("-classpath");
         cmd.add(classPath.toString());
@@ -161,7 +162,7 @@ public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateO
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.directory(home);
+        processBuilder.directory(karafHome);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
     }

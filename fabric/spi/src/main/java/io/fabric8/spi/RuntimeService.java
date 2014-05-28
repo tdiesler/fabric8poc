@@ -20,34 +20,42 @@ import java.nio.file.Path;
 
 public interface RuntimeService {
 
-    String ID = "runtime.id";
-    String HOME_DIR = "runtime.home";
-    String DATA_DIR = "runtime.data";
-    String CONF_DIR = "runtime.conf";
+    String RUNTIME_IDENTITY = "runtime.id";
+    String RUNTIME_HOME_DIR = "runtime.home";
+    String RUNTIME_DATA_DIR = "runtime.data";
+    String RUNTIME_CONF_DIR = "runtime.conf";
 
     String DEFAULT_ENV_PREFIX = "FABRIC8_";
 
     /**
-     * @return The unqiue runtime id.
+     * Get the identity for the current container
      */
-    String getId();
+    String getIdentity();
 
     /**
-     * @return the home path of the current runtime.
+     * Get the home path of the current runtime.
      */
     Path getHomePath();
 
     /**
-     * @return the conf path of the current runtime.
+     * Get the conf path of the current runtime.
      */
     Path getConfPath();
 
     /**
-     * @return the data path of the current runtime.
+     * Get the data path of the current runtime.
      */
     Path getDataPath();
 
+    /**
+     * Get a property from the current runtime
+     * @return the property value or null
+     */
     String getProperty(String key);
 
+    /**
+     * Get a property from the current runtime
+     * @return the property value or the given default value
+     */
     String getProperty(String key, String defaultValue);
 }

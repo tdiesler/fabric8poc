@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,18 +19,14 @@
  */
 package io.fabric8.core;
 
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.HostDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A host wide data store
@@ -42,9 +38,6 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
 @Service(HostDataStore.class)
 public final class HostDataStoreImpl extends AbstractComponent implements HostDataStore {
 
-    // [TODO] Real host wide identities
-    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
-
     @Activate
     void activate() {
         activateComponent();
@@ -53,11 +46,5 @@ public final class HostDataStoreImpl extends AbstractComponent implements HostDa
     @Deactivate
     void deactivate() {
         deactivateComponent();
-    }
-
-    @Override
-    public ContainerIdentity createManagedContainerIdentity(String prefix) {
-        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
-        return ContainerIdentity.create(prefix + "#" + uniqueTokenGenerator.incrementAndGet());
     }
 }

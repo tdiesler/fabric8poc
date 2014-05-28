@@ -20,6 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 
 import java.util.Map;
@@ -31,11 +32,11 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
 public abstract class AbstractCreateOptions implements CreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
-    private String identityPrefix = "Container";
+    private ContainerIdentity identity;
 
     @Override
-    public String getIdentityPrefix() {
-        return identityPrefix;
+    public ContainerIdentity getIdentity() {
+        return identity;
     }
 
     @Override
@@ -59,14 +60,14 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     }
 
     protected void validate() {
-        IllegalStateAssertion.assertNotNull(identityPrefix, "Identity prefix cannot be null");
+        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
     }
 
     // Setters are protected
 
-    protected void setIdentityPrefix(String prefix) {
-        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
-        this.identityPrefix = prefix;
+    protected void setIdentity(ContainerIdentity identity) {
+        IllegalArgumentAssertion.assertNotNull(identity, "identity");
+        this.identity = identity;
     }
 
     protected <T> void putAttribute(AttributeKey<T> key, T value) {

@@ -19,6 +19,7 @@
  */
 package io.fabric8.test.embedded.support;
 
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.AbstractContainerBuilder;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder.EmbeddedCreateOptions;
@@ -28,11 +29,25 @@ public final class EmbeddedContainerBuilder extends AbstractContainerBuilder<Emb
     public static EmbeddedContainerBuilder create() {
         return new EmbeddedContainerBuilder();
     }
+    public static EmbeddedContainerBuilder create(String identity) {
+        return new EmbeddedContainerBuilder(identity);
+    }
 
     private EmbeddedContainerBuilder() {
         super(new EmbeddedCreateOptions());
     }
 
+    private EmbeddedContainerBuilder(String identity) {
+        super(new EmbeddedCreateOptions(identity));
+    }
+
     static class EmbeddedCreateOptions extends AbstractCreateOptions {
+
+        EmbeddedCreateOptions() {
+        }
+
+        EmbeddedCreateOptions(String identity) {
+            setIdentity(ContainerIdentity.createFrom(identity));
+        }
     }
 }

@@ -196,7 +196,7 @@ public class FabricBootstrapService extends AbstractService<Void> {
     private void initConfigurationAdmin(Runtime runtime) {
         ModuleContext syscontext = runtime.getModuleContext();
         ConfigurationAdmin configAdmin = syscontext.getService(syscontext.getServiceReference(ConfigurationAdmin.class));
-        File confDir = new File((String) runtime.getProperty(RuntimeService.CONF_DIR));
+        File confDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_CONF_DIR));
         FilenameFilter filter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {

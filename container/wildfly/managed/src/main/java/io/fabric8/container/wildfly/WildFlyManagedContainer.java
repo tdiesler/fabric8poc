@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,8 @@ import io.fabric8.container.wildfly.connector.WildFlyManagementUtils;
 import io.fabric8.spi.AbstractManagedContainer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,11 +34,24 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.remote.JMXConnector;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 
 /**
@@ -54,14 +69,16 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
     protected void doStart() throws Exception {
 
         File jbossHome = getContainerHome();
-        if (!jbossHome.isDirectory())
-            throw new IllegalStateException("Not a valid WildFly home dir: " + jbossHome);
+        IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "WildFly home does not exist: " + jbossHome);
 
-        // standalone/configuration/gravia.configs/io.fabric8.zookeeper.server-0000.cfg
-        File zooKeeperServerFile = new File(jbossHome, "standalone/configuration/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
+        // Delete zookepper config file if this is not a server
         if (!getCreateOptions().isZooKeeperServer()) {
+            File zooKeeperServerFile = new File(jbossHome, "standalone/configuration/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
             zooKeeperServerFile.delete();
         }
+
+        // Transform conf/server.xml
+        transformStandaloneXML(new File(jbossHome, "standalone/configuration/" + getCreateOptions().getServerConfig()));
 
         File modulesPath = new File(jbossHome, "modules");
         File modulesJar = new File(jbossHome, "jboss-modules.jar");
@@ -137,6 +154,34 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
                 }
                 env.put(classLoaderKey, classLoader);
             }
+        }
+    }
+
+    private void transformStandaloneXML(File configFile) throws Exception {
+        IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
+
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = builderFactory.newDocumentBuilder();
+        FileInputStream fis = new FileInputStream(configFile);
+        Document document = builder.parse(fis);
+        fis.close();
+
+        String containerId = getCreateOptions().getIdentity().getCanonicalForm();
+        replacePropertyValue(document, "/server/system-properties/property[@name='runtime.id']", containerId);
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        DOMSource source = new DOMSource(document);
+        FileOutputStream fos = new FileOutputStream(configFile);
+        StreamResult result = new StreamResult(fos);
+        transformer.transform(source, result);
+        fos.close();
+    }
+
+    private void replacePropertyValue(Document document, String expression, String replacement) throws XPathExpressionException {
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        Element element = (Element) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
+        if (element != null) {
+            element.setAttribute("value", replacement);
         }
     }
 }

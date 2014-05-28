@@ -69,11 +69,10 @@ public class ContainerOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        cntBuilder.identityPrefix("cntA");
-        cntBuilder.addAttribute(AKEY, "AVal");
-        cntBuilder.addAttribute(BKEY, "BVal");
-        CreateOptions options = cntBuilder.getCreateOptions();
+        CreateOptions options = EmbeddedContainerBuilder.create("cntA")
+            .addAttribute(AKEY, "AVal")
+            .addAttribute(BKEY, "BVal")
+            .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
@@ -89,13 +88,13 @@ public class ContainerOpenTypeTest {
         cntManager.destroyContainer(idA);
 
         // Test the {@link CompositeDataOptionsProvider}
-        cntBuilder = EmbeddedContainerBuilder.create();
+        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
         cntBuilder.addOptions(new CompositeDataOptionsProvider(cdata));
         options = cntBuilder.getCreateOptions();
 
         Container cntC = cntManager.createContainer(options);
         ContainerIdentity idC = cntC.getIdentity();
-        Assert.assertEquals("cntA#2", idC.getSymbolicName());
+        Assert.assertEquals("cntA", idC.getCanonicalForm());
         Assert.assertEquals(cntA.getAttributes(), cntC.getAttributes());
 
         cntManager.destroyContainer(idC);
@@ -120,8 +119,7 @@ public class ContainerOpenTypeTest {
         public EmbeddedContainerBuilder addBuilderOptions(EmbeddedContainerBuilder builder) {
             Container container = ContainerOpenType.getContainer(cdata);
             String symbolicName = container.getIdentity().getSymbolicName();
-            String prefix = symbolicName.substring(0, symbolicName.indexOf('#'));
-            return builder.identityPrefix(prefix).addAttributes(container.getAttributes());
+            return builder.identity(symbolicName).addAttributes(container.getAttributes());
         }
     }
 }

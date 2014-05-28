@@ -20,6 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.OptionsProvider;
 
@@ -33,8 +34,8 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B identityPrefix(String prefix) {
-        getMutableOptions().setIdentityPrefix(prefix);
+    public B identity(String identity) {
+        getMutableOptions().setIdentity(ContainerIdentity.createFrom(identity));
         return (B) this;
     }
 

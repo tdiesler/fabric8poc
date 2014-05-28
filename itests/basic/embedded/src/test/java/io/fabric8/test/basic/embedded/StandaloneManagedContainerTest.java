@@ -20,7 +20,6 @@
 
 package io.fabric8.test.basic.embedded;
 
-import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
@@ -67,7 +66,7 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedKaraf() throws Exception {
         KarafContainerBuilder builder = buildCreateOptions(KarafContainerBuilder.create());
-        ManagedContainer container = builder.getManagedContainer();
+        ManagedContainer container = builder.identity("ManagedKaraf").getManagedContainer();
         try {
             container.create();
             verifyContainer(container, "karaf", "karaf");
@@ -80,7 +79,7 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedTomcat() throws Exception {
         TomcatContainerBuilder builder = buildCreateOptions(TomcatContainerBuilder.create());
-        ManagedContainer container = builder.getManagedContainer();
+        ManagedContainer container = builder.identity("ManagedTomcat").getManagedContainer();
         try {
             container.create();
             verifyContainer(container, null, null);
@@ -93,7 +92,7 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedWildFly() throws Exception {
         WildFlyContainerBuilder builder = buildCreateOptions(WildFlyContainerBuilder.create());
-        ManagedContainer container = builder.getManagedContainer();
+        ManagedContainer container = builder.identity("ManagedWildFly").getManagedContainer();
         try {
             container.create();
             verifyContainer(container, null, null);
@@ -108,16 +107,16 @@ public class StandaloneManagedContainerTest {
     }
 
     @SuppressWarnings({ "rawtypes" })
-    private ManagedContainer verifyContainer(ManagedContainer container, String jmxUsername, String jmxPassword) throws Exception {
-        Assert.assertNotNull("ManagedContainer not null", container);
-        File containerHome = container.getContainerHome();
+    private ManagedContainer verifyContainer(ManagedContainer cnt, String jmxUsername, String jmxPassword) throws Exception {
+        Assert.assertNotNull("ManagedContainer not null", cnt);
+        File containerHome = cnt.getContainerHome();
         Assert.assertNotNull("Container home not null", containerHome);
         Assert.assertTrue("Container home is dir", containerHome.isDirectory());
 
         // Start the container
-        container.start();
+        cnt.start();
 
-        JMXConnector connector = container.getJMXConnector(jmxUsername, jmxPassword, 20, TimeUnit.SECONDS);
+        JMXConnector connector = cnt.getJMXConnector(jmxUsername, jmxPassword, 20, TimeUnit.SECONDS);
         try {
             // Access containers through JMX
             MBeanServerConnection server = connector.getMBeanServerConnection();
@@ -126,7 +125,7 @@ public class StandaloneManagedContainerTest {
             Set<String> containerIds = cntManagement.getContainerIds();
             Assert.assertEquals("One container", 1, containerIds.size());
             ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
-            Assert.assertEquals(Constants.CURRENT_CONTAINER_IDENTITY, cntId);
+            Assert.assertEquals(cnt.getIdentity(), cntId);
 
             // Access profiles through JMX
             ProfileVersionManagement prvManagement = ManagementUtils.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);
@@ -139,6 +138,6 @@ public class StandaloneManagedContainerTest {
         } finally {
             connector.close();
         }
-        return container;
+        return cnt;
     }
 }

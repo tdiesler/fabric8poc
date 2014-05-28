@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ package io.fabric8.container.tomcat;
 
 import io.fabric8.api.Constants;
 import io.fabric8.spi.AbstractManagedContainer;
+import io.fabric8.spi.RuntimeService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.remote.JMXConnector;
@@ -45,6 +47,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -68,32 +71,17 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         File catalinaHome = getContainerHome();
         IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
 
-        // conf/server.xml
-        File serverFile = new File(catalinaHome, "conf/server.xml");
-        IllegalStateAssertion.assertTrue(serverFile.exists(), "File does not exist: " + serverFile);
-
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = builderFactory.newDocumentBuilder();
-        FileInputStream fis = new FileInputStream(serverFile);
-        Document document = builder.parse(fis);
-        fis.close();
-
-        // etc/io.fabric8.zookeeper.server-0000.cfg
-        File zooKeeperServerFile = new File(catalinaHome, "conf/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
+        // Delete zookepper config file if this is not a server
         if (!getCreateOptions().isZooKeeperServer()) {
+            File zooKeeperServerFile = new File(catalinaHome, "conf/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
             zooKeeperServerFile.delete();
         }
 
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", "${tomcat.http.port}");
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", "${tomcat.https.port}");
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", "${tomcat.ajp.port}");
+        // Transform conf/server.xml
+        transformServerXML(new File(catalinaHome, "conf/server.xml"));
 
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        DOMSource source = new DOMSource(document);
-        FileOutputStream fos = new FileOutputStream(serverFile);
-        StreamResult result = new StreamResult(fos);
-        transformer.transform(source, result);
-        fos.close();
+        // Transform conf/catalina.properties
+        transformCatalinaProperties(new File(catalinaHome, "conf/catalina.properties"));
     }
 
     @Override
@@ -161,6 +149,41 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
             connector = super.getJMXConnector(env, timeout, unit);
         }
         return connector;
+    }
+
+    private void transformServerXML(File configFile) throws Exception {
+        IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
+
+        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = builderFactory.newDocumentBuilder();
+        FileInputStream fis = new FileInputStream(configFile);
+        Document document = builder.parse(fis);
+        fis.close();
+
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", "${tomcat.http.port}");
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", "${tomcat.https.port}");
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", "${tomcat.ajp.port}");
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        DOMSource source = new DOMSource(document);
+        FileOutputStream fos = new FileOutputStream(configFile);
+        StreamResult result = new StreamResult(fos);
+        transformer.transform(source, result);
+        fos.close();
+    }
+
+    private void transformCatalinaProperties(File configFile) throws Exception {
+        IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
+
+        FileInputStream instream = new FileInputStream(configFile);
+        Properties properties = new Properties();
+        properties.load(instream);
+        IOUtils.safeClose(instream);
+
+        FileOutputStream outstream = new FileOutputStream(configFile);
+        properties.setProperty(RuntimeService.RUNTIME_IDENTITY, getIdentity().getCanonicalForm());
+        properties.store(outstream, "Managed container properties");
+        IOUtils.safeClose(outstream);
     }
 
     private void replacePortValue(Document document, String expression, String replacement) throws XPathExpressionException {

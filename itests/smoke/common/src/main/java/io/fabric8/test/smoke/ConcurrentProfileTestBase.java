@@ -123,7 +123,7 @@ public abstract class ConcurrentProfileTestBase {
 
         // Create a container
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = Constants.CURRENT_CONTAINER_IDENTITY;
+        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
 
         // Setup the provision listener
         final CountDownLatch latchA = new CountDownLatch(1);

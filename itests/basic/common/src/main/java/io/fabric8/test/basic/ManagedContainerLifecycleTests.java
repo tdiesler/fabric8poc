@@ -22,7 +22,6 @@ package io.fabric8.test.basic;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -75,9 +74,13 @@ public class ManagedContainerLifecycleTests  {
     public void testManagedKaraf() throws Exception {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
-        KarafContainerBuilder cntBuilder = KarafContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
-        CreateOptions options = cntBuilder.getCreateOptions();
+        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+
+        CreateOptions options = KarafContainerBuilder.create()
+                .identity("ManagedKaraf")
+                .outputToConsole(true)
+                .targetDirectory(dataDir)
+                .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
@@ -98,9 +101,13 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
-        TomcatContainerBuilder cntBuilder = TomcatContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
-        CreateOptions options = cntBuilder.getCreateOptions();
+        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+
+        CreateOptions options = TomcatContainerBuilder.create()
+                .identity("ManagedTomcat")
+                .outputToConsole(true)
+                .targetDirectory(dataDir)
+                .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
@@ -121,12 +128,16 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.DATA_DIR);
-        WildFlyContainerBuilder cntBuilder = WildFlyContainerBuilder.create().outputToConsole(true).targetDirectory(dataDir);
+        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+
         // [TODO] The default port of the running server is available, why?
-        cntBuilder.managementNativePort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_NATIVE_PORT + 1);
-        cntBuilder.managementHttpPort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_HTTP_PORT + 1);
-        CreateOptions options = cntBuilder.getCreateOptions();
+        CreateOptions options = WildFlyContainerBuilder.create()
+                .identity("ManagedWildFly")
+                .outputToConsole(true)
+                .targetDirectory(dataDir)
+                .managementNativePort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_NATIVE_PORT + 1)
+                .managementHttpPort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_HTTP_PORT + 1)
+                .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.createContainer(options);
@@ -165,7 +176,7 @@ public class ManagedContainerLifecycleTests  {
             Set<String> containerIds = cntManagement.getContainerIds();
             Assert.assertEquals("One container", 1, containerIds.size());
             ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
-            Assert.assertEquals(Constants.CURRENT_CONTAINER_IDENTITY, cntId);
+            Assert.assertEquals(cnt.getIdentity(), cntId);
 
             // Access profiles through JMX
             ProfileVersionManagement prvManagement = jmxEndpoint.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);

@@ -45,11 +45,6 @@ public interface Constants {
     String MANAGEMENT_DOMAIN = "fabric8";
 
     /**
-     * The current container identity
-     */
-    ContainerIdentity CURRENT_CONTAINER_IDENTITY = ContainerIdentity.create("#current");
-
-    /**
      * The attribute key for the Http port
      */
     AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create("fabric8.http.port", Integer.class);

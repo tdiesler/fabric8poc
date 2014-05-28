@@ -68,14 +68,13 @@ public class BasicContainerLifecycleTest {
     @Test
     public void testContainerLifecycle() throws Exception {
 
-        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.getCreateOptions();
+        CreateOptions options = EmbeddedContainerBuilder.create("cntA").getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cntA = cntManager.createContainer(options);
         ContainerIdentity cntIdA = cntA.getIdentity();
 
-        Assert.assertTrue(cntIdA.getSymbolicName().startsWith("Container#"));
+        Assert.assertEquals("cntA", cntIdA.getCanonicalForm());
         Assert.assertSame(State.CREATED, cntA.getState());
         Assert.assertNull("Null profile version", cntA.getProfileVersion());
 

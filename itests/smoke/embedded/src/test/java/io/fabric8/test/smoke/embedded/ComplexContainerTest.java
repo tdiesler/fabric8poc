@@ -87,13 +87,12 @@ public class ComplexContainerTest {
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
 
         // Create parent container
-        EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
-        CreateOptions options = cntBuilder.identityPrefix("cntA").getCreateOptions();
+        CreateOptions options = EmbeddedContainerBuilder.create("cntA").getCreateOptions();
         Container cntParent = cntManager.createContainer(options);
 
         // Verify parent identity
         ContainerIdentity idParent = cntParent.getIdentity();
-        Assert.assertTrue(idParent.getSymbolicName().startsWith("cntA#"));
+        Assert.assertTrue(idParent.getCanonicalForm().equals("cntA"));
 
         // Start the parent container
         cntParent = cntManager.startContainer(idParent, null);
@@ -203,14 +202,12 @@ public class ComplexContainerTest {
         Assert.assertEquals(2, cntParent.getProfileIdentities().size());
 
         // Create child container
-        cntBuilder = EmbeddedContainerBuilder.create();
-        options = cntBuilder.identityPrefix("cntB").getCreateOptions();
+        options = EmbeddedContainerBuilder.create("cntA:cntB").getCreateOptions();
         Container cntChild = cntManager.createContainer(idParent, options);
 
         // Verify child identity
         ContainerIdentity idChild = cntChild.getIdentity();
-        Assert.assertTrue(idChild.getSymbolicName().startsWith("cntA"));
-        Assert.assertTrue(idChild.getSymbolicName().indexOf(":cntB") > 0);
+        Assert.assertTrue(idChild.getCanonicalForm().equals("cntA:cntB"));
 
         // Start the child container
         cntChild = cntManager.startContainer(idChild, null);

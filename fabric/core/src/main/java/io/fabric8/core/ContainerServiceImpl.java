@@ -19,7 +19,6 @@
  */
 package io.fabric8.core;
 
-import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Configuration;
 import io.fabric8.api.ConfigurationItem;
@@ -33,7 +32,6 @@ import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
-import io.fabric8.core.zookeeper.locks.Lock;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
@@ -46,12 +44,12 @@ import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.zookeeper.locks.ReadWriteLock;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
+import io.fabric8.core.zookeeper.locks.Lock;
+import io.fabric8.core.zookeeper.locks.ReadWriteLock;
 import io.fabric8.core.zookeeper.locks.ZooKeeperLockManager;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
-import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
@@ -60,6 +58,7 @@ import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
@@ -148,26 +147,29 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
-    @Reference(referenceInterface = ClusterDataStore.class)
-    private final ValidatingReference<ClusterDataStore> clusterDataStore = new ValidatingReference<>();
     @Reference(referenceInterface = ConfigurationManager.class)
     private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
+    @Reference(referenceInterface = CuratorFramework.class)
+    private final ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
     private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<>();
+    @Reference(referenceInterface = RuntimeService.class)
+    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
+
     @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<>();
-    @Reference(referenceInterface = CuratorFramework.class)
-    private final ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
 
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
+    private ContainerIdentity currentIdentity;
     private ZooKeeperLockManager lockManager;
 
     @Activate
     void activate(Map<String, ?> config) throws ProvisionException {
+        currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getIdentity());
         lockManager = new ZooKeeperLockManager(curator.get());
         activateInternal();
         activateComponent(PERMIT, this);
@@ -223,12 +225,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         registrations.add(syscontext.registerService(ProfileEventListener.class, listener, null));
 
         // Create the current container
-        ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
+        ContainerState currentCnt = containerRegistry.get().getContainer(currentIdentity);
         if (currentCnt == null) {
             CreateOptions options = new AbstractCreateOptions() {
             };
             List<ContainerHandle> handles = Collections.emptyList();
-            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, lockManager.readWriteLock(CURRENT_CONTAINER_IDENTITY), handles);
+            currentCnt = new ContainerState(null, currentIdentity, options, lockManager.readWriteLock(currentIdentity), handles);
             LOGGER.info("Create current container: {}", currentCnt);
             containerRegistry.get().addContainer(currentCnt);
 
@@ -254,7 +256,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Provisioner getProvisioner(ContainerIdentity identity) {
         assertValid();
-        IllegalArgumentAssertion.assertTrue(CURRENT_CONTAINER_IDENTITY.equals(identity), "Provisioner for '" + identity + "' not supported");
+        IllegalArgumentAssertion.assertTrue(currentIdentity.equals(identity), "Provisioner for '" + identity + "' not supported");
         return provisioner.get();
     }
 
@@ -294,8 +296,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 handles.add(handler.create(options));
             }
         }
-        ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
-        ContainerIdentity identity = clusterDataStore.get().createContainerIdentity(parentId, options.getIdentityPrefix());
+        ContainerIdentity identity = options.getIdentity();
         ContainerState cntState = new ContainerState(parentState, identity, options, lockManager.readWriteLock(identity), handles);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
@@ -354,7 +355,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container stopContainer(ContainerIdentity identity) {
         assertValid();
-        IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot stop current container");
+        IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot stop current container");
         ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
@@ -371,7 +372,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container destroyContainer(ContainerIdentity identity) {
         assertValid();
-        IllegalStateAssertion.assertFalse(CURRENT_CONTAINER_IDENTITY.equals(identity), "Cannot destroy current container");
+        IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot destroy current container");
         ContainerState cntState = getRequiredContainerState(identity);
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
@@ -418,7 +419,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container getCurrentContainer() {
         assertValid();
-        return getRequiredContainerState(CURRENT_CONTAINER_IDENTITY).immutableContainer();
+        return getRequiredContainerState(currentIdentity).immutableContainer();
     }
 
     @Override
@@ -727,12 +728,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
         ResourceIdentity explicitId = resVersion != null ? ResourceIdentity.create(symbolicName, resVersion) : null;
-        ContainerState cntState = getRequiredContainerState(CURRENT_CONTAINER_IDENTITY);
+        ContainerState cntState = getRequiredContainerState(currentIdentity);
         LockHandle readLock = cntState.aquireReadLock();
         try {
             Resource resource = null;
             Version highestVersion = Version.emptyVersion;
-            Profile effective = getEffectiveProfile(CURRENT_CONTAINER_IDENTITY);
+            Profile effective = getEffectiveProfile(currentIdentity);
             for (ResourceItem item : effective.getProfileItems(ResourceItem.class)) {
                 ResourceIdentity resid = item.getResource().getIdentity();
                 if (resid.equals(explicitId)) {
@@ -789,20 +790,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    void bindClusterDataStore(ClusterDataStore service) {
-        clusterDataStore.bind(service);
-    }
-
-    void unbindClusterDataStore(ClusterDataStore service) {
-        clusterDataStore.unbind(service);
-    }
-
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
 
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
+    }
+
+    void bindCurator(CuratorFramework service) {
+        curator.bind(service);
+    }
+
+    void unbindCurator(CuratorFramework service) {
+        curator.unbind(service);
     }
 
     void bindProfileService(ProfileService service) {
@@ -821,11 +822,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         provisioner.unbind(service);
     }
 
-    void bindCurator(CuratorFramework service) {
-        curator.bind(service);
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
     }
-    void unbindCurator(CuratorFramework service) {
-        curator.unbind(service);
+
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
     }
 
     static final class ContainerState {
