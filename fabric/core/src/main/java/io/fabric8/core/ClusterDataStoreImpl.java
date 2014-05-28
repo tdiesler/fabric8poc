@@ -20,16 +20,20 @@
 package io.fabric8.core;
 
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.FabricException;
 import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
 
-import java.util.concurrent.atomic.AtomicLong;
-
+import io.fabric8.spi.scr.ValidatingReference;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.shared.SharedCount;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
@@ -42,8 +46,10 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
 @Service(ClusterDataStore.class)
 public final class ClusterDataStoreImpl extends AbstractComponent implements ClusterDataStore {
 
-    // [TODO] Real cluster wide identities
-    private final AtomicLong uniqueTokenGenerator = new AtomicLong();
+    private static final String COUNTER_PATH = "/fabric/registry/uuid/containers/%s";
+
+    @Reference(referenceInterface = CuratorFramework.class)
+    private final ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
 
     @Activate
     void activate() {
@@ -56,10 +62,37 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
     }
 
     @Override
-    public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String prefix) {
-        IllegalArgumentAssertion.assertNotNull(prefix, "prefix");
-        String parentName = parentId != null ? parentId.getSymbolicName() + ":" : "";
-        ContainerIdentity containerId = ContainerIdentity.create(parentName + prefix + "#" + uniqueTokenGenerator.incrementAndGet());
+    public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String name) {
+        assertValid();
+        IllegalArgumentAssertion.assertNotNull(name, "prefix");
+        int increment = getIncrementForPrefix(name);
+        String parentPrefix = parentId != null ? parentId.getSymbolicName() + ":" : "";
+        String suffix =  increment > 1 ? String.valueOf(increment) : "";
+        ContainerIdentity containerId = ContainerIdentity.create(parentPrefix + name + "#" + suffix);
         return containerId;
+    }
+
+    private int getIncrementForPrefix(String prefix) {
+        String path = String.format(COUNTER_PATH, prefix);
+        SharedCount sharedCount = new SharedCount(curator.get(), path, 1);
+        try {
+            sharedCount.start();
+            for (int count = sharedCount.getCount(); true; count = sharedCount.getCount()) {
+                if (sharedCount.trySetCount(count + 1)) {
+                    return count;
+                }
+            }
+        } catch (Exception e) {
+            throw FabricException.launderThrowable(e);
+        } finally {
+            IOUtils.safeClose(sharedCount);
+        }
+    }
+
+    void bindCurator(CuratorFramework service) {
+        curator.bind(service);
+    }
+    void unbindCurator(CuratorFramework service) {
+        curator.unbind(service);
     }
 }

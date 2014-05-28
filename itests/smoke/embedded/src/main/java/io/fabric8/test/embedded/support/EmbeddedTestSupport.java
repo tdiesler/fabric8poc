@@ -23,6 +23,7 @@ import io.fabric8.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
+import io.fabric8.spi.RuntimeService;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceLocator;
@@ -53,6 +54,8 @@ public abstract class EmbeddedTestSupport {
 
     public static void afterClass() throws Exception {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
+        //We need to cleanup the data dir to prevent failures due to previous values persisted to ZooKeeper.
+        EmbeddedUtils.deleteDirectory(String.valueOf(runtime.getProperty(RuntimeService.DATA_DIR)));
         Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
     }
