@@ -141,8 +141,8 @@ public abstract class ProfileUpdateTestBase  {
         ServiceRegistration<ProvisionEventListener> sregB = syscontext.registerService(ProvisionEventListener.class, provisionListener, null);
 
         profile = prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
-        Assert.assertFalse("ProvisionEvent not received", latchB.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.await(500, TimeUnit.MILLISECONDS));
+        Assert.assertFalse("ProvisionEvent not received", latchB.await(500, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
         // Verify profile
@@ -217,9 +217,9 @@ public abstract class ProfileUpdateTestBase  {
 
         // Update the default profile
         Profile profile = prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ComponentEvent received", latchC.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ComponentEvent received", latchC.get().await(500, TimeUnit.MILLISECONDS));
         sregB.unregister();
         sregC.unregister();
 
@@ -237,6 +237,6 @@ public abstract class ProfileUpdateTestBase  {
 
         latchA.set(new CountDownLatch(1));
         prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
     }
 }

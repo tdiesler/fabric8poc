@@ -127,8 +127,8 @@ public abstract class ConfigurationItemsTestBase {
 
         // Update the default profile
         Profile defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals("One item", 2, defaultProfile.getProfileItems(null).size());
 
         // Verify the configuration
@@ -145,8 +145,8 @@ public abstract class ConfigurationItemsTestBase {
         latchA.set(new CountDownLatch(1));
         latchB.set(new CountDownLatch(1));
         defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
-        Assert.assertTrue("ProfileEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ProvisionEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProfileEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals("One item", 1, defaultProfile.getProfileItems(null).size());
 
         sregB.unregister();
@@ -199,11 +199,11 @@ public abstract class ConfigurationItemsTestBase {
         // Switch the current container to 1.2
         ContainerIdentity cntIdentity = cntManager.getCurrentContainer().getIdentity();
         cntManager.setProfileVersion(cntIdentity, version, listener);
-        Assert.assertTrue("ProvisionEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchA.await(500, TimeUnit.MILLISECONDS));
 
         // Add profile foo to the current container
         cntManager.addProfiles(cntIdentity, Collections.singletonList("foo"), listener);
-        Assert.assertTrue("ProvisionEvent received", latchB.await(20000, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.await(500, TimeUnit.MILLISECONDS));
 
         // Verify runtime specific configuration
         ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);

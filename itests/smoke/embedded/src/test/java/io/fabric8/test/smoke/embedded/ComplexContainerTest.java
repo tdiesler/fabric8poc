@@ -151,7 +151,7 @@ public class ComplexContainerTest {
 
         // Switch the container to version 2.0
         cntParent = cntManager.setProfileVersion(idParent, version20, listener);
-        Assert.assertTrue("ProvisionEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchA.await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
@@ -196,7 +196,7 @@ public class ComplexContainerTest {
 
         // Add profile foo to parent container
         cntParent = cntManager.addProfiles(idParent, Collections.singletonList(fooProfile.getIdentity()), listener);
-        Assert.assertTrue("ProvisionEvent received", latchB.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchB.await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertTrue(cntParent.getProfileIdentities().contains(fooProfile.getIdentity()));
@@ -253,7 +253,7 @@ public class ComplexContainerTest {
 
         // Remove profile foo from container
         cntParent = cntManager.removeProfiles(idParent, Collections.singletonList(fooProfile.getIdentity()), listener);
-        Assert.assertTrue("ProvisionEvent received", latchC.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchC.await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals(version20, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());
@@ -285,7 +285,7 @@ public class ComplexContainerTest {
 
         // Set the default profile version
         cntParent = cntManager.setProfileVersion(idParent, DEFAULT_PROFILE_VERSION, listener);
-        Assert.assertTrue("ProvisionEvent received", latchD.await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ProvisionEvent received", latchD.await(500, TimeUnit.MILLISECONDS));
         Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntParent.getProfileVersion());
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
         Assert.assertEquals(1, cntParent.getProfileIdentities().size());

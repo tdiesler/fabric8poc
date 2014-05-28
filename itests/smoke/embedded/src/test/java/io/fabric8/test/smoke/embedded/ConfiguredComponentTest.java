@@ -125,8 +125,8 @@ public class ConfiguredComponentTest {
         config.update(props);
 
         // Wait a little for the component to get updated
-        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
-        Assert.assertTrue("ComponentEvent received", latchB.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ComponentEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
         sregB.unregister();
 
         EmbeddedContainerBuilder cntBuilder = EmbeddedContainerBuilder.create();
@@ -156,7 +156,7 @@ public class ConfiguredComponentTest {
         config.update(props);
 
         // Wait a little for the component to get updated
-        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(200, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("ConfigurationEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
         sregA.unregister();
     }
 }
