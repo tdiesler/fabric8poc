@@ -17,6 +17,7 @@ package io.fabric8.core.zookeeper;
 
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.spi.scr.ValidatingReference;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -45,7 +46,7 @@ import java.util.Properties;
 
 import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
 
-@Component( label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
+@Component(label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
 @org.apache.felix.scr.annotations.Properties({
         @Property(name = "clientPort", intValue = FabricZooKeeperServer.DEFAULT_CLIENT_PORT, label = "Client Port", description = "The port to listen for client connections"),
         @Property(name = "tickTime", intValue = ZooKeeperServer.DEFAULT_TICK_TIME, label = "Tick Time", description = "The basic time unit in milliseconds used by ZooKeeper. It is used to do heartbeats and the minimum session timeout will be twice the tickTime"),
@@ -57,9 +58,7 @@ import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
         @Property(name = "maxClientCnxns", intValue = FabricZooKeeperServer.DEFAULT_MAX_CLIENT_CNXNS, label = "Maximum Client Connections Per Host", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"),
         @Property(name = "clientPortAddress", value = FabricZooKeeperServer.DEFAULT_CLIENT_PORT_ADDRESS, label = "Client Port Address", description = "The address (ipv4, ipv6 or hostname) to listen for client connections; that is, the address that clients attempt to connect to"),
         @Property(name = "minSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MINIMUM_SESSION_TIMEOUT, label = "Minimum Session Timeout", description = "The minimum session timeout in milliseconds that the server will allow the client to negotiate"),
-        @Property(name = "maxSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MAXIMUM_SESSION_TIMEOUT, label = "Maximum Session Timeout", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"),
-}
-)
+        @Property(name = "maxSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MAXIMUM_SESSION_TIMEOUT, label = "Maximum Session Timeout", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"), })
 public class FabricZooKeeperServer extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricZooKeeperServer.class);
@@ -76,8 +75,9 @@ public class FabricZooKeeperServer extends AbstractComponent {
     static final String SERVER_ID = "server.id";
     static final String MY_ID = "myid";
 
-    @Reference
-    private Configurer configurer;
+    @Reference(referenceInterface = Configurer.class)
+    private final ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+
     private File dataDir;
     private File dataLogDir;
 
@@ -85,14 +85,14 @@ public class FabricZooKeeperServer extends AbstractComponent {
 
     @Activate
     void activate(Map<String, Object> configuration) throws Exception {
-        destroyable = activateInternal(configurer.configure(configuration, this));
+        destroyable = activateInternal(configurer.get().configure(configuration, this));
         activateComponent();
     }
 
     @Modified
     void modified(Map<String, Object> configuration) throws Exception {
         deactivateInternal();
-        destroyable = activateInternal(configurer.configure(configuration, this));
+        destroyable = activateInternal(configurer.get().configure(configuration, this));
     }
 
     @Deactivate
@@ -226,11 +226,19 @@ public class FabricZooKeeperServer extends AbstractComponent {
         return serverConfig;
     }
 
+    void bindConfigurer(Configurer service) {
+        this.configurer.bind(service);
+    }
+
+    void unbindConfigurer(Configurer service) {
+        this.configurer.unbind(service);
+    }
+
     interface Destroyable {
         void destroy() throws Exception;
     }
 
-     class SimpleServer implements Destroyable, ServerStats.Provider {
+    class SimpleServer implements Destroyable, ServerStats.Provider {
         private final ZooKeeperServer server;
         private final NIOServerCnxnFactory cnxnFactory;
 
@@ -267,7 +275,7 @@ public class FabricZooKeeperServer extends AbstractComponent {
         }
     }
 
-     class ClusteredServer implements Destroyable, QuorumStats.Provider {
+    class ClusteredServer implements Destroyable, QuorumStats.Provider {
         private final QuorumPeer peer;
 
         ClusteredServer(QuorumPeer peer) {

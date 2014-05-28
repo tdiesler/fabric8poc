@@ -75,8 +75,8 @@ import static org.jboss.gravia.utils.IOUtils.safeClose;
 public class ManagedCuratorFramework  extends AbstractComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedCuratorFramework.class);
 
-    @Reference
-    private Configurer configurer;
+    @Reference(referenceInterface = Configurer.class)
+    private final ValidatingReference<Configurer> configurer = new ValidatingReference<>();
     @Reference(referenceInterface = ACLProvider.class)
     private final ValidatingReference<ACLProvider> aclProvider = new ValidatingReference<ACLProvider>();
     @Reference(referenceInterface = ConnectionStateListener.class, bind = "bindConnectionStateListener", unbind = "unbindConnectionStateListener", cardinality = OPTIONAL_MULTIPLE, policy = DYNAMIC)
@@ -149,7 +149,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     void activate(BundleContext bundleContext, Map<String, Object> configuration) throws Exception {
         this.bundleContext = bundleContext;
         ZookeeperConfig config = new ZookeeperConfig();
-        configurer.configure(configuration, config);
+        configurer.get().configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
             State next = new State(config);
@@ -163,8 +163,8 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     @Modified
     void modified(Map<String, Object> configuration) throws Exception {
         ZookeeperConfig config = new ZookeeperConfig();
-        configurer.configure(configuration, this);
-        configurer.configure(configuration, config);
+        configurer.get().configure(configuration, this);
+        configurer.get().configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
             State prev = state.get();
@@ -230,19 +230,19 @@ public class ManagedCuratorFramework  extends AbstractComponent {
         connectionStateListeners.remove(connectionStateListener);
     }
 
-    void bindAclProvider(ACLProvider aclProvider) {
-        this.aclProvider.bind(aclProvider);
+    void bindAclProvider(ACLProvider service) {
+        this.aclProvider.bind(service);
     }
 
-    void unbindAclProvider(ACLProvider aclProvider) {
-        this.aclProvider.unbind(aclProvider);
+    void unbindAclProvider(ACLProvider service) {
+        this.aclProvider.unbind(service);
     }
 
-    void bindConfigurer(Configurer configurer) {
-        this.configurer = configurer;
+    void bindConfigurer(Configurer service) {
+        this.configurer.bind(service);
     }
 
-    void unbindConfigurer(Configurer configurer) {
-        this.configurer = null;
+    void unbindConfigurer(Configurer service) {
+        this.configurer.unbind(service);
     }
 }
