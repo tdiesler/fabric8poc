@@ -23,7 +23,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>io.fabric8.poc</groupId>
         <artifactId>fabric8-container-tomcat</artifactId>
@@ -75,7 +75,7 @@
             <artifactId>org.apache.felix.http.proxy</artifactId>
         </dependency>
 
-        <!-- Provided Dependencies -->        
+        <!-- Provided Dependencies -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -149,7 +149,7 @@
     </dependencies>
 
     <build>
-      <plugins>
+        <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -204,7 +204,7 @@
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>OSGI-INF/io.fabric8.core.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.ComponentConfigurer.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.core.MBeansProvider.xml,OSGI-INF/io.fabric8.core.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileRegistry.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricZooKeeperServer.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricACLProvider.xml,OSGI-INF/io.fabric8.core.zookeeper.ManagedCuratorFramework.xml,OSGI-INF/io.fabric8.spi.internal.BasicRuntimeService.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuilderService.xml,OSGI-INF/io.fabric8.spi.internal.ProfileVersionBuilderService.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/org.jboss.gravia.provision.internal.ProvisionerService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryMBeanService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryService.xml,OSGI-INF/org.jboss.gravia.resolver.internal.ResolverService.xml</Service-Component>
+                            <Service-Component>OSGI-INF/io.fabric8.core.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.ComponentConfigurer.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.core.MBeansProvider.xml,OSGI-INF/io.fabric8.core.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileRegistry.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricZooKeeperServer.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricACLProvider.xml,OSGI-INF/io.fabric8.core.zookeeper.ManagedCuratorFramework.xml,OSGI-INF/io.fabric8.spi.internal.BasicRuntimeService.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuildersImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/org.jboss.gravia.provision.internal.ProvisionerService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryMBeanService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryService.xml,OSGI-INF/org.jboss.gravia.resolver.internal.ResolverService.xml</Service-Component>
                         </manifestEntries>
                     </archive>
                     <webResources>

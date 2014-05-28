@@ -19,9 +19,14 @@
  */
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.ConfigurationItemBuilder;
+import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
+import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileBuilders;
 import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ProfileVersionBuilderFactory;
+import io.fabric8.spi.DefaultConfigurationItemBuilder;
+import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -32,23 +37,21 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
 
 /**
- * A provider service for the {@link ProfileVersionBuilderFactory}
+ * A provider service for the {@link ProfileBuilders}
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Mar-2014
  */
-@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(ProfileVersionBuilderFactory.class)
-public final class ProfileVersionBuilderService extends AbstractComponent implements ProfileVersionBuilderFactory {
+@Component( policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ProfileBuilders.class)
+public final class ProfileBuildersImpl extends AbstractComponent implements ProfileBuilders {
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    @Reference(referenceInterface = ProfileService.class)
+    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
 
     @Activate
     void activate() throws Exception {
@@ -61,28 +64,61 @@ public final class ProfileVersionBuilderService extends AbstractComponent implem
     }
 
     @Override
-    public ProfileVersionBuilder create() {
+    public ProfileVersionBuilder profileVersionBuilder() {
         assertValid();
         return new DefaultProfileVersionBuilder((Version) null);
     }
 
     @Override
-    public ProfileVersionBuilder create(Version version) {
+    public ProfileVersionBuilder profileVersionBuilder(Version version) {
         assertValid();
         return new DefaultProfileVersionBuilder(version);
     }
 
     @Override
-    public ProfileVersionBuilder createFrom(Version version) {
+    public ProfileVersionBuilder profileVersionBuilderFrom(Version version) {
         assertValid();
         LinkedProfileVersion linkedVersion = profileService.get().getLinkedProfileVersion(version);
         return linkedVersion != null ? new DefaultProfileVersionBuilder(linkedVersion) : new DefaultProfileVersionBuilder(version);
     }
 
     @Override
-    public ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion) {
+    public ProfileVersionBuilder profileVersionBuilderFrom(LinkedProfileVersion linkedVersion) {
         assertValid();
         return new DefaultProfileVersionBuilder(linkedVersion);
+    }
+
+    @Override
+    public ProfileBuilder profileBuilder() {
+        assertValid();
+        return new DefaultProfileBuilder((String) null);
+    }
+
+    @Override
+    public ProfileBuilder profileBuilder(String identity) {
+        assertValid();
+        return new DefaultProfileBuilder(identity);
+    }
+
+    @Override
+    public ProfileBuilder profileBuilderFrom(Version version, String identity) {
+        LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, identity);
+        return new DefaultProfileBuilder(linkedProfile);
+    }
+
+    @Override
+    public ProfileBuilder profileBuilderFrom(LinkedProfile linkedProfile) {
+        return new DefaultProfileBuilder(linkedProfile);
+    }
+
+    @Override
+    public ConfigurationItemBuilder configurationItemBuilder() {
+        return new DefaultConfigurationItemBuilder();
+    }
+
+    @Override
+    public ConfigurationItemBuilder configurationItemBuilder(String identity) {
+        return new DefaultConfigurationItemBuilder(identity);
     }
 
     void bindProfileService(ProfileService service) {

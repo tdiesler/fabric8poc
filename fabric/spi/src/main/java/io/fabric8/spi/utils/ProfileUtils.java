@@ -20,15 +20,18 @@
 
 package io.fabric8.spi.utils;
 
+import io.fabric8.api.Configuration;
 import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.spi.DefaultProfileBuilder;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * A set of profile utils
@@ -62,21 +65,57 @@ public final class ProfileUtils {
 
         // Add profile items
         for (ProfileItem item : profile.getProfileItems(null)) {
+            String itemId = item.getIdentity();
 
             // Merge with existing {@link ConfigurationItem}
-            if (item instanceof ConfigurationItem) {
-                String itemId = item.getIdentity();
-                ConfigurationItem prevItem = builder.getProfile().getProfileItem(itemId, ConfigurationItem.class);
-                if (prevItem != null) {
-                    Map<String, Object> config = new HashMap<>(prevItem.getConfiguration());
-                    config.putAll(((ConfigurationItem) item).getConfiguration());
-                    builder.addConfigurationItem(itemId, config);
-                    continue;
+            ConfigurationItem targetItem = builder.getProfile().getProfileItem(itemId, ConfigurationItem.class);
+            if (item instanceof ConfigurationItem && targetItem != null) {
+
+                builder.removeProfileItem(itemId);
+
+                ConfigurationItem mergedItem = getMergedConfigurationItem(targetItem, (ConfigurationItem) item);
+                if (mergedItem != null) {
+                    builder.addProfileItem(mergedItem);
+                }
+            } else {
+                // Add unmodified
+                builder.addProfileItem(item);
+            }
+        }
+    }
+
+    private static ConfigurationItem getMergedConfigurationItem(ConfigurationItem targetItem, ConfigurationItem thisItem) {
+        int configCount = 0;
+        String itemId = targetItem.getIdentity();
+        ConfigurationItemBuilder itemBuilder = ConfigurationItemBuilder.Factory.create(itemId);
+        for (Configuration tagetConfig : targetItem.getConfigurations(null)) {
+            String mergeIndex = tagetConfig.getMergeIndex();
+            Map<String, Object> atts = new LinkedHashMap<>(tagetConfig.getAttributes());
+            Map<String, String> dirs = new LinkedHashMap<>(tagetConfig.getDirectives());
+            Configuration thisConfig = thisItem.getConfiguration(mergeIndex);
+            if (thisConfig != null) {
+                Map<String, Object> thisAtts = thisConfig.getAttributes();
+                Map<String, String> thisDirs = thisConfig.getDirectives();
+                if (thisAtts.get(Configuration.DELETED_MARKER) == null) {
+                    for (Entry<String, Object> entry : thisAtts.entrySet()) {
+                        String key = entry.getKey();
+                        Object value = entry.getValue();
+                        if (Configuration.DELETED_MARKER.equals(value)) {
+                            atts.remove(key);
+                        } else {
+                            atts.put(key, value);
+                        }
+                    }
+                    dirs.putAll(thisDirs);
+                } else {
+                    atts.clear();
                 }
             }
-
-            // Add unmodified
-            builder.addProfileItem(item);
+            if (!atts.isEmpty()) {
+                itemBuilder.addConfiguration(mergeIndex, atts, dirs);
+                configCount++;
+            }
         }
+        return configCount > 0 ? itemBuilder.getConfigurationItem() : null;
     }
 }

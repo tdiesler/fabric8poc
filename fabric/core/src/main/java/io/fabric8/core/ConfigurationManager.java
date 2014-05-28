@@ -19,7 +19,6 @@
  */
 package io.fabric8.core;
 
-import io.fabric8.api.ConfigurationItem;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
@@ -28,7 +27,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -69,20 +67,17 @@ public final class ConfigurationManager extends AbstractComponent {
         deactivateComponent();
     }
 
-    void applyConfigurationItems(List<ConfigurationItem> items) {
+    void applyConfiguration(String pid, Map<String, Object> nextConfig) {
         assertValid();
-        for (ConfigurationItem item : items) {
-            LOGGER.info("Apply configuration item: {}", item);
-            try {
-                Configuration config = configAdmin.get().getConfiguration(item.getIdentity(), null);
-                Map<String, Object> prevConfig = toMap(config.getProperties());
-                Map<String, Object> nextConfig = item.getConfiguration();
-                if (needsUpdate(prevConfig, nextConfig)) {
-                    config.update(toDictionary(nextConfig));
-                }
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot update configuration: " + item.getIdentity(), ex);
+        LOGGER.info("Apply configuration: {}", pid);
+        try {
+            Configuration config = configAdmin.get().getConfiguration(pid, null);
+            Map<String, Object> prevConfig = toMap(config.getProperties());
+            if (needsUpdate(prevConfig, nextConfig)) {
+                config.update(toDictionary(nextConfig));
             }
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot update configuration: " + pid, ex);
         }
     }
 

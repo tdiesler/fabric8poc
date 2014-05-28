@@ -21,8 +21,14 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
+import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
+import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -41,8 +47,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.junit.After;
@@ -142,5 +150,72 @@ public abstract class ConfigurationItemsTestBase {
         Assert.assertEquals("One item", 1, defaultProfile.getProfileItems(null).size());
 
         sregB.unregister();
+    }
+
+    @Test
+    public void testMultipleConfigurationItem() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
+
+        // Build ConfigurationItem with multiple configs
+        ConfigurationItem configItem = ConfigurationItemBuilder.Factory.create("some.pid")
+            .addConfiguration("tomcat", Collections.singletonMap("some.key", (Object)"For TOMCAT"), Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, "tomcat"))
+            .addConfiguration("wildfly", Collections.singletonMap("some.key", (Object)"For WILDFLY"), Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, "wildfly"))
+            .addConfiguration("karaf", Collections.singletonMap("some.key", (Object)"For KARAF"), Collections.singletonMap(CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE, "karaf"))
+            .getConfigurationItem();
+
+        // Build profile
+        Profile profile = ProfileBuilder.Factory.create("foo")
+                .addProfileItem(configItem)
+                .getProfile();
+
+        // Build a profile version
+        Version version = Version.parseVersion("1.2");
+        ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
+                .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).getProfile())
+                .addProfile(profile)
+                .getProfileVersion();
+
+        // Add the profile version
+        prfManager.addProfileVersion(profileVersion);
+
+        // Setup the provision listener
+        final CountDownLatch latchA = new CountDownLatch(1);
+        final CountDownLatch latchB = new CountDownLatch(1);
+        ProvisionEventListener listener = new ProvisionEventListener() {
+            @Override
+            public void processEvent(ProvisionEvent event) {
+                String identity = event.getProfile().getIdentity();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default]".equals(identity)) {
+                    latchA.countDown();
+                }
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default,foo]".equals(identity)) {
+                    latchB.countDown();
+                }
+            }
+        };
+
+        // Switch the current container to 1.2
+        ContainerIdentity cntIdentity = cntManager.getCurrentContainer().getIdentity();
+        cntManager.setProfileVersion(cntIdentity, version, listener);
+        Assert.assertTrue("ProvisionEvent received", latchA.await(200, TimeUnit.MILLISECONDS));
+
+        // Add profile foo to the current container
+        cntManager.addProfiles(cntIdentity, Collections.singletonList("foo"), listener);
+        Assert.assertTrue("ProvisionEvent received", latchB.await(20000, TimeUnit.MILLISECONDS));
+
+        // Verify runtime specific configuration
+        ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
+        Configuration config = configAdmin.getConfiguration("some.pid", null);
+        Object configValue = config.getProperties().get("some.key");
+        if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
+            Assert.assertEquals("For " + RuntimeType.getRuntimeType(), configValue);
+        }
+
+        // Restore defaults
+        cntManager.removeProfiles(cntIdentity, Collections.singletonList("foo"), null);
+        cntManager.setProfileVersion(cntIdentity, DEFAULT_PROFILE_VERSION, null);
+        prfManager.removeProfileVersion(version);
     }
 }

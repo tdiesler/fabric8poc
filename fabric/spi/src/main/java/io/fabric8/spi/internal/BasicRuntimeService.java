@@ -15,19 +15,19 @@
 
 package io.fabric8.spi.internal;
 
+import static java.util.Objects.requireNonNull;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.runtime.RuntimeLocator;
-import org.osgi.service.component.ComponentContext;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import static java.util.Objects.requireNonNull;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.osgi.service.component.ComponentContext;
 
 @Component(immediate = true)
 @Service(RuntimeService.class)

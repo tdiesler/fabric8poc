@@ -43,7 +43,7 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder removeProfileItem(String identity);
 
-    ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config);
+    ProfileBuilder addConfigurationItem(String mergeIndex, Map<String, Object> config);
 
     ProfileBuilder addResourceItem(Resource resource);
 
@@ -62,23 +62,23 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
     final class Factory {
 
         public static ProfileBuilder create() {
-            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
-            return factory.create();
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileBuilder();
         }
 
         public static ProfileBuilder create(String identity) {
-            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
-            return factory.create(identity);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileBuilder(identity);
         }
 
         public static ProfileBuilder createFrom(Version version, String identity) {
-            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
-            return factory.createFrom(version, identity);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileBuilderFrom(version, identity);
         }
 
         public static ProfileBuilder createFrom(LinkedProfile linkedProfile) {
-            ProfileBuilderFactory factory = ServiceLocator.getRequiredService(ProfileBuilderFactory.class);
-            return factory.createFrom(linkedProfile);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileBuilderFrom(linkedProfile);
         }
 
         // Hide ctor

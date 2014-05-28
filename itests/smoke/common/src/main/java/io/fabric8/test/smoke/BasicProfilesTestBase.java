@@ -95,7 +95,7 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
-        Assert.assertEquals("yyy", citem.getConfiguration().get("xxx"));
+        Assert.assertEquals("yyy", citem.getDefaultAttributes().get("xxx"));
 
         // Remove profile version
         prfManager.removeProfileVersion(version);

@@ -116,8 +116,8 @@ public class LinkedProfileTest {
         Assert.assertTrue("No parents", linkedA.getParents().isEmpty());
         Assert.assertTrue("No linked parents", linkedA.getLinkedParents().isEmpty());
         Assert.assertEquals(2, linkedA.getProfileItems(null).size());
-        Assert.assertEquals(configA, linkedA.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configA, linkedA.getProfileItem("confItemA", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configA, linkedA.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, linkedA.getProfileItem("confItemA", ConfigurationItem.class).getDefaultAttributes());
 
         LinkedProfile linkedB = prfManager.getLinkedProfile(version, identityB);
         Assert.assertTrue("No attributes", linkedB.getAttributes().isEmpty());
@@ -126,8 +126,8 @@ public class LinkedProfileTest {
         Assert.assertTrue(linkedB.getParents().contains(identityA));
         Assert.assertNotNull(linkedB.getLinkedParents().get(identityA));
         Assert.assertEquals(2, linkedB.getProfileItems(null).size());
-        Assert.assertEquals(configB, linkedB.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configB, linkedB.getProfileItem("confItemB", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configB, linkedB.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configB, linkedB.getProfileItem("confItemB", ConfigurationItem.class).getDefaultAttributes());
 
         LinkedProfile linkedC = prfManager.getLinkedProfile(version, identityC);
         Assert.assertTrue("No attributes", linkedC.getAttributes().isEmpty());
@@ -138,8 +138,8 @@ public class LinkedProfileTest {
         Assert.assertNotNull(linkedC.getLinkedParents().get(identityA));
         Assert.assertNotNull(linkedC.getLinkedParents().get(identityB));
         Assert.assertEquals(2, linkedC.getProfileItems(null).size());
-        Assert.assertEquals(configC, linkedC.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configC, linkedC.getProfileItem("confItemC", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(configC, linkedC.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configC, linkedC.getProfileItem("confItemC", ConfigurationItem.class).getDefaultAttributes());
 
         Map<String, LinkedProfile> linkedParents = linkedC.getLinkedParents();
         Assert.assertEquals(2, linkedParents.size());

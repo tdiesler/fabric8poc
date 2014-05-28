@@ -19,6 +19,7 @@
  */
 package io.fabric8.test.smoke.embedded;
 
+import static io.fabric8.api.Configuration.DELETED_MARKER;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
@@ -56,6 +57,9 @@ public class EffectiveProfileTest {
     Map<String, Object>  configA = new HashMap<>();
     Map<String, Object>  configB = new HashMap<>();
     Map<String, Object>  configC = new HashMap<>();
+    Map<String, Object>  configC1 = new HashMap<>();
+    Map<String, Object>  effectB = new HashMap<>();
+    Map<String, Object>  effectC = new HashMap<>();
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -73,20 +77,30 @@ public class EffectiveProfileTest {
         configA.put("keyB", "aaa");
         configA.put("keyC", "aaa");
 
-        configB.put("keyA", "aaa");
+        configB.put("keyA", DELETED_MARKER);
         configB.put("keyB", "bbb");
         configB.put("keyC", "bbb");
 
         configC.put("keyA", "aaa");
-        configC.put("keyB", "bbb");
+        configC.put("keyB", DELETED_MARKER);
         configC.put("keyC", "ccc");
+
+        configC1.put(DELETED_MARKER, "dummy");
+
+        effectB.put("keyB", "bbb");
+        effectB.put("keyC", "bbb");
+
+        effectC.put("keyA", "aaa");
+        effectC.put("keyC", "ccc");
     }
 
     @Test
     public void testEffectiveProfile() {
 
         Profile prfA = ProfileBuilder.Factory.create(identityA)
-                .addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
+                .addConfigurationItem("confItem", configA)
+                .addConfigurationItem("confItemA", configA)
+                .addConfigurationItem("confItemA1", configA)
                 .getProfile();
 
         Profile prfB = ProfileBuilder.Factory.create(identityB)
@@ -100,6 +114,7 @@ public class EffectiveProfileTest {
                 .addParentProfile(identityB)
                 .addConfigurationItem("confItem", configC)
                 .addConfigurationItem("confItemC", configC)
+                .addConfigurationItem("confItemA1", configC1)
                 .getProfile();
 
         ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
@@ -123,9 +138,10 @@ public class EffectiveProfileTest {
         Assert.assertEquals("effective#A", effectiveA.getIdentity());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
-        Assert.assertEquals(2, effectiveA.getProfileItems(null).size());
-        Assert.assertEquals(configA, effectiveA.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(3, effectiveA.getProfileItems(null).size());
+        Assert.assertEquals(configA, effectiveA.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, effectiveA.getProfileItem("confItemA1", ConfigurationItem.class).getDefaultAttributes());
 
         // Verify effective B
         LinkedProfile linkedB = prfManager.getLinkedProfile(version, identityB);
@@ -133,10 +149,11 @@ public class EffectiveProfileTest {
         Assert.assertEquals("effective#B", effectiveB.getIdentity());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
-        Assert.assertEquals(3, effectiveB.getProfileItems(null).size());
-        Assert.assertEquals(configB, effectiveB.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveB.getProfileItem("confItemA", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configB, effectiveB.getProfileItem("confItemB", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(4, effectiveB.getProfileItems(null).size());
+        Assert.assertEquals(effectB, effectiveB.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, effectiveB.getProfileItem("confItemA", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, effectiveB.getProfileItem("confItemA1", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configB, effectiveB.getProfileItem("confItemB", ConfigurationItem.class).getDefaultAttributes());
 
         // Verify effective C
         LinkedProfile linkedC = prfManager.getLinkedProfile(version, identityC);
@@ -145,10 +162,10 @@ public class EffectiveProfileTest {
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());
         Assert.assertEquals(4, effectiveC.getProfileItems(null).size());
-        Assert.assertEquals(configC, effectiveC.getProfileItem("confItem", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configA, effectiveC.getProfileItem("confItemA", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configB, effectiveC.getProfileItem("confItemB", ConfigurationItem.class).getConfiguration());
-        Assert.assertEquals(configC, effectiveC.getProfileItem("confItemC", ConfigurationItem.class).getConfiguration());
+        Assert.assertEquals(effectC, effectiveC.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configA, effectiveC.getProfileItem("confItemA", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configB, effectiveC.getProfileItem("confItemB", ConfigurationItem.class).getDefaultAttributes());
+        Assert.assertEquals(configC, effectiveC.getProfileItem("confItemC", ConfigurationItem.class).getDefaultAttributes());
 
         prfManager.removeProfileVersion(version);
     }

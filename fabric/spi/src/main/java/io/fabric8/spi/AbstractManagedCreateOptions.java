@@ -38,7 +38,7 @@ public abstract class AbstractManagedCreateOptions extends AbstractCreateOptions
 
     /**
      * Get the array of maven artefacts that are getting unpacked
-     * during {@link ManagedContainer#createFrom(ContainerConfiguration)}
+     * during {@link ManagedContainer#profileVersionBuilderFrom(ContainerConfiguration)}
      */
     public List<MavenCoordinates> getMavenCoordinates() {
         return Collections.unmodifiableList(mavenCoordinates);

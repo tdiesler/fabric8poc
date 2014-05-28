@@ -101,7 +101,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals(identityA, profile.getIdentity());
         Assert.assertEquals(1, profile.getProfileItems(null).size());
         ConfigurationItem profileItem = profile.getProfileItem("some.pid", ConfigurationItem.class);
-        Assert.assertEquals("yyy", profileItem.getConfiguration().get("xxx"));
+        Assert.assertEquals("yyy", profileItem.getDefaultAttributes().get("xxx"));
 
         Profile updateProfile = ProfileBuilder.Factory.createFrom(version12, identityA)
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "zzz"))
@@ -111,7 +111,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals(identityA, updateProfile.getIdentity());
         Assert.assertEquals(1, updateProfile.getProfileItems(null).size());
         profileItem = updateProfile.getProfileItem("some.pid", ConfigurationItem.class);
-        Assert.assertEquals("zzz", profileItem.getConfiguration().get("xxx"));
+        Assert.assertEquals("zzz", profileItem.getDefaultAttributes().get("xxx"));
 
         // Setup the profile listener
         final CountDownLatch latchA = new CountDownLatch(1);
@@ -150,7 +150,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals("some.pid", citem.getIdentity());
-        Assert.assertEquals("zzz", citem.getConfiguration().get("xxx"));
+        Assert.assertEquals("zzz", citem.getDefaultAttributes().get("xxx"));
 
         // Remove profile version
         profileVersion = prfManager.removeProfileVersion(version12);
@@ -228,7 +228,7 @@ public abstract class ProfileUpdateTestBase  {
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();
         Assert.assertEquals(Container.CONTAINER_SERVICE_PID, citem.getIdentity());
-        Assert.assertEquals("bar", citem.getConfiguration().get("config.token"));
+        Assert.assertEquals("bar", citem.getDefaultAttributes().get("config.token"));
 
         // Build an update profile
         updateProfile =  ProfileBuilder.Factory.createFrom(DEFAULT_PROFILE_VERSION, DEFAULT_PROFILE_IDENTITY)

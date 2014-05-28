@@ -116,7 +116,7 @@ public abstract class ConcurrentProfileTestBase {
         List<ConfigurationItem> items = effectiveB.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals(1, items.size());
         ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
-        Map<String, Object> config = item.getConfiguration();
+        Map<String, Object> config = item.getDefaultAttributes();
         Assert.assertEquals(2, config.size());
         Assert.assertEquals(0, config.get("keyA"));
         Assert.assertEquals(0, config.get("keyB"));
@@ -175,7 +175,7 @@ public abstract class ConcurrentProfileTestBase {
                     // Verify that the effective profile is consistent
                     Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
                     ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
-                    Map<String, Object> config = item.getConfiguration();
+                    Map<String, Object> config = item.getDefaultAttributes();
 
                     Integer valA = (Integer) config.get("keyA");
                     Integer valB = (Integer) config.get("keyB");
@@ -221,14 +221,14 @@ public abstract class ConcurrentProfileTestBase {
 
                     ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(linkedA);
                     ConfigurationItem prfItem = linkedA.getProfileItem(PID, ConfigurationItem.class);
-                    Map<String, Object> config = new HashMap<>(prfItem.getConfiguration());
+                    Map<String, Object> config = new HashMap<>(prfItem.getDefaultAttributes());
                     config.put("keyA", new Integer(i + 1));
 
                     Profile prfA = prfBuilder.addConfigurationItem(PID, config).getProfile();
 
                     prfBuilder = ProfileBuilder.Factory.createFrom(linkedB);
                     prfItem = linkedB.getProfileItem(PID, ConfigurationItem.class);
-                    config = new HashMap<>(prfItem.getConfiguration());
+                    config = new HashMap<>(prfItem.getDefaultAttributes());
                     config.put("keyB", new Integer(i + 1));
 
                     Profile prfB = prfBuilder.addConfigurationItem(PID, config).getProfile();

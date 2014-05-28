@@ -21,7 +21,9 @@ package io.fabric8.core;
 
 import static io.fabric8.api.Constants.CURRENT_CONTAINER_IDENTITY;
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.Configuration;
 import io.fabric8.api.ConfigurationItem;
+import io.fabric8.api.ConfigurationItem.Filter;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
@@ -103,6 +105,7 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -138,9 +141,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(configurationPid = Container.CONTAINER_SERVICE_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(ContainerService.class)
-@References({
-        @Reference(referenceInterface = EventDispatcher.class),
-        @Reference(referenceInterface = PermitManager.class)})
+@References({ @Reference(referenceInterface = EventDispatcher.class), @Reference(referenceInterface = PermitManager.class) })
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
@@ -218,7 +219,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Create the current container
         ContainerState currentCnt = containerRegistry.get().getContainer(CURRENT_CONTAINER_IDENTITY);
         if (currentCnt == null) {
-            CreateOptions options = new AbstractCreateOptions(){};
+            CreateOptions options = new AbstractCreateOptions() {
+            };
             List<ContainerHandle> handles = Collections.emptyList();
             currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles);
             LOGGER.info("Create current container: {}", currentCnt);
@@ -427,7 +429,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container setVersionInternal(ContainerState cntState, Version nextVersion, ProvisionEventListener listener) throws ProvisionException {
 
-        ProfileVersionState nextVersionState = ((ProfileServiceImpl)profileService.get()).getProfileVersionState(nextVersion);
+        ProfileVersionState nextVersionState = ((ProfileServiceImpl) profileService.get()).getProfileVersionState(nextVersion);
         LOGGER.info("Set container version: {} <= {}", cntState, nextVersion);
 
         // Provision the next profiles
@@ -534,7 +536,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         provisionProfilesInternal(cntState, version, identities, listener);
     }
 
-    private void provisionProfilesInternal(ContainerState cntState, Version version, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
+    private void provisionProfilesInternal(ContainerState cntState, Version version, List<String> identities, ProvisionEventListener listener)
+            throws ProvisionException {
         if (cntState.getState() == State.STARTED) {
             Profile effective = getEffectiveProfileInternal(cntState, version, identities);
             provisionEffectiveProfile(cntState, effective, listener);
@@ -550,8 +553,21 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
 
         // Apply the configuration items
-        List<ConfigurationItem> configItems = effective.getProfileItems(ConfigurationItem.class);
-        configurationManager.get().applyConfigurationItems(configItems);
+        Filter filter = new ConfigurationItem.Filter() {
+            @Override
+            public boolean accept(Configuration config) {
+                String includedTypes = config.getDirective(ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE);
+                String excludedTypes = config.getDirective(ContentNamespace.CAPABILITY_EXCLUDE_RUNTIME_TYPE_DIRECTIVE);
+                return isRuntimeRelevant(includedTypes, excludedTypes);
+            }
+
+        };
+        for (ConfigurationItem item : effective.getProfileItems(ConfigurationItem.class)) {
+            for (Configuration config : item.getConfigurations(filter)) {
+                Map<String, Object> atts = config.getAttributes();
+                configurationManager.get().applyConfiguration(item.getIdentity(), atts);
+            }
+        }
 
         // Clone the runtime environment & add the explicit {@link ResourceItem}s
         Map<ResourceIdentity, ResourceItem> explicitResources = new LinkedHashMap<>();
@@ -618,6 +634,36 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         event = new ProvisionEvent(container, EventType.PROVISIONED, effective);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
+    }
+
+    private boolean isRuntimeRelevant(String includedTypes, String excludedTypes) {
+        boolean result = true;
+        if (includedTypes != null || excludedTypes != null) {
+            Set<RuntimeType> types = new HashSet<>();
+            if (includedTypes == null) {
+                types.add(RuntimeType.getRuntimeType());
+            }
+
+            // Add all included runtime types
+            types.addAll(getRuntimeTypes(includedTypes));
+
+            // Remove all excluded runtime types
+            types.removeAll(getRuntimeTypes(excludedTypes));
+
+            // Relevant when the current runtime type is included
+            result = types.contains(RuntimeType.getRuntimeType());
+        }
+        return result;
+    }
+
+    private Set<RuntimeType> getRuntimeTypes(String directive) {
+        Set<RuntimeType> types = new HashSet<>();
+        if (directive != null) {
+            for (String typespec : directive.split(",")) {
+                types.add(RuntimeType.valueOf(typespec.toUpperCase()));
+            }
+        }
+        return types;
     }
 
     @Override
@@ -717,10 +763,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         return containerRegistry.get().getRequiredContainer(identity);
     }
 
-
     void bindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.bind(service);
     }
+
     void unbindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.unbind(service);
     }
@@ -730,6 +776,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             createHandlers.add(service);
         }
     }
+
     void unbindCreateHandlers(ContainerCreateHandler service) {
         synchronized (createHandlers) {
             createHandlers.remove(service);
@@ -739,6 +786,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindClusterDataStore(ClusterDataStore service) {
         clusterDataStore.bind(service);
     }
+
     void unbindClusterDataStore(ClusterDataStore service) {
         clusterDataStore.unbind(service);
     }
@@ -746,6 +794,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
+
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -753,6 +802,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }
+
     void unbindProfileService(ProfileService service) {
         profileService.unbind(service);
     }
@@ -760,6 +810,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProvisioner(Provisioner service) {
         provisioner.bind(service);
     }
+
     void unbindProvisioner(Provisioner service) {
         provisioner.unbind(service);
     }
@@ -966,7 +1017,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 resourceHandles.remove(resid);
             }
         }
-
 
         private List<ContainerHandle> getContainerHandles() {
             return Collections.unmodifiableList(containerHandles);

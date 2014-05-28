@@ -27,13 +27,25 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileBuilderFactory {
+public interface ProfileBuilders {
 
-    ProfileBuilder create();
+    ProfileVersionBuilder profileVersionBuilder();
 
-    ProfileBuilder create(String identity);
+    ProfileVersionBuilder profileVersionBuilder(Version version);
 
-    ProfileBuilder createFrom(Version version, String identity);
+    ProfileVersionBuilder profileVersionBuilderFrom(Version version);
 
-    ProfileBuilder createFrom(LinkedProfile linkedProfile);
+    ProfileVersionBuilder profileVersionBuilderFrom(LinkedProfileVersion linkedVersion);
+
+    ProfileBuilder profileBuilder();
+
+    ProfileBuilder profileBuilder(String identity);
+
+    ProfileBuilder profileBuilderFrom(Version version, String identity);
+
+    ProfileBuilder profileBuilderFrom(LinkedProfile linkedProfile);
+
+    ConfigurationItemBuilder configurationItemBuilder();
+
+    ConfigurationItemBuilder configurationItemBuilder(String identity);
 }

@@ -19,23 +19,28 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.resource.Version;
+import java.util.Map;
 
 
 
 /**
- * A profile version builder factory
+ * The content of a configuration profile item
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 27-May-2014
  */
-public interface ProfileVersionBuilderFactory {
+public interface Configuration {
 
-    ProfileVersionBuilder create();
+    String DEFAULT_MERGE_INDEX = "default";
+    String DELETED_MARKER = "#deleted#";
 
-    ProfileVersionBuilder create(Version version);
+    String getMergeIndex();
 
-    ProfileVersionBuilder createFrom(Version version);
+    Map<String, Object> getAttributes();
 
-    ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion);
+    Object getAttribute(String key);
+
+    Map<String, String> getDirectives();
+
+    String getDirective(String key);
 }

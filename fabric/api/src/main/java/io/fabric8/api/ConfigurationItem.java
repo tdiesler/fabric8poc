@@ -19,9 +19,8 @@
  */
 package io.fabric8.api;
 
+import java.util.List;
 import java.util.Map;
-
-
 
 /**
  * A configuration profile item
@@ -31,5 +30,28 @@ import java.util.Map;
  */
 public interface ConfigurationItem extends ProfileItem {
 
-    Map<String, Object> getConfiguration();
+    /**
+     * A configuration filter
+     */
+    interface Filter {
+
+        boolean accept(Configuration config);
+    }
+
+    /**
+     * Get the default config attributes (i.e. first in the list)
+     */
+    Map<String, Object> getDefaultAttributes();
+
+    /**
+     * Get the configuration for the given merge index
+     */
+    Configuration getConfiguration(String mergeIndex);
+
+    /**
+     * Get the list of available configurations
+     *
+     * @param an optional filter
+     */
+    List<Configuration> getConfigurations(Filter filter);
 }

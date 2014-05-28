@@ -100,7 +100,7 @@ public final class PrePostConditions {
         Assert.assertEquals("One profile item", 1, profileItems.size());
         ProfileItem profileItem = profileItems.iterator().next();
         ConfigurationItem configItem = (ConfigurationItem) profileItem;
-        Map<String, Object> config = configItem.getConfiguration();
+        Map<String, Object> config = configItem.getDefaultAttributes();
         Assert.assertEquals("One config entry", 1, config.size());
         Assert.assertEquals("default", config.get("config.token"));
     }

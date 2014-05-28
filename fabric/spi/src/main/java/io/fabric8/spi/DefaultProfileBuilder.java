@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -44,7 +45,7 @@ import org.jboss.gravia.utils.ResourceUtils;
 
 public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
 
-    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] {'\\', ':', ' ', '\t', '&', '?'};
+    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] { '\\', ':', ' ', '\t', '&', '?' };
 
     private final MutableProfile mutableProfile;
 
@@ -86,8 +87,9 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> config) {
-        mutableProfile.addProfileItem(new DefaultConfigurationItem(identity, config));
+    public ProfileBuilder addConfigurationItem(String identity, Map<String, Object> atts) {
+        ConfigurationItemBuilder itemBuilder = new DefaultConfigurationItemBuilder(identity).addConfiguration(atts);
+        mutableProfile.addProfileItem(itemBuilder.getConfigurationItem());
         return this;
     }
 

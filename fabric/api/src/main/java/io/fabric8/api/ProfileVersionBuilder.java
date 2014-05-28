@@ -41,23 +41,23 @@ public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder> {
     final class Factory {
 
         public static ProfileVersionBuilder create() {
-            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
-            return factory.create();
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileVersionBuilder();
         }
 
         public static ProfileVersionBuilder create(Version version) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
-            return factory.create(version);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileVersionBuilder(version);
         }
 
         public static ProfileVersionBuilder createFrom(Version version) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
-            return factory.createFrom(version);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileVersionBuilderFrom(version);
         }
 
         public static ProfileVersionBuilder createFrom(LinkedProfileVersion linkedVersion) {
-            ProfileVersionBuilderFactory factory = ServiceLocator.getRequiredService(ProfileVersionBuilderFactory.class);
-            return factory.createFrom(linkedVersion);
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileVersionBuilderFrom(linkedVersion);
         }
 
         // Hide ctor
