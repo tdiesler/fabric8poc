@@ -22,13 +22,17 @@ package io.fabric8.core;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
+import io.fabric8.api.FabricException;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.Lock;
+import io.fabric8.api.LockManager;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ReadWriteLock;
 import io.fabric8.core.ContainerServiceImpl.ContainerState;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
@@ -51,9 +55,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -108,8 +109,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileRegistry.class)
     private final ValidatingReference<ProfileRegistry> profileRegistry = new ValidatingReference<>();
+    @Reference(referenceInterface = LockManager.class)
+    private final ValidatingReference<LockManager> lockManager = new ValidatingReference<>();
 
-    private final Map<Version, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<>();
+    private final Map<Version, ReadWriteLock> versionLocks = new ConcurrentHashMap<>();
+    private static final String VERSION_IDENTITY_LOCK = "/fabric/locks/version/%s";
 
     @Activate
     void activate() {
@@ -144,12 +148,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private LockHandle aquireWriteLock(Version version) {
 
-        final WriteLock writeLock = getReadWriteLock(version).writeLock();
+        final Lock writeLock = getReadWriteLock(version).writeLock();
 
         boolean success;
         try {
-            success = writeLock.tryLock() || writeLock.tryLock(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
+            success = writeLock.tryLock(120, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            FabricException.launderThrowable(ex);
             success = false;
         }
         IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + version);
@@ -164,12 +169,12 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private LockHandle aquireReadLock(Version version) {
 
-        final ReadLock readLock = getReadWriteLock(version).readLock();
+        final Lock readLock = getReadWriteLock(version).readLock();
 
         boolean success;
         try {
-            success = readLock.tryLock() || readLock.tryLock(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
+            success = readLock.tryLock(10, TimeUnit.SECONDS);
+        } catch (Exception ex) {
             success = false;
         }
         IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + version);
@@ -182,13 +187,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         };
     }
 
-    private ReentrantReadWriteLock getReadWriteLock(Version version) {
+    private ReadWriteLock getReadWriteLock(Version version) {
         IllegalArgumentAssertion.assertNotNull(version, "version");
-        ReentrantReadWriteLock readWriteLock;
+        ReadWriteLock readWriteLock;
         synchronized (versionLocks) {
             readWriteLock = versionLocks.get(version);
             if (readWriteLock == null) {
-                readWriteLock = new ReentrantReadWriteLock();
+                readWriteLock = lockManager.get().readWriteLock(String.format(VERSION_IDENTITY_LOCK, version.toString()));
                 versionLocks.put(version, readWriteLock);
             }
         }
@@ -507,6 +512,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         this.profileRegistry.unbind(service);
     }
 
+    void bindLockManager(LockManager service) {
+        lockManager.bind(service);
+    }
+    void unbindLockManager(LockManager service) {
+        lockManager.unbind(service);
+    }
+
     final class ProfileVersionState {
 
         private final ProfileVersion profileVersion;
@@ -527,6 +539,5 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         LockHandle aquireWriteLock() {
             return aquireProfileVersionLock(getIdentity());
         }
-
     }
 }

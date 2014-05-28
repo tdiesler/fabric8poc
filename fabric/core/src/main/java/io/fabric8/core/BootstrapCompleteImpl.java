@@ -21,6 +21,7 @@ package io.fabric8.core;
 
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.api.LockManager;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.RuntimeService;
@@ -57,6 +58,8 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     private ProfileManager profileManager;
     @Reference
     private Provisioner provisioner;
+    @Reference
+    private LockManager lockManager;
 
     @Activate
     void activate() throws Exception {
