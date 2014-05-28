@@ -101,14 +101,6 @@ public class FabricZooKeeperServer extends AbstractComponent {
         deactivateInternal();
     }
 
-    void bindConfigurer(Configurer configurer) {
-        this.configurer = configurer;
-    }
-
-    void unbindConfigurer(Configurer configurer) {
-        this.configurer = null;
-    }
-
     private Destroyable activateInternal(Map<String, ?> configuration) throws Exception {
         LOGGER.info("Creating zookeeper server with: {}", configuration);
 
