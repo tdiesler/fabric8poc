@@ -31,6 +31,8 @@ import io.fabric8.api.Host;
 import io.fabric8.api.JoinOptions;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.Lock;
+import io.fabric8.api.LockManager;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
@@ -43,6 +45,7 @@ import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.ReadWriteLock;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
@@ -77,8 +80,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -144,19 +145,22 @@ import org.slf4j.LoggerFactory;
 public final class ContainerServiceImpl extends AbstractProtectedComponent<ContainerService> implements ContainerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
+    private static final String CONTAINER_IDENTITY_LOCK = "/fabric/locks/container/%s";
 
     @Reference(referenceInterface = ClusterDataStore.class)
-    private final ValidatingReference<ClusterDataStore> clusterDataStore = new ValidatingReference<ClusterDataStore>();
+    private final ValidatingReference<ClusterDataStore> clusterDataStore = new ValidatingReference<>();
     @Reference(referenceInterface = ConfigurationManager.class)
-    private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<ConfigurationManager>();
+    private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
-    private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<ContainerRegistry>();
+    private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
-    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<ProfileService>();
+    private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
-    private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<Provisioner>();
+    private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
-    private final Set<ContainerCreateHandler> createHandlers = new HashSet<ContainerCreateHandler>();
+    private final Set<ContainerCreateHandler> createHandlers = new HashSet<>();
+    @Reference(referenceInterface = LockManager.class)
+    private final ValidatingReference<LockManager> lockManager = new ValidatingReference<>();
 
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
 
@@ -220,7 +224,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         if (currentCnt == null) {
             CreateOptions options = new AbstractCreateOptions(){};
             List<ContainerHandle> handles = Collections.emptyList();
-            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, handles);
+            currentCnt = new ContainerState(null, CURRENT_CONTAINER_IDENTITY, options, lockManager.get().readWriteLock(String.format(CONTAINER_IDENTITY_LOCK, CURRENT_CONTAINER_IDENTITY)), handles);
             LOGGER.info("Create current container: {}", currentCnt);
             containerRegistry.get().addContainer(currentCnt);
 
@@ -288,7 +292,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
         ContainerIdentity parentId = parentState != null ? parentState.getIdentity() : null;
         ContainerIdentity identity = clusterDataStore.get().createContainerIdentity(parentId, options.getIdentityPrefix());
-        ContainerState cntState = new ContainerState(parentState, identity, options, handles);
+        ContainerState cntState = new ContainerState(parentState, identity, options, lockManager.get().readWriteLock(String.format(CONTAINER_IDENTITY_LOCK, identity)), handles);
         LOGGER.info("Create container: {}", cntState);
         containerRegistry.get().addContainer(cntState);
         return cntState.immutableContainer();
@@ -764,6 +768,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         provisioner.unbind(service);
     }
 
+    void bindLockManager(LockManager service) {
+        lockManager.bind(service);
+    }
+    void unbindLockManager(LockManager service) {
+        lockManager.unbind(service);
+    }
+
     static final class ContainerState {
 
         private final ContainerState parentState;
@@ -773,17 +784,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final List<ContainerHandle> containerHandles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
         private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
-        private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+        private final ReadWriteLock readWriteLock;
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, List<ContainerHandle> handles) {
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ReadWriteLock readWriteLock, List<ContainerHandle> handles) {
             IllegalArgumentAssertion.assertNotNull(identity, "identity");
             IllegalArgumentAssertion.assertNotNull(options, "options");
             IllegalArgumentAssertion.assertNotNull(handles, "handles");
             this.parentState = parentState;
             this.identity = identity;
             this.state = State.CREATED;
+            this.readWriteLock = readWriteLock;
             this.containerHandles.addAll(handles);
             this.attributes = new AttributeSupport(options.getAttributes());
             if (parentState != null) {
@@ -792,12 +804,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         LockHandle aquireWriteLock() {
-            final WriteLock writeLock = readWriteLock.writeLock();
+            final Lock writeLock = readWriteLock.writeLock();
 
             boolean success;
             try {
-                success = writeLock.tryLock() || writeLock.tryLock(10, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
+                success = writeLock.tryLock(10, TimeUnit.SECONDS);
+            } catch (Exception ex) {
                 success = false;
             }
             IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + identity);
@@ -806,7 +818,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (versionState != null) {
                 try {
                     versionLock = versionState.aquireWriteLock();
-                } catch (RuntimeException ex) {
+                } catch (Exception ex) {
                     writeLock.unlock();
                     throw ex;
                 }
@@ -826,12 +838,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         LockHandle aquireReadLock() {
-            final ReadLock readLock = readWriteLock.readLock();
+            final Lock readLock = readWriteLock.readLock();
 
             boolean success;
             try {
-                success = readLock.tryLock() || readLock.tryLock(10, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
+                success = readLock.tryLock(10, TimeUnit.SECONDS);
+            } catch (Exception ex) {
                 success = false;
             }
             IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + identity);
