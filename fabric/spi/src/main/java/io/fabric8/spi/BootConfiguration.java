@@ -1,9 +1,6 @@
 /*
- * #%L
- * Fabric8 :: API
- * %%
- * Copyright (C) 2014 Red Hat
- * %%
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,25 +11,27 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
  */
-package io.fabric8.api;
 
+package io.fabric8.spi;
 
 import org.jboss.gravia.resource.Version;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
- * Container create options
- *
- * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * A holder for the initial container Configuration.
+ * This is intended to be used ONLY on first boot.
+ * It provides Fabric8 related configuration that should be used to for registration purposes.
+ * After that registration, its the responsibility of {@link io.fabric8.spi.ContainerService} to provide the actual config.
  */
-public interface CreateOptions extends Attributable {
+public interface BootConfiguration {
 
-    ContainerIdentity getIdentity();
+    String VERSION = "version";
+    String PROFILE = "profile";
+
     Version getVersion();
-    Set<String> getProfiles();    
+    Set<String> getProfiles();
+    Map<String, Object> getConfiguration();
 }

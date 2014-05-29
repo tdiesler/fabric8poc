@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,14 +53,21 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
 
     @Override
     protected void doConfigure() throws Exception {
-
-        File karafHome = getContainerHome();
-        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Karaf home does not exist: " + karafHome);
+        File home = getContainerHome();
+        IllegalStateAssertion.assertTrue(home.isDirectory(), "Karaf home does not exist: " + home);
+        File confDir = new File(home, "etc");
+        IllegalStateAssertion.assertTrue(confDir.isDirectory(), "Karaf conf does not exist: " + home);
 
         String comment = "Modified by " + getClass().getName();
+        configurePaxWeb(confDir, comment);
+        configureKarafManagement(confDir, comment);
+        configureFabricBoot(confDir, comment);
+        configureZooKeeperServer(confDir);
+    }
 
+    protected void configurePaxWeb(File confDir, String comment) throws IOException {
         // etc/org.ops4j.pax.web.cfg
-        File paxwebFile = new File(karafHome, "etc/org.ops4j.pax.web.cfg");
+        File paxwebFile = new File(confDir, "org.ops4j.pax.web.cfg");
         if (paxwebFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
@@ -79,13 +87,15 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
             putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
             putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         }
+    }
 
+    protected void configureKarafManagement(File confDir, String comment) throws IOException {
         // etc/org.apache.karaf.management.cfg
-        File managementFile = new File(karafHome, "etc/org.apache.karaf.management.cfg");
+        File managementFile = new File(confDir, "org.apache.karaf.management.cfg");
         IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
 
         // etc/io.fabric8.zookeeper.server-0000.cfg
-        File zooKeeperServerFile = new File(karafHome, "etc/io.fabric8.zookeeper.server-0000.cfg");
+        File zooKeeperServerFile = new File(confDir, "etc/io.fabric8.zookeeper.server-0000.cfg");
         if (!getCreateOptions().isZooKeeperServer()) {
             zooKeeperServerFile.delete();
         }
@@ -98,6 +108,7 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
         props.setProperty("rmiRegistryPort", new Integer(rmiRegistryPort).toString());
         props.setProperty("rmiServerPort", new Integer(rmiServerPort).toString());
         FileWriter fileWriter = new FileWriter(managementFile);
+
         try {
             props.store(fileWriter, comment);
         } finally {

@@ -23,9 +23,14 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileVersion;
+import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
@@ -33,10 +38,22 @@ public abstract class AbstractCreateOptions implements CreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
+    private Version version = ProfileVersion.DEFAULT_PROFILE_VERSION_IDENTITY;
+    private Set<String> profiles = new LinkedHashSet<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
 
     @Override
     public ContainerIdentity getIdentity() {
         return identity;
+    }
+
+    @Override
+    public Version getVersion() {
+        return version;
+    }
+
+    @Override
+    public Set<String> getProfiles() {
+        return profiles;
     }
 
     @Override
@@ -68,6 +85,16 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     protected void setIdentity(ContainerIdentity identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
+    }
+    
+    protected void setVersion(Version version) {
+        IllegalArgumentAssertion.assertNotNull(version, "version");
+        this.version = version;
+    }
+
+    protected void setProfiles(Set<String> profiles) {
+        IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
+        this.profiles = profiles;
     }
 
     protected <T> void putAttribute(AttributeKey<T> key, T value) {

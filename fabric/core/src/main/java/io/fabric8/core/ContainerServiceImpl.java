@@ -50,6 +50,7 @@ import io.fabric8.core.zookeeper.locks.ReadWriteLock;
 import io.fabric8.core.zookeeper.locks.ZooKeeperLockManager;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
@@ -161,6 +162,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
     private final Set<ContainerCreateHandler> createHandlers = new HashSet<>();
+    @Reference(referenceInterface = BootConfiguration.class)
+    private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
 
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
     private ContainerIdentity currentIdentity;
@@ -230,6 +233,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             };
             List<ContainerHandle> handles = Collections.emptyList();
             currentCnt = new ContainerState(null, currentIdentity, options, lockManager.readWriteLock(currentIdentity), handles);
+            currentCnt.addProfiles(new ArrayList<>(bootConfiguration.get().getProfiles()));
+            currentCnt.setProfileVersion(((ProfileServiceImpl) profileService.get()).getProfileVersionState(bootConfiguration.get().getVersion()));
+
             LOGGER.info("Create current container: {}", currentCnt);
             containerRegistry.get().addContainer(currentCnt);
 
@@ -817,10 +823,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-
+    
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }
+
+    void bindBootConfiguration(BootConfiguration service) {
+        bootConfiguration.bind(service);
+    }
+    void unbindBootConfiguration(BootConfiguration service) {
+        bootConfiguration.unbind(service);
+    }
+
 
     static final class ContainerState {
 
