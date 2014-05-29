@@ -55,7 +55,7 @@ public abstract class EmbeddedTestSupport {
     public static void afterClass() throws Exception {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         //We need to cleanup the data dir to prevent failures due to previous values persisted to ZooKeeper.
-        EmbeddedUtils.deleteDirectory(String.valueOf(runtime.getProperty(RuntimeService.DATA_DIR)));
+        EmbeddedUtils.deleteDirectory(String.valueOf(runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR)));
         Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
     }

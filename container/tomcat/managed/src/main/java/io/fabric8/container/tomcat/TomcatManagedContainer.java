@@ -70,18 +70,22 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
 
         File catalinaHome = getContainerHome();
         IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
+        File catalinaConf = new File(catalinaHome , "conf");
+        IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Catalina conf does not exist: " + catalinaConf);
+        File graviaConf = new File(catalinaConf , "gravia" + File.separator + "configs");
+        IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Gravia conf does not exist: " + graviaConf);
 
-        // Delete zookepper config file if this is not a server
-        if (!getCreateOptions().isZooKeeperServer()) {
-            File zooKeeperServerFile = new File(catalinaHome, "conf/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
-            zooKeeperServerFile.delete();
-        }
+        configureServer(catalinaConf);
+        configureFabricBoot(graviaConf, "");
+        configureZooKeeperServer(graviaConf);
+    }
 
+    protected void configureServer(File confDir) throws Exception {
         // Transform conf/server.xml
-        transformServerXML(new File(catalinaHome, "conf/server.xml"));
+        transformServerXML(new File(confDir, "server.xml"));
 
         // Transform conf/catalina.properties
-        transformCatalinaProperties(new File(catalinaHome, "conf/catalina.properties"));
+        transformCatalinaProperties(new File(confDir, "catalina.properties"));
     }
 
     @Override

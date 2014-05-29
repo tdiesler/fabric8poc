@@ -38,6 +38,8 @@ import org.jboss.gravia.resource.Version;
  */
 public interface Profile extends Attributable, Identifiable<String> {
 
+    String DEFAULT_PROFILE_IDENTITY = "default";
+
     /**
      * Get the associated profile version
      */

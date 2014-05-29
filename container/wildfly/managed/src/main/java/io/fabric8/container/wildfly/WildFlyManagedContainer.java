@@ -45,6 +45,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import io.fabric8.spi.utils.StringUtils;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.modules.Module;
@@ -63,6 +64,17 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
 
     WildFlyManagedContainer(WildFlyCreateOptions options) {
         super(options);
+    }
+
+    @Override
+    protected void doConfigure() throws Exception {
+        File jbossHome = getContainerHome();
+        IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "Wildfly home does not exist: " + jbossHome);
+        File graviaConf = new File(jbossHome, StringUtils.join(Arrays.asList("standalone", "configuration", "gravia", "configs", ""), File.separator));
+        IllegalStateAssertion.assertTrue(graviaConf.isDirectory(), "Gravia conf does not exist: " + jbossHome);
+
+        configureFabricBoot(graviaConf, "");
+        configureZooKeeperServer(graviaConf);
     }
 
     @Override

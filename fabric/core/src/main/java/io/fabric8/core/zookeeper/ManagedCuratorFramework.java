@@ -16,7 +16,7 @@
 package io.fabric8.core.zookeeper;
 
 import io.fabric8.core.utils.PasswordEncoder;
-import io.fabric8.core.utils.StringUtils;
+import io.fabric8.spi.utils.StringUtils;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;

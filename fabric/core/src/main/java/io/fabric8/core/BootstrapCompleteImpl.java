@@ -21,6 +21,7 @@ package io.fabric8.core;
 
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileManager;
+import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.RuntimeService;
@@ -45,6 +46,8 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
 
     @Reference
     private RuntimeService runtimeService;
+    @Reference
+    private BootConfiguration bootConfiguration;
     @Reference
     private BootstrapService bootstrapService;
     @Reference

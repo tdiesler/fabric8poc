@@ -24,22 +24,30 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.FabricException;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import javax.management.remote.JMXConnector;
 
+import io.fabric8.spi.utils.StringUtils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -287,6 +295,32 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     protected int nextAvailablePort(int portValue, InetAddress bindAddr) {
         PortManager portManager = ServiceLocator.getRequiredService(PortManager.class);
         return portManager.nextAvailablePort(portValue, bindAddr);
+    }
+
+
+    protected void populateProperties(Properties properties, CreateOptions options) {
+        properties.put(BootConfiguration.VERSION, options.getVersion().toString());
+        properties.put(BootConfiguration.PROFILE, StringUtils.join(getCreateOptions().getProfiles(), " "));
+    }
+
+    protected void configureZooKeeperServer(File confDir) throws IOException {
+        // etc/io.fabric8.zookeeper.server-0000.cfg
+        File zooKeeperServerFile = new File(confDir, "io.fabric8.zookeeper.server-0000.cfg");
+        if (!getCreateOptions().isZooKeeperServer()) {
+            zooKeeperServerFile.delete();
+        }
+    }
+
+    protected void configureFabricBoot(File confDir, String comment) throws IOException {
+        // etc/io.fabric8.boot.cfg
+        File bootConfigFile = new File(confDir, "io.fabric8.boot.cfg");
+        IllegalStateAssertion.assertTrue(bootConfigFile.exists(), "File does not exist: " + bootConfigFile);
+
+        Properties props = new Properties();
+        props.load(new FileReader(bootConfigFile));
+        populateProperties(props, getCreateOptions());
+        FileWriter fileWriter = new FileWriter(bootConfigFile);
+        props.store(fileWriter, comment);
     }
 
     /**

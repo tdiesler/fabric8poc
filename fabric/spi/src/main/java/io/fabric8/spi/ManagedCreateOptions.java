@@ -47,4 +47,6 @@ public interface ManagedCreateOptions extends CreateOptions {
     String getJavaVmArguments();
 
     boolean isOutputToConsole();
+
+    boolean isZooKeeperServer();
 }
