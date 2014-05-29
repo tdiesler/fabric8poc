@@ -110,7 +110,7 @@ org.jboss.gravia.runtime.type=karaf
       <echo file="${karaf.patch.dir}/etc/system.properties" append="true">
 runtime.id=${karaf.name}
 runtime.home=${karaf.home}
-runtime.conf=${karaf.etc}
+runtime.conf=${karaf.home}/etc
 runtime.data=${karaf.data}
 zookeeper.sasl.client=false
       </echo>
