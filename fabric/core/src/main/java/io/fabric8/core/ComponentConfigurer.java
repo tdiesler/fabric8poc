@@ -16,14 +16,11 @@ package io.fabric8.core;
 
 import io.fabric8.core.utils.ConfigInjectionUtils;
 import io.fabric8.spi.Configurer;
-import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.scr.ValidatingReference;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -39,9 +36,6 @@ import java.util.Map;
 @Service(Configurer.class)
 public class ComponentConfigurer extends AbstractComponent implements Configurer {
 
-    @Reference(referenceInterface = RuntimeService.class)
-    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
-
     @Activate
     void activate() {
         activateComponent();
@@ -52,17 +46,8 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
         deactivateComponent();
     }
 
-
-    void bindRuntimeService(RuntimeService service) {
-        this.runtimeService.bind(service);
-    }
-
-    void unbindRuntimeService(RuntimeService service) {
-        this.runtimeService.unbind(service);
-    }
-
     @Override
-    public <T> Map<String, Object> configure(final Map<String, Object> configuration, T target) throws Exception {
+    public <T> Map<String, Object> configure(final Map<String, Object> configuration, T target, String... ignorePrefix) throws Exception {
         assertValid();
         Map<String, Object> result = new HashMap<>();
         final Runtime runtime = RuntimeLocator.getRuntime();
@@ -83,7 +68,7 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
             Object value = provider.getProperty(key);
             result.put(key, value);
         }
-        ConfigInjectionUtils.applyConfiguration(result, target);
+        ConfigInjectionUtils.applyConfiguration(result, target, ignorePrefix);
         return result;
     }
 }
