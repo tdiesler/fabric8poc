@@ -20,7 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.Attributable;
-import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.spi.utils.ManagementUtils;
 
@@ -32,8 +32,8 @@ import javax.management.ObjectName;
 public abstract class AbstractJMXServiceEndpoint extends AttributeSupport implements JMXServiceEndpoint {
 
     public AbstractJMXServiceEndpoint(Attributable attributes) {
-        String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServiceURL);
+        String jmxServiceURL = attributes.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServiceURL);
     }
 
     @Override

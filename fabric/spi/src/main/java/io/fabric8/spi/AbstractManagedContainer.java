@@ -21,22 +21,19 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.Constants;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.FabricException;
 import io.fabric8.api.LifecycleException;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -255,7 +252,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
     }
 
     protected JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-        String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        String jmxServiceURL = getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
         IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }

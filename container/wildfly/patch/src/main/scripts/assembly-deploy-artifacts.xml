@@ -48,6 +48,7 @@
                 <include>*:fabric8-container-tomcat-managed:jar</include>
                 <include>*:fabric8-container-wildfly-extension:jar</include>
                 <include>*:fabric8-container-wildfly-managed:jar</include>
+                <include>*:fabric8-container-wildfly-attributes:jar</include>
             </includes>
             <scope>provided</scope>
             <unpack>false</unpack>

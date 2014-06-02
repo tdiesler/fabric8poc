@@ -89,6 +89,12 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-tomcat-attributes</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-karaf-managed</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -204,7 +210,7 @@
                     <archive>
                         <manifestEntries>
                             <Gravia-Identity>${project.artifactId};version=${project.version}</Gravia-Identity>
-                            <Service-Component>OSGI-INF/io.fabric8.spi.internal.BootConfigurationImpl.xml,OSGI-INF/io.fabric8.core.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.ComponentConfigurer.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.core.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.core.MBeansProvider.xml,OSGI-INF/io.fabric8.core.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileRegistry.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricZooKeeperServer.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricACLProvider.xml,OSGI-INF/io.fabric8.core.zookeeper.ManagedCuratorFramework.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuildersImpl.xml,OSGI-INF/io.fabric8.spi.internal.RuntimeServiceImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/org.jboss.gravia.provision.internal.ProvisionerService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryMBeanService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryService.xml,OSGI-INF/org.jboss.gravia.resolver.internal.ResolverService.xml</Service-Component>
+                            <Service-Component>OSGI-INF/io.fabric8.spi.internal.BootConfigurationImpl.xml,OSGI-INF/io.fabric8.core.BootstrapCompleteImpl.xml,OSGI-INF/io.fabric8.core.BootstrapService.xml,OSGI-INF/io.fabric8.core.ClusterDataStoreImpl.xml,OSGI-INF/io.fabric8.core.ComponentConfigurer.xml,OSGI-INF/io.fabric8.core.ConfigurationManager.xml,OSGI-INF/io.fabric8.core.ContainerRegistrationImpl.xml,OSGI-INF/io.fabric8.core.ContainerRegistry.xml,OSGI-INF/io.fabric8.core.ContainerServiceImpl.xml,OSGI-INF/io.fabric8.core.EventDispatcherImpl.xml,OSGI-INF/io.fabric8.tomcat.attributes.HttpAttributeProvider.xml,OSGI-INF/io.fabric8.core.HostDataStoreImpl.xml,OSGI-INF/io.fabric8.tomcat.attributes.JmxAttributeProvider.xml,OSGI-INF/io.fabric8.core.MBeansProvider.xml,OSGI-INF/io.fabric8.core.NetworkAttributeProvider.xml,OSGI-INF/io.fabric8.core.PortManagerImpl.xml,OSGI-INF/io.fabric8.core.ProfileServiceImpl.xml,OSGI-INF/io.fabric8.core.ProfileRegistry.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricZooKeeperServer.xml,OSGI-INF/io.fabric8.core.zookeeper.FabricACLProvider.xml,OSGI-INF/io.fabric8.core.zookeeper.ManagedCuratorFramework.xml,OSGI-INF/io.fabric8.spi.internal.ContainerManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileManagerImpl.xml,OSGI-INF/io.fabric8.spi.internal.ProfileBuildersImpl.xml,OSGI-INF/io.fabric8.spi.internal.RuntimeServiceImpl.xml,OSGI-INF/io.fabric8.spi.permit.PermitManagerImpl.xml,OSGI-INF/org.jboss.gravia.provision.internal.ProvisionerService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryMBeanService.xml,OSGI-INF/org.jboss.gravia.repository.internal.RepositoryService.xml,OSGI-INF/org.jboss.gravia.resolver.internal.ResolverService.xml</Service-Component>
                         </manifestEntries>
                     </archive>
                     <webResources>

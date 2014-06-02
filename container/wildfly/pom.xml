@@ -39,6 +39,7 @@
         <module>extension</module>
         <module>managed</module>
         <module>patch</module>
+        <module>attributes</module>
     </modules>
 
 </project>

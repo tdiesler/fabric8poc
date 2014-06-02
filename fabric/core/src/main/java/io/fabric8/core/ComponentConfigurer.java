@@ -29,6 +29,8 @@ import org.jboss.gravia.runtime.spi.MapPropertiesProvider;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.runtime.spi.SubstitutionPropertiesProvider;
 
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +46,16 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
     @Deactivate
     void deactivate() {
         deactivateComponent();
+    }
+
+    @Override
+    public <T> Map<String, Object> configure(final Dictionary<String, Object> configuration, T target, String... ignorePrefix) throws Exception {
+        Map<String, Object> mapConfiguration = new HashMap<>();
+        for (Enumeration<String> keys = configuration.keys(); keys.hasMoreElements();) {
+            String key = keys.nextElement();
+            mapConfiguration.put(key, configuration.get(key));
+        }
+        return configure(mapConfiguration, target, ignorePrefix);
     }
 
     @Override

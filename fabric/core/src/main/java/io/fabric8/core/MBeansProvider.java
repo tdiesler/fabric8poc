@@ -40,6 +40,7 @@ import java.util.Set;
 
 import javax.management.JMException;
 import javax.management.MBeanServer;
+import javax.management.ObjectInstance;
 import javax.management.StandardMBean;
 import javax.management.openmbean.CompositeData;
 

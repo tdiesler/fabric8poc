@@ -22,6 +22,7 @@
         <bundle>mvn:io.fabric8.poc/fabric8-api/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-spi/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-core/${project.version}</bundle>
+        <bundle>mvn:io.fabric8.poc/fabric8-container-karaf-attributes/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-container-karaf-managed/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-container-tomcat-managed/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-container-wildfly-managed/${project.version}</bundle>

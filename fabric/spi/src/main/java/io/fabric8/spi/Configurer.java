@@ -14,6 +14,7 @@
  */
 package io.fabric8.spi;
 
+import java.util.Dictionary;
 import java.util.Map;
 
 public interface Configurer {
@@ -23,5 +24,6 @@ public interface Configurer {
      * @param configuration The configuration.
      * @param target        The target that will receive the configuration.
      */
-    <T> Map<String, Object> configure(Map<String, Object> configuration, T target) throws Exception;
+    <T> Map<String, Object> configure(Map<String, Object> configuration, T target, String... ignorePrefix) throws Exception;
+    <T> Map<String, Object> configure(Dictionary<String, Object> configuration, T target, String... ignorePrefix) throws Exception;
 }

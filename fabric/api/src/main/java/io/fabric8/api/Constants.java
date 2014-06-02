@@ -44,16 +44,5 @@ public interface Constants {
      */
     String MANAGEMENT_DOMAIN = "fabric8";
 
-    /**
-     * The attribute key for the Http port
-     */
-    AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create("fabric8.http.port", Integer.class);
-    /**
-     * The attribute key for the Https port
-     */
-    AttributeKey<Integer> ATTRIBUTE_KEY_HTTPS_PORT = AttributeKey.create("fabric8.https.port", Integer.class);
-    /**
-     * The attribute key for JMX server URL
-     */
-    AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("fabric8.jmx.server.url", String.class);
+
 }

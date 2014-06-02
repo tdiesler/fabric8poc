@@ -79,6 +79,7 @@ org/apache/curator/curator-recipes/${version.apache.curator}/curator-recipes-${v
 io/fabric8/poc/fabric8-api/${project.version}/fabric8-api-${project.version}.jar=44
 io/fabric8/poc/fabric8-spi/${project.version}/fabric8-spi-${project.version}.jar=44
 io/fabric8/poc/fabric8-core/${project.version}/fabric8-core-${project.version}.jar=44
+io/fabric8/poc/fabric8-container-karaf-attributes/${project.version}/fabric8-container-karaf-attributes-${project.version}.jar=44
 io/fabric8/poc/fabric8-container-karaf-managed/${project.version}/fabric8-container-karaf-managed-${project.version}.jar=44
 io/fabric8/poc/fabric8-container-tomcat-managed/${project.version}/fabric8-container-tomcat-managed-${project.version}.jar=44
 io/fabric8/poc/fabric8-container-wildfly-managed/${project.version}/fabric8-container-wildfly-managed-${project.version}.jar=44
