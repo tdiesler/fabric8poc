@@ -20,7 +20,6 @@
 package io.fabric8.container.wildfly;
 
 import io.fabric8.spi.AbstractManagedCreateOptions;
-import io.fabric8.spi.ContainerCreateHandler;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -48,11 +47,6 @@ public final class WildFlyCreateOptions extends AbstractManagedCreateOptions {
     private int ajpPort = DEFAULT_AJP_PORT;
     private int httpPort = DEFAULT_HTTP_PORT;
     private int httpsPort = DEFAULT_HTTPS_PORT;
-
-    @Override
-    public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
-        return WildFlyContainerCreateHandler.class;
-    }
 
     public String getServerConfig() {
         return serverConfig;

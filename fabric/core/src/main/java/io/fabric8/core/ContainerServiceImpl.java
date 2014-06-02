@@ -56,7 +56,6 @@ import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableContainer;
-import io.fabric8.spi.ManagedCreateOptions;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.permit.PermitManager;
@@ -284,13 +283,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Every type of {@link CreateOptions}
         List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
         Set<ContainerCreateHandler> handlers = getContainerCreateHandlers();
-        if (options instanceof ManagedCreateOptions) {
-            ManagedCreateOptions managedOptions = (ManagedCreateOptions) options;
-            Class<? extends ContainerCreateHandler> primaryType = managedOptions.getPrimaryHandler();
-            ContainerCreateHandler primary = ServiceLocator.awaitService(primaryType, 10, TimeUnit.SECONDS);
-            handles.add(primary.create(options));
-            handlers.remove(primary);
-        }
         for (ContainerCreateHandler handler : handlers) {
             if (handler.accept(options)) {
                 handles.add(handler.create(options));

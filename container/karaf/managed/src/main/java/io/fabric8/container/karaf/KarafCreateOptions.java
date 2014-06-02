@@ -19,13 +19,12 @@
  */
 package io.fabric8.container.karaf;
 
+import io.fabric8.spi.AbstractManagedCreateOptions;
+
 import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.resource.MavenCoordinates;
-
-import io.fabric8.spi.AbstractManagedCreateOptions;
-import io.fabric8.spi.ContainerCreateHandler;
 
 
 public final class KarafCreateOptions extends AbstractManagedCreateOptions {
@@ -41,11 +40,6 @@ public final class KarafCreateOptions extends AbstractManagedCreateOptions {
     private int rmiRegistryPort = DEFAULT_RMI_REGISTRY_PORT;
     private int httpPort = DEFAULT_HTTP_PORT;
     private int httpsPort = DEFAULT_HTTPS_PORT;
-
-    @Override
-    public Class<? extends ContainerCreateHandler> getPrimaryHandler() {
-        return KarafContainerCreateHandler.class;
-    }
 
     public int getRmiServerPort() {
         return rmiServerPort;
