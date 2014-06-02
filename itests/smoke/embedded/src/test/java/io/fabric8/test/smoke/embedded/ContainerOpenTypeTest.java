@@ -19,7 +19,6 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
@@ -53,9 +52,6 @@ import org.junit.Test;
  */
 public class ContainerOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
-
     @BeforeClass
     public static void beforeClass() throws Exception {
         EmbeddedTestSupport.beforeClass();
@@ -70,8 +66,6 @@ public class ContainerOpenTypeTest {
     public void testComposisteData() throws Exception {
 
         CreateOptions options = EmbeddedContainerBuilder.create("cntA")
-            .addAttribute(AKEY, "AVal")
-            .addAttribute(BKEY, "BVal")
             .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -119,7 +113,7 @@ public class ContainerOpenTypeTest {
         public EmbeddedContainerBuilder addBuilderOptions(EmbeddedContainerBuilder builder) {
             Container container = ContainerOpenType.getContainer(cdata);
             String symbolicName = container.getIdentity().getSymbolicName();
-            return builder.identity(symbolicName).addAttributes(container.getAttributes());
+            return builder.identity(symbolicName);
         }
     }
 }

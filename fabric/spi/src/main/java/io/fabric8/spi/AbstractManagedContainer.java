@@ -75,7 +75,6 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         IllegalArgumentAssertion.assertNotNull(options, "options");
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider(new HashMap<String, Object>(), true, RuntimeService.DEFAULT_ENV_PREFIX));
         this.identity = options.getIdentity();
-        this.attributes.putAllAttributes(options.getAttributes());
         this.createOptions = options;
     }
 

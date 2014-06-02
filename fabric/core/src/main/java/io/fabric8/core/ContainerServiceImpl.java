@@ -834,7 +834,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         private final ContainerState parentState;
         private final ContainerIdentity identity;
-        private final AttributeSupport attributes;
+        private final AttributeSupport attributes = new AttributeSupport();
         private final List<String> profiles = new ArrayList<>();
         private final List<ContainerHandle> containerHandles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
@@ -852,7 +852,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             this.state = State.CREATED;
             this.readWriteLock = readWriteLock;
             this.containerHandles.addAll(handles);
-            this.attributes = new AttributeSupport(options.getAttributes());
             if (parentState != null) {
                 parentState.addChild(this);
             }
