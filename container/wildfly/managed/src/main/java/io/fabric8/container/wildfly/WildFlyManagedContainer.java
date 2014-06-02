@@ -61,7 +61,7 @@ import org.w3c.dom.Element;
  */
 public final class WildFlyManagedContainer extends AbstractManagedContainer<WildFlyCreateOptions> {
 
-    WildFlyManagedContainer(WildFlyCreateOptions options) {
+    public WildFlyManagedContainer(WildFlyCreateOptions options) {
         super(options);
     }
 

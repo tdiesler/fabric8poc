@@ -61,7 +61,7 @@ import org.w3c.dom.Element;
  */
 public final class TomcatManagedContainer extends AbstractManagedContainer<TomcatCreateOptions> {
 
-    TomcatManagedContainer(TomcatCreateOptions options) {
+    public TomcatManagedContainer(TomcatCreateOptions options) {
         super(options);
     }
 

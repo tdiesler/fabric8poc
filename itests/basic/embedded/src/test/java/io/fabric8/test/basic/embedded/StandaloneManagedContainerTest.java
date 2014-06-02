@@ -25,8 +25,14 @@ import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.api.management.ProfileVersionManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
+import io.fabric8.container.karaf.KarafCreateOptions;
+import io.fabric8.container.karaf.KarafManagedContainer;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
+import io.fabric8.container.tomcat.TomcatCreateOptions;
+import io.fabric8.container.tomcat.TomcatManagedContainer;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
+import io.fabric8.container.wildfly.WildFlyCreateOptions;
+import io.fabric8.container.wildfly.WildFlyManagedContainer;
 import io.fabric8.spi.ManagedContainer;
 import io.fabric8.spi.ManagedContainerBuilder;
 import io.fabric8.spi.utils.ManagementUtils;
@@ -66,7 +72,8 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedKaraf() throws Exception {
         KarafContainerBuilder builder = buildCreateOptions(KarafContainerBuilder.create());
-        ManagedContainer container = builder.identity("ManagedKaraf").getManagedContainer();
+        KarafCreateOptions options = builder.identity("ManagedKaraf").getCreateOptions();
+        ManagedContainer container = new KarafManagedContainer(options);
         try {
             container.create();
             verifyContainer(container, "karaf", "karaf");
@@ -79,7 +86,8 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedTomcat() throws Exception {
         TomcatContainerBuilder builder = buildCreateOptions(TomcatContainerBuilder.create());
-        ManagedContainer container = builder.identity("ManagedTomcat").getManagedContainer();
+        TomcatCreateOptions options = builder.identity("ManagedTomcat").getCreateOptions();
+        ManagedContainer container = new TomcatManagedContainer(options);
         try {
             container.create();
             verifyContainer(container, null, null);
@@ -92,7 +100,8 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     public void testManagedWildFly() throws Exception {
         WildFlyContainerBuilder builder = buildCreateOptions(WildFlyContainerBuilder.create());
-        ManagedContainer container = builder.identity("ManagedWildFly").getManagedContainer();
+        WildFlyCreateOptions options = builder.identity("ManagedWildFly").getCreateOptions();
+        ManagedContainer container = new WildFlyManagedContainer(options);
         try {
             container.create();
             verifyContainer(container, null, null);

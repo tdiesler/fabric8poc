@@ -44,9 +44,9 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  *
  * @since 26-Feb-2014
  */
-public class KarafManagedContainer extends AbstractManagedContainer<KarafCreateOptions> {
+public final class KarafManagedContainer extends AbstractManagedContainer<KarafCreateOptions> {
 
-    KarafManagedContainer(KarafCreateOptions options) {
+    public KarafManagedContainer(KarafCreateOptions options) {
         super(options);
     }
 

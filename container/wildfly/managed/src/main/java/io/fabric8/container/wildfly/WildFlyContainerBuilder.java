@@ -38,11 +38,6 @@ public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<Wil
         super(new WildFlyCreateOptions());
     }
 
-    @Override
-    public WildFlyManagedContainer getManagedContainer() {
-        return new WildFlyManagedContainer(getCreateOptions());
-    }
-
     public WildFlyContainerBuilder serverConfig(String serverConfig) {
         options.setServerConfig(serverConfig);
         return this;

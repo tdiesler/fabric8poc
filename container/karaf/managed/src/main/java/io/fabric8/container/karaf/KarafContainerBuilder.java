@@ -21,7 +21,6 @@
 package io.fabric8.container.karaf;
 
 import io.fabric8.spi.AbstractManagedContainerBuilder;
-import io.fabric8.spi.ManagedContainer;
 
 
 
@@ -39,11 +38,6 @@ public final class KarafContainerBuilder extends AbstractManagedContainerBuilder
 
     private KarafContainerBuilder() {
         super(new KarafCreateOptions());
-    }
-
-    @Override
-    public ManagedContainer<KarafCreateOptions> getManagedContainer() {
-        return new KarafManagedContainer(getCreateOptions());
     }
 
     public KarafContainerBuilder rmiServerPort(int serverPort) {
