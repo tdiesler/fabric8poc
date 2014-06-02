@@ -39,6 +39,7 @@
         <module>managed</module>
         <module>patch</module>
         <module>webapp</module>
+        <module>attributes</module>
     </modules>
 
 </project>

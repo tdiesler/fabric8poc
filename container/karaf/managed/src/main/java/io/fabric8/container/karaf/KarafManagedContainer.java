@@ -20,7 +20,7 @@
 
 package io.fabric8.container.karaf;
 
-import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AbstractManagedContainer;
 
 import java.io.File;
@@ -84,8 +84,8 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
                 fileWriter.close();
             }
 
-            putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-            putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         }
     }
 
@@ -116,7 +116,7 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
         }
 
         String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + rmiServerPort + "/jndi/rmi://127.0.0.1:" + rmiRegistryPort + "/karaf-root";
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override

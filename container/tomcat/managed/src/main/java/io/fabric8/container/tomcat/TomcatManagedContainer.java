@@ -20,7 +20,7 @@
 
 package io.fabric8.container.tomcat;
 
-import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AbstractManagedContainer;
 import io.fabric8.spi.RuntimeService;
 
@@ -131,11 +131,11 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         processBuilder.directory(new File(catalinaHome, "bin"));
         startProcess(processBuilder);
 
-        putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
 
         String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override

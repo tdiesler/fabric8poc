@@ -20,7 +20,7 @@
 
 package io.fabric8.container.wildfly;
 
-import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.container.wildfly.connector.WildFlyManagementUtils;
 import io.fabric8.spi.AbstractManagedContainer;
 
@@ -131,11 +131,11 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder);
 
-        putAttribute(Constants.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        putAttribute(Constants.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
 
         String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + managementHttpPort;
-        putAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
@@ -145,7 +145,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
             JmxEnvironmentEnhancer.addClassLoader(env);
             connector = super.getJMXConnector(env, timeout, unit);
         } else {
-            String jmxServiceURL = getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+            String jmxServiceURL = getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
             return WildFlyManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
         }
         return connector;

@@ -35,6 +35,7 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import io.fabric8.api.ContainerAttributes;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.MBeanProxy;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -70,7 +71,7 @@ public final class ManagementUtils {
     }
 
     public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
-        String jmxServiceURL = attributes.getAttribute(Constants.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        String jmxServiceURL = attributes.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
         IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
         return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
     }

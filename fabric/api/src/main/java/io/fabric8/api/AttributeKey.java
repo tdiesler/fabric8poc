@@ -68,7 +68,6 @@ public final class AttributeKey<T> {
         this.type = type;
         this.factory = factory;
         this.tostring = "Key[name=" + name + ",type=" + type.getName() + "]";
-
     }
 
     public String getName() {
