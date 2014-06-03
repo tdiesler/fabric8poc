@@ -16,7 +16,7 @@
 package io.fabric8.core;
 
 
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
@@ -25,14 +25,12 @@ import io.fabric8.spi.utils.HostUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 
 @Component(immediate = true)

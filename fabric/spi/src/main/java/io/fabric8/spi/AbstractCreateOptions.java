@@ -94,7 +94,7 @@ public abstract class AbstractCreateOptions implements CreateOptions {
 
     protected void setProfiles(Set<String> profiles) {
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
-        this.profiles = profiles;
+        this.profiles = new LinkedHashSet<>(profiles);
     }
 
     protected <T> void putAttribute(AttributeKey<T> key, T value) {

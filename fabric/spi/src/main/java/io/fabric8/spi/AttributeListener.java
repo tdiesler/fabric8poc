@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.api;
+package io.fabric8.spi;
+
+import io.fabric8.api.AttributeKey;
 
 /**
  * A Listener for attribute changes.

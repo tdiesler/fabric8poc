@@ -16,8 +16,8 @@
 package io.fabric8.spi.scr;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeListener;
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeListener;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * An abstract component for {@link io.fabric8.api.AttributeProvider} which delegates to {@link io.fabric8.spi.AttributeSupport}
+ * An abstract component for {@link io.fabric8.spi.AttributeProvider} which delegates to {@link io.fabric8.spi.AttributeSupport}
  */
 public abstract class AttributeProviderComponent extends AbstractComponent implements AttributeProvider {
 

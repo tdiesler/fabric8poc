@@ -15,8 +15,6 @@
 
 package io.fabric8.spi;
 
-import io.fabric8.api.AttributeListener;
-
 /**
  * An internal service that handles registration of the container attributes.
  */

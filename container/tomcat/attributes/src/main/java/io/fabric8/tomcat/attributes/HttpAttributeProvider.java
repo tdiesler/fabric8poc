@@ -16,7 +16,7 @@
 package io.fabric8.tomcat.attributes;
 
 
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
@@ -85,7 +85,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
         deactivateComponent();
     }
 
-    void activateInternal() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
+    private void activateInternal() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
         Server server = getServer();
         org.apache.catalina.Service[] services = server.findServices();
         for (org.apache.catalina.Service service : services) {
@@ -100,7 +100,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
     }
 
 
-    void updateAttributes() {
+    private void updateAttributes() {
         try {
             boolean httpEnabled = isHttpEnabled();
             boolean httpsEnabled = isHttpsEnabled();

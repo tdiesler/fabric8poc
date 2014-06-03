@@ -16,7 +16,7 @@
 package io.fabric8.wildfly.attributes;
 
 
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
@@ -72,7 +72,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
         deactivateComponent();
     }
 
-    void updateAttributes() {
+    private void updateAttributes() {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl(runtimeId, httpPort));

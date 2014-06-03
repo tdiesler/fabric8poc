@@ -15,7 +15,7 @@
 
 package io.fabric8.karaf.attributes;
 
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;

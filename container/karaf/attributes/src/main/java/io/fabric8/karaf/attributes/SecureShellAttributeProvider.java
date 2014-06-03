@@ -16,7 +16,7 @@
 package io.fabric8.karaf.attributes;
 
 
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
@@ -75,7 +75,7 @@ public class SecureShellAttributeProvider extends AttributeProviderComponent {
         deactivateComponent();
     }
 
-    void updateAttributes() {
+    private void updateAttributes() {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_SSH_SERVER_URL, getSshUrl(runtimeId, sshConnectionPort));
     }
 

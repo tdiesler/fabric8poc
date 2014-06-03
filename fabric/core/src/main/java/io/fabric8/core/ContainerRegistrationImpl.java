@@ -16,7 +16,7 @@
 package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeProvider;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.ContainerRegistration;
 import org.apache.felix.scr.annotations.Activate;
