@@ -55,7 +55,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private ContainerIdentity parent;
 
     private ImmutableContainer(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
-        super(attributes);
+        super(attributes, true);
         this.identity = identity;
         this.state = state;
     }

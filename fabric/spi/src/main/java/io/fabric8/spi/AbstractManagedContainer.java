@@ -63,7 +63,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  */
 public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> implements ManagedContainer<C> {
 
-    private final AttributeSupport attributes = new AttributeSupport();
+    private final AttributeSupport attributes;
     private final MavenDelegateRepository mavenRepository;
     private final ContainerIdentity identity;
     private final C createOptions;
@@ -75,6 +75,7 @@ public abstract class AbstractManagedContainer<C extends ManagedCreateOptions> i
         IllegalArgumentAssertion.assertNotNull(options, "options");
         this.mavenRepository = new DefaultMavenDelegateRepository(new DefaultPropertiesProvider(new HashMap<String, Object>(), true, RuntimeService.DEFAULT_ENV_PREFIX));
         this.identity = options.getIdentity();
+        this.attributes = new AttributeSupport(options.getAttributes(), true);
         this.createOptions = options;
     }
 

@@ -171,7 +171,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         private MutableProfile(Profile sourceProfile) {
-            super(sourceProfile.getAttributes());
+            super(sourceProfile.getAttributes(), false);
             identity = sourceProfile.getIdentity();
             version = sourceProfile.getVersion();
             parentProfiles.addAll(sourceProfile.getParents());

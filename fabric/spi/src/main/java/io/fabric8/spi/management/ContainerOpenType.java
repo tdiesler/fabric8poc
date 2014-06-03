@@ -110,6 +110,7 @@ public final class ContainerOpenType {
             for (CompositeData attData : (CompositeData[]) cdata.get(ContainerOpenType.ITEM_ATTRIBUTES)) {
                 AttributesOpenType.addAttribute(this, attData, classLoader);
             }
+            setImmutable(true);
         }
 
         @Override

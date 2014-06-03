@@ -108,6 +108,7 @@ public final class ProfileOpenType {
             for (CompositeData attData : (CompositeData[]) cdata.get(ProfileOpenType.ITEM_ATTRIBUTES)) {
                 AttributesOpenType.addAttribute(this, attData, classLoader);
             }
+            setImmutable(true);
         }
 
         @Override

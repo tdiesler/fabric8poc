@@ -19,19 +19,44 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import java.util.Map;
+import java.util.Set;
+
 import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 public abstract class AbstractCreateOptions implements CreateOptions {
 
+    private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
 
     @Override
     public ContainerIdentity getIdentity() {
         return identity;
+    }
+
+    @Override
+    public Set<AttributeKey<?>> getAttributeKeys() {
+        return attributes.getAttributeKeys();
+    }
+
+    @Override
+    public <T> T getAttribute(AttributeKey<T> key) {
+        return attributes.getAttribute(key);
+    }
+
+    @Override
+    public <T> boolean hasAttribute(AttributeKey<T> key) {
+        return attributes.hasAttribute(key);
+    }
+
+    @Override
+    public Map<AttributeKey<?>, Object> getAttributes() {
+        return attributes.getAttributes();
     }
 
     protected void validate() {
@@ -43,5 +68,9 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     protected void setIdentity(ContainerIdentity identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
+    }
+
+    protected <T> void putAttribute(AttributeKey<T> key, T value) {
+        attributes.putAttribute(key, value);
     }
 }

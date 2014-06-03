@@ -109,6 +109,7 @@ public final class ProfileVersionOpenType {
         private CompositeDataProfileVersion(CompositeData cdata, ClassLoader classLoader) {
             identity = Version.parseVersion((String) cdata.get(ProfileVersionOpenType.ITEM_IDENTITY));
             profiles = new HashSet<>(Arrays.asList((String[])cdata.get(ProfileVersionOpenType.ITEM_PROFILES)));
+            setImmutable(true);
         }
 
         @Override
