@@ -47,7 +47,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
-import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.Version;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
@@ -65,17 +64,6 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     @Deactivate
     void deactivate() {
         deactivateComponent();
-    }
-
-    @Override
-    public Provisioner getProvisioner(ContainerIdentity identity) {
-        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
-        try {
-            ContainerService service = permit.getInstance();
-            return service.getProvisioner(identity);
-        } finally {
-            permit.release();
-        }
     }
 
     @Override

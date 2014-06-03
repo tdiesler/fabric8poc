@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.provision.ProvisionException;
-import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
 
@@ -137,11 +136,6 @@ public interface ContainerManager {
      * @return null if the endpoint does not exist
      */
     ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId);
-
-    /**
-     * Get the provisioner associated with the given container
-     */
-    Provisioner getProvisioner(ContainerIdentity identity);
 
     /**
      * Get failures from the container with the given identity

@@ -259,13 +259,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Provisioner getProvisioner(ContainerIdentity identity) {
-        assertValid();
-        IllegalArgumentAssertion.assertTrue(currentIdentity.equals(identity), "Provisioner for '" + identity + "' not supported");
-        return provisioner.get();
-    }
-
-    @Override
     public LockHandle aquireContainerLock(ContainerIdentity identity) {
         assertValid();
         ContainerState cntState = getRequiredContainerState(identity);
@@ -823,7 +816,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-    
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

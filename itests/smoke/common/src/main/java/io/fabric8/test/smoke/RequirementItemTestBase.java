@@ -21,7 +21,6 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
@@ -60,6 +59,7 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleActivatorBridge;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
@@ -108,8 +108,7 @@ public abstract class RequirementItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Build the requirement & client resource
         ResourceIdentity featureId = ResourceIdentity.fromString("camel.core.feature:0.0.0");

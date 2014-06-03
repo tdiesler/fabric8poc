@@ -20,9 +20,7 @@
 package io.fabric8.test.smoke.container;
 
 import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
-import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.test.smoke.PrePostConditions;
 import io.fabric8.test.smoke.sub.a.CamelTransformHttpActivator;
@@ -195,9 +193,7 @@ public class ProvisionerTest {
     @Test
     public void testStreamResource() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
         ResourceBuilder builderA = provisioner.getContentResourceBuilder(identityA, deployer.getDeployment(RESOURCE_A));
@@ -230,9 +226,7 @@ public class ProvisionerTest {
     @Test
     public void testSharedStreamResource() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
         ResourceBuilder builderB = provisioner.getContentResourceBuilder(identityB, deployer.getDeployment(RESOURCE_B));
@@ -274,12 +268,10 @@ public class ProvisionerTest {
     @Test
     public void testMavenResource() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
-
         // Tomcat does not support jar deployments
         Assume.assumeFalse(RuntimeType.TOMCAT == RuntimeType.getRuntimeType());
+
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.unshared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
@@ -306,9 +298,7 @@ public class ProvisionerTest {
     @Test
     public void testSharedMavenResource() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.shared");
         MavenCoordinates mavenid = MavenCoordinates.parse("org.apache.camel:camel-core:jar:2.11.0");
@@ -353,13 +343,10 @@ public class ProvisionerTest {
     @Test
     public void testAbstractFeature() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
-
         // Provision the camel.core feature
         ResourceIdentity identity = ResourceIdentity.fromString("camel.core.feature:0.0.0");
         Requirement req = new IdentityRequirementBuilder(identity).getRequirement();
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
         Set<ResourceHandle> result = provisioner.provisionResources(Collections.singleton(req));
 
         List<ResourceHandle> handles = new ArrayList<>(result);
@@ -427,10 +414,6 @@ public class ProvisionerTest {
     @Test
     public void testRepositoryResourceWithDependency() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
-
         // Build a resource that has a dependency on camel.core
         DefaultResourceBuilder builderE = new DefaultResourceBuilder();
         Capability icapE = builderE.addIdentityCapability(RESOURCE_E, Version.emptyVersion);
@@ -440,6 +423,7 @@ public class ProvisionerTest {
         Resource res = builderE.getResource();
 
         // Add that resource to the repository
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
         Resource resB = provisioner.getRepository().addResource(res);
         Assert.assertEquals(RESOURCE_E + ":0.0.0", resB.getIdentity().toString());
 
@@ -497,9 +481,7 @@ public class ProvisionerTest {
     @Test
     public void testMultipleContentCapabilities() throws Exception {
 
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         ResourceBuilder builderF = new DefaultResourceBuilder();
         ResourceIdentity identityF = ResourceIdentity.create(RESOURCE_F, Version.emptyVersion);

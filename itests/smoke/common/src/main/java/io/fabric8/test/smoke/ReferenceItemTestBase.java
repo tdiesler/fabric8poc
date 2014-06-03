@@ -21,7 +21,6 @@ package io.fabric8.test.smoke;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
@@ -46,6 +45,7 @@ import org.jboss.gravia.resource.ContentNamespace;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.ResourceIdentity;
+import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,8 +79,7 @@ public abstract class ReferenceItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Build the resitem
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);

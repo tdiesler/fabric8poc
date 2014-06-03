@@ -22,7 +22,6 @@ package io.fabric8.test.smoke;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import static org.jboss.gravia.resource.ContentNamespace.CAPABILITY_INCLUDE_RUNTIME_TYPE_DIRECTIVE;
 import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
@@ -136,8 +135,7 @@ public abstract class ResourceItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Build the resitem
         ResourceIdentity identityA = ResourceIdentity.fromString(RESOURCE_A);
@@ -185,8 +183,7 @@ public abstract class ResourceItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Build the resources
         ResourceIdentity identityB = ResourceIdentity.fromString(RESOURCE_B);
@@ -246,8 +243,7 @@ public abstract class ResourceItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Tomcat does not support jar deployments
         Assume.assumeFalse(RuntimeType.TOMCAT == RuntimeType.getRuntimeType());
@@ -294,8 +290,7 @@ public abstract class ResourceItemTestBase {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        ContainerIdentity cntId = cntManager.getCurrentContainer().getIdentity();
-        Provisioner provisioner = cntManager.getProvisioner(cntId);
+        Provisioner provisioner = ServiceLocator.getRequiredService(Provisioner.class);
 
         // Build the resources
         ResourceIdentity identityA = ResourceIdentity.fromString("camel.core.resitem");
