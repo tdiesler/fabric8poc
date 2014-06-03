@@ -455,7 +455,7 @@
                     <version>${version-maven-javadoc-plugin}</version>
                     <configuration>
                         <!-- Default configuration for all reports -->
-                        <excludePackageNames>io.fabric8.core:io.fabric8.spi.*</excludePackageNames>
+                        <excludePackageNames>*.internal:*.webapp:io.fabric8.core:io.fabric8.test*:org.wildfly</excludePackageNames>
                         <quiet>true</quiet>
                         <links>
                             <link>http://tdiesler.github.io/gravia/1.1/apidocs/</link>
@@ -557,9 +557,6 @@
                                     <goal>aggregate</goal>
                                 </goals>
                                 <phase>install</phase>
-                                <configuration>
-                                    <excludePackageNames>*.internal:*.webapp:io.fabric8.core.*:io.fabric8.test*:org.wildfly</excludePackageNames>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
