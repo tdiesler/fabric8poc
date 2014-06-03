@@ -19,7 +19,6 @@
  */
 package io.fabric8.core;
 
-import io.fabric8.spi.PortManager;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import java.io.IOException;
@@ -31,6 +30,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.process.api.PortManager;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**

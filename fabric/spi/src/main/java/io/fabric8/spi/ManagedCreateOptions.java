@@ -19,12 +19,9 @@
  */
 package io.fabric8.spi;
 
+import org.jboss.gravia.process.api.ManagedProcessOptions;
+
 import io.fabric8.api.CreateOptions;
-
-import java.io.File;
-import java.util.List;
-
-import org.jboss.gravia.resource.MavenCoordinates;
 
 /**
  * Managed container create options
@@ -32,18 +29,7 @@ import org.jboss.gravia.resource.MavenCoordinates;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ManagedCreateOptions extends CreateOptions {
-
-    /**
-     * Get the array of maven artefacts that are getting unpacked
-     */
-    List<MavenCoordinates> getMavenCoordinates();
-
-    File getTargetDirectory();
-
-    String getJavaVmArguments();
-
-    boolean isOutputToConsole();
+public interface ManagedCreateOptions extends ManagedProcessOptions, CreateOptions {
 
     boolean isZooKeeperServer();
 }

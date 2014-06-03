@@ -19,8 +19,9 @@
  */
 package io.fabric8.spi;
 
+import org.jboss.gravia.runtime.LifecycleException;
+
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.LifecycleException;
 
 
 /**

@@ -21,7 +21,7 @@
 package io.fabric8.spi.utils;
 
 import io.fabric8.api.Attributable;
-import io.fabric8.api.Constants;
+import io.fabric8.api.ContainerAttributes;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -35,10 +35,9 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import io.fabric8.api.ContainerAttributes;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.MBeanProxy;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A set of management utils

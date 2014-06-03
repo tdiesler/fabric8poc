@@ -644,7 +644,6 @@ public class ProvisionerTest {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_C);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
                     builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
                     builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);
@@ -678,7 +677,6 @@ public class ProvisionerTest {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_D);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
                     builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
                     builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);
@@ -712,7 +710,6 @@ public class ProvisionerTest {
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_E);
                     builder.addBundleActivator(ModuleActivatorBridge.class);
-                    builder.addManifestHeader(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
                     builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
                     builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);

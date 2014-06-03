@@ -109,7 +109,7 @@ public class ContainerAttributes  {
             String attributeName = matcher.group(2);
             String replacement = "";
             String toReplace = String.format(CONTAINER_ATTRIBUTE_FORMAT, containerName, attributeName);
-            AttributeKey attributeKey = AttributeKey.create(attributeName, Object.class);
+            AttributeKey<Object> attributeKey = AttributeKey.create(attributeName, Object.class);
             if (attributes.containsKey(attributeKey) && !visited.contains(attributeKey)) {
                 replacement = String.valueOf(attributes.get(attributeKey));
                 replacement = replacement != null ? replacement : "";

@@ -118,7 +118,7 @@ public class StandaloneManagedContainerTest {
     @SuppressWarnings({ "rawtypes" })
     private ManagedContainer verifyContainer(ManagedContainer cnt, String jmxUsername, String jmxPassword) throws Exception {
         Assert.assertNotNull("ManagedContainer not null", cnt);
-        File containerHome = cnt.getContainerHome();
+        File containerHome = cnt.getHomeDir();
         Assert.assertNotNull("Container home not null", containerHome);
         Assert.assertTrue("Container home is dir", containerHome.isDirectory());
 

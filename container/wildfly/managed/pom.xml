@@ -46,6 +46,11 @@
             <artifactId>fabric8-container-wildfly-connector</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-process-api</artifactId>
+        </dependency>
+        
         <!-- Provided Dependencies -->
         <dependency>
             <groupId>org.jboss.modules</groupId>

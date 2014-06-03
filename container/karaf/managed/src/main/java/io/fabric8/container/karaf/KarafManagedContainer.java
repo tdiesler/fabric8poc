@@ -53,10 +53,10 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
 
     @Override
     protected void doConfigure() throws Exception {
-        File home = getContainerHome();
-        IllegalStateAssertion.assertTrue(home.isDirectory(), "Karaf home does not exist: " + home);
-        File confDir = new File(home, "etc");
-        IllegalStateAssertion.assertTrue(confDir.isDirectory(), "Karaf conf does not exist: " + home);
+        File karafHome = getHomeDir();
+        IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Karaf home does not exist: " + karafHome);
+        File confDir = new File(karafHome, "etc");
+        IllegalStateAssertion.assertTrue(confDir.isDirectory(), "Karaf conf does not exist: " + confDir);
 
         String comment = "Modified by " + getClass().getName();
         configurePaxWeb(confDir, comment);
@@ -122,7 +122,7 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
     @Override
     protected void doStart() throws Exception {
 
-        File karafHome = getContainerHome();
+        File karafHome = getHomeDir();
         IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Not a valid home dir: " + karafHome);
 
         List<String> cmd = new ArrayList<String>();

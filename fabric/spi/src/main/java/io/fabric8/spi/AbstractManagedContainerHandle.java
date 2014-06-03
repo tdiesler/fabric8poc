@@ -20,7 +20,6 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 
@@ -30,6 +29,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.remote.JMXConnector;
+
+import org.jboss.gravia.runtime.LifecycleException;
 
 /**
  * A handle to a container instance

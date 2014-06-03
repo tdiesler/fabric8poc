@@ -68,7 +68,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
     @Override
     protected void doConfigure() throws Exception {
 
-        File catalinaHome = getContainerHome();
+        File catalinaHome = getHomeDir();
         IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
         File catalinaConf = new File(catalinaHome , "conf");
         IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Catalina conf does not exist: " + catalinaConf);
@@ -111,7 +111,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         String javaArgs = getCreateOptions().getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
-        File catalinaHome = getContainerHome();
+        File catalinaHome = getHomeDir();
         String absolutePath = catalinaHome.getAbsolutePath();
         String CLASS_PATH = absolutePath + "/bin/bootstrap.jar" + File.pathSeparator;
         CLASS_PATH += absolutePath + "/bin/tomcat-juli.jar";

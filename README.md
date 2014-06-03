@@ -32,5 +32,4 @@ Links
 -----
 
 * [Javadoc](http://174.129.32.31:8080/job/tdi-fabric8-poc/javadoc)
-* [User Guide](../../wiki/User-Guide)
 * [Developer Guide](../../wiki/Developer-Guide)

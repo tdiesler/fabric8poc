@@ -41,6 +41,10 @@
             <artifactId>fabric8-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-process-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

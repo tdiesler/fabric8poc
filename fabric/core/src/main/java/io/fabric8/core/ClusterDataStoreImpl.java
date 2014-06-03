@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.FabricException;
 import io.fabric8.spi.ClusterDataStore;
 import io.fabric8.spi.scr.AbstractComponent;
-
 import io.fabric8.spi.scr.ValidatingReference;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.shared.SharedCount;
 import org.apache.felix.scr.annotations.Activate;
@@ -72,6 +72,7 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
         return containerId;
     }
 
+    @SuppressWarnings("resource")
     private int getIncrementForPrefix(String prefix) {
         String path = String.format(COUNTER_PATH, prefix);
         SharedCount sharedCount = new SharedCount(curator.get(), path, 1);

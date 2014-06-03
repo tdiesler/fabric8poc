@@ -68,7 +68,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
 
     @Override
     protected void doConfigure() throws Exception {
-        File jbossHome = getContainerHome();
+        File jbossHome = getHomeDir();
         IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "Wildfly home does not exist: " + jbossHome);
         File graviaConf = new File(jbossHome, StringUtils.join(Arrays.asList("standalone", "configuration", "gravia", "configs", ""), File.separator));
         IllegalStateAssertion.assertTrue(graviaConf.isDirectory(), "Gravia conf does not exist: " + jbossHome);
@@ -80,7 +80,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
     @Override
     protected void doStart() throws Exception {
 
-        File jbossHome = getContainerHome();
+        File jbossHome = getHomeDir();
         IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "WildFly home does not exist: " + jbossHome);
 
         // Delete zookepper config file if this is not a server

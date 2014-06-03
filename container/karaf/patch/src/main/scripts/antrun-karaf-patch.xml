@@ -63,6 +63,7 @@ org/jboss/gravia/gravia-runtime-osgi/${version.jboss.gravia}/gravia-runtime-osgi
 org/jboss/gravia/gravia-repository/${version.jboss.gravia}/gravia-repository-${version.jboss.gravia}.jar=41
 org/jboss/gravia/gravia-resolver/${version.jboss.gravia}/gravia-resolver-${version.jboss.gravia}.jar=41
 org/jboss/gravia/gravia-provision/${version.jboss.gravia}/gravia-provision-${version.jboss.gravia}.jar=42
+org/jboss/gravia/gravia-process-api/${version.jboss.gravia}/gravia-process-api-${version.jboss.gravia}.jar=42
 
 #
 # Curator ZooKeeper

@@ -20,11 +20,12 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.LifecycleException;
 import io.fabric8.api.ServiceEndpoint;
 
 import java.util.Collections;
 import java.util.Set;
+
+import org.jboss.gravia.runtime.LifecycleException;
 
 /**
  * An abstract handle to a container instance

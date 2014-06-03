@@ -63,6 +63,7 @@ public abstract class AttributeProviderComponent extends AbstractComponent imple
         return delegate.getAttributes();
     }
 
+    @SuppressWarnings("unchecked")
     public void putAllAttributes(Map<AttributeKey<?>, Object> atts) {
         for (Map.Entry<AttributeKey<?>, Object> entry : atts.entrySet()) {
             putAttribute((AttributeKey<Object>) entry.getKey(), entry.getValue());

@@ -44,9 +44,9 @@ public class HostUtils {
         //let's have them sort by interface name (by using a TreeMap).
         Map<String, Set<InetAddress>> interfaceAddressMap = new TreeMap<String, Set<InetAddress>>();
         try {
-            Enumeration ifaces = NetworkInterface.getNetworkInterfaces();
+            Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
             while (ifaces.hasMoreElements()) {
-                NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
+                NetworkInterface iface = ifaces.nextElement();
                 //We only care about usable non-loopback interfaces.
                 if (iface.isUp() && !iface.isLoopback()) {
                     String name = iface.getName();
