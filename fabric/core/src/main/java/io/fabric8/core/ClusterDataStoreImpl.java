@@ -64,7 +64,7 @@ public final class ClusterDataStoreImpl extends AbstractComponent implements Clu
     @Override
     public ContainerIdentity createContainerIdentity(ContainerIdentity parentId, String name) {
         assertValid();
-        IllegalArgumentAssertion.assertNotNull(name, "prefix");
+        IllegalArgumentAssertion.assertNotNull(name, "name");
         int increment = getIncrementForPrefix(name);
         String parentPrefix = parentId != null ? parentId.getSymbolicName() + ":" : "";
         String suffix =  increment > 1 ? String.valueOf(increment) : "";

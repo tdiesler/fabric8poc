@@ -32,6 +32,8 @@
         <resource-root path="fabric8-container-tomcat-managed-${project.version}.jar"/>
         <resource-root path="fabric8-container-wildfly-managed-${project.version}.jar"/>
         <resource-root path="fabric8-container-wildfly-attributes-${project.version}.jar"/>
+        <resource-root path="fabric8-domain-agent-${project.version}.jar"/>
+        <resource-root path="fabric8-domain-controller-${project.version}.jar"/>
     </resources>
 
     <exports>
@@ -39,6 +41,8 @@
         <include path="io/fabric8/container/karaf"/>
         <include path="io/fabric8/container/tomcat"/>
         <include path="io/fabric8/container/wildfly"/>
+        <include path="io/fabric8/domain/agent"/>
+        <include path="io/fabric8/domain/controller"/>
     </exports>
     
     <dependencies>

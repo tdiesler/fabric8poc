@@ -37,6 +37,16 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-domain-agent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-domain-controller</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -49,15 +59,15 @@
             <artifactId>curator-recipes</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
         </dependency>
         
         <!-- Provided Dependencies -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-process-api</artifactId>

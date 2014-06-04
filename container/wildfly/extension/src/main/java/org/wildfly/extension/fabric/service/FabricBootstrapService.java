@@ -20,11 +20,7 @@
 
 package org.wildfly.extension.fabric.service;
 
-import io.fabric8.container.karaf.KarafContainerCreateHandler;
-import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
-import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.spi.ContainerCreateHandler;
 import io.fabric8.spi.RuntimeService;
 
 import java.io.File;
@@ -62,11 +58,11 @@ import org.jboss.modules.ModuleClassLoader;
 import org.jboss.msc.service.AbstractService;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.value.InjectedValue;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -142,11 +138,13 @@ public class FabricBootstrapService extends AbstractService<Void> {
         }
 
         // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
+        /*
         Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
         handlers.add(new KarafContainerCreateHandler());
         handlers.add(new TomcatContainerCreateHandler());
         handlers.add(new WildFlyContainerCreateHandler());
         registerContainerCreateHandlers(syscontext, handlers);
+        */
 
         // Open service trackers for {@link Resolver}, {@link Repository}, {@link Provisioner}
         trackers = new HashSet<ServiceTracker<?, ?>>();
@@ -185,12 +183,14 @@ public class FabricBootstrapService extends AbstractService<Void> {
         }
     }
 
+    /*
     private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
         for (ContainerCreateHandler handler : handlers) {
             String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
             registrations.add(context.registerService(classes, handler, null));
         }
     }
+    */
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void initConfigurationAdmin(Runtime runtime) {

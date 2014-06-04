@@ -33,6 +33,8 @@ import java.util.Set;
 public interface CreateOptions extends Attributable {
 
     ContainerIdentity getIdentity();
+
     Version getVersion();
-    Set<String> getProfiles();    
+
+    Set<String> getProfiles();
 }

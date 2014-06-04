@@ -91,6 +91,8 @@
         	<include name="fabric8-container-tomcat-managed-*"/>
             <include name="fabric8-container-wildfly-managed-*"/>
             <include name="fabric8-container-wildfly-attributes-*"/>
+            <include name="fabric8-domain-agent-*"/>
+            <include name="fabric8-domain-controller-*"/>
         </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/io/fabric8/service/main" overwrite="true">

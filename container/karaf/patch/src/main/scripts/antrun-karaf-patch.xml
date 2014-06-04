@@ -85,6 +85,8 @@ io/fabric8/poc/fabric8-container-karaf-managed/${project.version}/fabric8-contai
 io/fabric8/poc/fabric8-container-tomcat-managed/${project.version}/fabric8-container-tomcat-managed-${project.version}.jar=44
 io/fabric8/poc/fabric8-container-wildfly-managed/${project.version}/fabric8-container-wildfly-managed-${project.version}.jar=44
 io/fabric8/poc/fabric8-container-wildfly-connector/${project.version}/fabric8-container-wildfly-connector-${project.version}.jar=44
+io/fabric8/poc/fabric8-domain-agent/${project.version}/fabric8-domain-agent-${project.version}.jar=44
+io/fabric8/poc/fabric8-domain-controller/${project.version}/fabric8-domain-controller-${project.version}.jar=44
     </echo>
 
     <copy file="${karaf.source.dir}/etc/custom.properties" todir="${karaf.patch.dir}/etc" overwrite="true"/>

@@ -36,11 +36,9 @@
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
                 <include>*:commons-compress:jar</include>
-                <include>*:guava:jar</include>
                 <include>*:curator-client:jar</include>
                 <include>*:curator-framework:jar</include>
                 <include>*:curator-recipes:jar</include>
-                <include>*:zookeeper:jar</include>
                 <include>*:fabric8-api:jar</include>
                 <include>*:fabric8-spi:jar</include>
                 <include>*:fabric8-core:jar</include>
@@ -49,6 +47,10 @@
                 <include>*:fabric8-container-wildfly-extension:jar</include>
                 <include>*:fabric8-container-wildfly-managed:jar</include>
                 <include>*:fabric8-container-wildfly-attributes:jar</include>
+                <include>*:fabric8-domain-agent:jar</include>
+                <include>*:fabric8-domain-controller:jar</include>
+                <include>*:guava:jar</include>
+                <include>*:zookeeper:jar</include>
             </includes>
             <scope>provided</scope>
             <unpack>false</unpack>

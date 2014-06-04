@@ -19,11 +19,7 @@
  */
 package io.fabric8.container.tomcat.webapp;
 
-import io.fabric8.container.karaf.KarafContainerCreateHandler;
-import io.fabric8.container.tomcat.TomcatContainerCreateHandler;
-import io.fabric8.container.wildfly.WildFlyContainerCreateHandler;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.spi.ContainerCreateHandler;
 
 import java.io.File;
 import java.util.HashSet;
@@ -90,11 +86,13 @@ public class FabricTomcatActivator implements ServletContextListener {
         registerServices(servletContext, runtime);
 
         // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
+        /*
         Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
         handlers.add(new KarafContainerCreateHandler());
         handlers.add(new TomcatContainerCreateHandler());
         handlers.add(new WildFlyContainerCreateHandler());
         registerContainerCreateHandlers(syscontext, handlers);
+        */
 
         // Install and start this webapp as a module
         WebAppContextListener webappInstaller = new WebAppContextListener();
@@ -123,12 +121,14 @@ public class FabricTomcatActivator implements ServletContextListener {
         registrations.add(syscontext.registerService(ResourceInstaller.class, installer, null));
     }
 
+    /*
     private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
         for (ContainerCreateHandler handler : handlers) {
             String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
             registrations.add(context.registerService(classes, handler, null));
         }
     }
+    */
 
     static class BoostrapLatch extends CountDownLatch {
 

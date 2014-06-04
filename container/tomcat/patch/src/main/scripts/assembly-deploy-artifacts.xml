@@ -43,6 +43,8 @@
                 <include>*:fabric8-container-tomcat-webapp:war</include>
                 <include>*:fabric8-container-wildfly-connector:jar</include>
                 <include>*:fabric8-container-wildfly-managed:jar</include>
+                <include>*:fabric8-domain-agent:jar</include>
+                <include>*:fabric8-domain-controller:jar</include>
             </includes>
             <scope>provided</scope>
             <unpack>false</unpack>

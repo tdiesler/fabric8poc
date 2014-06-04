@@ -40,6 +40,8 @@
     </properties>
     
     <dependencies>
+    
+        <!-- Provided Dependencies -->
         <dependency>
             <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-core</artifactId>
@@ -82,7 +84,18 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-domain-agent</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-domain-controller</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

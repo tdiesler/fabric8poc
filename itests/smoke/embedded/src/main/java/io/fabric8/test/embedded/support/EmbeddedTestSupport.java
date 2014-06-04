@@ -23,7 +23,6 @@ import io.fabric8.spi.BootstrapComplete;
 
 import java.util.concurrent.TimeUnit;
 
-import io.fabric8.spi.RuntimeService;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceLocator;
@@ -38,7 +37,7 @@ import org.junit.Assert;
 public abstract class EmbeddedTestSupport {
 
     private static String[] moduleNames = new String[] { "gravia-provision", "gravia-resolver", "gravia-repository",
-            "fabric8-api", "fabric8-spi", "fabric8-core" };
+            "fabric8-api", "fabric8-spi", "fabric8-domain-agent", "fabric8-domain-controller", "fabric8-core" };
 
     public static void beforeClass() throws Exception {
 
@@ -54,8 +53,6 @@ public abstract class EmbeddedTestSupport {
 
     public static void afterClass() throws Exception {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        //We need to cleanup the data dir to prevent failures due to previous values persisted to ZooKeeper.
-        EmbeddedUtils.deleteDirectory(String.valueOf(runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR)));
         Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
     }

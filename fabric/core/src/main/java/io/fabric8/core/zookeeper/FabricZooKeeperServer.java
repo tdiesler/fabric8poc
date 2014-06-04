@@ -46,6 +46,7 @@ import java.util.Properties;
 
 import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
 
+/*
 @Component(label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
 @org.apache.felix.scr.annotations.Properties({
         @Property(name = "clientPort", intValue = FabricZooKeeperServer.DEFAULT_CLIENT_PORT, label = "Client Port", description = "The port to listen for client connections"),
@@ -59,6 +60,7 @@ import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
         @Property(name = "clientPortAddress", value = FabricZooKeeperServer.DEFAULT_CLIENT_PORT_ADDRESS, label = "Client Port Address", description = "The address (ipv4, ipv6 or hostname) to listen for client connections; that is, the address that clients attempt to connect to"),
         @Property(name = "minSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MINIMUM_SESSION_TIMEOUT, label = "Minimum Session Timeout", description = "The minimum session timeout in milliseconds that the server will allow the client to negotiate"),
         @Property(name = "maxSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MAXIMUM_SESSION_TIMEOUT, label = "Maximum Session Timeout", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"), })
+*/
 public class FabricZooKeeperServer extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricZooKeeperServer.class);

@@ -61,6 +61,7 @@ import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MUL
 import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
 import static org.jboss.gravia.utils.IOUtils.safeClose;
 
+/*
 @Component(configurationPid = ZOOKEEPER_PID, label = "Fabric8 ZooKeeper Client Factory", policy = ConfigurationPolicy.OPTIONAL, immediate = true, metatype = true)
 @Properties(
         {
@@ -72,6 +73,7 @@ import static org.jboss.gravia.utils.IOUtils.safeClose;
                 @Property(name = SESSION_TIMEOUT, label = "Session Timeout", description = "The amount of time to wait before timing out the session", value = "${zookeeper.session.timeout}")
         }
 )
+*/
 public class ManagedCuratorFramework  extends AbstractComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedCuratorFramework.class);
 

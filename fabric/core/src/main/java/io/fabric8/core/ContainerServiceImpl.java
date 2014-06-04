@@ -45,14 +45,10 @@ import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
-import io.fabric8.core.zookeeper.locks.Lock;
-import io.fabric8.core.zookeeper.locks.ReadWriteLock;
-import io.fabric8.core.zookeeper.locks.ZooKeeperLockManager;
+import io.fabric8.domain.controller.Controller;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.BootConfiguration;
-import io.fabric8.spi.ContainerCreateHandler;
-import io.fabric8.spi.ContainerHandle;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
@@ -81,14 +77,14 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
@@ -151,8 +147,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
-    @Reference(referenceInterface = CuratorFramework.class)
-    private final ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
+    @Reference(referenceInterface = Controller.class)
+    private final ValidatingReference<Controller> controller = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
@@ -160,19 +156,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    @Reference(referenceInterface = ContainerCreateHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
-    private final Set<ContainerCreateHandler> createHandlers = new HashSet<>();
     @Reference(referenceInterface = BootConfiguration.class)
     private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
 
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
     private ContainerIdentity currentIdentity;
-    private ZooKeeperLockManager lockManager;
 
     @Activate
     void activate(Map<String, ?> config) throws ProvisionException {
         currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getIdentity());
-        lockManager = new ZooKeeperLockManager(curator.get());
         activateInternal();
         activateComponent(PERMIT, this);
     }
@@ -231,8 +223,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         if (currentCnt == null) {
             CreateOptions options = new AbstractCreateOptions() {
             };
-            List<ContainerHandle> handles = Collections.emptyList();
-            currentCnt = new ContainerState(null, currentIdentity, options, lockManager.readWriteLock(currentIdentity), handles);
+            currentCnt = new ContainerState(null, currentIdentity, options);
             currentCnt.addProfiles(new ArrayList<>(bootConfiguration.get().getProfiles()));
             currentCnt.setProfileVersion(((ProfileServiceImpl) profileService.get()).getProfileVersionState(bootConfiguration.get().getVersion()));
 
@@ -274,32 +265,22 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container createContainer(ContainerIdentity parentId, CreateOptions options) {
         assertValid();
-        return createContainerInternal(getRequiredContainerState(parentId), options);
+        return createContainerInternal(parentId, options);
     }
 
-    private Container createContainerInternal(ContainerState parentState, CreateOptions options) {
+    private Container createContainerInternal(ContainerIdentity parentId, CreateOptions options) {
 
-        // Every type of {@link CreateOptions}
-        List<ContainerHandle> handles = new ArrayList<ContainerHandle>();
-        Set<ContainerCreateHandler> handlers = getContainerCreateHandlers();
-        for (ContainerCreateHandler handler : handlers) {
-            if (handler.accept(options)) {
-                handles.add(handler.create(options));
-            }
+        // Support for embedded container testing
+        if (options.getClass().getName().endsWith("EmbeddedCreateOptions")) {
+            ContainerIdentity identity = options.getIdentity();
+            ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
+            ContainerState cntState = new ContainerState(parentState, identity, options);
+            LOGGER.info("Create container: {}", cntState);
+            containerRegistry.get().addContainer(cntState);
+            return cntState.immutableContainer();
         }
-        ContainerIdentity identity = options.getIdentity();
-        ContainerState cntState = new ContainerState(parentState, identity, options, lockManager.readWriteLock(identity), handles);
-        LOGGER.info("Create container: {}", cntState);
-        containerRegistry.get().addContainer(cntState);
-        return cntState.immutableContainer();
-    }
 
-    private Set<ContainerCreateHandler> getContainerCreateHandlers() {
-        Set<ContainerCreateHandler> handlers;
-        synchronized (createHandlers) {
-            handlers = new HashSet<ContainerCreateHandler>(createHandlers);
-        }
-        return handlers;
+        return controller.get().createContainer(parentId, options);
     }
 
     @Override
@@ -320,9 +301,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             LOGGER.info("Start container: {}", cntState);
-            for (ContainerHandle handle : cntState.getContainerHandles()) {
-                handle.start();
-            }
             if (cntState.getProfileVersion() == null) {
                 Profile defaultProfile = profileService.get().getDefaultProfile();
                 setVersionInternal(cntState, defaultProfile.getVersion(), listener);
@@ -351,9 +329,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle writeLock = cntState.aquireWriteLock();
         try {
             LOGGER.info("Stop container: {}", cntState);
-            for (ContainerHandle handle : cntState.getContainerHandles()) {
-                handle.stop();
-            }
             return cntState.stop().immutableContainer();
         } finally {
             writeLock.unlock();
@@ -375,9 +350,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
 
             LOGGER.info("Destroy container: {}", cntState);
-            for (ContainerHandle handle : cntState.getContainerHandles()) {
-                handle.destroy();
-            }
             containerRegistry.get().removeContainer(identity);
             cntState.destroy();
             return cntState.immutableContainer();
@@ -761,66 +733,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         return containerRegistry.get().getRequiredContainer(identity);
     }
 
-    void bindConfigurationManager(ConfigurationManager service) {
-        this.configurationManager.bind(service);
-    }
-
-    void unbindConfigurationManager(ConfigurationManager service) {
-        this.configurationManager.unbind(service);
-    }
-
-    void bindCreateHandlers(ContainerCreateHandler service) {
-        synchronized (createHandlers) {
-            createHandlers.add(service);
-        }
-    }
-
-    void unbindCreateHandlers(ContainerCreateHandler service) {
-        synchronized (createHandlers) {
-            createHandlers.remove(service);
-        }
-    }
-
-    void bindContainerRegistry(ContainerRegistry service) {
-        containerRegistry.bind(service);
-    }
-
-    void unbindContainerRegistry(ContainerRegistry service) {
-        containerRegistry.unbind(service);
-    }
-
-    void bindCurator(CuratorFramework service) {
-        curator.bind(service);
-    }
-
-    void unbindCurator(CuratorFramework service) {
-        curator.unbind(service);
-    }
-
-    void bindProfileService(ProfileService service) {
-        profileService.bind(service);
-    }
-
-    void unbindProfileService(ProfileService service) {
-        profileService.unbind(service);
-    }
-
-    void bindProvisioner(Provisioner service) {
-        provisioner.bind(service);
-    }
-
-    void unbindProvisioner(Provisioner service) {
-        provisioner.unbind(service);
-    }
-
-    void bindRuntimeService(RuntimeService service) {
-        runtimeService.bind(service);
-    }
-
-    void unbindRuntimeService(RuntimeService service) {
-        runtimeService.unbind(service);
-    }
-
     void bindBootConfiguration(BootConfiguration service) {
         bootConfiguration.bind(service);
     }
@@ -828,6 +740,47 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         bootConfiguration.unbind(service);
     }
 
+    void bindController(Controller service) {
+        this.controller.bind(service);
+    }
+    void unbindController(Controller service) {
+        this.controller.unbind(service);
+    }
+
+    void bindConfigurationManager(ConfigurationManager service) {
+        this.configurationManager.bind(service);
+    }
+    void unbindConfigurationManager(ConfigurationManager service) {
+        this.configurationManager.unbind(service);
+    }
+
+    void bindContainerRegistry(ContainerRegistry service) {
+        containerRegistry.bind(service);
+    }
+    void unbindContainerRegistry(ContainerRegistry service) {
+        containerRegistry.unbind(service);
+    }
+
+    void bindProfileService(ProfileService service) {
+        profileService.bind(service);
+    }
+    void unbindProfileService(ProfileService service) {
+        profileService.unbind(service);
+    }
+
+    void bindProvisioner(Provisioner service) {
+        provisioner.bind(service);
+    }
+    void unbindProvisioner(Provisioner service) {
+        provisioner.unbind(service);
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
+    }
 
     static final class ContainerState {
 
@@ -835,22 +788,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final ContainerIdentity identity;
         private final AttributeSupport attributes;
         private final List<String> profiles = new ArrayList<>();
-        private final List<ContainerHandle> containerHandles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
         private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
-        private final ReadWriteLock readWriteLock;
+        private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ReadWriteLock readWriteLock, List<ContainerHandle> handles) {
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options) {
             IllegalArgumentAssertion.assertNotNull(identity, "identity");
             IllegalArgumentAssertion.assertNotNull(options, "options");
-            IllegalArgumentAssertion.assertNotNull(handles, "handles");
             this.parentState = parentState;
             this.identity = identity;
             this.state = State.CREATED;
-            this.readWriteLock = readWriteLock;
-            this.containerHandles.addAll(handles);
             this.attributes = new AttributeSupport(options.getAttributes(), true);
             if (parentState != null) {
                 parentState.addChild(this);
@@ -858,7 +807,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         LockHandle aquireWriteLock() {
-            final Lock writeLock = readWriteLock.writeLock();
+            final WriteLock writeLock = readWriteLock.writeLock();
 
             boolean success;
             try {
@@ -892,7 +841,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         LockHandle aquireReadLock() {
-            final Lock readLock = readWriteLock.readLock();
+            final ReadLock readLock = readWriteLock.readLock();
 
             boolean success;
             try {
@@ -996,11 +945,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         Map<ServiceEndpointIdentity<?>, ServiceEndpoint> getServiceEndpoints() {
             Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
-            for (ContainerHandle handle : containerHandles) {
-                for (ServiceEndpoint ep : handle.getServiceEndpoints()) {
-                    endpoints.put(ep.getIdentity(), ep);
-                }
-            }
             return Collections.unmodifiableMap(endpoints);
         }
 
@@ -1031,10 +975,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             for (ResourceIdentity resid : handles) {
                 resourceHandles.remove(resid);
             }
-        }
-
-        private List<ContainerHandle> getContainerHandles() {
-            return Collections.unmodifiableList(containerHandles);
         }
 
         // NOTE - Methods that mutate this objects should be private
