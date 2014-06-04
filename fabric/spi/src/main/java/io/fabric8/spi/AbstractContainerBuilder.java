@@ -23,10 +23,10 @@ import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.OptionsProvider;
-import org.jboss.gravia.resource.Version;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.List;
+
+import org.jboss.gravia.resource.Version;
 
 public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
 
@@ -52,8 +52,8 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B profiles(Set<String> profiles) {
-        getMutableOptions().setProfiles(Collections.unmodifiableSet(profiles));
+    public B profiles(List<String> profiles) {
+        getMutableOptions().setProfiles(profiles);
         return (B) this;
     }
 

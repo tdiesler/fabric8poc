@@ -17,19 +17,31 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
 
-import org.jboss.gravia.process.api.ManagedProcessOptions;
+package io.fabric8.api.process;
 
-import io.fabric8.api.CreateOptions;
+import io.fabric8.api.Attributable;
+
+import java.nio.file.Path;
+
 
 /**
- * Managed container create options
+ * The managed root container
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 26-Feb-2014
  */
-public interface ManagedCreateOptions extends ManagedProcessOptions, CreateOptions {
+public interface ManagedProcess extends Attributable {
 
-    boolean isZooKeeperServer();
+    enum State {
+        CREATED, STARTED, STOPPED, DESTROYED
+    }
+
+    ProcessOptions getCreateOptions();
+
+    ProcessIdentity getIdentity();
+
+    Path getHomePath();
+
+    State getState();
 }

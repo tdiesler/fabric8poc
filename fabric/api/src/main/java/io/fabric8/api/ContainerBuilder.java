@@ -20,9 +20,9 @@
 package io.fabric8.api;
 
 
-import org.jboss.gravia.resource.Version;
+import java.util.List;
 
-import java.util.Set;
+import org.jboss.gravia.resource.Version;
 
 /**
  * A builder for a fabric container
@@ -33,8 +33,10 @@ import java.util.Set;
 public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AttributableBuilder<B> {
 
     B identity(String identity);
+
     B version(Version version);
-    B profiles(Set<String> profiles);    
+
+    B profiles(List<String> profiles);
 
     T getCreateOptions();
 }

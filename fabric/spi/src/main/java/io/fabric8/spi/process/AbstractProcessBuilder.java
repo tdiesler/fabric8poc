@@ -17,16 +17,29 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.spi.process;
 
-import java.io.File;
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.process.ProcessBuilder;
+
+import java.nio.file.Path;
+import java.util.Map;
 
 import org.jboss.gravia.resource.MavenCoordinates;
 
-public abstract class AbstractManagedContainerBuilder<B extends ManagedContainerBuilder<B, T>, T extends AbstractManagedCreateOptions> extends AbstractContainerBuilder<B, T> implements ManagedContainerBuilder<B, T> {
+public abstract class AbstractProcessBuilder<B extends ProcessBuilder<B, T>, T extends AbstractProcessOptions> implements ProcessBuilder<B, T> {
 
-    protected AbstractManagedContainerBuilder(T options) {
-        super(options);
+    protected final T options;
+
+    protected AbstractProcessBuilder(T options) {
+        this.options = options;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B identityPrefix(String prefix) {
+        options.setIdentityPrefix(prefix);
+        return (B) this;
     }
 
     @Override
@@ -38,8 +51,8 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
 
     @Override
     @SuppressWarnings("unchecked")
-    public B targetDirectory(String target) {
-        options.setTargetDirectory(new File(target).getAbsoluteFile());
+    public B targetPath(Path targetPath) {
+        options.setTargetPath(targetPath);
         return (B) this;
     }
 
@@ -59,8 +72,21 @@ public abstract class AbstractManagedContainerBuilder<B extends ManagedContainer
 
     @Override
     @SuppressWarnings("unchecked")
-    public B zooKeeperServer(boolean zooKeeperServer) {
-        options.setZooKeeperServer(zooKeeperServer);
+    public <V> B addAttribute(AttributeKey<V> key, V value) {
+        options.addAttribute(key, value);
         return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addAttributes(Map<AttributeKey<?>, Object> atts) {
+        options.addAttributes(atts);
+        return (B) this;
+    }
+
+    @Override
+    public T getProcessOptions() {
+        options.validate();
+        return options;
     }
 }

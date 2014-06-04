@@ -20,6 +20,9 @@
 
 package io.fabric8.container.karaf.internal;
 
+import io.fabric8.container.karaf.KarafProcessHandler;
+import io.fabric8.spi.process.ProcessHandler;
+
 import org.jboss.gravia.runtime.ModuleActivator;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.ServiceRegistration;
@@ -36,9 +39,11 @@ public final class KarafContainerActivator implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) throws Exception {
+        registration = context.registerService(ProcessHandler.class, new KarafProcessHandler(), null);
     }
 
     @Override
     public void stop(ModuleContext context) throws Exception {
+        registration.unregister();
     }
 }

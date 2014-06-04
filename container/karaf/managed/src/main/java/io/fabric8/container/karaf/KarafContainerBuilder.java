@@ -20,17 +20,22 @@
 
 package io.fabric8.container.karaf;
 
-import io.fabric8.spi.AbstractManagedContainerBuilder;
+import java.nio.file.Path;
+
+import org.jboss.gravia.resource.MavenCoordinates;
+
+import io.fabric8.spi.AbstractContainerBuilder;
+import io.fabric8.api.process.ProcessBuilder;
 
 
 
 /**
- * The managed container configuration builder
+ * The {@link KarafCreateOptions} builder
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Apr-2014
  */
-public final class KarafContainerBuilder extends AbstractManagedContainerBuilder<KarafContainerBuilder, KarafCreateOptions> {
+public final class KarafContainerBuilder extends AbstractContainerBuilder<KarafContainerBuilder, KarafCreateOptions> implements ProcessBuilder<KarafContainerBuilder, KarafCreateOptions> {
 
     public static KarafContainerBuilder create() {
         return new KarafContainerBuilder();
@@ -58,5 +63,41 @@ public final class KarafContainerBuilder extends AbstractManagedContainerBuilder
     public KarafContainerBuilder httpsPort(int httpsPort) {
         options.setHttpsPort(httpsPort);
         return this;
+    }
+
+    @Override
+    public KarafContainerBuilder identityPrefix(String prefix) {
+        options.setIdentityPrefix(prefix);
+        return this;
+    }
+
+    @Override
+    public KarafContainerBuilder targetPath(Path targetPath) {
+        options.setTargetPath(targetPath);
+        return this;
+    }
+
+    @Override
+    public KarafContainerBuilder jvmArguments(String javaVmArguments) {
+        options.setJavaVmArguments(javaVmArguments);
+        return this;
+    }
+
+    @Override
+    public KarafContainerBuilder addMavenCoordinates(MavenCoordinates coordinates) {
+        options.addMavenCoordinates(coordinates);
+        return this;
+    }
+
+    @Override
+    public KarafContainerBuilder outputToConsole(boolean outputToConsole) {
+        options.setOutputToConsole(outputToConsole);
+        return this;
+    }
+
+    @Override
+    public KarafCreateOptions getProcessOptions() {
+        options.validate();
+        return options;
     }
 }

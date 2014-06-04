@@ -20,15 +20,22 @@
 
 package io.fabric8.container.wildfly;
 
-import io.fabric8.spi.AbstractManagedContainerBuilder;
+import java.nio.file.Path;
+
+import org.jboss.gravia.resource.MavenCoordinates;
+
+import io.fabric8.spi.AbstractContainerBuilder;
+import io.fabric8.api.process.ProcessBuilder;
+
+
 
 /**
- * The WildFly managed container builder
+ * The {@link WildFlyCreateOptions} builder
  *
  * @author thomas.diesler@jboss.com
- * @since 26-Feb-2014
+ * @since 14-Apr-2014
  */
-public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> {
+public final class WildFlyContainerBuilder extends AbstractContainerBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> implements ProcessBuilder<WildFlyContainerBuilder, WildFlyCreateOptions> {
 
     public static WildFlyContainerBuilder create() {
         return new WildFlyContainerBuilder();
@@ -71,5 +78,41 @@ public class WildFlyContainerBuilder extends AbstractManagedContainerBuilder<Wil
     public WildFlyContainerBuilder httpsPort(int httpsPort) {
         options.setHttpsPort(httpsPort);
         return this;
+    }
+
+    @Override
+    public WildFlyContainerBuilder identityPrefix(String prefix) {
+        options.setIdentityPrefix(prefix);
+        return this;
+    }
+
+    @Override
+    public WildFlyContainerBuilder targetPath(Path targetPath) {
+        options.setTargetPath(targetPath);
+        return this;
+    }
+
+    @Override
+    public WildFlyContainerBuilder jvmArguments(String javaVmArguments) {
+        options.setJavaVmArguments(javaVmArguments);
+        return this;
+    }
+
+    @Override
+    public WildFlyContainerBuilder addMavenCoordinates(MavenCoordinates coordinates) {
+        options.addMavenCoordinates(coordinates);
+        return this;
+    }
+
+    @Override
+    public WildFlyContainerBuilder outputToConsole(boolean outputToConsole) {
+        options.setOutputToConsole(outputToConsole);
+        return this;
+    }
+
+    @Override
+    public WildFlyCreateOptions getProcessOptions() {
+        options.validate();
+        return options;
     }
 }

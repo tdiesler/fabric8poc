@@ -20,8 +20,9 @@
 
 package io.fabric8.container.karaf;
 
-import io.fabric8.api.ContainerAttributes;
-import io.fabric8.spi.AbstractManagedContainer;
+import io.fabric8.api.process.MutableManagedProcess;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.process.AbstractProcessHandler;
 
 import java.io.File;
 import java.io.FileReader;
@@ -31,13 +32,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
-import javax.management.remote.JMXConnector;
-
-import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
@@ -45,35 +42,39 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  *
  * @since 26-Feb-2014
  */
-public final class KarafManagedContainer extends AbstractManagedContainer<KarafCreateOptions> {
+public final class KarafProcessHandler extends AbstractProcessHandler {
 
-    public KarafManagedContainer(KarafCreateOptions options) {
-        super(options);
+    public KarafProcessHandler() {
+        super(new RuntimePropertiesProvider());
     }
 
     @Override
-    protected void doConfigure() throws Exception {
-        File karafHome = getHomeDir();
+    public boolean accept(ProcessOptions options) {
+        return options instanceof KarafProcessOptions;
+    }
+
+    @Override
+    protected void doConfigure(MutableManagedProcess process) throws Exception {
+        File karafHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Karaf home does not exist: " + karafHome);
         File confDir = new File(karafHome, "etc");
         IllegalStateAssertion.assertTrue(confDir.isDirectory(), "Karaf conf does not exist: " + confDir);
 
         String comment = "Modified by " + getClass().getName();
-        configurePaxWeb(confDir, comment);
-        configureKarafManagement(confDir, comment);
-        configureFabricBoot(confDir, comment);
-        configureZooKeeperServer(confDir);
+        configurePaxWeb(process, confDir, comment);
+        configureKarafManagement(process, confDir, comment);
     }
 
-    protected void configurePaxWeb(File confDir, String comment) throws IOException {
+    protected void configurePaxWeb(MutableManagedProcess process, File confDir, String comment) throws IOException {
         // etc/org.ops4j.pax.web.cfg
         File paxwebFile = new File(confDir, "org.ops4j.pax.web.cfg");
         if (paxwebFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
 
-            int httpPort = nextAvailablePort(getCreateOptions().getHttpPort());
-            int httpsPort = nextAvailablePort(getCreateOptions().getHttpsPort());
+            KarafProcessOptions createOptions = (KarafProcessOptions) process.getCreateOptions();
+            int httpPort = nextAvailablePort(createOptions.getHttpPort());
+            int httpsPort = nextAvailablePort(createOptions.getHttpsPort());
 
             props.setProperty("org.osgi.service.http.port", new Integer(httpPort).toString());
             props.setProperty("org.osgi.service.https.port", new Integer(httpsPort).toString());
@@ -84,26 +85,21 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
                 fileWriter.close();
             }
 
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+            process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+            process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         }
     }
 
-    protected void configureKarafManagement(File confDir, String comment) throws IOException {
+    protected void configureKarafManagement(MutableManagedProcess process, File confDir, String comment) throws IOException {
         // etc/org.apache.karaf.management.cfg
         File managementFile = new File(confDir, "org.apache.karaf.management.cfg");
         IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
 
-        // etc/io.fabric8.zookeeper.server-0000.cfg
-        File zooKeeperServerFile = new File(confDir, "etc/io.fabric8.zookeeper.server-0000.cfg");
-        if (!getCreateOptions().isZooKeeperServer()) {
-            zooKeeperServerFile.delete();
-        }
-
         Properties props = new Properties();
         props.load(new FileReader(managementFile));
-        int rmiRegistryPort = nextAvailablePort(getCreateOptions().getRmiRegistryPort());
-        int rmiServerPort = nextAvailablePort(getCreateOptions().getRmiServerPort());
+        KarafProcessOptions createOptions = (KarafProcessOptions) process.getCreateOptions();
+        int rmiRegistryPort = nextAvailablePort(createOptions.getRmiRegistryPort());
+        int rmiServerPort = nextAvailablePort(createOptions.getRmiServerPort());
 
         props.setProperty("rmiRegistryPort", new Integer(rmiRegistryPort).toString());
         props.setProperty("rmiServerPort", new Integer(rmiServerPort).toString());
@@ -116,24 +112,25 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
         }
 
         String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + rmiServerPort + "/jndi/rmi://127.0.0.1:" + rmiRegistryPort + "/karaf-root";
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
-    protected void doStart() throws Exception {
+    protected void doStart(MutableManagedProcess process) throws Exception {
 
-        File karafHome = getHomeDir();
+        File karafHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(karafHome.isDirectory(), "Not a valid home dir: " + karafHome);
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
 
         // JavaVM args
-        String javaArgs = getCreateOptions().getJavaVmArguments();
+        KarafProcessOptions createOptions = (KarafProcessOptions) process.getCreateOptions();
+        String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         // Karaf properties
-        cmd.add("-Druntime.id=" + getIdentity());
+        cmd.add("-Druntime.id=" + process.getIdentity().getName());
         cmd.add("-Druntime.home=" + karafHome);
         cmd.add("-Druntime.base=" + karafHome);
         cmd.add("-Druntime.conf=" + karafHome + "/etc");
@@ -166,32 +163,9 @@ public final class KarafManagedContainer extends AbstractManagedContainer<KarafC
         // Main class
         cmd.add("org.apache.karaf.main.Main");
 
-        // Output the startup command
-        StringBuffer cmdstr = new StringBuffer();
-        for (String tok : cmd) {
-            cmdstr.append(tok + " ");
-        }
-
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.directory(karafHome);
         processBuilder.redirectErrorStream(true);
-        startProcess(processBuilder);
-    }
-
-    @Override
-    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-        JMXConnector connector;
-        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
-            ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-            try {
-                Thread.currentThread().setContextClassLoader(null);
-                connector = super.getJMXConnector(env, timeout, unit);
-            } finally {
-                Thread.currentThread().setContextClassLoader(contextLoader);
-            }
-        } else {
-            connector = super.getJMXConnector(env, timeout, unit);
-        }
-        return connector;
+        startProcess(processBuilder, createOptions);
     }
 }

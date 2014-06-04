@@ -1,6 +1,6 @@
 /*
  * #%L
- * Fabric8 :: Container :: Tomcat :: Managed
+ * Fabric8 :: Container :: Karaf :: Managed
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
@@ -20,16 +20,22 @@
 
 package io.fabric8.container.tomcat;
 
-import io.fabric8.spi.AbstractManagedContainerBuilder;
+import java.nio.file.Path;
+
+import org.jboss.gravia.resource.MavenCoordinates;
+
+import io.fabric8.spi.AbstractContainerBuilder;
+import io.fabric8.api.process.ProcessBuilder;
+
 
 
 /**
- * The Tomcat managed container builder
+ * The {@link KarafCreateOptions} builder
  *
  * @author thomas.diesler@jboss.com
- * @since 26-Feb-2014
+ * @since 14-Apr-2014
  */
-public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<TomcatContainerBuilder, TomcatCreateOptions> {
+public final class TomcatContainerBuilder extends AbstractContainerBuilder<TomcatContainerBuilder, TomcatCreateOptions> implements ProcessBuilder<TomcatContainerBuilder, TomcatCreateOptions> {
 
     public static TomcatContainerBuilder create() {
         return new TomcatContainerBuilder();
@@ -57,5 +63,41 @@ public class TomcatContainerBuilder extends AbstractManagedContainerBuilder<Tomc
     public TomcatContainerBuilder httpsPort(int httpsPort) {
         options.setHttpsPort(httpsPort);
         return this;
+    }
+
+    @Override
+    public TomcatContainerBuilder identityPrefix(String prefix) {
+        options.setIdentityPrefix(prefix);
+        return this;
+    }
+
+    @Override
+    public TomcatContainerBuilder targetPath(Path targetPath) {
+        options.setTargetPath(targetPath);
+        return this;
+    }
+
+    @Override
+    public TomcatContainerBuilder jvmArguments(String javaVmArguments) {
+        options.setJavaVmArguments(javaVmArguments);
+        return this;
+    }
+
+    @Override
+    public TomcatContainerBuilder addMavenCoordinates(MavenCoordinates coordinates) {
+        options.addMavenCoordinates(coordinates);
+        return this;
+    }
+
+    @Override
+    public TomcatContainerBuilder outputToConsole(boolean outputToConsole) {
+        options.setOutputToConsole(outputToConsole);
+        return this;
+    }
+
+    @Override
+    public TomcatCreateOptions getProcessOptions() {
+        options.validate();
+        return options;
     }
 }

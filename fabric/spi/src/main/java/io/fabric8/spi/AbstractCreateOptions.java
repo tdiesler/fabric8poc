@@ -22,24 +22,25 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileVersion;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileVersion;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public abstract class AbstractCreateOptions implements CreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
     private Version version = ProfileVersion.DEFAULT_PROFILE_VERSION_IDENTITY;
-    private Set<String> profiles = new LinkedHashSet<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
+    private List<String> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
 
     @Override
     public ContainerIdentity getIdentity() {
@@ -52,7 +53,7 @@ public abstract class AbstractCreateOptions implements CreateOptions {
     }
 
     @Override
-    public Set<String> getProfiles() {
+    public List<String> getProfiles() {
         return profiles;
     }
 
@@ -86,15 +87,15 @@ public abstract class AbstractCreateOptions implements CreateOptions {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
     }
-    
+
     protected void setVersion(Version version) {
         IllegalArgumentAssertion.assertNotNull(version, "version");
         this.version = version;
     }
 
-    protected void setProfiles(Set<String> profiles) {
+    protected void setProfiles(List<String> profiles) {
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
-        this.profiles = new LinkedHashSet<>(profiles);
+        this.profiles = new ArrayList<>(profiles);
     }
 
     protected <T> void putAttribute(AttributeKey<T> key, T value) {

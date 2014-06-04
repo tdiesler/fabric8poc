@@ -17,21 +17,27 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api.process;
 
-import io.fabric8.api.ContainerBuilder;
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.CreateOptions;
+
+import java.nio.file.Path;
+import java.util.Map;
 
 import org.jboss.gravia.resource.MavenCoordinates;
 
 /**
- * A builder for a fabric container
+ * Builder for {@link CreateOptions}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends ManagedCreateOptions> extends ContainerBuilder<B, C> {
+public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>, C extends CreateOptions> {
 
-    B targetDirectory(String target);
+    B identityPrefix(String prefix);
+
+    B targetPath(Path targetPath);
 
     B jvmArguments(String javaVmArguments);
 
@@ -39,5 +45,9 @@ public interface ManagedContainerBuilder<B extends ManagedContainerBuilder<B, C>
 
     B outputToConsole(boolean outputToConsole);
 
-    B zooKeeperServer(boolean zooKeeperServer);
+    <V> B addAttribute(AttributeKey<V> key, V value);
+
+    B addAttributes(Map<AttributeKey<?>, Object> attributes);
+
+    C getCreateOptions();
 }

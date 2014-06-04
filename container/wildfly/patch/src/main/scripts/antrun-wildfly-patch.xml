@@ -64,6 +64,11 @@
     </copy>
   	
   	<!-- Copy module resources -->
+    <copy todir="${wildfly.patch.dir}/modules/org/apache/commons/compress/main" overwrite="true">
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="commons-compress-*"/>
+        </fileset>
+    </copy>
     <copy todir="${wildfly.patch.dir}/modules/com/google/guava/main" overwrite="true">
           <fileset dir="${deploy.artifacts.lib}">
               <include name="guava-*"/>

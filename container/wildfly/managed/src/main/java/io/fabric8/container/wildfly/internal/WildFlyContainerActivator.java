@@ -20,6 +20,9 @@
 
 package io.fabric8.container.wildfly.internal;
 
+import io.fabric8.container.wildfly.WildFlyProcessHandler;
+import io.fabric8.spi.process.ProcessHandler;
+
 import org.jboss.gravia.runtime.ModuleActivator;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.ServiceRegistration;
@@ -36,9 +39,11 @@ public final class WildFlyContainerActivator implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) throws Exception {
+        registration = context.registerService(ProcessHandler.class, new WildFlyProcessHandler(), null);
     }
 
     @Override
     public void stop(ModuleContext context) throws Exception {
+        registration.unregister();
     }
 }

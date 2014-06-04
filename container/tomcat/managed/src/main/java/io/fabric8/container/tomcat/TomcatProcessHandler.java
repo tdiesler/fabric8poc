@@ -1,3 +1,4 @@
+package io.fabric8.container.tomcat;
 /*
  * #%L
  * Fabric8 :: Container :: Tomcat :: Managed
@@ -18,11 +19,11 @@
  * #L%
  */
 
-package io.fabric8.container.tomcat;
 
-import io.fabric8.api.ContainerAttributes;
-import io.fabric8.spi.AbstractManagedContainer;
-import io.fabric8.spi.RuntimeService;
+
+import io.fabric8.api.process.MutableManagedProcess;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.process.AbstractProcessHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,11 +31,8 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
-import javax.management.remote.JMXConnector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -46,7 +44,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.w3c.dom.Attr;
@@ -59,42 +57,45 @@ import org.w3c.dom.Element;
  *
  * @since 26-Feb-2014
  */
-public final class TomcatManagedContainer extends AbstractManagedContainer<TomcatCreateOptions> {
+public final class TomcatProcessHandler extends AbstractProcessHandler {
 
-    public TomcatManagedContainer(TomcatCreateOptions options) {
-        super(options);
+    public TomcatProcessHandler() {
+        super(new RuntimePropertiesProvider());
     }
 
     @Override
-    protected void doConfigure() throws Exception {
+    public boolean accept(ProcessOptions options) {
+        return options instanceof TomcatProcessOptions;
+    }
 
-        File catalinaHome = getHomeDir();
+    @Override
+    protected void doConfigure(MutableManagedProcess process) throws Exception {
+
+        File catalinaHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
         File catalinaConf = new File(catalinaHome , "conf");
         IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Catalina conf does not exist: " + catalinaConf);
         File graviaConf = new File(catalinaConf , "gravia" + File.separator + "configs");
         IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Gravia conf does not exist: " + graviaConf);
 
-        configureServer(catalinaConf);
-        configureFabricBoot(graviaConf, "");
-        configureZooKeeperServer(graviaConf);
+        configureServer(process, catalinaConf);
     }
 
-    protected void configureServer(File confDir) throws Exception {
+    protected void configureServer(MutableManagedProcess process, File confDir) throws Exception {
         // Transform conf/server.xml
-        transformServerXML(new File(confDir, "server.xml"));
-
+        transformServerXML(process, new File(confDir, "server.xml"));
         // Transform conf/catalina.properties
-        transformCatalinaProperties(new File(confDir, "catalina.properties"));
+        transformCatalinaProperties(process, new File(confDir, "catalina.properties"));
     }
 
     @Override
-    protected void doStart() throws Exception {
+    protected void doStart(MutableManagedProcess process) throws Exception {
 
-        int jmxPort = nextAvailablePort(getCreateOptions().getJmxPort());
-        int ajpPort = nextAvailablePort(getCreateOptions().getAjpPort());
-        int httpPort = nextAvailablePort(getCreateOptions().getHttpPort());
-        int httpsPort = nextAvailablePort(getCreateOptions().getHttpsPort());
+        TomcatProcessOptions createOptions = (TomcatProcessOptions) process.getCreateOptions();
+        int jmxPort = nextAvailablePort(createOptions.getJmxPort());
+        int ajpPort = nextAvailablePort(createOptions.getAjpPort());
+        int httpPort = nextAvailablePort(createOptions.getHttpPort());
+        int httpsPort = nextAvailablePort(createOptions.getHttpsPort());
 
         // Construct a command to execute
         List<String> cmd = new ArrayList<String>();
@@ -108,10 +109,10 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         cmd.add("-Dtomcat.http.port=" + httpPort);
         cmd.add("-Dtomcat.https.port=" + httpsPort);
 
-        String javaArgs = getCreateOptions().getJavaVmArguments();
+        String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
-        File catalinaHome = getHomeDir();
+        File catalinaHome = process.getHomePath().toFile();
         String absolutePath = catalinaHome.getAbsolutePath();
         String CLASS_PATH = absolutePath + "/bin/bootstrap.jar" + File.pathSeparator;
         CLASS_PATH += absolutePath + "/bin/tomcat-juli.jar";
@@ -129,33 +130,16 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
-        startProcess(processBuilder);
+        startProcess(processBuilder, createOptions);
 
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
 
         String jmxServerURL = "service:jmx:rmi:///jndi/rmi://127.0.0.1:" + jmxPort + "/jmxrmi";
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
-    @Override
-    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-        JMXConnector connector;
-        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
-            ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-            try {
-                Thread.currentThread().setContextClassLoader(null);
-                connector = super.getJMXConnector(env, timeout, unit);
-            } finally {
-                Thread.currentThread().setContextClassLoader(contextLoader);
-            }
-        } else {
-            connector = super.getJMXConnector(env, timeout, unit);
-        }
-        return connector;
-    }
-
-    private void transformServerXML(File configFile) throws Exception {
+    private void transformServerXML(MutableManagedProcess process, File configFile) throws Exception {
         IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
 
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -176,7 +160,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         fos.close();
     }
 
-    private void transformCatalinaProperties(File configFile) throws Exception {
+    private void transformCatalinaProperties(MutableManagedProcess process, File configFile) throws Exception {
         IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
 
         FileInputStream instream = new FileInputStream(configFile);
@@ -185,7 +169,7 @@ public final class TomcatManagedContainer extends AbstractManagedContainer<Tomca
         IOUtils.safeClose(instream);
 
         FileOutputStream outstream = new FileOutputStream(configFile);
-        properties.setProperty(RuntimeService.RUNTIME_IDENTITY, getIdentity().getCanonicalForm());
+        properties.setProperty("runtime.id", process.getIdentity().getName());
         properties.store(outstream, "Managed container properties");
         IOUtils.safeClose(outstream);
     }

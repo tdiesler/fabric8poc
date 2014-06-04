@@ -20,8 +20,9 @@ import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.utils.ManagementUtils;
 
-import javax.management.remote.JMXConnector;
 import java.util.concurrent.TimeUnit;
+
+import javax.management.remote.JMXConnector;
 
 public class ContainerJmxEndpoint extends AbstractJMXServiceEndpoint {
 

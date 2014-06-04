@@ -20,20 +20,19 @@
 
 package io.fabric8.container.wildfly;
 
-import io.fabric8.api.ContainerAttributes;
-import io.fabric8.container.wildfly.connector.WildFlyManagementUtils;
-import io.fabric8.spi.AbstractManagedContainer;
+import io.fabric8.api.process.MutableManagedProcess;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.process.AbstractProcessHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import javax.management.remote.JMXConnector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -45,8 +44,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import io.fabric8.spi.utils.StringUtils;
-import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -60,50 +58,46 @@ import org.w3c.dom.Element;
  *
  * @since 26-Feb-2014
  */
-public final class WildFlyManagedContainer extends AbstractManagedContainer<WildFlyCreateOptions> {
+public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
-    public WildFlyManagedContainer(WildFlyCreateOptions options) {
-        super(options);
+    public WildFlyProcessHandler() {
+        super(new RuntimePropertiesProvider());
     }
 
     @Override
-    protected void doConfigure() throws Exception {
-        File jbossHome = getHomeDir();
+    public boolean accept(ProcessOptions options) {
+        return options instanceof WildFlyProcessOptions;
+    }
+
+    @Override
+    protected void doConfigure(MutableManagedProcess process) throws Exception {
+        File jbossHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "Wildfly home does not exist: " + jbossHome);
-        File graviaConf = new File(jbossHome, StringUtils.join(Arrays.asList("standalone", "configuration", "gravia", "configs", ""), File.separator));
+        File graviaConf = Paths.get(jbossHome.getPath(), "standalone", "configuration", "gravia", "configs").toFile();
         IllegalStateAssertion.assertTrue(graviaConf.isDirectory(), "Gravia conf does not exist: " + jbossHome);
-
-        configureFabricBoot(graviaConf, "");
-        configureZooKeeperServer(graviaConf);
     }
 
     @Override
-    protected void doStart() throws Exception {
+    protected void doStart(MutableManagedProcess process) throws Exception {
 
-        File jbossHome = getHomeDir();
+        File jbossHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "WildFly home does not exist: " + jbossHome);
 
-        // Delete zookepper config file if this is not a server
-        if (!getCreateOptions().isZooKeeperServer()) {
-            File zooKeeperServerFile = new File(jbossHome, "standalone/configuration/gravia/configs/io.fabric8.zookeeper.server-0000.cfg");
-            zooKeeperServerFile.delete();
-        }
-
         // Transform conf/server.xml
-        transformStandaloneXML(new File(jbossHome, "standalone/configuration/" + getCreateOptions().getServerConfig()));
+        WildFlyProcessOptions createOptions = (WildFlyProcessOptions) process.getCreateOptions();
+        transformStandaloneXML(process, new File(jbossHome, "standalone/configuration/" + createOptions.getServerConfig()));
 
         File modulesPath = new File(jbossHome, "modules");
         File modulesJar = new File(jbossHome, "jboss-modules.jar");
         if (!modulesJar.exists())
             throw new IllegalStateException("Cannot find: " + modulesJar);
 
-        WildFlyCreateOptions options = getCreateOptions();
-        int managementNativePort = nextAvailablePort(options.getManagementNativePort());
-        int managementHttpPort = nextAvailablePort(options.getManagementHttpPort());
-        int managementHttpsPort = nextAvailablePort(options.getManagementHttpsPort());
-        int ajpPort = nextAvailablePort(options.getAjpPort());
-        int httpPort = nextAvailablePort(options.getHttpPort());
-        int httpsPort = nextAvailablePort(options.getHttpsPort());
+        int managementNativePort = nextAvailablePort(createOptions.getManagementNativePort());
+        int managementHttpPort = nextAvailablePort(createOptions.getManagementHttpPort());
+        int managementHttpsPort = nextAvailablePort(createOptions.getManagementHttpsPort());
+        int ajpPort = nextAvailablePort(createOptions.getAjpPort());
+        int httpPort = nextAvailablePort(createOptions.getHttpPort());
+        int httpsPort = nextAvailablePort(createOptions.getHttpsPort());
 
         List<String> cmd = new ArrayList<String>();
         cmd.add("java");
@@ -115,7 +109,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         cmd.add("-Djboss.http.port=" + httpPort);
         cmd.add("-Djboss.https.port=" + httpsPort);
 
-        String javaArgs = options.getJavaVmArguments();
+        String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
         cmd.add("-Djboss.home.dir=" + jbossHome);
@@ -125,30 +119,17 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         cmd.add(modulesPath.getAbsolutePath());
         cmd.add("org.jboss.as.standalone");
         cmd.add("-server-config");
-        cmd.add(options.getServerConfig());
+        cmd.add(createOptions.getServerConfig());
 
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
-        startProcess(processBuilder);
+        startProcess(processBuilder, createOptions);
 
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
 
         String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + managementHttpPort;
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
-    }
-
-    @Override
-    public JMXConnector getJMXConnector(Map<String, Object> env, long timeout, TimeUnit unit) {
-        JMXConnector connector;
-        if (RuntimeType.getRuntimeType() == RuntimeType.WILDFLY) {
-            JmxEnvironmentEnhancer.addClassLoader(env);
-            connector = super.getJMXConnector(env, timeout, unit);
-        } else {
-            String jmxServiceURL = getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
-            return WildFlyManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
-        }
-        return connector;
+        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     // Confine the usage of jboss-modules to an additional class
@@ -169,7 +150,7 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         }
     }
 
-    private void transformStandaloneXML(File configFile) throws Exception {
+    private void transformStandaloneXML(MutableManagedProcess process, File configFile) throws Exception {
         IllegalStateAssertion.assertTrue(configFile.exists(), "File does not exist: " + configFile);
 
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -178,8 +159,8 @@ public final class WildFlyManagedContainer extends AbstractManagedContainer<Wild
         Document document = builder.parse(fis);
         fis.close();
 
-        String containerId = getCreateOptions().getIdentity().getCanonicalForm();
-        replacePropertyValue(document, "/server/system-properties/property[@name='runtime.id']", containerId);
+        String processId = process.getIdentity().getName();
+        replacePropertyValue(document, "/server/system-properties/property[@name='runtime.id']", processId);
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         DOMSource source = new DOMSource(document);

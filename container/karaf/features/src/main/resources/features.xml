@@ -45,7 +45,6 @@
         <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.scr/${version.apache.felix.scr}</bundle>
         <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.metatype/${version.apache.felix.metatype}</bundle>
         <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.http.bundle/${version.apache.felix.http}</bundle>
-        <bundle>mvn:org.jboss.gravia/gravia-process-api/${version.jboss.gravia}</bundle>
         <bundle>mvn:org.jboss.gravia/gravia-provision/${version.jboss.gravia}</bundle>
         <bundle>mvn:org.jboss.gravia/gravia-resolver/${version.jboss.gravia}</bundle>
         <bundle>mvn:org.jboss.gravia/gravia-resource/${version.jboss.gravia}</bundle>

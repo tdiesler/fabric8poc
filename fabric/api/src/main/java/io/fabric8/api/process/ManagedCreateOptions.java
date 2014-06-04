@@ -17,28 +17,17 @@
  * limitations under the License.
  * #L%
  */
+package io.fabric8.api.process;
 
-package io.fabric8.spi;
-
-import io.fabric8.api.Attributable;
-import io.fabric8.api.ContainerIdentity;
-
-import java.util.concurrent.TimeUnit;
-
-import javax.management.remote.JMXConnector;
-
-import org.jboss.gravia.process.api.ManagedProcess;
+import io.fabric8.api.CreateOptions;
 
 
 /**
- * The managed root container
+ * Managed container create options
  *
  * @author thomas.diesler@jboss.com
- * @since 26-Feb-2014
+ * @since 14-Mar-2014
  */
-public interface ManagedContainer<T extends ManagedCreateOptions> extends ManagedProcess<T>, Attributable {
+public interface ManagedCreateOptions extends ProcessOptions, CreateOptions {
 
-    ContainerIdentity getIdentity();
-
-    JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit);
 }

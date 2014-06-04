@@ -17,20 +17,14 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.domain.agent;
-
-import io.fabric8.api.ContainerManager;
+package io.fabric8.spi.process;
 
 /**
- * The central controller service
+ * The self registration process options
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 04-Jun-2014
  */
-public interface Agent extends ContainerManager {
+public class SelfRegistrationOptions extends AbstractProcessOptions {
 
-    /**
-     * The configuration PID for this service
-     */
-    String AGENT_SERVICE_PID = "agent.service.pid";
 }

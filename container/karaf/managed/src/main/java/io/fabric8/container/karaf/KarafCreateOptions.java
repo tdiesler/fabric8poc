@@ -19,75 +19,33 @@
  */
 package io.fabric8.container.karaf;
 
-import io.fabric8.spi.AbstractManagedCreateOptions;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.process.ManagedCreateOptions;
 
-import java.io.IOException;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.resource.Version;
 
 
-public final class KarafCreateOptions extends AbstractManagedCreateOptions {
+public final class KarafCreateOptions extends KarafProcessOptions implements ManagedCreateOptions {
 
-    public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
+    private final List<String> profiles = new ArrayList<>();
+    private Version version = Version.emptyVersion;
 
-    public static final int DEFAULT_RMI_SERVER_PORT = 44444;
-    public static final int DEFAULT_RMI_REGISTRY_PORT = 1099;
-    public static final int DEFAULT_HTTP_PORT = 8080;
-    public static final int DEFAULT_HTTPS_PORT = 8443;
-
-    private int rmiServerPort = DEFAULT_RMI_SERVER_PORT;
-    private int rmiRegistryPort = DEFAULT_RMI_REGISTRY_PORT;
-    private int httpPort = DEFAULT_HTTP_PORT;
-    private int httpsPort = DEFAULT_HTTPS_PORT;
-
-    public int getRmiServerPort() {
-        return rmiServerPort;
-    }
-
-    void setRmiServerPort(int rmiServerPort) {
-        this.rmiServerPort = rmiServerPort;
-    }
-
-    public int getRmiRegistryPort() {
-        return rmiRegistryPort;
-    }
-
-    void setRmiRegistryPort(int rmiRegistryPort) {
-        this.rmiRegistryPort = rmiRegistryPort;
-    }
-
-    public int getHttpPort() {
-        return httpPort;
-    }
-
-    void setHttpPort(int httpPort) {
-        this.httpPort = httpPort;
-    }
-
-    public int getHttpsPort() {
-        return httpsPort;
-    }
-
-    void setHttpsPort(int httpsPort) {
-        this.httpsPort = httpsPort;
+    @Override
+    public ContainerIdentity getIdentity() {
+        return ContainerIdentity.create(getIdentityPrefix());
     }
 
     @Override
-    protected void validate() {
-        if (getMavenCoordinates().isEmpty()) {
-            Properties properties = new Properties();
-            try {
-                properties.load(getClass().getResourceAsStream("version.properties"));
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot load version.properties", ex);
-            }
-            String projectVersion = properties.getProperty("project.version");
-            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-karaf", projectVersion, "tar.gz", null));
-        }
-        if (getJavaVmArguments() == null) {
-            setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);
-        }
-        super.validate();
+    public Version getVersion() {
+        return version;
+    }
+
+    @Override
+    public List<String> getProfiles() {
+        return Collections.unmodifiableList(profiles);
     }
 }

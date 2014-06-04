@@ -18,13 +18,6 @@ package io.fabric8.spi.internal;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalStateAssertion;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +25,14 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 @Component(configurationPid = "io.fabric8.boot", policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(BootConfiguration.class)

@@ -14,10 +14,10 @@
  */
 package io.fabric8.spi.utils;
 
-import org.jboss.gravia.runtime.RuntimeLocator;
-
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.ServerSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
@@ -25,6 +25,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public class HostUtils {
 
@@ -35,9 +38,7 @@ public class HostUtils {
     }
 
     /**
-     * Returns a {@link} of {@link java.net.InetAddress} per {@link java.net.NetworkInterface} as a {@link java.util.Map}.
-     *
-     * @return
+     * Returns a map of InetAddress per NetworkInterface
      */
     public static Map<String, Set<InetAddress>> getNetworkInterfaceAddresses() {
         //JVM returns interfaces in a non-predictable order, so to make this more predictable
@@ -72,8 +73,7 @@ public class HostUtils {
     }
 
     /**
-     * Returns a {@link java.util.Set} of {@link java.net.InetAddress} that are non-loopback or mac.
-     * @return
+     * Returns a set of InetAddress that are non-loopback or mac.
      */
     public static Set<InetAddress> getAddresses() {
         Set<InetAddress> allAddresses = new LinkedHashSet<InetAddress>();
@@ -93,9 +93,6 @@ public class HostUtils {
     /**
      * Chooses one of the available {@link java.net.InetAddress} based on the specified preference.
      * If the preferred address is not part of the available addresses it will be ignored.
-     *
-     * @param preferred
-     * @return
      */
     private static InetAddress chooseAddress(String preferred) throws UnknownHostException {
         Set<InetAddress> addresses = getAddresses();
@@ -124,9 +121,6 @@ public class HostUtils {
 
     /**
      * Returns the local hostname. It loops through the network interfaces and returns the first non loopback address
-     *
-     * @return
-     * @throws java.net.UnknownHostException
      */
     public static String getLocalHostName() throws UnknownHostException {
         String preffered = String.valueOf(RuntimeLocator.getRequiredRuntime().getProperty(PREFERED_ADDRESS_PROPERTY_NAME));
@@ -135,13 +129,32 @@ public class HostUtils {
 
     /**
      * Returns the local IP. It loops through the network interfaces and returns the first non loopback address
-     *
-     * @return
-     * @throws java.net.UnknownHostException
      */
     public static String getLocalIp() throws UnknownHostException {
         String preffered = String.valueOf(RuntimeLocator.getRequiredRuntime().getProperty(PREFERED_ADDRESS_PROPERTY_NAME));;
         return chooseAddress(preffered).getHostAddress();
     }
 
+    /**
+     * Get the next available port value
+     */
+    public static int nextAvailablePort(int portValue, InetAddress bindAddr) {
+        ServerSocket socket = null;
+        int endPort = portValue + 100;
+        while (socket == null && portValue < endPort) {
+            try {
+                socket = new ServerSocket(portValue, 0, bindAddr);
+            } catch (IOException ex) {
+                portValue++;
+            }
+        }
+        IllegalStateAssertion.assertNotNull(socket, "Cannot obtain next available port");
+        int resultPort = socket.getLocalPort();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            // ignore
+        }
+        return resultPort;
+    }
 }

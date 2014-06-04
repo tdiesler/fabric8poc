@@ -19,12 +19,12 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.ContainerManager;
+import io.fabric8.spi.permit.PermitKey;
+
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-
-import io.fabric8.api.ContainerManager;
-import io.fabric8.spi.permit.PermitKey;
 
 /**
  * The internal fabric service

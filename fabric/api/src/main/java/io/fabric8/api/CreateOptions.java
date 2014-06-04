@@ -20,9 +20,9 @@
 package io.fabric8.api;
 
 
-import org.jboss.gravia.resource.Version;
+import java.util.List;
 
-import java.util.Set;
+import org.jboss.gravia.resource.Version;
 
 /**
  * Container create options
@@ -36,5 +36,5 @@ public interface CreateOptions extends Attributable {
 
     Version getVersion();
 
-    Set<String> getProfiles();
+    List<String> getProfiles();
 }

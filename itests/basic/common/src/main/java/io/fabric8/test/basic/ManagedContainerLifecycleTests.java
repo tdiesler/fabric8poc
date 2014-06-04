@@ -38,6 +38,7 @@ import io.fabric8.container.wildfly.WildFlyCreateOptions;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.test.smoke.PrePostConditions;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -74,12 +75,12 @@ public class ManagedContainerLifecycleTests  {
     public void testManagedKaraf() throws Exception {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+        File dataDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR));
 
         CreateOptions options = KarafContainerBuilder.create()
                 .identity("ManagedKaraf")
                 .outputToConsole(true)
-                .targetDirectory(dataDir)
+                .targetPath(dataDir.toPath())
                 .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -101,12 +102,12 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+        File dataDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR));
 
         CreateOptions options = TomcatContainerBuilder.create()
                 .identity("ManagedTomcat")
                 .outputToConsole(true)
-                .targetDirectory(dataDir)
+                .targetPath(dataDir.toPath())
                 .getCreateOptions();
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -128,13 +129,13 @@ public class ManagedContainerLifecycleTests  {
 
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String dataDir = (String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR);
+        File dataDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR));
 
         // [TODO] The default port of the running server is available, why?
         CreateOptions options = WildFlyContainerBuilder.create()
                 .identity("ManagedWildFly")
                 .outputToConsole(true)
-                .targetDirectory(dataDir)
+                .targetPath(dataDir.toPath())
                 .managementNativePort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_NATIVE_PORT + 1)
                 .managementHttpPort(WildFlyCreateOptions.DEFAULT_MANAGEMENT_HTTP_PORT + 1)
                 .getCreateOptions();

@@ -19,14 +19,14 @@
  */
 package io.fabric8.spi;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
-
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.spi.permit.PermitKey;
+
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import org.jboss.gravia.resource.Version;
 

@@ -1,8 +1,8 @@
 /*
  * #%L
- * Fabric8 :: Core
+ * Gravia :: Resolver
  * %%
- * Copyright (C) 2014 Red Hat
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,159 +19,173 @@
  */
 package io.fabric8.domain.agent.internal;
 
-import io.fabric8.api.Container;
-import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.CreateOptions;
-import io.fabric8.api.Failure;
-import io.fabric8.api.JoinOptions;
-import io.fabric8.api.LockHandle;
-import io.fabric8.api.Profile;
-import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.domain.agent.Agent;
-import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.api.process.ManagedProcess;
+import io.fabric8.api.process.MutableManagedProcess;
+import io.fabric8.api.process.ProcessIdentity;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.process.ImmutableManagedProcess;
+import io.fabric8.spi.process.ProcessHandler;
+import io.fabric8.spi.process.SelfRegistrationHandler;
+import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.management.MBeanServer;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.provision.ProvisionException;
-import org.jboss.gravia.resource.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.gravia.runtime.LifecycleException;
+import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
- * The central {@link Agent}
+ * The agent controller
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 29-May-2014
  */
-@Component(configurationPid = Agent.AGENT_SERVICE_PID, policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(Agent.class)
-public final class AgentService extends AbstractComponent implements Agent {
+public final class AgentService implements Agent {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
+    private final AtomicInteger processCount = new AtomicInteger();
+    private final Map<ProcessIdentity, Registration> registrations = new ConcurrentHashMap<>();
+
+    @Reference(referenceInterface = ConfigurationAdmin.class)
+    private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
+    @Reference(referenceInterface = MBeanServer.class)
+    private final ValidatingReference<MBeanServer> mbeanServer = new ValidatingReference<>();
+    @Reference(referenceInterface = ProcessHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final Set<ProcessHandler> processHandlers = new CopyOnWriteArraySet<>();
 
     @Activate
-    void activate(Map<String, ?> config) throws ProvisionException {
-        activateComponent();
+    void activate(Map<String, Object> config) {
+        activateInternal();
     }
-
-    // @Modified not implemented - we get a new component with every config change
 
     @Deactivate
     void deactivate() {
-        deactivateComponent();
+    }
+
+    private void activateInternal() {
+
+        // Register the self registration handler
+        processHandlers.add(new SelfRegistrationHandler());
     }
 
     @Override
-    public LockHandle aquireContainerLock(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+    public Set<String> getProcessHandlers() {
+        Set<String> fqnames = new HashSet<>();
+        for (ProcessHandler handler : processHandlers) {
+            fqnames.add(handler.getClass().getName());
+        }
+        return fqnames;
     }
 
     @Override
-    public Container createContainer(CreateOptions options) {
-        throw new UnsupportedOperationException();
+    public Set<ProcessIdentity> getProcessIdentities() {
+        return registrations.keySet();
     }
 
     @Override
-    public Container createContainer(ContainerIdentity parentId, CreateOptions options) {
-        throw new UnsupportedOperationException();
+    public ManagedProcess getManagedProcess(ProcessIdentity processId) {
+        Registration preg = getRequiredRegistration(processId);
+        return new ImmutableManagedProcess(preg.getManagedProcess());
     }
 
     @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
-        throw new UnsupportedOperationException();
+    public ManagedProcess createProcess(ProcessOptions options) {
+        MutableManagedProcess process = null;
+        for (ProcessHandler handler : processHandlers) {
+            if (handler.accept(options)) {
+                String identitySpec = options.getIdentityPrefix();
+                if (identitySpec.endsWith("#")) {
+                    identitySpec += processCount.incrementAndGet();
+                }
+                process = handler.create(options, ProcessIdentity.create(identitySpec));
+                registrations.put(process.getIdentity(), new Registration(handler, process));
+                break;
+            }
+        }
+        IllegalStateAssertion.assertNotNull(process, "No handler for: " + options);
+        return process;
     }
 
     @Override
-    public Set<Container> getContainers(Set<ContainerIdentity> identities) {
-        throw new UnsupportedOperationException();
+    public void startProcess(ProcessIdentity processId) throws LifecycleException {
+        Registration preg = getRequiredRegistration(processId);
+        MutableManagedProcess process = preg.getManagedProcess();
+        preg.getProcessHandler().start(process);
     }
 
     @Override
-    public Container getContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+    public void stopProcess(ProcessIdentity processId) throws LifecycleException {
+        Registration preg = getRequiredRegistration(processId);
+        MutableManagedProcess process = preg.getManagedProcess();
+        preg.getProcessHandler().stop(process);
     }
 
     @Override
-    public Container getCurrentContainer() {
-        throw new UnsupportedOperationException();
+    public void destroyProcess(ProcessIdentity processId) {
+        Registration preg = getRequiredRegistration(processId);
+        MutableManagedProcess process = preg.getManagedProcess();
+        preg.getProcessHandler().destroy(process);
     }
 
-    @Override
-    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
+    private Registration getRequiredRegistration(ProcessIdentity processId) {
+        Registration preg = registrations.get(processId);
+        IllegalStateAssertion.assertNotNull(preg, "Process not registered: " + processId);
+        return preg;
     }
 
-    @Override
-    public Container stopContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+    void bindConfigAdmin(ConfigurationAdmin service) {
+        configAdmin.bind(service);
+    }
+    void unbindConfigAdmin(ConfigurationAdmin service) {
+        configAdmin.unbind(service);
     }
 
-    @Override
-    public Container destroyContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+    void bindMbeanServer(MBeanServer service) {
+        mbeanServer.bind(service);
+    }
+    void unbindMbeanServer(MBeanServer service) {
+        mbeanServer.unbind(service);
     }
 
-    @Override
-    public boolean pingContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+    void bindProcessHandler(ProcessHandler service) {
+        processHandlers.add(service);
+    }
+    void unbindProcessHandler(ProcessHandler service) {
+        processHandlers.remove(service);
     }
 
-    @Override
-    public Container joinFabric(ContainerIdentity identity, JoinOptions options) {
-        throw new UnsupportedOperationException();
-    }
+    static class Registration {
 
-    @Override
-    public Container leaveFabric(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
+        private final ProcessHandler handler;
+        private MutableManagedProcess process;
 
-    @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
+        Registration(ProcessHandler handler, MutableManagedProcess process) {
+            this.handler = handler;
+            this.process = process;
+        }
 
-    @Override
-    public Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
+        ProcessHandler getProcessHandler() {
+            return handler;
+        }
 
-    @Override
-    public Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Profile getEffectiveProfile(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Failure> getFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Failure> clearFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        MutableManagedProcess getManagedProcess() {
+            return process;
+        }
     }
 }

@@ -1,6 +1,6 @@
 /*
  * #%L
- * Fabric8 :: Container :: Tomcat :: Managed
+ * Fabric8 :: Container :: Karaf :: Managed
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
@@ -19,75 +19,33 @@
  */
 package io.fabric8.container.tomcat;
 
-import io.fabric8.spi.AbstractManagedCreateOptions;
+import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.process.ManagedCreateOptions;
 
-import java.io.IOException;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.resource.Version;
 
 
-public final class TomcatCreateOptions extends AbstractManagedCreateOptions {
+public final class TomcatCreateOptions extends TomcatProcessOptions implements ManagedCreateOptions {
 
-    public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m -XX:MaxPermSize=128m";
+    private final List<String> profiles = new ArrayList<>();
+    private Version version = Version.emptyVersion;
 
-    public static final int DEFAULT_JMX_PORT = 8089;
-    public static final int DEFAULT_AJP_PORT = 8009;
-    public static final int DEFAULT_HTTP_PORT = 8080;
-    public static final int DEFAULT_HTTPS_PORT = 8443;
-
-    private int jmxPort = DEFAULT_JMX_PORT;
-    private int ajpPort = DEFAULT_AJP_PORT;
-    private int httpPort = DEFAULT_HTTP_PORT;
-    private int httpsPort = DEFAULT_HTTPS_PORT;
-
-    public int getJmxPort() {
-        return jmxPort;
-    }
-
-    void setJmxPort(int jmxPort) {
-        this.jmxPort = jmxPort;
-    }
-
-    public int getAjpPort() {
-        return ajpPort;
-    }
-
-    void setAjpPort(int ajpPort) {
-        this.ajpPort = ajpPort;
-    }
-
-    public int getHttpPort() {
-        return httpPort;
-    }
-
-    void setHttpPort(int httpPort) {
-        this.httpPort = httpPort;
-    }
-
-    public int getHttpsPort() {
-        return httpsPort;
-    }
-
-    void setHttpsPort(int httpsPort) {
-        this.httpsPort = httpsPort;
+    @Override
+    public ContainerIdentity getIdentity() {
+        return ContainerIdentity.create(getIdentityPrefix());
     }
 
     @Override
-    protected void validate() {
-        if (getMavenCoordinates().isEmpty()) {
-            Properties properties = new Properties();
-            try {
-                properties.load(getClass().getResourceAsStream("version.properties"));
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot load version.properties", ex);
-            }
-            String projectVersion = properties.getProperty("project.version");
-            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-tomcat", projectVersion, "tar.gz", null));
-        }
-        if (getJavaVmArguments() == null) {
-            setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);
-        }
-        super.validate();
+    public Version getVersion() {
+        return version;
+    }
+
+    @Override
+    public List<String> getProfiles() {
+        return Collections.unmodifiableList(profiles);
     }
 }

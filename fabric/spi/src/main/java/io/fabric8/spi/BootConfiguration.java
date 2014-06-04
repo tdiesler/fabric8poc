@@ -15,10 +15,10 @@
 
 package io.fabric8.spi;
 
-import org.jboss.gravia.resource.Version;
-
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.gravia.resource.Version;
 
 /**
  * A holder for the initial container Configuration.

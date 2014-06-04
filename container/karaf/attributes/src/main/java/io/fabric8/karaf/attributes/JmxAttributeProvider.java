@@ -73,7 +73,7 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
     private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
 
     @Reference(referenceInterface = ConfigurationAdmin.class)
-    private ValidatingReference<ConfigurationAdmin> configurationAdmin = new ValidatingReference<>();
+    private ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
 
 
     @Activate
@@ -100,7 +100,7 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
      */
     private void processConfiguration() {
         try {
-            Configuration configuration = configurationAdmin.get().getConfiguration(MANAGEMENT_PID);
+            Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID);
             Map<String, Object> map = new HashMap<>();
             configurer.get().configure(configuration.getProperties(), this);
             updateAttributes();
@@ -122,16 +122,14 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
     void bindConfigurer(Configurer service) {
         this.configurer.bind(service);
     }
-
     void unbindConfigurer(Configurer service) {
         this.configurer.unbind(service);
     }
 
-    void bindConfigurationAdmin(ConfigurationAdmin service) {
-        this.configurationAdmin.bind(service);
+    void bindConfigAdmin(ConfigurationAdmin service) {
+        this.configAdmin.bind(service);
     }
-
-    void unbindConfigurationAdmin(ConfigurationAdmin service) {
-        this.configurationAdmin.unbind(service);
+    void unbindConfigAdmin(ConfigurationAdmin service) {
+        this.configAdmin.unbind(service);
     }
 }
