@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.domain.agent;
+package io.fabric8.spi;
 
 import io.fabric8.api.process.ManagedProcess;
 import io.fabric8.api.process.ProcessIdentity;

@@ -19,13 +19,27 @@
  */
 package io.fabric8.core;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
+import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.core.ContainerServiceImpl.ContainerState;
+import io.fabric8.api.CreateOptions;
+import io.fabric8.api.Host;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
+import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +48,13 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.resource.ResourceIdentity;
+import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -47,6 +67,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 @Service(ContainerRegistry.class)
 public final class ContainerRegistry extends AbstractComponent {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRegistry.class);
+
     private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();
 
     @Activate
@@ -57,6 +79,12 @@ public final class ContainerRegistry extends AbstractComponent {
     @Deactivate
     void deactivate() {
         deactivateComponent();
+    }
+
+    ContainerState createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options) {
+        ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
+        ContainerState cntState = new ContainerState(parentState, identity, options);
+        return cntState;
     }
 
     Set<ContainerIdentity> getContainerIdentities() {
@@ -75,33 +103,226 @@ public final class ContainerRegistry extends AbstractComponent {
         return Collections.unmodifiableSet(result);
     }
 
-    ContainerState getContainer(ContainerIdentity identity) {
-        assertValid();
-        return getContainerInternal(identity);
-    }
-
-    void addContainer(ContainerState cntState) {
+    void publishContainer(ContainerState cntState) {
         assertValid();
         ContainerIdentity identity = cntState.getIdentity();
-        IllegalStateAssertion.assertTrue(getContainerInternal(identity) == null, "Container already exists: " + identity);
+        IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
         containers.put(identity, cntState);
     }
 
-    ContainerState removeContainer(ContainerIdentity identity) {
+    void removeContainer(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainer(identity);
+        getRequiredContainerState(identity);
         containers.remove(identity);
-        return cntState;
     }
 
-    ContainerState getRequiredContainer(ContainerIdentity identity) {
-        assertValid();
-        ContainerState cntState = getContainerInternal(identity);
+    ContainerState getContainerState(ContainerIdentity identity) {
+        return containers.get(identity);
+    }
+
+    ContainerState getRequiredContainerState(ContainerIdentity identity) {
+        ContainerState cntState = containers.get(identity);
         IllegalStateAssertion.assertNotNull(cntState, "Container not registered: " + identity);
         return cntState;
     }
 
-    private ContainerState getContainerInternal(ContainerIdentity identity) {
-        return containers.get(identity);
+    final static class ContainerState {
+
+        private final ContainerState parentState;
+        private final ContainerIdentity identity;
+        private final AttributeSupport attributes;
+        private final List<String> profiles = new ArrayList<>();
+        private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
+        private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
+        private ProfileVersionState versionState;
+        private State state;
+
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options) {
+            IllegalArgumentAssertion.assertNotNull(identity, "identity");
+            IllegalArgumentAssertion.assertNotNull(options, "options");
+            this.parentState = parentState;
+            this.identity = identity;
+            this.state = State.CREATED;
+            this.attributes = new AttributeSupport(options.getAttributes(), true);
+        }
+
+        ContainerIdentity getIdentity() {
+            return identity;
+        }
+
+        State getState() {
+            return state;
+        }
+
+        Map<AttributeKey<?>, Object> getAttributes() {
+            return attributes.getAttributes();
+        }
+
+        Set<AttributeKey<?>> getAttributeKeys() {
+            return attributes.getAttributeKeys();
+        }
+
+        <T> T getAttribute(AttributeKey<T> key) {
+            return attributes.getAttribute(key);
+        }
+
+        <T> boolean hasAttribute(AttributeKey<T> key) {
+            return attributes.hasAttribute(key);
+        }
+
+        Host getHost() {
+            throw new UnsupportedOperationException();
+        }
+
+        Set<String> getManagementDomains() {
+            throw new UnsupportedOperationException();
+        }
+
+        ContainerState getParentState() {
+            return parentState != null ? parentState : null;
+        }
+
+        Set<ContainerIdentity> getChildIdentities() {
+            assertReadLock();
+            return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
+        }
+
+        ProfileVersion getProfileVersion() {
+            return versionState != null ? versionState.getProfileVersion() : null;
+        }
+
+        List<String> getProfileIdentities() {
+            assertReadLock();
+            return Collections.unmodifiableList(new ArrayList<>(profiles));
+        }
+
+        Set<ServiceEndpointIdentity<?>> getServiceEndpointIdentities() {
+            return Collections.unmodifiableSet(new HashSet<>(getServiceEndpoints().keySet()));
+        }
+
+        @SuppressWarnings("unchecked")
+        <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
+            IllegalArgumentAssertion.assertNotNull(type, "type");
+            T endpoint = null;
+            for (ServiceEndpoint ep : getServiceEndpoints().values()) {
+                if (type.isAssignableFrom(ep.getClass())) {
+                    if (endpoint == null) {
+                        endpoint = (T) ep;
+                    } else {
+                        LOGGER.warn("Multiple service endpoints of type {} for: {}", type.getName(), identity);
+                        endpoint = null;
+                        break;
+                    }
+                }
+            }
+            return endpoint;
+        }
+
+        ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity<?> identity) {
+            return getServiceEndpoints().get(identity);
+        }
+
+        Map<ServiceEndpointIdentity<?>, ServiceEndpoint> getServiceEndpoints() {
+            Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
+            return Collections.unmodifiableMap(endpoints);
+        }
+
+        ImmutableContainer immutableContainer() {
+            assertReadLock();
+            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
+            builder.addParent(parentState != null ? parentState.getIdentity() : null);
+            builder.addProfileVersion(versionState != null ? versionState.getIdentity() : null);
+            builder.addChildren(getChildIdentities());
+            builder.addProfiles(getProfileIdentities());
+            builder.addServiceEndpoints(getServiceEndpointIdentities());
+            return builder.build();
+        }
+
+        Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
+            return Collections.unmodifiableMap(resourceHandles);
+        }
+
+        void addChild(ContainerState childState) {
+            assertNotDestroyed();
+            assertWriteLock();
+            children.put(childState.getIdentity(), childState);
+        }
+
+        void removeChild(ContainerIdentity identity) {
+            assertNotDestroyed();
+            assertWriteLock();
+            children.remove(identity);
+        }
+
+        void setProfileVersion(ProfileVersionState versionState) {
+            assertNotDestroyed();
+            assertWriteLock();
+            this.versionState = versionState;
+        }
+
+        void addProfiles(List<String> identities) {
+            assertNotDestroyed();
+            assertWriteLock();
+            profiles.addAll(identities);
+        }
+
+        void removeProfiles(List<String> identities) {
+            assertNotDestroyed();
+            assertWriteLock();
+            profiles.removeAll(identities);
+        }
+
+        ContainerState start() {
+            assertNotDestroyed();
+            assertWriteLock();
+            state = State.STARTED;
+            return this;
+        }
+
+        ContainerState stop() {
+            assertNotDestroyed();
+            assertWriteLock();
+            state = State.STOPPED;
+            return this;
+        }
+
+        ContainerState destroy() {
+            assertNotDestroyed();
+            assertWriteLock();
+            state = State.DESTROYED;
+            return this;
+        }
+
+        void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
+            assertNotDestroyed();
+            assertWriteLock();
+            resourceHandles.putAll(handles);
+        }
+
+        void removeResourceHandles(Collection<ResourceIdentity> handles) {
+            assertNotDestroyed();
+            assertWriteLock();
+            for (ResourceIdentity resid : handles) {
+                resourceHandles.remove(resid);
+            }
+        }
+
+        private void assertNotDestroyed() {
+            IllegalStateAssertion.assertFalse(state == State.DESTROYED, "Container already destroyed: " + this);
+        }
+
+        private void assertReadLock() {
+            ContainerLockManager.assertReadLock(identity);
+        }
+
+        private void assertWriteLock() {
+            ContainerLockManager.assertWriteLock(identity);
+        }
+
+        @Override
+        public String toString() {
+            Version profileVersion = versionState != null ? versionState.getIdentity() : null;
+            return "ContainerState[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
+        }
     }
 }

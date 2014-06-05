@@ -27,7 +27,6 @@
         <bundle>mvn:io.fabric8.poc/fabric8-container-wildfly-managed/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-core/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-domain-agent/${project.version}</bundle>
-        <bundle>mvn:io.fabric8.poc/fabric8-domain-controller/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-spi/${project.version}</bundle>
     </feature>
 

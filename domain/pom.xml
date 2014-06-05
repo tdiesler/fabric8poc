@@ -32,6 +32,5 @@
 
     <modules>
         <module>agent</module>
-        <module>controller</module>
     </modules>
 </project>

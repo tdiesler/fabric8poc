@@ -17,24 +17,19 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.domain.controller.internal;
+package io.fabric8.spi.internal;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.Failure;
-import io.fabric8.api.JoinOptions;
-import io.fabric8.api.LockHandle;
-import io.fabric8.api.Profile;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.process.ManagedProcess;
 import io.fabric8.api.process.ProcessOptions;
-import io.fabric8.domain.agent.Agent;
-import io.fabric8.domain.controller.Controller;
+import io.fabric8.spi.Agent;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.ContainerLifecycle;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -61,16 +56,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The central {@link Controller}
+ * The central {@link ContainerLifecycle}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-@Component(configurationPid = Controller.CONTROLLER_SERVICE_PID, policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(Controller.class)
-public final class ControllerService extends AbstractComponent implements Controller {
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service(ContainerLifecycle.class)
+public final class ContainerLifecycleService extends AbstractComponent implements ContainerLifecycle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerLifecycleService.class);
 
     @Reference(referenceInterface = Agent.class)
     private final ValidatingReference<Agent> agent = new ValidatingReference<>();
@@ -87,11 +82,6 @@ public final class ControllerService extends AbstractComponent implements Contro
     @Deactivate
     void deactivate() {
         deactivateComponent();
-    }
-
-    @Override
-    public LockHandle aquireContainerLock(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -113,31 +103,6 @@ public final class ControllerService extends AbstractComponent implements Contro
         ManagedContainerState cntState = new ManagedContainerState(process);
         containers.put(cntState.getIdentity(), cntState);
         return cntState.immutableContainer();
-    }
-
-    @Override
-    public Set<ContainerIdentity> getContainerIdentities() {
-        assertValid();
-        return Collections.unmodifiableSet(containers.keySet());
-    }
-
-    @Override
-    public Set<Container> getContainers(Set<ContainerIdentity> identities) {
-        assertValid();
-        Set<Container> result = new HashSet<Container>();
-        for (ManagedContainerState cntState : containers.values()) {
-            if (identities == null || identities.contains(cntState.getIdentity())) {
-                result.add(cntState.immutableContainer());
-            }
-        }
-        return Collections.unmodifiableSet(result);
-    }
-
-    @Override
-    public Container getContainer(ContainerIdentity identity) {
-        assertValid();
-        ManagedContainerState cntState = containers.get(identity);
-        return cntState != null ? cntState.immutableContainer() : null;
     }
 
     @Override
@@ -175,65 +140,6 @@ public final class ControllerService extends AbstractComponent implements Contro
         return cntState.immutableContainer();
     }
 
-    @Override
-    public Container getCurrentContainer() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean pingContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Container joinFabric(ContainerIdentity identity, JoinOptions options) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Container leaveFabric(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Profile getEffectiveProfile(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Failure> getFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Failure> clearFailures(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
-    }
 
     void bindAgent(Agent service) {
         agent.bind(service);

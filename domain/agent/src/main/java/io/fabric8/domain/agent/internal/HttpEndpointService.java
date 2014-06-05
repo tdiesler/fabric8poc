@@ -20,7 +20,7 @@
 package io.fabric8.domain.agent.internal;
 
 import static io.fabric8.domain.agent.internal.AgentLogger.LOGGER;
-import io.fabric8.domain.agent.Agent;
+import io.fabric8.spi.Agent;
 import io.fabric8.spi.scr.ValidatingReference;
 
 import java.util.Map;

@@ -19,12 +19,16 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.permit.PermitKey;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+
+import org.jboss.gravia.provision.ProvisionException;
 
 /**
  * The internal fabric service
@@ -49,4 +53,6 @@ public interface ContainerService extends ContainerManager {
      * The version parameters is optional. When missing it will use the higest version.
      */
     URLConnection getContainerURLConnection(URL url) throws IOException;
+
+    void updateProfile(ContainerIdentity identity, String profile, ProvisionEventListener listener) throws ProvisionException;
 }

@@ -95,7 +95,6 @@
         	<include name="fabric8-container-wildfly-connector-*"/>
             <include name="fabric8-container-wildfly-managed-*"/>
             <include name="fabric8-domain-agent-*"/>
-            <include name="fabric8-domain-controller-*"/>
         </fileset>
     </copy>
     <copy tofile="${tomcat.patch.dir}/webapps/fabric.war" overwrite="true">

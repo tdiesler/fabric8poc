@@ -29,7 +29,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.core.ContainerServiceImpl.ContainerState;
+import io.fabric8.core.ContainerRegistry.ContainerState;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
