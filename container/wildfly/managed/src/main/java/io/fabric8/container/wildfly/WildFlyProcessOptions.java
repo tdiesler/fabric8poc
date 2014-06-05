@@ -105,7 +105,7 @@ public class WildFlyProcessOptions extends AbstractProcessOptions {
     }
 
     @Override
-    protected void validate() {
+    public void validate() {
         if (getMavenCoordinates().isEmpty()) {
             Properties properties = new Properties();
             try {
@@ -116,7 +116,7 @@ public class WildFlyProcessOptions extends AbstractProcessOptions {
             String projectVersion = properties.getProperty("project.version");
             String wildflyVersion = properties.getProperty("wildfly.version");
             addMavenCoordinates(MavenCoordinates.create("org.wildfly", "wildfly-dist", wildflyVersion, "zip", null));
-            addMavenCoordinates(MavenCoordinates.create("org.jboss.gravia", "gravia-container-wildfly-patch", projectVersion, "tar.gz", null));
+            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-container-wildfly-patch", projectVersion, "tar.gz", null));
         }
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);

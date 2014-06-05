@@ -21,14 +21,13 @@ package io.fabric8.spi;
 
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.OptionsProvider;
 
 import java.util.List;
 
 import org.jboss.gravia.resource.Version;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends CreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends MutableCreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
 
     protected final T options;
 
@@ -39,21 +38,21 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
     @Override
     @SuppressWarnings("unchecked")
     public B identity(String identity) {
-        getMutableOptions().setIdentity(ContainerIdentity.createFrom(identity));
+        options.setIdentity(ContainerIdentity.createFrom(identity));
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public B version(Version version) {
-        getMutableOptions().setVersion(version);
+        options.setVersion(version);
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public B profiles(List<String> profiles) {
-        getMutableOptions().setProfiles(profiles);
+        options.setProfiles(profiles);
         return (B) this;
     }
 
@@ -63,13 +62,9 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
         return optionsProvider.addBuilderOptions((B) this);
     }
 
-    protected AbstractCreateOptions getMutableOptions() {
-        return (AbstractCreateOptions) options;
-    }
-
     @Override
     public T getCreateOptions() {
-        getMutableOptions().validate();
+        options.validate();
         return options;
     }
 }

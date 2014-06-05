@@ -69,14 +69,27 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Activator>org.jboss.gravia.runtime.ModuleActivatorBridge</Bundle-Activator>
-                        <Module-Activator>io.fabric8.container.wildfly.internal.WildFlyContainerActivator</Module-Activator>
                         <Import-Package>
                             !org.jboss.modules,
                             *
                         </Import-Package>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                        <configuration>
+                            <specVersion>1.2</specVersion>
+                            <strictMode>true</strictMode>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

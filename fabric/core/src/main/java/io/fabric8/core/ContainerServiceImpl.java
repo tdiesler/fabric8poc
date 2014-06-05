@@ -1110,7 +1110,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         @Override
         public String toString() {
             Version profileVersion = versionState != null ? versionState.getIdentity() : null;
-            return "Container[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
+            return "ContainerState[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
         }
     }
 }

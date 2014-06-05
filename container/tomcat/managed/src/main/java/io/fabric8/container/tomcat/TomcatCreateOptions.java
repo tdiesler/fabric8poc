@@ -21,17 +21,19 @@ package io.fabric8.container.tomcat;
 
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.process.ManagedCreateOptions;
+import io.fabric8.spi.MutableCreateOptions;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
-public final class TomcatCreateOptions extends TomcatProcessOptions implements ManagedCreateOptions {
+public final class TomcatCreateOptions extends TomcatProcessOptions implements ManagedCreateOptions, MutableCreateOptions {
 
-    private final List<String> profiles = new ArrayList<>();
+    private List<String> profiles = new ArrayList<>();
     private Version version = Version.emptyVersion;
 
     @Override
@@ -47,5 +49,26 @@ public final class TomcatCreateOptions extends TomcatProcessOptions implements M
     @Override
     public List<String> getProfiles() {
         return Collections.unmodifiableList(profiles);
+    }
+
+    @Override
+    public void setIdentity(ContainerIdentity identity) {
+        assertMutable();
+        IllegalArgumentAssertion.assertNotNull(identity, "identity");
+        setIdentityPrefix(identity.getSymbolicName());
+    }
+
+    @Override
+    public void setVersion(Version version) {
+        assertMutable();
+        IllegalArgumentAssertion.assertNotNull(version, "version");
+        this.version = version;
+    }
+
+    @Override
+    public void setProfiles(List<String> profiles) {
+        assertMutable();
+        IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
+        this.profiles = new ArrayList<>(profiles);
     }
 }

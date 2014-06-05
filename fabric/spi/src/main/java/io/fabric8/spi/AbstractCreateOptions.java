@@ -21,7 +21,6 @@ package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersion;
 
@@ -35,7 +34,7 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
-public abstract class AbstractCreateOptions implements CreateOptions {
+public abstract class AbstractCreateOptions implements MutableCreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
@@ -77,28 +76,31 @@ public abstract class AbstractCreateOptions implements CreateOptions {
         return attributes.getAttributes();
     }
 
-    protected void validate() {
-        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
-    }
-
-    // Setters are protected
-
-    protected void setIdentity(ContainerIdentity identity) {
+    @Override
+    public void setIdentity(ContainerIdentity identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         this.identity = identity;
     }
 
-    protected void setVersion(Version version) {
+    @Override
+    public void setVersion(Version version) {
         IllegalArgumentAssertion.assertNotNull(version, "version");
         this.version = version;
     }
 
-    protected void setProfiles(List<String> profiles) {
+    @Override
+    public void setProfiles(List<String> profiles) {
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
         this.profiles = new ArrayList<>(profiles);
     }
 
-    protected <T> void putAttribute(AttributeKey<T> key, T value) {
+    @Override
+    public <T> void putAttribute(AttributeKey<T> key, T value) {
         attributes.putAttribute(key, value);
+    }
+
+    @Override
+    public void validate() {
+        IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
     }
 }

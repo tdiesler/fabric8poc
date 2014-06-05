@@ -73,14 +73,14 @@ public abstract class AbstractProcessBuilder<B extends ProcessBuilder<B, T>, T e
     @Override
     @SuppressWarnings("unchecked")
     public <V> B addAttribute(AttributeKey<V> key, V value) {
-        options.addAttribute(key, value);
+        options.putAttribute(key, value);
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public B addAttributes(Map<AttributeKey<?>, Object> atts) {
-        options.addAttributes(atts);
+        options.putAllAttributes(atts);
         return (B) this;
     }
 

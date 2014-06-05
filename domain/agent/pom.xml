@@ -105,6 +105,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Import-Package>!org.jboss.gravia.runtime.embedded*,*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

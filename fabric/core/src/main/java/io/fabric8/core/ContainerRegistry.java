@@ -67,13 +67,9 @@ public final class ContainerRegistry extends AbstractComponent {
     Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
         assertValid();
         Set<ContainerState> result = new HashSet<ContainerState>();
-        if (identities == null) {
-            result.addAll(containers.values());
-        } else {
-            for (ContainerState cntState : containers.values()) {
-                if (identities.contains(cntState.getIdentity())) {
-                    result.add(cntState);
-                }
+        for (ContainerState cntState : containers.values()) {
+            if (identities == null || identities.contains(cntState.getIdentity())) {
+                result.add(cntState);
             }
         }
         return Collections.unmodifiableSet(result);
@@ -100,9 +96,9 @@ public final class ContainerRegistry extends AbstractComponent {
 
     ContainerState getRequiredContainer(ContainerIdentity identity) {
         assertValid();
-        ContainerState container = getContainerInternal(identity);
-        IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
-        return container;
+        ContainerState cntState = getContainerInternal(identity);
+        IllegalStateAssertion.assertNotNull(cntState, "Container not registered: " + identity);
+        return cntState;
     }
 
     private ContainerState getContainerInternal(ContainerIdentity identity) {

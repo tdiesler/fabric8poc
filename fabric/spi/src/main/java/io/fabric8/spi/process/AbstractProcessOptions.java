@@ -115,12 +115,12 @@ public abstract class AbstractProcessOptions implements ProcessOptions {
         this.outputToConsole = outputToConsole;
     }
 
-    public <V> void addAttribute(AttributeKey<V> key, V value) {
+    public <V> void putAttribute(AttributeKey<V> key, V value) {
         assertMutable();
         attributes.putAttribute(key, value);
     }
 
-    public void addAttributes(Map<AttributeKey<?>, Object> atts) {
+    public void putAllAttributes(Map<AttributeKey<?>, Object> atts) {
         assertMutable();
         attributes.putAllAttributes(atts);
     }
@@ -131,7 +131,7 @@ public abstract class AbstractProcessOptions implements ProcessOptions {
         immutable.set(true);
     }
 
-    private void assertMutable() {
+    protected void assertMutable() {
         IllegalStateAssertion.assertFalse(immutable.get(), "Cannot modify immutable options");
     }
 }

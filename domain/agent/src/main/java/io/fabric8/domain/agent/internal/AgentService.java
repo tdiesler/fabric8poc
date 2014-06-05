@@ -23,6 +23,7 @@ import io.fabric8.api.process.ManagedProcess;
 import io.fabric8.api.process.MutableManagedProcess;
 import io.fabric8.api.process.ProcessIdentity;
 import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.domain.agent.Agent;
 import io.fabric8.spi.process.ImmutableManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
 import io.fabric8.spi.process.SelfRegistrationHandler;

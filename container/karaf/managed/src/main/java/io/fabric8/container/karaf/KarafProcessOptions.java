@@ -19,6 +19,7 @@
  */
 package io.fabric8.container.karaf;
 
+import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.process.AbstractProcessOptions;
 
 import java.util.Properties;
@@ -26,6 +27,12 @@ import java.util.Properties;
 import org.jboss.gravia.resource.MavenCoordinates;
 
 
+/**
+ * The Karaf {@link ProcessOptions}
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 14-Apr-2014
+ */
 public class KarafProcessOptions extends AbstractProcessOptions {
 
     public static final String DEFAULT_JAVAVM_ARGUMENTS = "-Xmx512m";
@@ -73,7 +80,7 @@ public class KarafProcessOptions extends AbstractProcessOptions {
     }
 
     @Override
-    protected void validate() {
+    public void validate() {
         if (getMavenCoordinates().isEmpty()) {
             Properties properties = new Properties();
             try {
@@ -81,10 +88,8 @@ public class KarafProcessOptions extends AbstractProcessOptions {
             } catch (Exception ex) {
                 throw new IllegalStateException("Cannot load version.properties", ex);
             }
-            String karafVersion = properties.getProperty("karaf.version");
             String projectVersion = properties.getProperty("project.version");
-            addMavenCoordinates(MavenCoordinates.create("org.apache.karaf", "apache-karaf", karafVersion, "tar.gz", "minimal"));
-            addMavenCoordinates(MavenCoordinates.create("org.jboss.gravia", "gravia-container-karaf-patch", projectVersion, "tar.gz", null));
+            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-karaf", projectVersion, "tar.gz", null));
         }
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);

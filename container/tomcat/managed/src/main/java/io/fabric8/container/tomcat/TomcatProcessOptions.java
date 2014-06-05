@@ -75,7 +75,7 @@ public class TomcatProcessOptions extends AbstractProcessOptions {
     }
 
     @Override
-    protected void validate() {
+    public void validate() {
         if (getMavenCoordinates().isEmpty()) {
             Properties properties = new Properties();
             try {
@@ -83,10 +83,8 @@ public class TomcatProcessOptions extends AbstractProcessOptions {
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot load version.properties", ex);
             }
-            String tomcatVersion = properties.getProperty("tomcat.version");
             String projectVersion = properties.getProperty("project.version");
-            addMavenCoordinates(MavenCoordinates.create("org.apache.tomcat", "tomcat", tomcatVersion, "tar.gz", null));
-            addMavenCoordinates(MavenCoordinates.create("org.jboss.gravia", "gravia-container-tomcat-patch", projectVersion, "tar.gz", null));
+            addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-tomcat", projectVersion, "tar.gz", null));
         }
         if (getJavaVmArguments() == null) {
             setJavaVmArguments(DEFAULT_JAVAVM_ARGUMENTS);

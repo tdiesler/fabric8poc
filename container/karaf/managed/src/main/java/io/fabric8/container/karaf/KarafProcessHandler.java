@@ -38,8 +38,9 @@ import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
- * The Karaf managed container
+ * The Karaf {@link ProcessHandler}
  *
+ * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
 public final class KarafProcessHandler extends AbstractProcessHandler {
