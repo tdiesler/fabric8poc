@@ -42,7 +42,7 @@ public final class WildFlyCreateOptions extends WildFlyProcessOptions implements
     }
 
     @Override
-    public Version getVersion() {
+    public Version getProfileVersion() {
         return version;
     }
 

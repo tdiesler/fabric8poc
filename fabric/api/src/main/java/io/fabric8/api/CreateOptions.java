@@ -34,7 +34,7 @@ public interface CreateOptions extends Attributable {
 
     ContainerIdentity getIdentity();
 
-    Version getVersion();
+    Version getProfileVersion();
 
     List<String> getProfiles();
 }

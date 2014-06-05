@@ -38,7 +38,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
-    private Version version = ProfileVersion.DEFAULT_PROFILE_VERSION_IDENTITY;
+    private Version version = ProfileVersion.DEFAULT_PROFILE_VERSION;
     private List<String> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
 
     @Override
@@ -47,7 +47,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public Version getVersion() {
+    public Version getProfileVersion() {
         return version;
     }
 

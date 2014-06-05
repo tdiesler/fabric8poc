@@ -34,7 +34,7 @@ public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends Cr
 
     B identity(String identity);
 
-    B version(Version version);
+    B profileVersion(Version version);
 
     B profiles(List<String> profiles);
 

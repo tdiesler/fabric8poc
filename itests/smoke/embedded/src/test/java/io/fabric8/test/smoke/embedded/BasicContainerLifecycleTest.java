@@ -26,6 +26,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.ProfileVersion;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
@@ -76,7 +77,7 @@ public class BasicContainerLifecycleTest {
 
         Assert.assertEquals("cntA", cntIdA.getCanonicalForm());
         Assert.assertSame(State.CREATED, cntA.getState());
-        Assert.assertNull("Null profile version", cntA.getProfileVersion());
+        Assert.assertEquals(ProfileVersion.DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
 
         cntA = cntManager.startContainer(cntIdA, null);
         Assert.assertSame(State.STARTED, cntA.getState());

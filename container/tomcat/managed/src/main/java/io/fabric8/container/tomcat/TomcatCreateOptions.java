@@ -42,7 +42,7 @@ public final class TomcatCreateOptions extends TomcatProcessOptions implements M
     }
 
     @Override
-    public Version getVersion() {
+    public Version getProfileVersion() {
         return version;
     }
 

@@ -32,7 +32,7 @@ import org.jboss.gravia.resource.Version;
  */
 public interface ProfileVersion extends Identifiable<Version> {
 
-    Version DEFAULT_PROFILE_VERSION_IDENTITY = new Version(1, 0, 0);
+    Version DEFAULT_PROFILE_VERSION = new Version("1.0");
 
     /**
      * Get the associated profiles

@@ -44,7 +44,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B version(Version version) {
+    public B profileVersion(Version version) {
         options.setVersion(version);
         return (B) this;
     }

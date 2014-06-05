@@ -24,8 +24,6 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.Host;
-import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
@@ -81,10 +79,12 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    ContainerState createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles) {
+        IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
         ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
-        ContainerState cntState = new ContainerState(parentState, identity, options);
-        return cntState;
+        ContainerState cntState = new ContainerState(parentState, identity, options, versionState, profiles);
+        containers.put(identity, new Registration(cntState));
+        return cntState.immutableContainer();
     }
 
     Set<ContainerIdentity> getContainerIdentities() {
@@ -92,41 +92,84 @@ public final class ContainerRegistry extends AbstractComponent {
         return Collections.unmodifiableSet(containers.keySet());
     }
 
-    Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
-        assertValid();
-        Set<ContainerState> result = new HashSet<ContainerState>();
-        for (Registration creg : containers.values()) {
-            ContainerState cntState = creg.getContainerState();
-            if (identities == null || identities.contains(cntState.getIdentity())) {
-                result.add(cntState);
-            }
-        }
-        return Collections.unmodifiableSet(result);
+    void addChildToParent(ContainerIdentity parentId, ContainerIdentity childId) {
+        ContainerState parentState = getRequiredContainerState(parentId);
+        ContainerState childState = getRequiredContainerState(childId);
+        parentState.addChild(childState);
     }
 
-    void publishContainer(ContainerState cntState) {
-        assertValid();
-        ContainerIdentity identity = cntState.getIdentity();
-        IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
-        containers.put(identity, new Registration(cntState));
+    void removeChildFromParent(ContainerIdentity parentId, ContainerIdentity childId) {
+        ContainerState parentState = getRequiredContainerState(parentId);
+        parentState.removeChild(childId);
     }
 
-    void removeContainer(ContainerIdentity identity) {
-        assertValid();
-        getRequiredContainerState(identity);
+    Container getContainer(ContainerIdentity identity) {
+        ContainerState cntState = getContainerState(identity);
+        return cntState != null ? cntState.immutableContainer() : null;
+    }
+
+    boolean hasContainer(ContainerIdentity identity) {
+        return containers.containsKey(identity);
+    }
+
+    Container getRequiredContainer(ContainerIdentity identity) {
+        return getRequiredContainerState(identity).immutableContainer();
+    }
+
+    Container startContainer(ContainerIdentity identity) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        return cntState.start().immutableContainer();
+    }
+
+    Container stopContainer(ContainerIdentity identity) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        return cntState.stop().immutableContainer();
+    }
+
+    Container destroyContainer(ContainerIdentity identity) {
+        ContainerState cntState = getRequiredContainerState(identity);
         containers.remove(identity);
+        return cntState.destroy().immutableContainer();
     }
 
-    ContainerState getContainerState(ContainerIdentity identity) {
+    Container setProfileVersion(ContainerIdentity identity, ProfileVersionState versionState) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        cntState.setProfileVersion(versionState);
+        return cntState.immutableContainer();
+    }
+
+    Container addProfiles(ContainerIdentity identity, List<String> profiles) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        cntState.addProfiles(profiles);
+        return cntState.immutableContainer();
+    }
+
+    Container removeProfiles(ContainerIdentity identity, List<String> profiles) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        cntState.removeProfiles(profiles);
+        return cntState.immutableContainer();
+    }
+
+    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        return cntState.getServiceEndpoint(type);
+    }
+
+    ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+        ContainerState cntState = getRequiredContainerState(identity);
+        return cntState.getServiceEndpoint(endpointId);
+    }
+
+    private ContainerState getContainerState(ContainerIdentity identity) {
         Registration creg = containers.get(identity);
         return creg != null ? creg.getContainerState() : null;
     }
 
-    ContainerState getRequiredContainerState(ContainerIdentity identity) {
+    private ContainerState getRequiredContainerState(ContainerIdentity identity) {
         return getRequiredRegistration(identity).getContainerState();
     }
 
-    Registration getRequiredRegistration(ContainerIdentity identity) {
+    private Registration getRequiredRegistration(ContainerIdentity identity) {
         Registration creg = containers.get(identity);
         IllegalStateAssertion.assertNotNull(creg, "Container not registered: " + identity);
         return creg;
@@ -144,7 +187,7 @@ public final class ContainerRegistry extends AbstractComponent {
         getRequiredRegistration(identity).removeResourceHandles(handles);
     }
 
-    final static class Registration {
+    private final static class Registration {
 
         private final ContainerState cntState;
         private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
@@ -176,7 +219,7 @@ public final class ContainerRegistry extends AbstractComponent {
         }
     }
 
-    final static class ContainerState {
+    private final static class ContainerState {
 
         private final ContainerState parentState;
         private final ContainerIdentity identity;
@@ -186,13 +229,16 @@ public final class ContainerRegistry extends AbstractComponent {
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options) {
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles) {
             IllegalArgumentAssertion.assertNotNull(identity, "identity");
             IllegalArgumentAssertion.assertNotNull(options, "options");
+            IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
+            this.attributes = new AttributeSupport(options.getAttributes(), true);
+            this.profiles.addAll(profiles);
             this.parentState = parentState;
+            this.versionState = versionState;
             this.identity = identity;
             this.state = State.CREATED;
-            this.attributes = new AttributeSupport(options.getAttributes(), true);
         }
 
         ContainerIdentity getIdentity() {
@@ -207,6 +253,7 @@ public final class ContainerRegistry extends AbstractComponent {
             return attributes.getAttributes();
         }
 
+        /*
         Set<AttributeKey<?>> getAttributeKeys() {
             return attributes.getAttributeKeys();
         }
@@ -218,26 +265,11 @@ public final class ContainerRegistry extends AbstractComponent {
         <T> boolean hasAttribute(AttributeKey<T> key) {
             return attributes.hasAttribute(key);
         }
-
-        Host getHost() {
-            throw new UnsupportedOperationException();
-        }
-
-        Set<String> getManagementDomains() {
-            throw new UnsupportedOperationException();
-        }
-
-        ContainerState getParentState() {
-            return parentState != null ? parentState : null;
-        }
+        */
 
         Set<ContainerIdentity> getChildIdentities() {
             assertReadLock();
             return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
-        }
-
-        ProfileVersion getProfileVersion() {
-            return versionState != null ? versionState.getProfileVersion() : null;
         }
 
         List<String> getProfileIdentities() {

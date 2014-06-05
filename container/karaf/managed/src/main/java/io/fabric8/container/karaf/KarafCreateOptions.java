@@ -48,7 +48,7 @@ public final class KarafCreateOptions extends KarafProcessOptions implements Man
     }
 
     @Override
-    public Version getVersion() {
+    public Version getProfileVersion() {
         return version;
     }
 

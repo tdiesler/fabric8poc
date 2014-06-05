@@ -22,6 +22,7 @@ package io.fabric8.core;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import io.fabric8.api.Container;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
@@ -29,7 +30,6 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.core.ContainerRegistry.ContainerState;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
@@ -256,9 +256,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             ProfileVersion profileVersion = getRequiredProfileVersion(version);
             Set<String> profileIdentities = profileVersion.getProfileIdentities();
             Map<String, Profile> linkedProfiles = new HashMap<>();
-            for (String identity : profileIdentities) {
-                Profile profile = registry.getProfile(version, identity);
-                linkedProfiles.put(identity, profile);
+            for (String profileId : profileIdentities) {
+                Profile profile = registry.getProfile(version, profileId);
+                linkedProfiles.put(profileId, profile);
             }
             return new ImmutableProfileVersion(version, profileIdentities, linkedProfiles);
         } finally {
@@ -289,12 +289,20 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public ProfileVersion removeProfileVersion(Version version) {
         assertValid();
+        getRequiredProfileVersion(version);
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            ProfileVersion profileVersion = getRequiredProfileVersion(version);
-            for (ContainerState cntState : containerRegistry.get().getContainers(null)) {
-                ProfileVersion cntVersion = cntState.getProfileVersion();
-                IllegalStateAssertion.assertFalse(profileVersion.equals(cntVersion), "Cannot remove profile version used by: " + cntState);
+            ContainerRegistry registry = containerRegistry.get();
+            ContainerLockManager lockManager = containerLocks.get();
+            for (ContainerIdentity cntid : registry.getContainerIdentities()) {
+                LockHandle readLock = lockManager.aquireReadLock(cntid);
+                try {
+                    Container container = registry.getContainer(cntid);
+                    Version cntVersion = container.getProfileVersion();
+                    IllegalStateAssertion.assertFalse(version.equals(cntVersion), "Cannot remove profile version used by: " + container);
+                } finally {
+                    readLock.unlock();
+                }
             }
             LOGGER.info("Remove profile version: {}", version);
             versionLocks.remove(version);
@@ -327,35 +335,35 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getProfile(Version version, String identity) {
+    public Profile getProfile(Version version, String profileId) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {
-            return profileRegistry.get().getProfile(version, identity);
+            return profileRegistry.get().getProfile(version, profileId);
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public Profile getEffectiveProfile(Version version, String identity) {
+    public Profile getEffectiveProfile(Version version, String profileId) {
         assertValid();
-        return ProfileUtils.getEffectiveProfile(getLinkedProfile(version, identity));
+        return ProfileUtils.getEffectiveProfile(getLinkedProfile(version, profileId));
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(Version version, String identity) {
+    public LinkedProfile getLinkedProfile(Version version, String profileId) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {
-            return getLinkedProfileInternal(version, identity, new HashMap<String, LinkedProfile>());
+            return getLinkedProfileInternal(version, profileId, new HashMap<String, LinkedProfile>());
         } finally {
             readLock.unlock();
         }
     }
 
-    private LinkedProfile getLinkedProfileInternal(Version version, String identity, Map<String, LinkedProfile> linkedProfiles) {
-        Profile profile = getRequiredProfile(version, identity);
+    private LinkedProfile getLinkedProfileInternal(Version version, String profileId, Map<String, LinkedProfile> linkedProfiles) {
+        Profile profile = getRequiredProfile(version, profileId);
         Map<String, LinkedProfile> linkedParents = getLinkedParents(profile, linkedProfiles);
         return new ImmutableProfile(profile.getVersion(), profile.getIdentity(), profile.getAttributes(), profile.getParents(), profile.getProfileItems(null), linkedParents);
     }
@@ -380,9 +388,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             Set<Profile> result = new HashSet<Profile>();
             ProfileVersion profileVersion = getRequiredProfileVersion(version);
-            for (String identity : profileVersion.getProfileIdentities()) {
-                if (identities == null || identities.contains(identity)) {
-                    result.add(getRequiredProfile(version, identity));
+            for (String profileId : profileVersion.getProfileIdentities()) {
+                if (identities == null || identities.contains(profileId)) {
+                    result.add(getRequiredProfile(version, profileId));
                 }
             }
             IllegalStateAssertion.assertTrue(identities == null || result.size() == identities.size(), "Cannot obtain the full set of given profiles: " + identities);
@@ -413,23 +421,24 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile removeProfile(Version version, String identity) {
+    public Profile removeProfile(Version version, String profileId) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
             getRequiredProfileVersion(version);
             ContainerRegistry registry = containerRegistry.get();
             ContainerLockManager lockManager = containerLocks.get();
-            for (ContainerState cntState : registry.getContainers(null)) {
-                LockHandle readLock = lockManager.aquireReadLock(cntState.getIdentity());
+            for (ContainerIdentity cntid : registry.getContainerIdentities()) {
+                LockHandle readLock = lockManager.aquireReadLock(cntid);
                 try {
-                    IllegalStateAssertion.assertFalse(cntState.getProfileIdentities().contains(identity), "Cannot remove profile used by: " + cntState);
+                    Container container = registry.getContainer(cntid);
+                    IllegalStateAssertion.assertFalse(container.getProfileIdentities().contains(profileId), "Cannot remove profile used by: " + container);
                 } finally {
                     readLock.unlock();
                 }
             }
-            LOGGER.info("Remove profile from version: {} => {}", version, identity);
-            return profileRegistry.get().removeProfile(version, identity);
+            LOGGER.info("Remove profile from version: {} => {}", version, profileId);
+            return profileRegistry.get().removeProfile(version, profileId);
         } finally {
             writeLock.unlock();
         }
@@ -439,14 +448,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public Profile updateProfile(Profile profile, ProfileEventListener listener) {
         assertValid();
         Version version = profile.getVersion();
-        String identity = profile.getIdentity();
+        String profileId = profile.getIdentity();
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            getRequiredProfile(version, identity);
+            getRequiredProfile(version, profileId);
             LOGGER.info("Update profile: {}", profile);
             try {
                 ProfileRegistry registry = profileRegistry.get();
-                registry.removeProfile(version, identity);
+                registry.removeProfile(version, profileId);
                 Profile updated = registry.addProfile(version, profile);
                 ProfileEvent event = new ProfileEvent(updated, ProfileEvent.EventType.UPDATED);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
@@ -474,11 +483,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getRequiredProfile(Version version, String identity) {
+    public Profile getRequiredProfile(Version version, String profileId) {
         LockHandle readLock = aquireReadLock(version);
         try {
-            Profile profile = profileRegistry.get().getProfile(version, identity);
-            IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile: " + version + ":" + identity);
+            Profile profile = profileRegistry.get().getProfile(version, profileId);
+            IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile: " + version + ":" + profileId);
             return profile;
         } finally {
             readLock.unlock();
@@ -496,7 +505,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         }
     }
 
-    ProfileVersionState getProfileVersionState(Version version) {
+    ProfileVersionState getRequiredProfileVersionState(Version version) {
         return new ProfileVersionState(getRequiredProfileVersion(version));
     }
 
