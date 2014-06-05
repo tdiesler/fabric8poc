@@ -50,6 +50,7 @@ public class ComponentConfigurer extends AbstractComponent implements Configurer
 
     @Override
     public <T> Map<String, Object> configure(final Dictionary<String, Object> configuration, T target, String... ignorePrefix) throws Exception {
+        assertValid();
         Map<String, Object> mapConfiguration = new HashMap<>();
         for (Enumeration<String> keys = configuration.keys(); keys.hasMoreElements();) {
             String key = keys.nextElement();

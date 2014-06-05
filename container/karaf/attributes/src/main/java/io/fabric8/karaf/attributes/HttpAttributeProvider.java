@@ -15,11 +15,14 @@
 
 package io.fabric8.karaf.attributes;
 
+import static io.fabric8.api.ContainerAttributes.HTTPS_BINDING_PORT_KEY;
+import static io.fabric8.api.ContainerAttributes.HTTP_BINDING_PORT_KEY;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -34,34 +37,30 @@ import java.util.Map;
 
 @Component(configurationPid = HttpAttributeProvider.PAX_WEB_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(AttributeProvider.class)
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class HttpAttributeProvider extends AttributeProviderComponent {
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class HttpAttributeProvider extends AbstractAttributeProvider {
 
-     static final String PAX_WEB_PID = "org.ops4j.pax.web";
-    private static final String HTTP_BINDING_PORT_KEY = "org.osgi.service.http.port";
+    static final String PAX_WEB_PID = "org.ops4j.pax.web";
     private static final String HTTP_CONNECTION_PORT_KEY = "io.fabric8.http.connection.port";
-    private static final String HTTPS_BINDING_PORT_KEY = "org.osgi.service.http.port.secure";
     private static final String HTTPS_CONNECTION_PORT_KEY = "io.fabric8.http.connection.port.secure";
 
     private static final String HTTP_ENABLED = "org.osgi.service.http.enabled";
     private static final String HTTPS_ENABLED = "org.osgi.service.http.secure.enabled";
     private static final String HTTP_URL_FORMAT = "%s://${container:%s/fabric8.ip}:%d";
 
-    @Property(name = HTTP_BINDING_PORT_KEY, value = "${"+HTTP_BINDING_PORT_KEY+"}")
-    private int httpPort=8080;
-    @Property(name = HTTPS_BINDING_PORT_KEY, value = "${"+HTTPS_BINDING_PORT_KEY+"}")
-    private int httpPortSecure=8443;
-    @Property(name = HTTP_CONNECTION_PORT_KEY, value = "${"+HTTP_CONNECTION_PORT_KEY+"}")
-    private int httpConnectionPort=0;
-    @Property(name = HTTPS_CONNECTION_PORT_KEY, value = "${"+HTTPS_CONNECTION_PORT_KEY+"}")
-    private int httpConnectionPortSecure=0;
-    @Property(name = HTTP_ENABLED, value = "${"+HTTP_ENABLED+"}")
-    private boolean httpEnabled=true;
-    @Property(name = HTTPS_ENABLED, value = "${"+HTTPS_ENABLED+"}")
-    private boolean httpSecureEnabled=false;
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
+    @Property(name = HTTP_BINDING_PORT_KEY, value = "${" + HTTP_BINDING_PORT_KEY + "}")
+    private int httpPort = 8080;
+    @Property(name = HTTPS_BINDING_PORT_KEY, value = "${" + HTTPS_BINDING_PORT_KEY + "}")
+    private int httpPortSecure = 8443;
+    @Property(name = HTTP_CONNECTION_PORT_KEY, value = "${" + HTTP_CONNECTION_PORT_KEY + "}")
+    private int httpConnectionPort = 0;
+    @Property(name = HTTPS_CONNECTION_PORT_KEY, value = "${" + HTTPS_CONNECTION_PORT_KEY + "}")
+    private int httpConnectionPortSecure = 0;
+    @Property(name = HTTP_ENABLED, value = "${" + HTTP_ENABLED + "}")
+    private boolean httpEnabled = true;
+    @Property(name = HTTPS_ENABLED, value = "${" + HTTPS_ENABLED + "}")
+    private boolean httpSecureEnabled = false;
+    @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
     @Reference
@@ -82,7 +81,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent {
 
     @Deactivate
     void deactivate() {
-      deactivateComponent();
+        deactivateComponent();
     }
 
     private void configureInternal(Map<String, Object> configuration) throws Exception {
@@ -104,7 +103,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent {
         return getHttpUrl(protocol, runtimeId, port);
     }
 
-    private static String getHttpUrl(String protocol, String id, int port)  {
+    private static String getHttpUrl(String protocol, String id, int port) {
         return String.format(HTTP_URL_FORMAT, protocol, id, port);
     }
 }

@@ -30,6 +30,16 @@ public class ContainerAttributes  {
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{container:([a-zA-Z0-9\\.\\-]+)/([a-zA-Z0-9\\.\\-]+)}");
 
     /**
+     * Runtime property for the Http port
+     */
+    public static final String HTTP_BINDING_PORT_KEY = "org.osgi.service.http.port";
+
+    /**
+     * Runtime property for the Http port
+     */
+    public static final String HTTPS_BINDING_PORT_KEY = "org.osgi.service.http.port.secure";
+
+    /**
      * The attribute key for the Advertised IP Address
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_IP = AttributeKey.create("fabric8.ip", String.class);
@@ -68,15 +78,21 @@ public class ContainerAttributes  {
      * The attribute key for the Http port
      */
     public static final  AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create("fabric8.http.port", Integer.class);
+
     /**
      * The attribute key for the Https port
      */
     public static final  AttributeKey<Integer> ATTRIBUTE_KEY_HTTPS_PORT = AttributeKey.create("fabric8.https.port", Integer.class);
 
     /**
-     * The attribute key for JMX server URL
+     * The attribute key for the Http URL
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTP_URL = AttributeKey.create("fabric8.http.url", String.class);
+
+    /**
+     * The attribute key for the Http URL
+     */
+    public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTPS_URL = AttributeKey.create("fabric8.https.url", String.class);
 
     /**
      * The attribute key for JMX server URL

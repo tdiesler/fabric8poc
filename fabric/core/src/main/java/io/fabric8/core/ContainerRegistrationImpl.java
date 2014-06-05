@@ -16,11 +16,19 @@
 package io.fabric8.core;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.ContainerRegistration;
+import io.fabric8.spi.scr.AbstractComponent;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -28,62 +36,68 @@ import org.apache.felix.scr.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-@Component(immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerRegistration.class)
-public class ContainerRegistrationImpl implements ContainerRegistration {
+public class ContainerRegistrationImpl extends AbstractComponent implements ContainerRegistration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRegistrationImpl.class);
 
     @Reference(referenceInterface = AttributeProvider.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,
             bind = "bindAttributeProvider", unbind = "unbindAttributeProvider", target = "(type=" + ContainerAttributes.TYPE + ")")
-    private List<AttributeProvider> attributeProviders = new CopyOnWriteArrayList<>();
+
+    private final List<AttributeProvider> attributeProviders = new CopyOnWriteArrayList<>();
 
     @Activate
     void activate() {
         for (AttributeProvider provider : attributeProviders) {
             addAttributes(provider);
         }
+        activateComponent();
+    }
+
+    @Deactivate
+    void deactivate() {
+        deactivateComponent();
     }
 
     @Override
     public <T> void attributeAdded(AttributeKey<T> key, T value) {
+        assertValid();
         LOGGER.info("Attribute Added:{} - {}.", key, value);
     }
 
     @Override
     public <T> void attributeChanged(AttributeKey<T> key, T value) {
+        assertValid();
         LOGGER.info("Attribute Changed:{} - {}.", key, value);
     }
 
     @Override
     public <T> void attributeRemoved(AttributeKey<T> key, T value) {
+        assertValid();
         LOGGER.info("Attribute Removed:{} - {}.", key, value);
     }
 
-    void addAttributes(AttributeProvider provider) {
+    private void addAttributes(AttributeProvider provider) {
         for (Map.Entry<AttributeKey<?>, Object> entry : provider.getAttributes().entrySet()) {
-            LOGGER.debug("Attribute Added:{} - {}.", entry.getKey().getName(), entry.getValue());
+            LOGGER.info("Attribute Added:{} - {}.", entry.getKey(), entry.getValue());
         }
     }
 
-    void removeAttributes(AttributeProvider provider) {
+    private void removeAttributes(AttributeProvider provider) {
         for (Map.Entry<AttributeKey<?>, Object> entry : provider.getAttributes().entrySet()) {
-            LOGGER.info("Removed Added:{} - {}.", entry.getKey().getName(), entry.getValue());
+            LOGGER.info("Removed Added:{} - {}.", entry.getKey(), entry.getValue());
         }
     }
 
-    public void bindAttributeProvider(AttributeProvider provider) {
+    void bindAttributeProvider(AttributeProvider provider) {
         addAttributes(provider);
         provider.addListener(this);
         attributeProviders.add(provider);
     }
 
-    public void unbindAttributeProvider(AttributeProvider provider) {
+    void unbindAttributeProvider(AttributeProvider provider) {
         provider.removeListener(this);
         attributeProviders.remove(provider);
         removeAttributes(provider);

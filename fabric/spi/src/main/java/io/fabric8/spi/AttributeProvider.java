@@ -23,6 +23,7 @@ import io.fabric8.api.Attributable;
 public interface AttributeProvider extends Attributable {
 
     void addListener(AttributeListener listener);
+
     void removeListener(AttributeListener listener);
 
 }

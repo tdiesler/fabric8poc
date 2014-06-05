@@ -15,24 +15,15 @@
 
 package io.fabric8.tomcat.attributes;
 
-
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
-import io.fabric8.spi.Configurer;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
-import org.apache.catalina.Server;
-import org.apache.catalina.connector.Connector;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
@@ -41,40 +32,44 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
-import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
 
-@Component(immediate = true)
+import org.apache.catalina.Server;
+import org.apache.catalina.connector.Connector;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(AttributeProvider.class)
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class HttpAttributeProvider extends AttributeProviderComponent  {
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class HttpAttributeProvider extends AbstractAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpAttributeProvider.class);
-    private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
+
     private static final int DEFAULT_HTTP_REMOTE_PORT = 8080;
     private static final int DEFAULT_HTTPS_REMOTE_PORT = 8443;
 
     private static final String HTTP_URL_FORMAT = "%s://${container:%s/fabric8.ip}:%d";
 
-    @Property(name = JMX_REMOTE_PORT, value = "${" + JMX_REMOTE_PORT + "}")
-    int httpPort = DEFAULT_HTTP_REMOTE_PORT;
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
-    private String runtimeId;
-    @Reference
-    private Configurer configurer;
     @Reference(referenceInterface = MBeanServer.class)
     private final ValidatingReference<MBeanServer> mbeanServer = new ValidatingReference<MBeanServer>();
+    @Reference(referenceInterface = RuntimeService.class)
+    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     private final Set<Connector> httpConnectors = new LinkedHashSet<Connector>();
     private final Set<Connector> httpsConnectors = new LinkedHashSet<Connector>();
+    private String runtimeId;
 
     @Activate
-    void activate(Map<String, Object> configuration) throws Exception {
-        configurer.configure(configuration, this);
+    void activate() throws Exception {
+        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
         activateInternal();
         updateAttributes();
         activateComponent();
@@ -99,7 +94,6 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
         }
     }
 
-
     private void updateAttributes() {
         try {
             boolean httpEnabled = isHttpEnabled();
@@ -107,12 +101,11 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
             String protocol = httpsEnabled && !httpEnabled ? "https" : "http";
             int httpPort = httpsEnabled && !httpEnabled ? getHttpsPort() : getHttpPort();
             String httpUrl = getHttpUrl(protocol, runtimeId, httpPort);
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, httpUrl);
-        }catch (Exception e) {
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, httpUrl);
+        } catch (Exception e) {
             LOGGER.warn("Failed to get http attributes.", e);
         }
     }
-
 
     private Server getServer() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
         ObjectName name = new ObjectName("Catalina", "type", "Server");
@@ -135,7 +128,7 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
         return port;
     }
 
-    private int getHttpsPort() throws  InterruptedException, IOException {
+    private int getHttpsPort() throws InterruptedException, IOException {
         int port = DEFAULT_HTTPS_REMOTE_PORT;
         for (Connector connector : httpsConnectors) {
             return connector.getPort();
@@ -143,15 +136,21 @@ public class HttpAttributeProvider extends AttributeProviderComponent  {
         return port;
     }
 
-    private String getHttpUrl(String protocol, String name, int port)  {
+    private String getHttpUrl(String protocol, String name, int port) {
         return String.format(HTTP_URL_FORMAT, name);
     }
 
     void bindMbeanServer(MBeanServer service) {
         this.mbeanServer.bind(service);
     }
-
     void unbindMbeanServer(MBeanServer service) {
         this.mbeanServer.unbind(service);
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
     }
 }

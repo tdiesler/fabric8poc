@@ -15,12 +15,14 @@
 
 package io.fabric8.karaf.attributes;
 
-
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
+
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -31,14 +33,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
-import java.util.Map;
-
 @Component(configurationPid = SecureShellAttributeProvider.SSH_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(AttributeProvider.class)
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class SecureShellAttributeProvider extends AttributeProviderComponent {
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class SecureShellAttributeProvider extends AbstractAttributeProvider {
 
     static final String SSH_PID = "org.apache.karaf.shell";
 
@@ -46,12 +44,12 @@ public class SecureShellAttributeProvider extends AttributeProviderComponent {
     private static final String SSH_BINDING_PORT_KEY = "sshPort";
     private static final String SSH_CONNECTION_PORT_KEY = "sshConnectionPort";
 
-    @Property(name = SSH_BINDING_PORT_KEY, value = "${"+SSH_BINDING_PORT_KEY+"}")
-    private int sshPort=8101;
-    @Property(name = SSH_CONNECTION_PORT_KEY, value = "${"+SSH_CONNECTION_PORT_KEY+"}")
-    private int sshConnectionPort=8101;
+    @Property(name = SSH_BINDING_PORT_KEY, value = "${" + SSH_BINDING_PORT_KEY + "}")
+    private int sshPort = 8101;
+    @Property(name = SSH_CONNECTION_PORT_KEY, value = "${" + SSH_CONNECTION_PORT_KEY + "}")
+    private int sshConnectionPort = 8101;
 
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
+    @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
     @Reference
@@ -79,7 +77,7 @@ public class SecureShellAttributeProvider extends AttributeProviderComponent {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_SSH_SERVER_URL, getSshUrl(runtimeId, sshConnectionPort));
     }
 
-    private String getSshUrl(String name, int port)  {
+    private String getSshUrl(String name, int port) {
         return String.format(SSH_URL_FORMAT, name, port);
     }
 }

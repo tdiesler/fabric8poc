@@ -16,43 +16,43 @@
 package io.fabric8.tomcat.attributes;
 
 
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
-import io.fabric8.spi.Configurer;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
+import io.fabric8.spi.scr.ValidatingReference;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
-import java.util.Map;
-
-@Component(immediate = true)
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(AttributeProvider.class)
 @Properties(
         @Property(name = "type", value = ContainerAttributes.TYPE)
 )
-public class JmxAttributeProvider extends AttributeProviderComponent  {
+public class JmxAttributeProvider extends AbstractAttributeProvider  {
 
     private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
 
     private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
 
-    @Property(name = JMX_REMOTE_PORT, value = "${" + JMX_REMOTE_PORT + "}")
-    int jmxRemotePort = DEFAULT_JMX_REMOTE_PORT;
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
+    @Reference(referenceInterface = RuntimeService.class)
+    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
+
+    private int jmxRemotePort;
     private String runtimeId;
-    @Reference
-    private Configurer configurer;
 
     @Activate
-    void activate(Map<String, Object> configuration) throws Exception {
-        configurer.configure(configuration, this);
+    void activate() throws Exception {
+        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
+        jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
         updateAttributes();
         activateComponent();
     }
@@ -68,5 +68,12 @@ public class JmxAttributeProvider extends AttributeProviderComponent  {
 
     private String getJmxUrl(String name, int port)  {
         return String.format(JMX_URL_FORMAT, name);
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
     }
 }

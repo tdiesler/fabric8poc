@@ -26,9 +26,9 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * An abstract component for {@link io.fabric8.spi.AttributeProvider} which delegates to {@link io.fabric8.spi.AttributeSupport}
+ * An abstract component for {@link AttributeProvider}.
  */
-public abstract class AttributeProviderComponent extends AbstractComponent implements AttributeProvider {
+public abstract class AbstractAttributeProvider extends AbstractComponent implements AttributeProvider {
 
     private final AttributeSupport delegate = new AttributeSupport();
     private final List<AttributeListener> listeners = new CopyOnWriteArrayList<>();

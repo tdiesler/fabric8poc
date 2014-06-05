@@ -15,15 +15,16 @@
 
 package io.fabric8.core;
 
-
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.utils.HostUtils;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -33,23 +34,21 @@ import org.apache.felix.scr.annotations.Service;
 import java.net.UnknownHostException;
 import java.util.Map;
 
-@Component(immediate = true)
+@Component(policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(AttributeProvider.class)
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class NetworkAttributeProvider extends AttributeProviderComponent {
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class NetworkAttributeProvider extends AbstractAttributeProvider {
 
     private static final String ATTRIBUTE_POINTER_FORMAT = "${container:%s/%s}";
 
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
+    @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
     @Reference
     private Configurer configurer;
 
     @Activate
-    void activate(Map<String, Object>configuration) throws Exception {
+    void activate(Map<String, Object> configuration) throws Exception {
         configurer.configure(configuration, this);
         updateAttributes();
         activateComponent();

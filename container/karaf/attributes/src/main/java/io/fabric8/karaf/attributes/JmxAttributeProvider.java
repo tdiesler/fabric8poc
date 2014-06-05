@@ -15,15 +15,18 @@
 
 package io.fabric8.karaf.attributes;
 
-
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.scr.AttributeProviderComponent;
+import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
+
+import java.io.IOException;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -36,37 +39,31 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-@Component(immediate = true)
-@Service({AttributeProvider.class, ConfigurationListener.class})
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class JmxAttributeProvider extends AttributeProviderComponent implements ConfigurationListener {
+@Component(configurationPid = JmxAttributeProvider.MANAGEMENT_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
+@Service({ AttributeProvider.class, ConfigurationListener.class })
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class JmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JmxAttributeProvider.class);
     static final String MANAGEMENT_PID = "org.apache.karaf.management";
 
     private static final String JMX_URL_FORMAT = "service:jmx:rmi://${container:%s/fabric8.ip}:%d/jndi/rmi://${container:%s/fabric8.ip}:%d/karaf-%s";
 
-    private static final String JMX_SERVICE_URL = "serviceUrl";
+    //private static final String JMX_SERVICE_URL = "serviceUrl";
     private static final String RMI_REGISTRY_BINDING_PORT_KEY = "rmiRegistryPort";
     private static final String RMI_SERVER_BINDING_PORT_KEY = "rmiServerPort";
     private static final String RMI_REGISTRY_CONNECTION_PORT_KEY = "rmiRegistryConnectionPort";
     private static final String RMI_SERVER_CONNECTION_PORT_KEY = "rmiServerConnectionPort";
 
-    @Property(name = RMI_REGISTRY_BINDING_PORT_KEY, value = "${"+RMI_REGISTRY_BINDING_PORT_KEY+"}")
+    @Property(name = RMI_REGISTRY_BINDING_PORT_KEY, value = "${" + RMI_REGISTRY_BINDING_PORT_KEY + "}")
     private int rmiRegistryPort = 1099;
-    @Property(name = RMI_SERVER_BINDING_PORT_KEY, value = "${"+RMI_SERVER_BINDING_PORT_KEY+"}")
+    @Property(name = RMI_SERVER_BINDING_PORT_KEY, value = "${" + RMI_SERVER_BINDING_PORT_KEY + "}")
     private int rmiServerPort = 44444;
-    @Property(name = RMI_REGISTRY_CONNECTION_PORT_KEY, value = "${"+RMI_REGISTRY_CONNECTION_PORT_KEY+"}")
+    @Property(name = RMI_REGISTRY_CONNECTION_PORT_KEY, value = "${" + RMI_REGISTRY_CONNECTION_PORT_KEY + "}")
     private int rmiRegistryConnectionPort = 1099;
-    @Property(name = RMI_SERVER_CONNECTION_PORT_KEY, value = "${"+RMI_SERVER_CONNECTION_PORT_KEY+"}")
+    @Property(name = RMI_SERVER_CONNECTION_PORT_KEY, value = "${" + RMI_SERVER_CONNECTION_PORT_KEY + "}")
     private int rmiServerConnectionPort = 44444;
-    @Property(name ="runtimeId", value = "${"+RuntimeService.RUNTIME_IDENTITY+"}")
+    @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
     @Reference(referenceInterface = Configurer.class)
@@ -74,7 +71,6 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
 
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
-
 
     @Activate
     void activate() throws Exception {
@@ -101,7 +97,6 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
     private void processConfiguration() {
         try {
             Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID);
-            Map<String, Object> map = new HashMap<>();
             configurer.get().configure(configuration.getProperties(), this);
             updateAttributes();
         } catch (IOException e) {
@@ -115,13 +110,14 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, rmiServerConnectionPort, rmiRegistryPort));
     }
 
-    private String getJmxUrl(String name, int serverConnectionPort, int registryConnectionPort)  {
+    private String getJmxUrl(String name, int serverConnectionPort, int registryConnectionPort) {
         return String.format(JMX_URL_FORMAT, name, serverConnectionPort, name, registryConnectionPort, name);
     }
 
     void bindConfigurer(Configurer service) {
         this.configurer.bind(service);
     }
+
     void unbindConfigurer(Configurer service) {
         this.configurer.unbind(service);
     }
@@ -129,6 +125,7 @@ public class JmxAttributeProvider extends AttributeProviderComponent implements 
     void bindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.bind(service);
     }
+
     void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
     }
