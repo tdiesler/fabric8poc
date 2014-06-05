@@ -77,8 +77,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -143,6 +141,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
+    @Reference(referenceInterface = BootConfiguration.class)
+    private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
     @Reference(referenceInterface = ConfigurationManager.class)
     private final ValidatingReference<ConfigurationManager> configurationManager = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
@@ -155,9 +155,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
-
-    @Reference(referenceInterface = BootConfiguration.class)
-    private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
 
     private final Set<ServiceRegistration<?>> registrations = new HashSet<>();
     private ContainerIdentity currentIdentity;
@@ -198,8 +195,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                     ContainerServiceImpl service = (ContainerServiceImpl) permit.getInstance();
                     String profileId = profile.getIdentity();
                     for (ContainerState cntState : service.getContainerStates(null)) {
-                        if (cntState.getProfileIdentities().contains(profileId)) {
-                            LockHandle writeLock = cntState.aquireWriteLock();
+                        List<String> profiles;
+                        LockHandle readLock = service.aquireReadLock(cntState.getIdentity());
+                        try {
+                            profiles = cntState.getProfileIdentities();
+                        } finally {
+                            readLock.unlock();
+                        }
+                        if (profiles.contains(profileId)) {
+                            LockHandle writeLock = service.aquireContainerLock(cntState.getIdentity());
                             try {
                                 service.updateProfileInternal(cntState, profileId, null);
                             } catch (ProvisionException ex) {
@@ -224,8 +228,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             CreateOptions options = new AbstractCreateOptions() {
             };
             currentCnt = new ContainerState(null, currentIdentity, options);
-            currentCnt.addProfiles(new ArrayList<>(bootConfiguration.get().getProfiles()));
-            currentCnt.setProfileVersion(((ProfileServiceImpl) profileService.get()).getProfileVersionState(bootConfiguration.get().getVersion()));
+            LockHandle writeLock = aquireWriteLock(currentIdentity);
+            try {
+                currentCnt.addProfiles(new ArrayList<>(bootConfiguration.get().getProfiles()));
+                currentCnt.setProfileVersion(((ProfileServiceImpl) profileService.get()).getProfileVersionState(bootConfiguration.get().getVersion()));
+            } finally {
+                writeLock.unlock();
+            }
 
             LOGGER.info("Create current container: {}", currentCnt);
             containerRegistry.get().addContainer(currentCnt);
@@ -252,8 +261,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public LockHandle aquireContainerLock(ContainerIdentity identity) {
         assertValid();
-        ContainerState cntState = getRequiredContainerState(identity);
-        return cntState.aquireWriteLock();
+        return aquireWriteLock(identity);
+    }
+
+    private LockHandle aquireWriteLock(ContainerIdentity identity) {
+        return containerRegistry.get().aquireWriteLock(identity);
+    }
+
+    private LockHandle aquireReadLock(ContainerIdentity identity) {
+        return containerRegistry.get().aquireReadLock(identity);
     }
 
     @Override
@@ -273,11 +289,27 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Support for embedded container testing
         if (options.getClass().getName().endsWith("EmbeddedCreateOptions")) {
             ContainerIdentity identity = options.getIdentity();
-            ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
-            ContainerState cntState = new ContainerState(parentState, identity, options);
+            ContainerState cntState;
+            if (parentId != null) {
+                LockHandle parentLock = aquireWriteLock(parentId);
+                try {
+                    ContainerState parentState = getRequiredContainerState(parentId);
+                    cntState = new ContainerState(parentState, identity, options);
+                } finally {
+                    parentLock.unlock();
+                }
+            } else {
+                cntState = new ContainerState(null, identity, options);
+            }
             LOGGER.info("Create container: {}", cntState);
-            containerRegistry.get().addContainer(cntState);
-            return cntState.immutableContainer();
+            ContainerRegistry registry = containerRegistry.get();
+            LockHandle readLock = registry.aquireReadLock(identity);
+            try {
+                registry.addContainer(cntState);
+                return cntState.immutableContainer();
+            } finally {
+                readLock.unlock();
+            }
         }
 
         return controller.get().createContainer(parentId, options);
@@ -287,7 +319,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container getContainer(ContainerIdentity identity) {
         assertValid();
         ContainerState cntState = getContainerState(identity);
-        return cntState != null ? cntState.immutableContainer() : null;
+        if (cntState != null) {
+            LockHandle readLock = aquireReadLock(identity);
+            try {
+                return cntState.immutableContainer();
+            } finally {
+                readLock.unlock();
+            }
+        } else {
+            return controller.get().getContainer(identity);
+        }
     }
 
     @Override
@@ -298,7 +339,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private Container startContainerInternal(ContainerState cntState, ProvisionEventListener listener) throws ProvisionException {
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(cntState.getIdentity());
         try {
             LOGGER.info("Start container: {}", cntState);
             if (cntState.getProfileVersion() == null) {
@@ -326,7 +367,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         assertValid();
         IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot stop current container");
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(identity);
         try {
             LOGGER.info("Stop container: {}", cntState);
             return cntState.stop().immutableContainer();
@@ -340,7 +381,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         assertValid();
         IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot destroy current container");
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(identity);
         try {
             IllegalStateAssertion.assertTrue(cntState.getChildIdentities().isEmpty(), "Cannot destroy a container that has active child containers: " + identity);
 
@@ -351,6 +392,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
             LOGGER.info("Destroy container: {}", cntState);
             containerRegistry.get().removeContainer(identity);
+            ContainerState parentState = cntState.getParentState();
+            if (parentState != null) {
+                LockHandle parentLock = aquireWriteLock(parentState.getIdentity());
+                try {
+                    parentState.removeChild(identity);
+                } finally {
+                    parentLock.unlock();
+                }
+            }
             cntState.destroy();
             return cntState.immutableContainer();
         } finally {
@@ -369,7 +419,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         assertValid();
         Set<Container> result = new HashSet<>();
         for (ContainerState cntState : getContainerStates(identities)) {
-            result.add(cntState.immutableContainer());
+            LockHandle readLock = aquireReadLock(cntState.getIdentity());
+            try {
+                result.add(cntState.immutableContainer());
+            } finally {
+                readLock.unlock();
+            }
         }
         return Collections.unmodifiableSet(result);
     }
@@ -382,14 +437,20 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container getCurrentContainer() {
         assertValid();
-        return getRequiredContainerState(currentIdentity).immutableContainer();
+        ContainerState cntState = getRequiredContainerState(currentIdentity);
+        LockHandle readLock = aquireReadLock(cntState.getIdentity());
+        try {
+            return cntState.immutableContainer();
+        } finally {
+            readLock.unlock();
+        }
     }
 
     @Override
     public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(identity);
         try {
             return setVersionInternal(cntState, version, listener);
         } finally {
@@ -414,7 +475,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container addProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(identity);
         try {
             return addProfilesInternal(cntState, identities, listener);
         } finally {
@@ -440,7 +501,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container removeProfiles(ContainerIdentity identity, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle writeLock = cntState.aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(identity);
         try {
             return removeProfilesInternal(cntState, identities, listener);
         } finally {
@@ -466,7 +527,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Profile getEffectiveProfile(ContainerIdentity identity) {
         assertValid();
         ContainerState cntState = getRequiredContainerState(identity);
-        LockHandle readLock = cntState.aquireReadLock();
+        LockHandle readLock = aquireReadLock(identity);
         try {
             Version version = cntState.getProfileVersion().getIdentity();
             List<String> identities = cntState.getProfileIdentities();
@@ -477,7 +538,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private Profile getEffectiveProfileInternal(ContainerState cntState, Version version, List<String> identities) {
-        LockHandle readLock = cntState.aquireReadLock();
+        LockHandle readLock = aquireReadLock(cntState.getIdentity());
         try {
             StringBuffer effectiveId = new StringBuffer("effective#" + version + "[");
             for (int i = 0; i < identities.size(); i++) {
@@ -692,7 +753,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
         ResourceIdentity explicitId = resVersion != null ? ResourceIdentity.create(symbolicName, resVersion) : null;
         ContainerState cntState = getRequiredContainerState(currentIdentity);
-        LockHandle readLock = cntState.aquireReadLock();
+        LockHandle readLock = aquireReadLock(cntState.getIdentity());
         try {
             Resource resource = null;
             Version highestVersion = Version.emptyVersion;
@@ -790,7 +851,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         private final List<String> profiles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
         private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
-        private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
         private ProfileVersionState versionState;
         private State state;
 
@@ -804,59 +864,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (parentState != null) {
                 parentState.addChild(this);
             }
-        }
-
-        LockHandle aquireWriteLock() {
-            final WriteLock writeLock = readWriteLock.writeLock();
-
-            boolean success;
-            try {
-                success = writeLock.tryLock(10, TimeUnit.SECONDS);
-            } catch (Exception ex) {
-                success = false;
-            }
-            IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + identity);
-
-            final LockHandle versionLock;
-            if (versionState != null) {
-                try {
-                    versionLock = versionState.aquireWriteLock();
-                } catch (Exception ex) {
-                    writeLock.unlock();
-                    throw ex;
-                }
-            } else {
-                versionLock = null;
-            }
-
-            return new LockHandle() {
-                @Override
-                public void unlock() {
-                    if (versionLock != null) {
-                        versionLock.unlock();
-                    }
-                    writeLock.unlock();
-                }
-            };
-        }
-
-        LockHandle aquireReadLock() {
-            final ReadLock readLock = readWriteLock.readLock();
-
-            boolean success;
-            try {
-                success = readLock.tryLock(10, TimeUnit.SECONDS);
-            } catch (Exception ex) {
-                success = false;
-            }
-            IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + identity);
-
-            return new LockHandle() {
-                @Override
-                public void unlock() {
-                    readLock.unlock();
-                }
-            };
         }
 
         ContainerIdentity getIdentity() {
@@ -896,12 +903,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         Set<ContainerIdentity> getChildIdentities() {
-            LockHandle readLock = aquireReadLock();
-            try {
-                return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
-            } finally {
-                readLock.unlock();
-            }
+            assertReadLock();
+            return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
         }
 
         ProfileVersion getProfileVersion() {
@@ -909,12 +912,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         List<String> getProfileIdentities() {
-            LockHandle readLock = aquireReadLock();
-            try {
-                return Collections.unmodifiableList(new ArrayList<>(profiles));
-            } finally {
-                readLock.unlock();
-            }
+            assertReadLock();
+            return Collections.unmodifiableList(new ArrayList<>(profiles));
         }
 
         Set<ServiceEndpointIdentity<?>> getServiceEndpointIdentities() {
@@ -949,18 +948,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         ImmutableContainer immutableContainer() {
-            LockHandle readLock = aquireReadLock();
-            try {
-                ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
-                builder.addParent(parentState != null ? parentState.getIdentity() : null);
-                builder.addProfileVersion(versionState != null ? versionState.getIdentity() : null);
-                builder.addChildren(getChildIdentities());
-                builder.addProfiles(getProfileIdentities());
-                builder.addServiceEndpoints(getServiceEndpointIdentities());
-                return builder.build();
-            } finally {
-                readLock.unlock();
-            }
+            assertReadLock();
+            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
+            builder.addParent(parentState != null ? parentState.getIdentity() : null);
+            builder.addProfileVersion(versionState != null ? versionState.getIdentity() : null);
+            builder.addChildren(getChildIdentities());
+            builder.addProfiles(getProfileIdentities());
+            builder.addServiceEndpoints(getServiceEndpointIdentities());
+            return builder.build();
         }
 
         Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
@@ -982,92 +977,65 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         private void addChild(ContainerState childState) {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                children.put(childState.getIdentity(), childState);
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            children.put(childState.getIdentity(), childState);
         }
 
         private void removeChild(ContainerIdentity identity) {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                children.remove(identity);
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            children.remove(identity);
         }
 
         private void setProfileVersion(ProfileVersionState versionState) {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                this.versionState = versionState;
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            this.versionState = versionState;
         }
 
         private void addProfiles(List<String> identities) {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                profiles.addAll(identities);
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            profiles.addAll(identities);
         }
 
         private void removeProfiles(List<String> identities) {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                profiles.removeAll(identities);
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            profiles.removeAll(identities);
         }
 
         private ContainerState start() {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                state = State.STARTED;
-                return this;
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            state = State.STARTED;
+            return this;
         }
 
         private ContainerState stop() {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                state = State.STOPPED;
-                return this;
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            state = State.STOPPED;
+            return this;
         }
 
         private ContainerState destroy() {
             assertNotDestroyed();
-            LockHandle writeLock = aquireWriteLock();
-            try {
-                if (parentState != null) {
-                    parentState.removeChild(identity);
-                }
-                state = State.DESTROYED;
-                return this;
-            } finally {
-                writeLock.unlock();
-            }
+            assertWriteLock();
+            state = State.DESTROYED;
+            return this;
         }
 
         private void assertNotDestroyed() {
             IllegalStateAssertion.assertFalse(state == State.DESTROYED, "Container already destroyed: " + this);
+        }
+
+        private void assertReadLock() {
+            ContainerRegistry.assertReadLock(identity);
+        }
+
+        private void assertWriteLock() {
+            ContainerRegistry.assertWriteLock(identity);
         }
 
         @Override
