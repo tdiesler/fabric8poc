@@ -32,6 +32,7 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.domain.controller.Controller;
 import io.fabric8.spi.scr.AbstractComponent;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,17 +88,17 @@ public final class ControllerService extends AbstractComponent implements Contro
 
     @Override
     public Set<ContainerIdentity> getContainerIdentities() {
-        throw new UnsupportedOperationException();
+        return Collections.emptySet();
     }
 
     @Override
     public Set<Container> getContainers(Set<ContainerIdentity> identities) {
-        throw new UnsupportedOperationException();
+        return Collections.emptySet();
     }
 
     @Override
     public Container getContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
@@ -107,17 +108,17 @@ public final class ControllerService extends AbstractComponent implements Contro
 
     @Override
     public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
-        throw new UnsupportedOperationException();
+        throw new IllegalStateException("Cannot obtain container: " + identity);
     }
 
     @Override
     public Container stopContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        throw new IllegalStateException("Cannot obtain container: " + identity);
     }
 
     @Override
     public Container destroyContainer(ContainerIdentity identity) {
-        throw new UnsupportedOperationException();
+        throw new IllegalStateException("Cannot obtain container: " + identity);
     }
 
     @Override

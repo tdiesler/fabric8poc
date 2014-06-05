@@ -36,10 +36,6 @@
             <artifactId>fabric8-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-runtime-embedded</artifactId>
-        </dependency>
         
         <!-- Provided Dependencies -->
         <dependency>
@@ -70,6 +66,11 @@
         <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-resource</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-runtime-embedded</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

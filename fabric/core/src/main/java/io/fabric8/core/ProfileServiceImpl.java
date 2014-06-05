@@ -104,6 +104,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileServiceImpl.class);
 
+    @Reference(referenceInterface = ContainerLockManager.class)
+    private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileRegistry.class)
@@ -417,8 +419,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             getRequiredProfileVersion(version);
             ContainerRegistry registry = containerRegistry.get();
+            ContainerLockManager lockManager = containerLocks.get();
             for (ContainerState cntState : registry.getContainers(null)) {
-                LockHandle readLock = registry.aquireReadLock(cntState.getIdentity());
+                LockHandle readLock = lockManager.aquireReadLock(cntState.getIdentity());
                 try {
                     IllegalStateAssertion.assertFalse(cntState.getProfileIdentities().contains(identity), "Cannot remove profile used by: " + cntState);
                 } finally {
@@ -497,10 +500,16 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         return new ProfileVersionState(getRequiredProfileVersion(version));
     }
 
+    void bindContainerLocks(ContainerLockManager service) {
+        containerLocks.bind(service);
+    }
+    void unbindContainerLocks(ContainerLockManager service) {
+        containerLocks.unbind(service);
+    }
+
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
-
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -508,7 +517,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     void bindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.bind(service);
     }
-
     void unbindProfileRegistry(ProfileRegistry service) {
         this.profileRegistry.unbind(service);
     }
