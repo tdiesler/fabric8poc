@@ -69,7 +69,7 @@ public final class ContainerRegistry extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRegistry.class);
 
-    private final Map<ContainerIdentity, ContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ContainerState>();
+    private final Map<ContainerIdentity, Registration> containers = new ConcurrentHashMap<ContainerIdentity, Registration>();
 
     @Activate
     void activate() {
@@ -95,7 +95,8 @@ public final class ContainerRegistry extends AbstractComponent {
     Set<ContainerState> getContainers(Set<ContainerIdentity> identities) {
         assertValid();
         Set<ContainerState> result = new HashSet<ContainerState>();
-        for (ContainerState cntState : containers.values()) {
+        for (Registration creg : containers.values()) {
+            ContainerState cntState = creg.getContainerState();
             if (identities == null || identities.contains(cntState.getIdentity())) {
                 result.add(cntState);
             }
@@ -107,7 +108,7 @@ public final class ContainerRegistry extends AbstractComponent {
         assertValid();
         ContainerIdentity identity = cntState.getIdentity();
         IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
-        containers.put(identity, cntState);
+        containers.put(identity, new Registration(cntState));
     }
 
     void removeContainer(ContainerIdentity identity) {
@@ -117,13 +118,62 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     ContainerState getContainerState(ContainerIdentity identity) {
-        return containers.get(identity);
+        Registration creg = containers.get(identity);
+        return creg != null ? creg.getContainerState() : null;
     }
 
     ContainerState getRequiredContainerState(ContainerIdentity identity) {
-        ContainerState cntState = containers.get(identity);
-        IllegalStateAssertion.assertNotNull(cntState, "Container not registered: " + identity);
-        return cntState;
+        return getRequiredRegistration(identity).getContainerState();
+    }
+
+    Registration getRequiredRegistration(ContainerIdentity identity) {
+        Registration creg = containers.get(identity);
+        IllegalStateAssertion.assertNotNull(creg, "Container not registered: " + identity);
+        return creg;
+    }
+
+    Map<ResourceIdentity, ResourceHandle> getResourceHandles(ContainerIdentity identity) {
+        return getRequiredRegistration(identity).getResourceHandles();
+    }
+
+    void addResourceHandles(ContainerIdentity identity, Map<ResourceIdentity, ResourceHandle> handles) {
+        getRequiredRegistration(identity).addResourceHandles(handles);
+    }
+
+    void removeResourceHandles(ContainerIdentity identity, Collection<ResourceIdentity> handles) {
+        getRequiredRegistration(identity).removeResourceHandles(handles);
+    }
+
+    final static class Registration {
+
+        private final ContainerState cntState;
+        private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
+
+        private Registration(ContainerState cntState) {
+            this.cntState = cntState;
+        }
+
+        ContainerState getContainerState() {
+            return cntState;
+        }
+
+        Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
+            return Collections.unmodifiableMap(resourceHandles);
+        }
+
+        void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
+            cntState.assertNotDestroyed();
+            cntState.assertWriteLock();
+            resourceHandles.putAll(handles);
+        }
+
+        void removeResourceHandles(Collection<ResourceIdentity> handles) {
+            cntState.assertNotDestroyed();
+            cntState.assertWriteLock();
+            for (ResourceIdentity resid : handles) {
+                resourceHandles.remove(resid);
+            }
+        }
     }
 
     final static class ContainerState {
@@ -133,7 +183,6 @@ public final class ContainerRegistry extends AbstractComponent {
         private final AttributeSupport attributes;
         private final List<String> profiles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
-        private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
         private ProfileVersionState versionState;
         private State state;
 
@@ -238,10 +287,6 @@ public final class ContainerRegistry extends AbstractComponent {
             return builder.build();
         }
 
-        Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
-            return Collections.unmodifiableMap(resourceHandles);
-        }
-
         void addChild(ContainerState childState) {
             assertNotDestroyed();
             assertWriteLock();
@@ -291,20 +336,6 @@ public final class ContainerRegistry extends AbstractComponent {
             assertWriteLock();
             state = State.DESTROYED;
             return this;
-        }
-
-        void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
-            assertNotDestroyed();
-            assertWriteLock();
-            resourceHandles.putAll(handles);
-        }
-
-        void removeResourceHandles(Collection<ResourceIdentity> handles) {
-            assertNotDestroyed();
-            assertWriteLock();
-            for (ResourceIdentity resid : handles) {
-                resourceHandles.remove(resid);
-            }
         }
 
         private void assertNotDestroyed() {

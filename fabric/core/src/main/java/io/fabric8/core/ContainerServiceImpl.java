@@ -47,7 +47,6 @@ import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerService;
-import io.fabric8.spi.ContainerLifecycle;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
@@ -143,12 +142,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
-    @Reference(referenceInterface = ContainerLifecycle.class)
-    private final ValidatingReference<ContainerLifecycle> containerLifecycle = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
     private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<>();
+    @Reference(referenceInterface = RemoteContainerService.class)
+    private final ValidatingReference<RemoteContainerService> remoteContainer = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
@@ -308,7 +307,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             }
         }
 
-        return containerLifecycle.get().createContainer(parentId, options);
+        return remoteContainer.get().createContainer(parentId, options);
     }
 
     @Override
@@ -335,7 +334,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (cntState != null) {
                 return startContainerInternal(cntState, listener);
             } else {
-                return containerLifecycle.get().startContainer(identity, listener);
+                return remoteContainer.get().startContainer(identity, listener);
             }
         } finally {
             writeLock.unlock();
@@ -371,7 +370,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (cntState != null) {
                 return stopContainerInternal(cntState);
             } else {
-                return containerLifecycle.get().stopContainer(identity);
+                return remoteContainer.get().stopContainer(identity);
             }
         } finally {
             writeLock.unlock();
@@ -393,7 +392,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             if (cntState != null) {
                 return destroyContainerInternal(cntState);
             } else {
-                return containerLifecycle.get().destroyContainer(identity);
+                return remoteContainer.get().destroyContainer(identity);
             }
         } finally {
             writeLock.unlock();
@@ -595,6 +594,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private void provisionEffectiveProfile(ContainerState cntState, Profile effective, ProvisionEventListener listener) throws ProvisionException {
 
+        ContainerIdentity identity = cntState.getIdentity();
         LOGGER.info("Provision profile: {} <= {}", cntState, effective.getIdentity());
 
         Container container = cntState.immutableContainer();
@@ -654,8 +654,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         // Get list of resources for removal
+        ContainerRegistry registry = containerRegistry.get();
         List<ResourceIdentity> removalPending = new ArrayList<>();
-        Map<ResourceIdentity, ResourceHandle> currentResources = cntState.getResourceHandles();
+        Map<ResourceIdentity, ResourceHandle> currentResources = registry.getResourceHandles(identity);
         for (ResourceIdentity resid : currentResources.keySet()) {
             if (allResources.get(resid) == null) {
                 removalPending.add(resid);
@@ -668,7 +669,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             ResourceHandle handle = currentResources.get(resid);
             handle.uninstall();
         }
-        cntState.removeResourceHandles(removalPending);
+        registry.removeResourceHandles(identity, removalPending);
 
         // Install added resources
         Map<ResourceIdentity, ResourceHandle> addedResources = new LinkedHashMap<>();
@@ -679,7 +680,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 addedResources.put(resid, handle);
             }
         }
-        cntState.addResourceHandles(addedResources);
+        registry.addResourceHandles(identity, addedResources);
 
         event = new ProvisionEvent(container, EventType.PROVISIONED, effective);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
@@ -829,11 +830,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         bootConfiguration.unbind(service);
     }
 
-    void bindContainerLifecycle(ContainerLifecycle service) {
-        this.containerLifecycle.bind(service);
+    void bindRemoteContainer(RemoteContainerService service) {
+        this.remoteContainer.bind(service);
     }
-    void unbindContainerLifecycle(ContainerLifecycle service) {
-        this.containerLifecycle.unbind(service);
+    void unbindRemoteContainer(RemoteContainerService service) {
+        this.remoteContainer.unbind(service);
     }
 
     void bindConfigurationManager(ConfigurationManager service) {

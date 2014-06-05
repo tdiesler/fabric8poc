@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.internal;
+package io.fabric8.core;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
@@ -29,7 +29,6 @@ import io.fabric8.api.process.ManagedProcess;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.Agent;
 import io.fabric8.spi.AttributeSupport;
-import io.fabric8.spi.ContainerLifecycle;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -56,16 +55,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The central {@link ContainerLifecycle}
+ * The {@link RemoteContainerService}
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(ContainerLifecycle.class)
-public final class ContainerLifecycleService extends AbstractComponent implements ContainerLifecycle {
+@Service(RemoteContainerService.class)
+public final class RemoteContainerService extends AbstractComponent {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerLifecycleService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteContainerService.class);
 
     @Reference(referenceInterface = Agent.class)
     private final ValidatingReference<Agent> agent = new ValidatingReference<>();
@@ -84,14 +83,12 @@ public final class ContainerLifecycleService extends AbstractComponent implement
         deactivateComponent();
     }
 
-    @Override
-    public Container createContainer(CreateOptions options) {
+    Container createContainer(CreateOptions options) {
         assertValid();
         return createContainerInternal(null, options);
     }
 
-    @Override
-    public Container createContainer(ContainerIdentity parentId, CreateOptions options) {
+    Container createContainer(ContainerIdentity parentId, CreateOptions options) {
         assertValid();
         return createContainerInternal(parentId, options);
     }
@@ -105,8 +102,7 @@ public final class ContainerLifecycleService extends AbstractComponent implement
         return cntState.immutableContainer();
     }
 
-    @Override
-    public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
+    Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
         ManagedContainerState cntState = getRequiredContainerState(identity);
         LOGGER.info("Start container: {}", cntState);
         ManagedProcess process = cntState.getManagedProcess();
@@ -114,8 +110,7 @@ public final class ContainerLifecycleService extends AbstractComponent implement
         return cntState.immutableContainer();
     }
 
-    @Override
-    public Container stopContainer(ContainerIdentity identity) {
+    Container stopContainer(ContainerIdentity identity) {
         ManagedContainerState cntState = getRequiredContainerState(identity);
         LOGGER.info("Stop container: {}", cntState);
         ManagedProcess process = cntState.getManagedProcess();
@@ -123,8 +118,7 @@ public final class ContainerLifecycleService extends AbstractComponent implement
         return cntState.immutableContainer();
     }
 
-    @Override
-    public Container destroyContainer(ContainerIdentity identity) {
+    Container destroyContainer(ContainerIdentity identity) {
         ManagedContainerState cntState = getRequiredContainerState(identity);
         Set<ContainerIdentity> childIdentities = cntState.getChildIdentities();
         IllegalStateAssertion.assertTrue(childIdentities.isEmpty(), "Cannot destroy a container that has active child containers: " + cntState);
