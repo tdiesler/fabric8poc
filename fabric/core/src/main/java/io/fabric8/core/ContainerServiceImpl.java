@@ -24,6 +24,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItem.Filter;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
@@ -218,8 +219,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         // Create the current container
         ContainerRegistry registry = containerRegistry.get();
         if (!registry.getContainerIdentities().contains(currentIdentity)) {
-            CreateOptions options = new AbstractCreateOptions() {
-            };
 
             // Get boot profile version
             Version bootVersion = bootConfiguration.get().getVersion();
@@ -229,8 +228,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             List<String> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());
 
             // Get JMX service endpoint
-            String jmxServerUrl = jmxProvider.get().getJmxServerUrl();
+            final String jmxServerUrl = jmxProvider.get().getJmxServerUrl();
             Set<ServiceEndpoint> endpoints = Collections.<ServiceEndpoint>singleton(new ContainerJmxEndpoint(currentIdentity, jmxServerUrl));
+
+            CreateOptions options = new AbstractCreateOptions() {
+                {
+                    putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
+                }
+            };
 
             LockHandle writeLock = aquireWriteLock(currentIdentity);
             try {

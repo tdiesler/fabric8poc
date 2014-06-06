@@ -102,5 +102,6 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     @Override
     public void validate() {
         IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
+        IllegalStateAssertion.assertNotNull(version, "Profile version cannot be null");
     }
 }

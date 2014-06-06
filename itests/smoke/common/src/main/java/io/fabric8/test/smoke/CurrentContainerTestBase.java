@@ -20,6 +20,7 @@
 package io.fabric8.test.smoke;
 
 import io.fabric8.api.Container;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -89,6 +90,9 @@ public abstract class CurrentContainerTestBase {
         Assert.assertEquals(runtimeId + "-JMXServiceEndpoint", epids.iterator().next().getSymbolicName());
 
         Assume.assumeFalse(RuntimeType.OTHER == RuntimeType.getRuntimeType());
+
+        String jmxServerUrl = cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        Assert.assertNotNull("JMX server URL not null", jmxServerUrl);
 
         String[] userpass = credentials.get(RuntimeType.getRuntimeType());
         JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
