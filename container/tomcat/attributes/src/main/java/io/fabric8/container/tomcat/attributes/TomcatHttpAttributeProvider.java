@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.tomcat.attributes;
+package io.fabric8.container.tomcat.attributes;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
+import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -47,11 +48,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(AttributeProvider.class)
+@Service({AttributeProvider.class, HttpAttributeProvider.class})
 @Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
-public class HttpAttributeProvider extends AbstractAttributeProvider {
+public class TomcatHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpAttributeProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TomcatHttpAttributeProvider.class);
 
     private static final int DEFAULT_HTTP_REMOTE_PORT = 8080;
     private static final int DEFAULT_HTTPS_REMOTE_PORT = 8443;
@@ -65,6 +66,8 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
 
     private final Set<Connector> httpConnectors = new LinkedHashSet<Connector>();
     private final Set<Connector> httpsConnectors = new LinkedHashSet<Connector>();
+    private String httpUrl;
+    private String httpsUrl;
     private String runtimeId;
 
     @Activate
@@ -78,6 +81,16 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
     @Deactivate
     void deactivate() {
         deactivateComponent();
+    }
+
+    @Override
+    public String getHttpsUrl() {
+        return httpsUrl;
+    }
+
+    @Override
+    public String getHttpUrl() {
+        return httpUrl;
     }
 
     private void activateInternal() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
@@ -98,10 +111,10 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
         try {
             boolean httpEnabled = isHttpEnabled();
             boolean httpsEnabled = isHttpsEnabled();
-            String protocol = httpsEnabled && !httpEnabled ? "https" : "http";
             int httpPort = httpsEnabled && !httpEnabled ? getHttpsPort() : getHttpPort();
-            String httpUrl = getHttpUrl(protocol, runtimeId, httpPort);
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, httpUrl);
+            int httpsPort = httpsEnabled ? getHttpsPort() : 0;
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl("http", runtimeId, httpPort));
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl("https", runtimeId, httpsPort));
         } catch (Exception e) {
             LOGGER.warn("Failed to get http attributes.", e);
         }
@@ -137,7 +150,11 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
     }
 
     private String getHttpUrl(String protocol, String name, int port) {
-        return String.format(HTTP_URL_FORMAT, name);
+        return httpUrl = String.format(HTTP_URL_FORMAT, "http", name, port);
+    }
+
+    private String getHttpsUrl(String protocol, String name, int port) {
+        return httpsUrl = String.format(HTTP_URL_FORMAT, "https", name, port);
     }
 
     void bindMbeanServer(MBeanServer service) {

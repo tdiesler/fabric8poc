@@ -19,6 +19,9 @@
  */
 package io.fabric8.test.embedded.support;
 
+import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.RuntimeService;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +40,6 @@ import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import io.fabric8.spi.RuntimeService;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
@@ -113,6 +115,9 @@ public class EmbeddedUtils {
                 EmbeddedResourceInstaller resourceInstaller = new EmbeddedResourceInstaller(environment);
                 syscontext.registerService(RuntimeEnvironment.class, environment, null);
                 syscontext.registerService(ResourceInstaller.class, resourceInstaller, null);
+
+                // Register the JMXAttributeProvider
+                syscontext.registerService(JmxAttributeProvider.class, new EmbeddedJmxAttributeProvider(), null);
 
                 // Add initial runtime resources
                 String resname = "environment.xml";
@@ -280,6 +285,14 @@ public class EmbeddedUtils {
                     module.uninstall();
                 }
             };
+        }
+    }
+
+    static final class EmbeddedJmxAttributeProvider implements JmxAttributeProvider {
+
+        @Override
+        public String getJmxServerUrl() {
+            return null;
         }
     }
 }

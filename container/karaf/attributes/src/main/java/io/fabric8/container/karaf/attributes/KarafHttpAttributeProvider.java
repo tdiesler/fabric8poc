@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.karaf.attributes;
+package io.fabric8.container.karaf.attributes;
 
 import static io.fabric8.api.ContainerAttributes.HTTPS_BINDING_PORT_KEY;
 import static io.fabric8.api.ContainerAttributes.HTTP_BINDING_PORT_KEY;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.Configurer;
+import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
+import io.fabric8.spi.scr.ValidatingReference;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -35,10 +37,10 @@ import org.apache.felix.scr.annotations.Service;
 
 import java.util.Map;
 
-@Component(configurationPid = HttpAttributeProvider.PAX_WEB_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
-@Service(AttributeProvider.class)
+@Component(configurationPid = KarafHttpAttributeProvider.PAX_WEB_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
+@Service({AttributeProvider.class, HttpAttributeProvider.class})
 @Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
-public class HttpAttributeProvider extends AbstractAttributeProvider {
+public class KarafHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     static final String PAX_WEB_PID = "org.ops4j.pax.web";
     private static final String HTTP_CONNECTION_PORT_KEY = "io.fabric8.http.connection.port";
@@ -63,8 +65,11 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
     @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
-    @Reference
-    private Configurer configurer;
+    @Reference(referenceInterface = Configurer.class)
+    private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+
+    private String httpUrl;
+    private String httpsUrl;
 
     @Activate
     void activate(Map<String, Object> configuration) throws Exception {
@@ -84,8 +89,18 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
         deactivateComponent();
     }
 
+    @Override
+    public String getHttpsUrl() {
+        return httpsUrl;
+    }
+
+    @Override
+    public String getHttpUrl() {
+        return httpUrl;
+    }
+
     private void configureInternal(Map<String, Object> configuration) throws Exception {
-        configurer.configure(configuration, this, "org.osgi.service", "io.fabric8");
+        configurer.get().configure(configuration, this, "org.osgi.service", "io.fabric8");
         httpConnectionPort = httpConnectionPort != 0 ? httpConnectionPort : httpPort;
         httpConnectionPortSecure = httpConnectionPortSecure != 0 ? httpConnectionPortSecure : httpPortSecure;
 
@@ -94,16 +109,24 @@ public class HttpAttributeProvider extends AbstractAttributeProvider {
     private void updateAttributes() throws Exception {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpConnectionPort != 0 ? httpConnectionPort : httpPort);
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpConnectionPortSecure != 0 ? httpConnectionPortSecure : httpPortSecure);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl());
+        int httpPort = httpSecureEnabled && !httpEnabled ? httpConnectionPortSecure : httpConnectionPort;
+        int httpsPort = httpSecureEnabled ? httpConnectionPortSecure : 0;
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl(runtimeId, httpPort));
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl(runtimeId, httpsPort));
     }
 
-    private String getHttpUrl() throws Exception {
-        String protocol = httpSecureEnabled && !httpEnabled ? "https" : "http";
-        int port = httpSecureEnabled && !httpEnabled ? httpConnectionPortSecure : httpConnectionPort;
-        return getHttpUrl(protocol, runtimeId, port);
+    private String getHttpUrl(String id, int port) {
+        return httpUrl = String.format(HTTP_URL_FORMAT, "http", id, port);
     }
 
-    private static String getHttpUrl(String protocol, String id, int port) {
-        return String.format(HTTP_URL_FORMAT, protocol, id, port);
+    private String getHttpsUrl(String id, int port) {
+        return httpsUrl = String.format(HTTP_URL_FORMAT, "https", id, port);
+    }
+
+    void bindConfigurer(Configurer service) {
+        this.configurer.bind(service);
+    }
+    void unbindConfigurer(Configurer service) {
+        this.configurer.unbind(service);
     }
 }

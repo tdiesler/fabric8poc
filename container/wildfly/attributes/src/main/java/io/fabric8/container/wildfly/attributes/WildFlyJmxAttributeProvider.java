@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.tomcat.attributes;
+package io.fabric8.container.wildfly.attributes;
 
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
+import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -32,21 +33,22 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(AttributeProvider.class)
+@Service({ AttributeProvider.class, JmxAttributeProvider.class})
 @Properties(
         @Property(name = "type", value = ContainerAttributes.TYPE)
 )
-public class JmxAttributeProvider extends AbstractAttributeProvider  {
+public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider {
 
-    private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
-    private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
+    private static final String JMX_REMOTE_PORT = "jboss.management.http.port";
+    private static final int DEFAULT_JMX_REMOTE_PORT = 9990;
 
-    private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
+    private static final String JMX_URL_FORMAT = "service:jmx:http-remoting-jmx://${container:%s/fabric8.ip}:%d";
 
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     private int jmxRemotePort;
+    private String jmxServerUrl;
     private String runtimeId;
 
     @Activate
@@ -62,12 +64,17 @@ public class JmxAttributeProvider extends AbstractAttributeProvider  {
         deactivateComponent();
     }
 
+    @Override
+    public String getJmxServerUrl() {
+        return jmxServerUrl;
+    }
+
     private void updateAttributes() {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, jmxRemotePort));
     }
 
     private String getJmxUrl(String name, int port)  {
-        return String.format(JMX_URL_FORMAT, name);
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, name, port);
     }
 
     void bindRuntimeService(RuntimeService service) {
@@ -77,3 +84,4 @@ public class JmxAttributeProvider extends AbstractAttributeProvider  {
         runtimeService.unbind(service);
     }
 }
+

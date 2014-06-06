@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.wildfly.attributes;
+package io.fabric8.container.tomcat.attributes;
 
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
+import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -32,33 +33,29 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(AttributeProvider.class)
+@Service({ AttributeProvider.class, JmxAttributeProvider.class})
 @Properties(
         @Property(name = "type", value = ContainerAttributes.TYPE)
 )
-public class HttpAttributeProvider extends AbstractAttributeProvider  {
+public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider  {
 
-    private static final String HTTP_PORT = "jboss.management.http.port";
-    private static final String HTTPS_PORT = "jboss.management.https.port";
-    private static final int DEFAULT_HTTP_PORT = 8080;
-    private static final int DEFAULT_HTTPS_PORT = 8443;
+    private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
+    private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
 
-    private static final String HTTP_URL_FORMAT = "http://${container:%s/fabric8.ip}:%d";
-    private static final String HTTPS_URL_FORMAT = "https://${container:%s/fabric8.ip}:%d";
+    private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
 
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    private int httpPort;
-    private int httpsPort;
+    private int jmxRemotePort;
+    private String jmxServerUrl;
     private String runtimeId;
 
     @Activate
     void activate() throws Exception {
         runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
-        httpPort = Integer.parseInt(runtimeService.get().getProperty(HTTP_PORT, "" + DEFAULT_HTTP_PORT));
-        httpsPort = Integer.parseInt(runtimeService.get().getProperty(HTTPS_PORT, "" + DEFAULT_HTTPS_PORT));
-        updateAttributes();
+        jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, jmxRemotePort));
         activateComponent();
     }
 
@@ -67,19 +64,13 @@ public class HttpAttributeProvider extends AbstractAttributeProvider  {
         deactivateComponent();
     }
 
-    private void updateAttributes() {
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl(runtimeId, httpPort));
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl(runtimeId, httpsPort));
+    @Override
+    public String getJmxServerUrl() {
+        return jmxServerUrl;
     }
 
-    private String getHttpUrl(String name, int port)  {
-        return String.format(HTTP_URL_FORMAT, name, port);
-    }
-
-    private String getHttpsUrl(String name, int port)  {
-        return String.format(HTTPS_URL_FORMAT, name, port);
+    private String getJmxUrl(String name, int port)  {
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, name, port);
     }
 
     void bindRuntimeService(RuntimeService service) {

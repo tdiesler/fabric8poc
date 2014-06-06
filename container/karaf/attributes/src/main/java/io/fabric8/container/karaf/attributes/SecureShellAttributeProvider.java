@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.karaf.attributes;
+package io.fabric8.container.karaf.attributes;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;

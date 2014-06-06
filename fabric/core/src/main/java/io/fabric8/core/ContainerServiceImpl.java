@@ -48,6 +48,7 @@ import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
+import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.permit.PermitManager;
@@ -141,6 +142,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
+    @Reference(referenceInterface = JmxAttributeProvider.class)
+    private final ValidatingReference<JmxAttributeProvider> jmxProvider = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
@@ -853,6 +856,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
+    }
+
+    void bindJmxProvider(JmxAttributeProvider service) {
+        jmxProvider.bind(service);
+    }
+    void unbindJmxProvider(JmxAttributeProvider service) {
+        jmxProvider.unbind(service);
     }
 
     void bindProfileService(ProfileService service) {

@@ -56,7 +56,6 @@ org/apache/felix/org.apache.felix.eventadmin/${version.apache.felix.eventadmin}/
 org/apache/felix/org.apache.felix.http.bundle/${version.apache.felix.http}/org.apache.felix.http.bundle-${version.apache.felix.http}.jar=40
 org/apache/felix/org.apache.felix.metatype/${version.apache.felix.metatype}/org.apache.felix.metatype-${version.apache.felix.metatype}.jar=40
 org/apache/felix/org.apache.felix.scr/${version.apache.felix.scr}/org.apache.felix.scr-${version.apache.felix.scr}.jar=40
-org/apache/commons/commons-compress/${version.apache.commons.compress}/commons-compress-${version.apache.commons.compress}.jar=40
 org/jboss/gravia/gravia-resource/${version.jboss.gravia}/gravia-resource-${version.jboss.gravia}.jar=40
 org/jboss/gravia/gravia-runtime-api/${version.jboss.gravia}/gravia-runtime-api-${version.jboss.gravia}.jar=40
 org/jboss/gravia/gravia-runtime-osgi/${version.jboss.gravia}/gravia-runtime-osgi-${version.jboss.gravia}.jar=40
@@ -76,6 +75,7 @@ org/apache/curator/curator-recipes/${version.apache.curator}/curator-recipes-${v
 #
 # Fabric8 Integration
 # 
+org/apache/commons/commons-compress/${version.apache.commons.compress}/commons-compress-${version.apache.commons.compress}.jar=44
 io/fabric8/poc/fabric8-api/${project.version}/fabric8-api-${project.version}.jar=44
 io/fabric8/poc/fabric8-spi/${project.version}/fabric8-spi-${project.version}.jar=44
 io/fabric8/poc/fabric8-core/${project.version}/fabric8-core-${project.version}.jar=44

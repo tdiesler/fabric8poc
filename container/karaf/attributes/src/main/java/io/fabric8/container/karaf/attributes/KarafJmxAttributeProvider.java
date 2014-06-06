@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.karaf.attributes;
+package io.fabric8.container.karaf.attributes;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
+import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -39,12 +40,15 @@ import org.osgi.service.cm.ConfigurationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(configurationPid = JmxAttributeProvider.MANAGEMENT_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
-@Service({ AttributeProvider.class, ConfigurationListener.class })
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
-public class JmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener {
+// Cannot use configuration pid=org.apache.karaf.management because it belongs to bundle
+// mvn:org.apache.karaf.management/org.apache.karaf.management.server/2.3.3
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmxAttributeProvider.class);
+@Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
+@Service({ AttributeProvider.class, ConfigurationListener.class, JmxAttributeProvider.class })
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class KarafJmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener, JmxAttributeProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KarafJmxAttributeProvider.class);
     static final String MANAGEMENT_PID = "org.apache.karaf.management";
 
     private static final String JMX_URL_FORMAT = "service:jmx:rmi://${container:%s/fabric8.ip}:%d/jndi/rmi://${container:%s/fabric8.ip}:%d/karaf-%s";
@@ -68,9 +72,10 @@ public class JmxAttributeProvider extends AbstractAttributeProvider implements C
 
     @Reference(referenceInterface = Configurer.class)
     private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
-
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
+
+    private String jmxServerUrl;
 
     @Activate
     void activate() throws Exception {
@@ -91,9 +96,12 @@ public class JmxAttributeProvider extends AbstractAttributeProvider implements C
         }
     }
 
-    /**
-     * Reads configuration and updates attrivutes
-     */
+    @Override
+    public String getJmxServerUrl() {
+        return jmxServerUrl;
+    }
+
+    // Reads configuration and updates attributes
     private void processConfiguration() {
         try {
             Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID);
@@ -111,13 +119,12 @@ public class JmxAttributeProvider extends AbstractAttributeProvider implements C
     }
 
     private String getJmxUrl(String name, int serverConnectionPort, int registryConnectionPort) {
-        return String.format(JMX_URL_FORMAT, name, serverConnectionPort, name, registryConnectionPort, name);
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, name, serverConnectionPort, name, registryConnectionPort, name);
     }
 
     void bindConfigurer(Configurer service) {
         this.configurer.bind(service);
     }
-
     void unbindConfigurer(Configurer service) {
         this.configurer.unbind(service);
     }
@@ -125,7 +132,6 @@ public class JmxAttributeProvider extends AbstractAttributeProvider implements C
     void bindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.bind(service);
     }
-
     void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
     }
