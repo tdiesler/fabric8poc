@@ -19,6 +19,7 @@ import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -51,7 +52,8 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     private static final Logger LOGGER = LoggerFactory.getLogger(KarafJmxAttributeProvider.class);
     static final String MANAGEMENT_PID = "org.apache.karaf.management";
 
-    private static final String JMX_URL_FORMAT = "service:jmx:rmi://${container:%s/fabric8.ip}:%d/jndi/rmi://${container:%s/fabric8.ip}:%d/karaf-%s";
+    //private static final String JMX_URL_FORMAT = "service:jmx:rmi://${container:%s/fabric8.ip}:%d/jndi/rmi://${container:%s/fabric8.ip}:%d/karaf-%s";
+    private static final String JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/karaf-%s";
 
     //private static final String JMX_SERVICE_URL = "serviceUrl";
     private static final String RMI_REGISTRY_BINDING_PORT_KEY = "rmiRegistryPort";
@@ -74,11 +76,15 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
+    @Reference(referenceInterface = NetworkAttributeProvider.class)
+    private final ValidatingReference<NetworkAttributeProvider> networkProvider = new ValidatingReference<>();
 
+    private String ip;
     private String jmxServerUrl;
 
     @Activate
     void activate() throws Exception {
+        ip = networkProvider.get().getIp();
         processConfiguration();
         activateComponent();
     }
@@ -115,11 +121,11 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     }
 
     private void updateAttributes() {
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, rmiServerConnectionPort, rmiRegistryPort));
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(ip, rmiServerConnectionPort, rmiRegistryPort));
     }
 
-    private String getJmxUrl(String name, int serverConnectionPort, int registryConnectionPort) {
-        return jmxServerUrl = String.format(JMX_URL_FORMAT, name, serverConnectionPort, name, registryConnectionPort, name);
+    private String getJmxUrl(String ip, int serverConnectionPort, int registryConnectionPort) {
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, serverConnectionPort, ip, registryConnectionPort, ip);
     }
 
     void bindConfigurer(Configurer service) {
@@ -134,5 +140,12 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     }
     void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
+    }
+
+    void bindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.bind(service);
+    }
+    void unbindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.unbind(service);
     }
 }

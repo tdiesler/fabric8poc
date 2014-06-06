@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.container.wildfly.attributes;
-
+package io.fabric8.core;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
-import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.HostUtils;
+
+import java.net.UnknownHostException;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -34,33 +35,23 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JmxAttributeProvider.class})
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
-public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider {
+@Service({AttributeProvider.class, NetworkAttributeProvider.class})
+@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+public class NetworkAttributeProviderImpl extends AbstractAttributeProvider implements NetworkAttributeProvider {
 
-    private static final String JMX_REMOTE_PORT = "jboss.management.http.port";
-    private static final int DEFAULT_JMX_REMOTE_PORT = 9990;
+    private static final String ATTRIBUTE_POINTER_FORMAT = "${container:%s/%s}";
 
-    //private static final String JMX_URL_FORMAT = "service:jmx:http-remoting-jmx://${container:%s/fabric8.ip}:%d";
-    private static final String JMX_URL_FORMAT = "service:jmx:http-remoting-jmx://%s:%d";
-
-    @Reference(referenceInterface = NetworkAttributeProvider.class)
-    private final ValidatingReference<NetworkAttributeProvider> networkProvider = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    private String ip;
-    private int jmxRemotePort;
-    private String jmxServerUrl;
     private String runtimeId;
+    private String ip;
+    private String localIp;
+    private String localHostName;
 
     @Activate
     void activate() throws Exception {
         runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
-        jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
-        ip = networkProvider.get().getIp();
         updateAttributes();
         activateComponent();
     }
@@ -71,23 +62,30 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
     }
 
     @Override
-    public String getJmxServerUrl() {
-        return jmxServerUrl;
+    public String getIp() {
+        return ip;
     }
 
-    private void updateAttributes() {
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, ip, jmxRemotePort));
+    @Override
+    public String getLocalIp() {
+        return localIp;
     }
 
-    private String getJmxUrl(String runtimeId, String ip, int port)  {
-        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
+    @Override
+    public String getLocalHostName() {
+        return localHostName;
     }
 
-    void bindNetworkProvider(NetworkAttributeProvider service) {
-        networkProvider.bind(service);
+    private void updateAttributes() throws UnknownHostException {
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_BIND_ADDRESS, "0.0.0.0");
+        putAttribute(ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER, ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP.getName());
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_IP, getIp(runtimeId, ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER.getName()));
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP, localIp = HostUtils.getLocalIp());
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HOSTNAME, localHostName = HostUtils.getLocalHostName());
     }
-    void unbindNetworkProvider(NetworkAttributeProvider service) {
-        networkProvider.unbind(service);
+
+    private String getIp(String name, String resolver) {
+        return ip = String.format(ATTRIBUTE_POINTER_FORMAT, name, resolver);
     }
 
     void bindRuntimeService(RuntimeService service) {
@@ -97,4 +95,3 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
         runtimeService.unbind(service);
     }
 }
-

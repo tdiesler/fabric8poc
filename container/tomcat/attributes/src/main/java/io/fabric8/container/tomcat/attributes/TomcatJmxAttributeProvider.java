@@ -19,6 +19,7 @@ package io.fabric8.container.tomcat.attributes;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -42,20 +43,25 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
 
-    private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
+    //private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
+    private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
 
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
+    @Reference(referenceInterface = NetworkAttributeProvider.class)
+    private final ValidatingReference<NetworkAttributeProvider> networkProvider = new ValidatingReference<>();
 
+    private String ip;
     private int jmxRemotePort;
     private String jmxServerUrl;
-    private String runtimeId;
+    //private String runtimeId;
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
+        //runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
         jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, jmxRemotePort));
+        ip = networkProvider.get().getIp();
+        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(ip, jmxRemotePort));
         activateComponent();
     }
 
@@ -69,8 +75,8 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
         return jmxServerUrl;
     }
 
-    private String getJmxUrl(String name, int port)  {
-        return jmxServerUrl = String.format(JMX_URL_FORMAT, name, port);
+    private String getJmxUrl(String ip, int port)  {
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
     }
 
     void bindRuntimeService(RuntimeService service) {
@@ -78,5 +84,12 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     }
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
+    }
+
+    void bindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.bind(service);
+    }
+    void unbindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.unbind(service);
     }
 }
