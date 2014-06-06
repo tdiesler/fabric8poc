@@ -71,7 +71,7 @@ public abstract class AbstractAttributeProvider extends AbstractComponent implem
     }
 
     public <T> T putAttribute(AttributeKey<T> key, T value) {
-        T oldValue = delegate.putAttribute(key, value);
+        T oldValue = delegate.addAttribute(key, value);
         for (AttributeListener listener : listeners) {
             if (oldValue == null) {
                 listener.attributeAdded(key, value);

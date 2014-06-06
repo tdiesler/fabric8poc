@@ -20,11 +20,10 @@
 
 package io.fabric8.container.wildfly.internal;
 
-import io.fabric8.api.process.MutableManagedProcess;
-import io.fabric8.api.process.ProcessIdentity;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.container.wildfly.WildFlyProcessHandler;
-import io.fabric8.spi.process.ProcessHandler;
+import io.fabric8.container.wildfly.WildFlyProcessOptions;
+import io.fabric8.spi.process.ProcessHandlerFactory;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -34,16 +33,14 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
 
 /**
- * The WildFly {@link ProcessHandler} service
+ * The WildFly {@link ProcessHandlerFactory} service
  *
  * @author thomas.diesler@jboss.com
  * @since 05-Jun-2014
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(ProcessHandler.class)
-public final class WildFlyProcessHandlerService extends AbstractComponent implements ProcessHandler {
-
-    private final WildFlyProcessHandler delegate = new WildFlyProcessHandler();
+@Service(ProcessHandlerFactory.class)
+public final class WildFlyProcessHandlerService extends AbstractComponent implements ProcessHandlerFactory {
 
     @Activate
     void activate() {
@@ -55,29 +52,13 @@ public final class WildFlyProcessHandlerService extends AbstractComponent implem
         deactivateComponent();
     }
 
-    public boolean accept(ProcessOptions options) {
-        assertValid();
-        return delegate.accept(options);
-    }
-
-    public final MutableManagedProcess create(ProcessOptions options, ProcessIdentity identity) {
-        assertValid();
-        return delegate.create(options, identity);
-    }
-
-    public final void start(MutableManagedProcess process) {
-        assertValid();
-        delegate.start(process);
-    }
-
-    public final void stop(MutableManagedProcess process) {
-        assertValid();
-        delegate.stop(process);
-    }
-
     @Override
-    public void destroy(MutableManagedProcess process) {
+    public WildFlyProcessHandler accept(ProcessOptions options) {
         assertValid();
-        delegate.destroy(process);
+        if (options instanceof WildFlyProcessOptions) {
+            return new WildFlyProcessHandler();
+        } else {
+            return null;
+        }
     }
 }

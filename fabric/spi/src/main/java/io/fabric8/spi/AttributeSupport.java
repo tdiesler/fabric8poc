@@ -70,13 +70,13 @@ public class AttributeSupport implements Attributable {
         return Collections.unmodifiableMap(attributes);
     }
 
-    public void putAllAttributes(Map<AttributeKey<?>, Object> atts) {
+    public void addAttributes(Map<AttributeKey<?>, Object> atts) {
         assertMutable();
         attributes.putAll(atts);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T putAttribute(AttributeKey<T> key, T value) {
+    public <T> T addAttribute(AttributeKey<T> key, T value) {
         return (T) attributes.put(key, value);
     }
 

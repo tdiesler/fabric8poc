@@ -18,30 +18,21 @@
  * #L%
  */
 
-package io.fabric8.api.process;
+package io.fabric8.spi.process;
 
-import io.fabric8.api.Attributable;
-
-import java.nio.file.Path;
-
+import io.fabric8.api.AttributeKey;
 
 /**
- * The managed root container
+ * The mutable managed process
  *
  * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
-public interface ManagedProcess extends Attributable {
+public interface MutableManagedProcess extends ManagedProcess {
 
-    enum State {
-        CREATED, STARTED, STOPPED, DESTROYED
-    }
+    <V> V addAttribute(AttributeKey<V> key, V value);
 
-    ProcessOptions getCreateOptions();
+    <V> V removeAttribute(AttributeKey<V> key);
 
-    ProcessIdentity getIdentity();
-
-    Path getHomePath();
-
-    State getState();
+    void setState(State state);
 }

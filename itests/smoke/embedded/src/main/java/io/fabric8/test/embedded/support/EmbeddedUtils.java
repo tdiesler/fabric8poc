@@ -19,12 +19,14 @@
  */
 package io.fabric8.test.embedded.support;
 
+import io.fabric8.spi.AbstractJMXAttributeProvider;
 import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.rmi.registry.LocateRegistry;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -39,6 +42,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+
+import javax.management.MBeanServer;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
@@ -116,8 +124,18 @@ public class EmbeddedUtils {
                 syscontext.registerService(RuntimeEnvironment.class, environment, null);
                 syscontext.registerService(ResourceInstaller.class, resourceInstaller, null);
 
+                // Create the JMXConnectorServer
+                String jmxServerUrl;
+                try {
+                    JMXConnectorServer connectorServer = createJMXConnectorServer();
+                    connectorServer.start();
+                    jmxServerUrl = connectorServer.getAddress().toString();
+                } catch (IOException ex) {
+                    throw new IllegalStateException(ex);
+                }
+
                 // Register the JMXAttributeProvider
-                syscontext.registerService(JmxAttributeProvider.class, new EmbeddedJmxAttributeProvider(), null);
+                syscontext.registerService(JmxAttributeProvider.class, new EmbeddedJmxAttributeProvider(jmxServerUrl), null);
 
                 // Add initial runtime resources
                 String resname = "environment.xml";
@@ -136,6 +154,16 @@ public class EmbeddedUtils {
             }
         }
         return runtime;
+    }
+
+    private static JMXConnectorServer createJMXConnectorServer() throws IOException {
+        ServerSocket server = new ServerSocket(0);
+        int port = server.getLocalPort();
+        server.close();
+        LocateRegistry.createRegistry(port);
+        JMXServiceURL serviceURL = new JMXServiceURL("service:jmx:rmi://localhost:" + port + "/jndi/rmi://localhost:" + port + "/jmxrmi");
+        MBeanServer mbeanServer = ServiceLocator.getRequiredService(MBeanServer.class);
+        return JMXConnectorServerFactory.newJMXConnectorServer(serviceURL, null, mbeanServer);
     }
 
     public static Module installAndStartModule(ClassLoader classLoader, String symbolicName) throws ModuleException, IOException {
@@ -288,11 +316,10 @@ public class EmbeddedUtils {
         }
     }
 
-    static final class EmbeddedJmxAttributeProvider implements JmxAttributeProvider {
+    static final class EmbeddedJmxAttributeProvider extends AbstractJMXAttributeProvider {
 
-        @Override
-        public String getJmxServerUrl() {
-            return null;
+        EmbeddedJmxAttributeProvider(String jmxServerUrl) {
+            super(jmxServerUrl, null, null);
         }
     }
 }

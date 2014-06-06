@@ -54,11 +54,13 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
     private String ip;
     private int jmxRemotePort;
     private String jmxServerUrl;
+    private String jmxUsername;
+    private String jmxPassword;
     private String runtimeId;
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
+        runtimeId = runtimeService.get().getRuntimeIdentity();;
         jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
         ip = networkProvider.get().getIp();
         updateAttributes();
@@ -73,6 +75,16 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
     @Override
     public String getJmxServerUrl() {
         return jmxServerUrl;
+    }
+
+    @Override
+    public String getJmxUsername() {
+        return jmxUsername;
+    }
+
+    @Override
+    public String getJmxPassword() {
+        return jmxPassword;
     }
 
     private void updateAttributes() {

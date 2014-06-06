@@ -26,11 +26,6 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.api.management.ContainerManagement;
-import io.fabric8.api.management.ProfileManagement;
-import io.fabric8.api.management.ProfileVersionManagement;
 import io.fabric8.container.karaf.KarafContainerBuilder;
 import io.fabric8.container.tomcat.TomcatContainerBuilder;
 import io.fabric8.container.wildfly.WildFlyContainerBuilder;
@@ -40,11 +35,6 @@ import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
 
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -59,7 +49,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class ManagedContainerLifecycleTests  {
+public abstract class ManagedContainerTestBase  {
 
     @Before
     public void preConditions() {
@@ -91,7 +81,7 @@ public class ManagedContainerLifecycleTests  {
             cnt = cntManager.startContainer(cntId, null);
             Assert.assertEquals(State.STARTED, cnt.getState());
 
-            verifyContainer(cnt, "karaf", "karaf");
+            verifyContainer(cnt);
         } finally {
             cntManager.destroyContainer(cntId);
         }
@@ -118,7 +108,7 @@ public class ManagedContainerLifecycleTests  {
             cnt = cntManager.startContainer(cntId, null);
             Assert.assertEquals(State.STARTED, cnt.getState());
 
-            verifyContainer(cnt, null, null);
+            verifyContainer(cnt);
         } finally {
             cntManager.destroyContainer(cntId);
         }
@@ -148,13 +138,13 @@ public class ManagedContainerLifecycleTests  {
             cnt = cntManager.startContainer(cntId, null);
             Assert.assertEquals(State.STARTED, cnt.getState());
 
-            verifyContainer(cnt, null, null);
+            verifyContainer(cnt);
         } finally {
             cntManager.destroyContainer(cntId);
         }
     }
 
-    private void verifyContainer(Container cnt, String username, String password) throws IOException {
+    private void verifyContainer(Container cnt) throws IOException {
 
         // Assert that there is one {@link JMXServiceEndpoint}
         /*

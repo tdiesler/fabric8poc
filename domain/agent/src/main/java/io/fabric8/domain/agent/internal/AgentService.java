@@ -19,24 +19,48 @@
  */
 package io.fabric8.domain.agent.internal;
 
-import io.fabric8.api.process.ManagedProcess;
-import io.fabric8.api.process.MutableManagedProcess;
-import io.fabric8.api.process.ProcessIdentity;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.Agent;
+import io.fabric8.spi.AgentIdentity;
+import io.fabric8.spi.AgentRegistration;
+import io.fabric8.spi.AgentTopology;
+import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.NetworkAttributeProvider;
+import io.fabric8.spi.RuntimeIdentity;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.process.ImmutableManagedProcess;
+import io.fabric8.spi.process.ManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
-import io.fabric8.spi.process.SelfRegistrationHandler;
+import io.fabric8.spi.process.ProcessHandlerFactory;
+import io.fabric8.spi.process.ProcessIdentity;
+import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.ManagementUtils;
 
+import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import javax.management.JMException;
+import javax.management.ListenerNotFoundException;
+import javax.management.MBeanNotificationInfo;
 import javax.management.MBeanServer;
+import javax.management.MBeanServerConnection;
+import javax.management.Notification;
+import javax.management.NotificationBroadcasterSupport;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationFilter;
+import javax.management.NotificationListener;
+import javax.management.StandardEmitterMBean;
+import javax.management.StandardMBean;
+import javax.management.remote.JMXConnector;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -47,8 +71,11 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.LifecycleException;
+import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The agent controller
@@ -58,96 +85,238 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(Agent.class)
-public final class AgentService implements Agent {
+public final class AgentService extends AbstractComponent implements Agent, NotificationEmitter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
 
     private final AtomicInteger processCount = new AtomicInteger();
-    private final Map<ProcessIdentity, Registration> registrations = new ConcurrentHashMap<>();
+    private final NotificationBroadcasterSupport notificationSupport = new NotificationBroadcasterSupport();
+    private final AtomicLong sequenceNumber = new AtomicLong();
 
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
+    @Reference(referenceInterface = JmxAttributeProvider.class)
+    private final ValidatingReference<JmxAttributeProvider> jmxProvider = new ValidatingReference<>();
     @Reference(referenceInterface = MBeanServer.class)
     private final ValidatingReference<MBeanServer> mbeanServer = new ValidatingReference<>();
-    @Reference(referenceInterface = ProcessHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private final Set<ProcessHandler> processHandlers = new CopyOnWriteArraySet<>();
+    @Reference(referenceInterface = NetworkAttributeProvider.class)
+    private final ValidatingReference<NetworkAttributeProvider> networkProvider = new ValidatingReference<>();
+    @Reference(referenceInterface = RuntimeService.class)
+    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
+
+    // The agent JMX topology
+    private final MutableAgentTopology agentTopology = new MutableAgentTopology();
+
+    // The {@link ManagedProcess} registrations for this Agent
+    private final Map<ProcessIdentity, ProcessRegistration> localProcesses = new ConcurrentHashMap<>();
+
+    // The  {@link ProcessHandler}s with this Agent
+    @Reference(referenceInterface = ProcessHandlerFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final Set<ProcessHandlerFactory> processHandlerFactories = new CopyOnWriteArraySet<>();
+
+    private AgentRegistration localAgent;
+    private AgentIdentity agentId;
 
     @Activate
-    void activate(Map<String, Object> config) {
+    void activate(Map<String, Object> config) throws Exception {
         activateInternal();
+        activateComponent();
     }
 
     @Deactivate
-    void deactivate() {
+    void deactivate() throws Exception {
+        deactivateInternal();
+        deactivateComponent();
     }
 
-    private void activateInternal() {
+    private void activateInternal() throws Exception {
 
-        // Register the self registration handler
-        processHandlers.add(new SelfRegistrationHandler());
+        String runtimeId = RuntimeIdentity.getIdentity();
+        agentId = AgentIdentity.create(runtimeId);
+
+        // Register this Agent
+        InetAddress targetHost = InetAddress.getByName(networkProvider.get().getIp());
+        String jmxServerUrl = jmxProvider.get().getJmxServerUrl();
+        String jmxUsername = jmxProvider.get().getJmxUsername();
+        String jmxPassword = jmxProvider.get().getJmxPassword();
+        localAgent = new AgentRegistration(agentId, targetHost, jmxServerUrl, jmxUsername, jmxPassword);
+        agentTopology.addAgent(localAgent);
+
+        // Register the {@link Agent} MBean
+        StandardMBean mbean = new StandardEmitterMBean(this, Agent.class, notificationSupport);
+        mbeanServer.get().registerMBean(mbean, Agent.OBJECT_NAME);
+
+        // Register this agent with the cluster
+        AgentTopology topology = registerAgentWithCluster(localAgent);
+        if (topology != null) {
+            agentTopology.updateTopology(topology);
+        }
+    }
+
+    private void deactivateInternal() throws JMException {
+        mbeanServer.get().unregisterMBean(OBJECT_NAME);
+    }
+
+    private AgentTopology registerAgentWithCluster(AgentRegistration agentReg) throws Exception {
+
+        String jmxRemoteServerUrl = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_SERVER_URL);
+        if (true) //jmxRemoteServerUrl == null)
+            return null;
+
+        String jmxRemoteUsername = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_USERNAME);
+        String jmxRemotePassword = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_PASSWORD);
+        JMXConnector jmxConnector = ManagementUtils.getJMXConnector(jmxRemoteServerUrl, jmxRemoteUsername, jmxRemotePassword, 200, TimeUnit.MILLISECONDS);
+        try {
+            MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
+            Agent agent = ManagementUtils.getMBeanProxy(server, Agent.OBJECT_NAME, Agent.class);
+            return agent.registerAgent(agentReg);
+        } finally {
+            IOUtils.safeClose(jmxConnector);
+        }
     }
 
     @Override
     public Set<String> getProcessHandlers() {
         Set<String> fqnames = new HashSet<>();
-        for (ProcessHandler handler : processHandlers) {
-            fqnames.add(handler.getClass().getName());
+        for (ProcessHandlerFactory factories : processHandlerFactories) {
+            fqnames.add(factories.getClass().getName());
         }
         return fqnames;
     }
 
     @Override
     public Set<ProcessIdentity> getProcessIdentities() {
-        return registrations.keySet();
+        return localProcesses.keySet();
     }
 
     @Override
     public ManagedProcess getManagedProcess(ProcessIdentity processId) {
-        Registration preg = getRequiredRegistration(processId);
+        ProcessRegistration preg = getRequiredProcessRegistration(processId);
         return new ImmutableManagedProcess(preg.getManagedProcess());
     }
 
     @Override
     public ManagedProcess createProcess(ProcessOptions options) {
-        MutableManagedProcess process = null;
-        for (ProcessHandler handler : processHandlers) {
-            if (handler.accept(options)) {
-                String identitySpec = options.getIdentityPrefix();
-                if (identitySpec.endsWith("#")) {
-                    identitySpec += processCount.incrementAndGet();
-                }
-                process = handler.create(options, ProcessIdentity.create(identitySpec));
-                registrations.put(process.getIdentity(), new Registration(handler, process));
-                break;
-            }
+        if (localAgentIsTarget(options)) {
+            ProcessHandler handler = getProcessHandler(options, 10, TimeUnit.SECONDS);
+            ProcessIdentity processId = getProcessIdentity(options);
+            ManagedProcess process = handler.create(localAgent, options, processId);
+            localProcesses.put(processId, new ProcessRegistration(handler, process));
+            agentTopology.addProcess(processId, agentId);
+            return new ImmutableManagedProcess(process);
+        } else {
+            throw new UnsupportedOperationException();
         }
-        IllegalStateAssertion.assertNotNull(process, "No handler for: " + options);
-        return process;
+    }
+
+    private ProcessIdentity getProcessIdentity(ProcessOptions options) {
+        String identitySpec = options.getIdentityPrefix();
+        if (identitySpec.endsWith("#")) {
+            identitySpec += processCount.incrementAndGet();
+        }
+        return ProcessIdentity.create(identitySpec);
     }
 
     @Override
-    public void startProcess(ProcessIdentity processId) throws LifecycleException {
-        Registration preg = getRequiredRegistration(processId);
-        MutableManagedProcess process = preg.getManagedProcess();
-        preg.getProcessHandler().start(process);
+    public AgentTopology getAgentTopology() {
+        return agentTopology.immutableTopology();
     }
 
     @Override
-    public void stopProcess(ProcessIdentity processId) throws LifecycleException {
-        Registration preg = getRequiredRegistration(processId);
-        MutableManagedProcess process = preg.getManagedProcess();
-        preg.getProcessHandler().stop(process);
+    public AgentTopology registerAgent(AgentRegistration agentReg) {
+        agentTopology.addAgent(agentReg);
+        long seq = sequenceNumber.incrementAndGet();
+        notificationSupport.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, this, seq, agentReg.toString()));
+        return agentTopology.immutableTopology();
     }
 
     @Override
-    public void destroyProcess(ProcessIdentity processId) {
-        Registration preg = getRequiredRegistration(processId);
-        MutableManagedProcess process = preg.getManagedProcess();
-        preg.getProcessHandler().destroy(process);
+    public Future<ManagedProcess> startProcess(ProcessIdentity processId) throws LifecycleException {
+        if (localAgentIsTarget(processId)) {
+            ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            return preg.getProcessHandler().start();
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    private Registration getRequiredRegistration(ProcessIdentity processId) {
-        Registration preg = registrations.get(processId);
+    @Override
+    public Future<ManagedProcess> stopProcess(ProcessIdentity processId) throws LifecycleException {
+        if (localAgentIsTarget(processId)) {
+            ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            return preg.getProcessHandler().stop();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @Override
+    public ManagedProcess destroyProcess(ProcessIdentity processId) {
+        if (localAgentIsTarget(processId)) {
+            ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            ManagedProcess result = preg.getProcessHandler().destroy();
+            agentTopology.removeProcess(processId);
+            localProcesses.remove(processId);
+            return new ImmutableManagedProcess(result);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @Override
+    public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) {
+        notificationSupport.addNotificationListener(listener, filter, handback);
+    }
+
+    @Override
+    public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
+        notificationSupport.removeNotificationListener(listener);
+    }
+
+    @Override
+    public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
+        notificationSupport.removeNotificationListener(listener, filter, handback);
+    }
+
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        return notificationSupport.getNotificationInfo();
+    }
+
+    private ProcessRegistration getRequiredProcessRegistration(ProcessIdentity processId) {
+        ProcessRegistration preg = localProcesses.get(processId);
         IllegalStateAssertion.assertNotNull(preg, "Process not registered: " + processId);
         return preg;
+    }
+
+    private boolean localAgentIsTarget(ProcessOptions options) {
+        InetAddress targetHost = options.getTargetHost();
+        return targetHost == null || targetHost.equals(localAgent.getTargetHost());
+    }
+
+    private boolean localAgentIsTarget(ProcessIdentity processId) {
+        AgentRegistration agentReg = agentTopology.getRequiredAgentRegistration(processId);
+        return agentId.equals(agentReg.getIdentity());
+    }
+
+    private ProcessHandler getProcessHandler(ProcessOptions options, long timeout, TimeUnit unit) {
+        long now = System.currentTimeMillis();
+        long end = now + unit.toMillis(timeout);
+        while (now < end) {
+            for (ProcessHandlerFactory factory : processHandlerFactories) {
+                ProcessHandler handler = factory.accept(options);
+                if (handler != null) {
+                    return handler;
+                }
+            }
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ex) {
+                // ignore
+            }
+            now = System.currentTimeMillis();
+        }
+        throw new IllegalStateException("No handler for: " + options);
     }
 
     void bindConfigAdmin(ConfigurationAdmin service) {
@@ -157,6 +326,13 @@ public final class AgentService implements Agent {
         configAdmin.unbind(service);
     }
 
+    void bindJmxProvider(JmxAttributeProvider service) {
+        jmxProvider.bind(service);
+    }
+    void unbindJmxProvider(JmxAttributeProvider service) {
+        jmxProvider.unbind(service);
+    }
+
     void bindMbeanServer(MBeanServer service) {
         mbeanServer.bind(service);
     }
@@ -164,19 +340,33 @@ public final class AgentService implements Agent {
         mbeanServer.unbind(service);
     }
 
-    void bindProcessHandler(ProcessHandler service) {
-        processHandlers.add(service);
+    void bindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.bind(service);
     }
-    void unbindProcessHandler(ProcessHandler service) {
-        processHandlers.remove(service);
+    void unbindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.unbind(service);
     }
 
-    static class Registration {
+    void bindProcessHandlerFactory(ProcessHandlerFactory service) {
+        processHandlerFactories.add(service);
+    }
+    void unbindProcessHandlerFactory(ProcessHandlerFactory service) {
+        processHandlerFactories.remove(service);
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
+    }
+
+    static class ProcessRegistration {
 
         private final ProcessHandler handler;
-        private MutableManagedProcess process;
+        private final ManagedProcess process;
 
-        Registration(ProcessHandler handler, MutableManagedProcess process) {
+        ProcessRegistration(ProcessHandler handler, ManagedProcess process) {
             this.handler = handler;
             this.process = process;
         }
@@ -185,8 +375,9 @@ public final class AgentService implements Agent {
             return handler;
         }
 
-        MutableManagedProcess getManagedProcess() {
+        ManagedProcess getManagedProcess() {
             return process;
         }
     }
+
 }

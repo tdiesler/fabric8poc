@@ -20,9 +20,9 @@
 package io.fabric8.domain.agent.internal;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.process.ManagedProcess;
-import io.fabric8.api.process.ProcessIdentity;
 import io.fabric8.spi.Agent;
+import io.fabric8.spi.process.ManagedProcess;
+import io.fabric8.spi.process.ProcessIdentity;
 
 import java.io.IOException;
 import java.io.PrintWriter;

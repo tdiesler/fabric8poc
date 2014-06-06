@@ -58,7 +58,7 @@ public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider impl
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
+        runtimeId = runtimeService.get().getRuntimeIdentity();;
         httpPort = Integer.parseInt(runtimeService.get().getProperty(HTTP_PORT, "" + DEFAULT_HTTP_PORT));
         httpsPort = Integer.parseInt(runtimeService.get().getProperty(HTTPS_PORT, "" + DEFAULT_HTTPS_PORT));
         updateAttributes();

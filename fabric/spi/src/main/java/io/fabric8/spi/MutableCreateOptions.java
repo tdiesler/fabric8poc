@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
 
@@ -42,7 +43,9 @@ public interface MutableCreateOptions extends CreateOptions {
 
     void setProfiles(List<String> profiles);
 
-    <T> void putAttribute(AttributeKey<T> key, T value);
+    <T> void addAttribute(AttributeKey<T> key, T value);
+
+    void addAttributes(Map<AttributeKey<?>, Object> atts);
 
     void validate();
 }

@@ -20,9 +20,11 @@
 
 package io.fabric8.container.wildfly;
 
-import io.fabric8.api.process.MutableManagedProcess;
-import io.fabric8.api.process.ProcessOptions;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
 import io.fabric8.spi.process.AbstractProcessHandler;
+import io.fabric8.spi.process.MutableManagedProcess;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -65,11 +67,6 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
     }
 
     @Override
-    public boolean accept(ProcessOptions options) {
-        return options instanceof WildFlyProcessOptions;
-    }
-
-    @Override
     protected void doConfigure(MutableManagedProcess process) throws Exception {
         File jbossHome = process.getHomePath().toFile();
         IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "Wildfly home does not exist: " + jbossHome);
@@ -108,6 +105,10 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         cmd.add("-Djboss.ajp.port=" + ajpPort);
         cmd.add("-Djboss.http.port=" + httpPort);
         cmd.add("-Djboss.https.port=" + httpsPort);
+        cmd.add("-Dfabric8.agent.jmx.server.url=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL));
+        // [TODO] Remove JMX credentials from logged system properties
+        cmd.add("-Dfabric8.agent.jmx.username=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_USERNAME));
+        cmd.add("-Dfabric8.agent.jmx.password=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_PASSWORD));
 
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
@@ -124,12 +125,6 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         processBuilder.redirectErrorStream(true);
         startProcess(processBuilder, createOptions);
-
-        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
-
-        String jmxServerURL = "service:jmx:http-remoting-jmx://127.0.0.1:" + managementHttpPort;
-        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     // Confine the usage of jboss-modules to an additional class

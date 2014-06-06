@@ -23,6 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AttributeSupport;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,14 +41,20 @@ public abstract class AbstractProcessOptions implements ProcessOptions {
     private final AttributeSupport attributes = new AttributeSupport();
     private final List<MavenCoordinates> mavenCoordinates = new ArrayList<MavenCoordinates>();
     private final AtomicBoolean immutable = new AtomicBoolean();
-    private boolean outputToConsole;
+    private InetAddress targetHost;
     private String identityPrefix;
     private String javaVmArguments;
+    private boolean outputToConsole;
     private Path targetPath;
 
     @Override
     public String getIdentityPrefix() {
         return identityPrefix;
+    }
+
+    @Override
+    public InetAddress getTargetHost() {
+        return targetHost;
     }
 
     @Override
@@ -90,9 +97,24 @@ public abstract class AbstractProcessOptions implements ProcessOptions {
         return attributes.getAttributes();
     }
 
+    public <V> void addAttribute(AttributeKey<V> key, V value) {
+        assertMutable();
+        attributes.addAttribute(key, value);
+    }
+
+    public void addAttributes(Map<AttributeKey<?>, Object> atts) {
+        assertMutable();
+        attributes.addAttributes(atts);
+    }
+
     public void setIdentityPrefix(String identityPrefix) {
         assertMutable();
         this.identityPrefix = identityPrefix;
+    }
+
+    public void setTargetHost(InetAddress targetHost) {
+        assertMutable();
+        this.targetHost = targetHost;
     }
 
     public void addMavenCoordinates(MavenCoordinates coordinates) {
@@ -113,16 +135,6 @@ public abstract class AbstractProcessOptions implements ProcessOptions {
     public void setOutputToConsole(boolean outputToConsole) {
         assertMutable();
         this.outputToConsole = outputToConsole;
-    }
-
-    public <V> void putAttribute(AttributeKey<V> key, V value) {
-        assertMutable();
-        attributes.putAttribute(key, value);
-    }
-
-    public void putAllAttributes(Map<AttributeKey<?>, Object> atts) {
-        assertMutable();
-        attributes.putAllAttributes(atts);
     }
 
     protected void validate() {

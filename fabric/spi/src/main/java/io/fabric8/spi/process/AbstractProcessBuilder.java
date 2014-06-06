@@ -20,8 +20,10 @@
 package io.fabric8.spi.process;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.process.ProcessBuilder;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -39,6 +41,13 @@ public abstract class AbstractProcessBuilder<B extends ProcessBuilder<B, T>, T e
     @SuppressWarnings("unchecked")
     public B identityPrefix(String prefix) {
         options.setIdentityPrefix(prefix);
+        return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B targetHost(InetAddress targetHost) {
+        options.setTargetHost(targetHost);
         return (B) this;
     }
 
@@ -73,15 +82,21 @@ public abstract class AbstractProcessBuilder<B extends ProcessBuilder<B, T>, T e
     @Override
     @SuppressWarnings("unchecked")
     public <V> B addAttribute(AttributeKey<V> key, V value) {
-        options.putAttribute(key, value);
+        options.addAttribute(key, value);
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public B addAttributes(Map<AttributeKey<?>, Object> atts) {
-        options.putAllAttributes(atts);
+        options.addAttributes(atts);
         return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addOptions(OptionsProvider<B> optionsProvider) {
+        return optionsProvider.addBuilderOptions((B) this);
     }
 
     @Override

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,11 +28,11 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-abstract class Identity {
+abstract class AbstractIdentity {
 
     private final String symbolicName;
 
-    Identity(String symbolicName) {
+    AbstractIdentity(String symbolicName) {
         IllegalArgumentAssertion.assertNotNull(symbolicName, "symbolicName");
         this.symbolicName = symbolicName;
     }
@@ -45,8 +45,8 @@ abstract class Identity {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Identity)) return false;
-        Identity other = (Identity) obj;
+        if (!(obj instanceof AbstractIdentity)) return false;
+        AbstractIdentity other = (AbstractIdentity) obj;
         return other.symbolicName.equals(symbolicName);
     }
 

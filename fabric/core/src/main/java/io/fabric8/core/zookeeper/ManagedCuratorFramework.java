@@ -15,31 +15,14 @@
 
 package io.fabric8.core.zookeeper;
 
+import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MULTIPLE;
+import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
+import static org.jboss.gravia.utils.IOUtils.safeClose;
 import io.fabric8.core.utils.PasswordEncoder;
-import io.fabric8.spi.utils.StringUtils;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
-
-import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.api.ACLProvider;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.RetryNTimes;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.fabric8.spi.utils.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -50,16 +33,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.fabric8.core.zookeeper.ZookeeperConstants.CONNECTION_TIMEOUT;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_INTERVAL_MS;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_MAX_RETRIES;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.SESSION_TIMEOUT;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PASSWORD;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PID;
-import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_URL;
-import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MULTIPLE;
-import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
-import static org.jboss.gravia.utils.IOUtils.safeClose;
+import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.ACLProvider;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Reference;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 @Component(configurationPid = ZOOKEEPER_PID, label = "Fabric8 ZooKeeper Client Factory", policy = ConfigurationPolicy.OPTIONAL, immediate = true, metatype = true)
@@ -77,8 +65,9 @@ import static org.jboss.gravia.utils.IOUtils.safeClose;
 public class ManagedCuratorFramework  extends AbstractComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedCuratorFramework.class);
 
-    @Reference(referenceInterface = Configurer.class)
-    private final ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+    @Reference
+    private Configurer configurer;
+
     @Reference(referenceInterface = ACLProvider.class)
     private final ValidatingReference<ACLProvider> aclProvider = new ValidatingReference<ACLProvider>();
     @Reference(referenceInterface = ConnectionStateListener.class, bind = "bindConnectionStateListener", unbind = "unbindConnectionStateListener", cardinality = OPTIONAL_MULTIPLE, policy = DYNAMIC)
@@ -151,7 +140,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     void activate(BundleContext bundleContext, Map<String, Object> configuration) throws Exception {
         this.bundleContext = bundleContext;
         ZookeeperConfig config = new ZookeeperConfig();
-        configurer.get().configure(configuration, config);
+        configurer.configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
             State next = new State(config);
@@ -165,8 +154,8 @@ public class ManagedCuratorFramework  extends AbstractComponent {
     @Modified
     void modified(Map<String, Object> configuration) throws Exception {
         ZookeeperConfig config = new ZookeeperConfig();
-        configurer.get().configure(configuration, this);
-        configurer.get().configure(configuration, config);
+        configurer.configure(configuration, this);
+        configurer.configure(configuration, config);
 
         if (!StringUtils.isNullOrBlank(config.getZookeeperUrl())) {
             State prev = state.get();
@@ -219,6 +208,13 @@ public class ManagedCuratorFramework  extends AbstractComponent {
         return framework;
     }
 
+    void bindAclProvider(ACLProvider service) {
+        this.aclProvider.bind(service);
+    }
+    void unbindAclProvider(ACLProvider service) {
+        this.aclProvider.unbind(service);
+    }
+
     void bindConnectionStateListener(ConnectionStateListener connectionStateListener) {
         connectionStateListeners.add(connectionStateListener);
         State curr = state.get();
@@ -227,24 +223,7 @@ public class ManagedCuratorFramework  extends AbstractComponent {
             connectionStateListener.stateChanged(curator, ConnectionState.CONNECTED);
         }
     }
-
     void unbindConnectionStateListener(ConnectionStateListener connectionStateListener) {
         connectionStateListeners.remove(connectionStateListener);
-    }
-
-    void bindAclProvider(ACLProvider service) {
-        this.aclProvider.bind(service);
-    }
-
-    void unbindAclProvider(ACLProvider service) {
-        this.aclProvider.unbind(service);
-    }
-
-    void bindConfigurer(Configurer service) {
-        this.configurer.bind(service);
-    }
-
-    void unbindConfigurer(Configurer service) {
-        this.configurer.unbind(service);
     }
 }

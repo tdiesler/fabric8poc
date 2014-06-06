@@ -22,10 +22,10 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -91,7 +91,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public HostIdentity getHostIdentity() {
+    public InetAddress getHostIdentity() {
         throw new UnsupportedOperationException();
     }
 

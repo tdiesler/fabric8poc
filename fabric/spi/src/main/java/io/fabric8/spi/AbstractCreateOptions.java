@@ -95,8 +95,13 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public <T> void putAttribute(AttributeKey<T> key, T value) {
-        attributes.putAttribute(key, value);
+    public <T> void addAttribute(AttributeKey<T> key, T value) {
+        attributes.addAttribute(key, value);
+    }
+
+    @Override
+    public void addAttributes(Map<AttributeKey<?>, Object> atts) {
+        attributes.addAttributes(atts);
     }
 
     @Override

@@ -54,11 +54,11 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     private String ip;
     private int jmxRemotePort;
     private String jmxServerUrl;
-    //private String runtimeId;
+    private String jmxUsername;
+    private String jmxPassword;
 
     @Activate
     void activate() throws Exception {
-        //runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
         jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
         ip = networkProvider.get().getIp();
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(ip, jmxRemotePort));
@@ -75,15 +75,18 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
         return jmxServerUrl;
     }
 
-    private String getJmxUrl(String ip, int port)  {
-        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
+    @Override
+    public String getJmxUsername() {
+        return jmxUsername;
     }
 
-    void bindRuntimeService(RuntimeService service) {
-        runtimeService.bind(service);
+    @Override
+    public String getJmxPassword() {
+        return jmxPassword;
     }
-    void unbindRuntimeService(RuntimeService service) {
-        runtimeService.unbind(service);
+
+    private String getJmxUrl(String ip, int port)  {
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
     }
 
     void bindNetworkProvider(NetworkAttributeProvider service) {
@@ -91,5 +94,12 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     }
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
     }
 }

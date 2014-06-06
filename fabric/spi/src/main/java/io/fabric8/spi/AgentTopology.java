@@ -1,8 +1,8 @@
 /*
  * #%L
- * Fabric8 :: SPI
+ * Gravia :: Resolver
  * %%
- * Copyright (C) 2014 Red Hat
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,27 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi.process;
+package io.fabric8.spi;
+
+import io.fabric8.spi.process.ProcessIdentity;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
- * The self registration process options
+ * The process/agent topology
  *
  * @author thomas.diesler@jboss.com
- * @since 04-Jun-2014
+ * @since 07-Jun-2014
  */
-public class SelfRegistrationOptions extends AbstractProcessOptions {
+public interface AgentTopology {
+
+    Set<AgentIdentity> getAgentIdentities();
+
+    AgentRegistration getAgentRegistration(AgentIdentity agentId);
+
+    AgentRegistration getAgentRegistration(ProcessIdentity processId);
+
+    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
 
 }

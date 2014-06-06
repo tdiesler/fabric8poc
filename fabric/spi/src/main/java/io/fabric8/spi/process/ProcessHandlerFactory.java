@@ -1,8 +1,8 @@
 /*
  * #%L
- * Fabric8 :: SPI
+ * Gravia :: Resolver
  * %%
- * Copyright (C) 2014 Red Hat
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,18 @@
  * limitations under the License.
  * #L%
  */
+package io.fabric8.spi.process;
 
-package io.fabric8.api.process;
-
-import io.fabric8.api.AttributeKey;
-
+import io.fabric8.api.process.ProcessOptions;
 
 
 /**
- * The mutable managed process
+ * The process handler factory
  *
  * @author thomas.diesler@jboss.com
- * @since 26-Feb-2014
+ * @since 08-Jun-2014
  */
-public interface MutableManagedProcess extends ManagedProcess {
+public interface ProcessHandlerFactory {
 
-    <V> V putAttribute(AttributeKey<V> key, V value);
-
-    <V> V removeAttribute(AttributeKey<V> key);
-
-    void setState(State state);
+    ProcessHandler accept(ProcessOptions options);
 }

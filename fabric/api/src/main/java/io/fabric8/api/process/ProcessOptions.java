@@ -20,8 +20,8 @@
 package io.fabric8.api.process;
 
 import io.fabric8.api.Attributable;
-import io.fabric8.api.AttributeKey;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -35,20 +35,9 @@ import org.jboss.gravia.resource.MavenCoordinates;
  */
 public interface ProcessOptions extends Attributable {
 
-    /**
-     * The attribute key for the Http port
-     */
-    AttributeKey<Integer> ATTRIBUTE_KEY_HTTP_PORT = AttributeKey.create("gravia.http.port", Integer.class);
-    /**
-     * The attribute key for the Https port
-     */
-    AttributeKey<Integer> ATTRIBUTE_KEY_HTTPS_PORT = AttributeKey.create("gravia.https.port", Integer.class);
-    /**
-     * The attribute key for JMX server URL
-     */
-    AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("gravia.jmx.server.url", String.class);
-
     String getIdentityPrefix();
+
+    InetAddress getTargetHost();
 
     List<MavenCoordinates> getMavenCoordinates();
 

@@ -1,6 +1,6 @@
 /*
  * #%L
- * Fabric8 :: API
+ * Fabric8 :: SPI
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
@@ -17,47 +17,41 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api.process;
+package io.fabric8.spi;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
- * A process identity
+ * An abstract JMX service endpoint
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 06-Jun-2014
  */
-public final class ProcessIdentity  {
+public class AbstractJMXAttributeProvider implements JmxAttributeProvider {
 
-    private final String name;
+    private final String jmxServerUrl;
+    private final String jmxUsername;
+    private final String jmxPassword;
 
-    public static ProcessIdentity create(String name) {
-        return new ProcessIdentity(name);
-    }
-
-    private ProcessIdentity(String name) {
-        IllegalArgumentAssertion.assertNotNull(name, "name");
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
+    public AbstractJMXAttributeProvider(String jmxServerUrl, String jmxUsername, String jmxPassword) {
+        IllegalArgumentAssertion.assertNotNull(jmxServerUrl, "jmxServerUrl");
+        this.jmxServerUrl = jmxServerUrl;
+        this.jmxUsername = jmxUsername;
+        this.jmxPassword = jmxPassword;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ProcessIdentity)) return false;
-        ProcessIdentity other = (ProcessIdentity) obj;
-        return other.name.equals(name);
+    public String getJmxServerUrl() {
+        return jmxServerUrl;
     }
 
     @Override
-    public int hashCode() {
-        return name.hashCode();
+    public String getJmxUsername() {
+        return jmxUsername;
     }
 
     @Override
-    public String toString() {
-        return name;
+    public String getJmxPassword() {
+        return jmxPassword;
     }
 }

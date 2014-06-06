@@ -20,8 +20,6 @@
 
 package io.fabric8.spi.process;
 
-import io.fabric8.api.process.ManagedProcess;
-import io.fabric8.api.process.ProcessIdentity;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AttributeSupport;
 

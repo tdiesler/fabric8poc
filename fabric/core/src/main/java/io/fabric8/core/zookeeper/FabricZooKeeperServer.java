@@ -17,14 +17,16 @@ package io.fabric8.core.zookeeper;
 
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
-import io.fabric8.spi.scr.ValidatingReference;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
@@ -37,14 +39,6 @@ import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.apache.zookeeper.server.quorum.QuorumStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-
-import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_SERVER_PID;
 
 /*
 @Component(label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
@@ -77,8 +71,8 @@ public class FabricZooKeeperServer extends AbstractComponent {
     static final String SERVER_ID = "server.id";
     static final String MY_ID = "myid";
 
-    @Reference(referenceInterface = Configurer.class)
-    private final ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+    @Reference
+    private Configurer configurer;
 
     private File dataDir;
     private File dataLogDir;
@@ -87,14 +81,14 @@ public class FabricZooKeeperServer extends AbstractComponent {
 
     @Activate
     void activate(Map<String, Object> configuration) throws Exception {
-        destroyable = activateInternal(configurer.get().configure(configuration, this));
+        destroyable = activateInternal(configurer.configure(configuration, this));
         activateComponent();
     }
 
     @Modified
     void modified(Map<String, Object> configuration) throws Exception {
         deactivateInternal();
-        destroyable = activateInternal(configurer.get().configure(configuration, this));
+        destroyable = activateInternal(configurer.configure(configuration, this));
     }
 
     @Deactivate
@@ -226,14 +220,6 @@ public class FabricZooKeeperServer extends AbstractComponent {
         serverConfig.readFrom(peerConfig);
         LOGGER.info("Created zookeeper server configuration: {}", serverConfig);
         return serverConfig;
-    }
-
-    void bindConfigurer(Configurer service) {
-        this.configurer.bind(service);
-    }
-
-    void unbindConfigurer(Configurer service) {
-        this.configurer.unbind(service);
     }
 
     interface Destroyable {

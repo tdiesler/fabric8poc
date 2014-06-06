@@ -19,9 +19,10 @@
  */
 package io.fabric8.spi.process;
 
-import io.fabric8.api.process.MutableManagedProcess;
-import io.fabric8.api.process.ProcessIdentity;
+import java.util.concurrent.Future;
+
 import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.AgentRegistration;
 
 import org.jboss.gravia.runtime.LifecycleException;
 
@@ -34,13 +35,11 @@ import org.jboss.gravia.runtime.LifecycleException;
  */
 public interface ProcessHandler {
 
-    boolean accept(ProcessOptions options);
+    ManagedProcess create(AgentRegistration agentReg, ProcessOptions options, ProcessIdentity identity);
 
-    MutableManagedProcess create(ProcessOptions options, ProcessIdentity identity);
+    Future<ManagedProcess> start() throws LifecycleException;
 
-    void start(MutableManagedProcess process) throws LifecycleException;
+    Future<ManagedProcess> stop() throws LifecycleException;
 
-    void stop(MutableManagedProcess process) throws LifecycleException;
-
-    void destroy(MutableManagedProcess process);
+    ManagedProcess destroy();
 }

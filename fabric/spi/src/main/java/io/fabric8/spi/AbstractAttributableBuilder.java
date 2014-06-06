@@ -31,14 +31,14 @@ public abstract class AbstractAttributableBuilder<B extends AttributableBuilder<
     @Override
     @SuppressWarnings("unchecked")
     public <V> B addAttribute(AttributeKey<V> key, V value) {
-        attributes.putAttribute(key, value);
+        attributes.addAttribute(key, value);
         return (B) this;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public B addAttributes(Map<AttributeKey<?>, Object> atts) {
-        attributes.putAllAttributes(atts);
+        attributes.addAttributes(atts);
         return (B) this;
     }
 

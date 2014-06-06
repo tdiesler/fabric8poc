@@ -30,4 +30,7 @@ public interface JmxAttributeProvider {
 
     String getJmxServerUrl();
 
+    String getJmxUsername();
+
+    String getJmxPassword();
 }

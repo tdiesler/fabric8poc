@@ -20,9 +20,12 @@
 
 package io.fabric8.container.karaf;
 
-import io.fabric8.api.process.MutableManagedProcess;
-import io.fabric8.api.process.ProcessOptions;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
 import io.fabric8.spi.process.AbstractProcessHandler;
+import io.fabric8.spi.process.MutableManagedProcess;
+import io.fabric8.spi.process.ProcessHandler;
 
 import java.io.File;
 import java.io.FileReader;
@@ -47,11 +50,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
 
     public KarafProcessHandler() {
         super(new RuntimePropertiesProvider());
-    }
-
-    @Override
-    public boolean accept(ProcessOptions options) {
-        return options instanceof KarafProcessOptions;
     }
 
     @Override
@@ -85,9 +83,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
             } finally {
                 fileWriter.close();
             }
-
-            process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
-            process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_HTTPS_PORT, httpsPort);
         }
     }
 
@@ -111,9 +106,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         } finally {
             fileWriter.close();
         }
-
-        String jmxServerURL = "service:jmx:rmi://127.0.0.1:" + rmiServerPort + "/jndi/rmi://127.0.0.1:" + rmiRegistryPort + "/karaf-root";
-        process.putAttribute(ProcessOptions.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerURL);
     }
 
     @Override
@@ -139,6 +131,10 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dkaraf.instances=" + karafHome + "/instances");
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
+        cmd.add("-Dfabric8.agent.jmx.server.url=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL));
+        // [TODO] Remove JMX credentials from logged system properties
+        cmd.add("-Dfabric8.agent.jmx.username=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_USERNAME));
+        cmd.add("-Dfabric8.agent.jmx.password=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_PASSWORD));
 
         // Java properties
         cmd.add("-Djava.io.tmpdir=" + new File(karafHome, "data/tmp"));

@@ -72,8 +72,9 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
-    @Reference(referenceInterface = Configurer.class)
-    private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+    @Reference
+    private Configurer configurer;
+
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
     @Reference(referenceInterface = NetworkAttributeProvider.class)
@@ -81,6 +82,8 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
 
     private String ip;
     private String jmxServerUrl;
+    private String jmxUsername = "karaf";
+    private String jmxPassword = "karaf";
 
     @Activate
     void activate() throws Exception {
@@ -107,11 +110,21 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
         return jmxServerUrl;
     }
 
+    @Override
+    public String getJmxUsername() {
+        return jmxUsername;
+    }
+
+    @Override
+    public String getJmxPassword() {
+        return jmxPassword;
+    }
+
     // Reads configuration and updates attributes
     private void processConfiguration() {
         try {
             Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID);
-            configurer.get().configure(configuration.getProperties(), this);
+            configurer.configure(configuration.getProperties(), this);
             updateAttributes();
         } catch (IOException e) {
             LOGGER.warn("Failed to read configuration update on pid {}.", MANAGEMENT_PID, e);
@@ -126,13 +139,6 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
 
     private String getJmxUrl(String ip, int serverConnectionPort, int registryConnectionPort) {
         return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, serverConnectionPort, ip, registryConnectionPort);
-    }
-
-    void bindConfigurer(Configurer service) {
-        this.configurer.bind(service);
-    }
-    void unbindConfigurer(Configurer service) {
-        this.configurer.unbind(service);
     }
 
     void bindConfigAdmin(ConfigurationAdmin service) {

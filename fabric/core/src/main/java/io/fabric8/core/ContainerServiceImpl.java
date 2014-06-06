@@ -160,7 +160,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     @Activate
     void activate(Map<String, ?> config) throws ProvisionException {
-        currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getIdentity());
+        currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
         activateInternal();
         activateComponent(PERMIT, this);
     }
@@ -233,7 +233,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
             CreateOptions options = new AbstractCreateOptions() {
                 {
-                    putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
+                    addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
                 }
             };
 

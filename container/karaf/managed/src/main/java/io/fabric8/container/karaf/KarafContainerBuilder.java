@@ -20,6 +20,7 @@
 
 package io.fabric8.container.karaf;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
 
 import org.jboss.gravia.resource.MavenCoordinates;
@@ -43,6 +44,12 @@ public final class KarafContainerBuilder extends AbstractContainerBuilder<KarafC
 
     private KarafContainerBuilder() {
         super(new KarafCreateOptions());
+    }
+
+    @Override
+    public KarafContainerBuilder targetHost(InetAddress targetHost) {
+        options.setTargetHost(targetHost);
+        return this;
     }
 
     public KarafContainerBuilder rmiServerPort(int serverPort) {

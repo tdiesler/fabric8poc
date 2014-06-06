@@ -29,7 +29,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends Identity {
+public final class ServiceEndpointIdentity<T extends ServiceEndpoint> extends AbstractIdentity {
 
     private final Class<T> type;
     private final String canonicalForm;

@@ -25,7 +25,7 @@ package io.fabric8.api;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ContainerIdentity extends Identity {
+public final class ContainerIdentity extends AbstractIdentity {
 
     public static ContainerIdentity create(String symbolicName) {
         return new ContainerIdentity(symbolicName);

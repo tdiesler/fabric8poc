@@ -100,6 +100,21 @@ public class ContainerAttributes  {
     public static final AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("fabric8.jmx.server.url", String.class);
 
     /**
+     * The attribute key for Agent JMX server URL that created the remote process
+     */
+    public static final AttributeKey<String> ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL = AttributeKey.create("fabric8.agent.jmx.server.url", String.class);
+
+    /**
+     * The attribute key for Agent JMX server username
+     */
+    public static final AttributeKey<String> ATTRIBUTE_KEY_AGENT_JMX_USERNAME = AttributeKey.create("fabric8.agent.jmx.username", String.class);
+
+    /**
+     * The attribute key for Agent JMX server password
+     */
+    public static final AttributeKey<String> ATTRIBUTE_KEY_AGENT_JMX_PASSWORD = AttributeKey.create("fabric8.agent.jmx.password", String.class);
+
+    /**
      * The attribute key for SSH server URL
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_SSH_SERVER_URL = AttributeKey.create("fabric8.ssh.server.url", String.class);

@@ -19,10 +19,10 @@
  */
 package io.fabric8.api.process;
 
-import io.fabric8.api.AttributeKey;
+import io.fabric8.api.AttributableBuilder;
 
+import java.net.InetAddress;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.jboss.gravia.resource.MavenCoordinates;
 
@@ -32,9 +32,11 @@ import org.jboss.gravia.resource.MavenCoordinates;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProcessBuilder<B extends ProcessBuilder<B, C>, C extends ProcessOptions> {
+public interface ProcessBuilder<B extends ProcessBuilder<B, C>, C extends ProcessOptions> extends AttributableBuilder<B> {
 
     B identityPrefix(String prefix);
+
+    B targetHost(InetAddress targetHost);
 
     B targetPath(Path targetPath);
 
@@ -43,10 +45,6 @@ public interface ProcessBuilder<B extends ProcessBuilder<B, C>, C extends Proces
     B addMavenCoordinates(MavenCoordinates coordinates);
 
     B outputToConsole(boolean outputToConsole);
-
-    <V> B addAttribute(AttributeKey<V> key, V value);
-
-    B addAttributes(Map<AttributeKey<?>, Object> attributes);
 
     C getProcessOptions();
 }

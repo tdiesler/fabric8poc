@@ -25,11 +25,11 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.api.process.ManagedProcess;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.Agent;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ImmutableContainer;
+import io.fabric8.spi.process.ManagedProcess;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -49,6 +51,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.LifecycleException;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.slf4j.Logger;
@@ -106,7 +109,14 @@ public final class RemoteContainerService extends AbstractComponent {
         ManagedContainerState cntState = getRequiredContainerState(identity);
         LOGGER.info("Start container: {}", cntState);
         ManagedProcess process = cntState.getManagedProcess();
-        agent.get().startProcess(process.getIdentity());
+        Future<ManagedProcess> future = agent.get().startProcess(process.getIdentity());
+        ManagedProcess result;
+        try {
+            result = future.get(10, TimeUnit.SECONDS);
+            containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(result));
+        } catch (Exception ex) {
+            throw new LifecycleException("Cannot get future process value after start for: " + process, ex);
+        }
         return cntState.immutableContainer();
     }
 
@@ -114,7 +124,14 @@ public final class RemoteContainerService extends AbstractComponent {
         ManagedContainerState cntState = getRequiredContainerState(identity);
         LOGGER.info("Stop container: {}", cntState);
         ManagedProcess process = cntState.getManagedProcess();
-        agent.get().stopProcess(process.getIdentity());
+        Future<ManagedProcess> future = agent.get().stopProcess(process.getIdentity());
+        ManagedProcess result;
+        try {
+            result = future.get(10, TimeUnit.SECONDS);
+            containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(result));
+        } catch (Exception ex) {
+            throw new LifecycleException("Cannot get future process value after stop for: " + process, ex);
+        }
         return cntState.immutableContainer();
     }
 
@@ -130,7 +147,8 @@ public final class RemoteContainerService extends AbstractComponent {
         LOGGER.info("Destroy container: {}", cntState);
         containers.remove(identity);
         ManagedProcess process = cntState.getManagedProcess();
-        agent.get().destroyProcess(process.getIdentity());
+        process = agent.get().destroyProcess(process.getIdentity());
+        containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(process));
         return cntState.immutableContainer();
     }
 
@@ -154,10 +172,12 @@ public final class RemoteContainerService extends AbstractComponent {
         private final ManagedProcess process;
 
         private Version profileVersion;
+        /*
         private Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
         private Set<ContainerIdentity> children = new HashSet<>();
         private List<String> profiles = new ArrayList<>();
         private ManagedContainerState parentState;
+        */
 
         ManagedContainerState(ManagedProcess process) {
             super(process.getAttributes(), true);
@@ -166,7 +186,7 @@ public final class RemoteContainerService extends AbstractComponent {
         }
 
         Set<ContainerIdentity> getChildIdentities() {
-            return Collections.unmodifiableSet(children);
+            return Collections.emptySet();
         }
 
         ManagedProcess getManagedProcess() {
@@ -183,9 +203,9 @@ public final class RemoteContainerService extends AbstractComponent {
 
         ImmutableContainer immutableContainer() {
             ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
-            builder.addParent(parentState != null ? parentState.getIdentity() : null);
-            builder.addProfileVersion(profileVersion);
             // [TODO] child, profiles, endpoints on managed container
+            //builder.addParent(parentState != null ? parentState.getIdentity() : null);
+            //builder.addProfileVersion(profileVersion);
             //builder.addChildren(getChildIdentities());
             //builder.addProfiles(getProfileIdentities());
             //builder.addServiceEndpoints(getServiceEndpointIdentities());

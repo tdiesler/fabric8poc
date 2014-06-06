@@ -72,7 +72,7 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getProperty(RuntimeService.RUNTIME_IDENTITY);
+        runtimeId = runtimeService.get().getRuntimeIdentity();
         activateInternal();
         updateAttributes();
         activateComponent();

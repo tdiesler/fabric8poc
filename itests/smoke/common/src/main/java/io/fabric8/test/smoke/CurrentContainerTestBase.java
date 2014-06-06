@@ -42,7 +42,6 @@ import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,15 +53,8 @@ import org.junit.Test;
  */
 public abstract class CurrentContainerTestBase {
 
-    static String[] tomcatJmx = new String[] {null, null};
     static String[] karafJmx = new String[] {"karaf", "karaf"};
-    static String[] wildflyJmx = new String[] {null, null};
-    static Map<RuntimeType, String[]> credentials = new HashMap<>();
-    static {
-        credentials.put(RuntimeType.TOMCAT, tomcatJmx);
-        credentials.put(RuntimeType.KARAF, karafJmx);
-        credentials.put(RuntimeType.WILDFLY, wildflyJmx);
-    }
+    static String[] otherJmx = new String[] {null, null};
 
     @Before
     public void preConditions() {
@@ -89,12 +81,10 @@ public abstract class CurrentContainerTestBase {
         Assert.assertEquals(1, epids.size());
         Assert.assertEquals(runtimeId + "-JMXServiceEndpoint", epids.iterator().next().getSymbolicName());
 
-        Assume.assumeFalse(RuntimeType.OTHER == RuntimeType.getRuntimeType());
-
         String jmxServerUrl = cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
         Assert.assertNotNull("JMX server URL not null", jmxServerUrl);
 
-        String[] userpass = credentials.get(RuntimeType.getRuntimeType());
+        String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
         JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
         JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {

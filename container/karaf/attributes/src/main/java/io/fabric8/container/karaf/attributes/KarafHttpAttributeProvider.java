@@ -17,13 +17,14 @@ package io.fabric8.container.karaf.attributes;
 
 import static io.fabric8.api.ContainerAttributes.HTTPS_BINDING_PORT_KEY;
 import static io.fabric8.api.ContainerAttributes.HTTP_BINDING_PORT_KEY;
-import io.fabric8.spi.AttributeProvider;
 import io.fabric8.api.ContainerAttributes;
+import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
-import io.fabric8.spi.scr.ValidatingReference;
+
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -34,8 +35,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-
-import java.util.Map;
 
 @Component(configurationPid = KarafHttpAttributeProvider.PAX_WEB_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service({AttributeProvider.class, HttpAttributeProvider.class})
@@ -65,8 +64,8 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
     @Property(name = "runtimeId", value = "${" + RuntimeService.RUNTIME_IDENTITY + "}")
     private String runtimeId;
 
-    @Reference(referenceInterface = Configurer.class)
-    private ValidatingReference<Configurer> configurer = new ValidatingReference<>();
+    @Reference
+    private Configurer configurer;
 
     private String httpUrl;
     private String httpsUrl;
@@ -100,7 +99,7 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
     }
 
     private void configureInternal(Map<String, Object> configuration) throws Exception {
-        configurer.get().configure(configuration, this, "org.osgi.service", "io.fabric8");
+        configurer.configure(configuration, this, "org.osgi.service", "io.fabric8");
         httpConnectionPort = httpConnectionPort != 0 ? httpConnectionPort : httpPort;
         httpConnectionPortSecure = httpConnectionPortSecure != 0 ? httpConnectionPortSecure : httpPortSecure;
 
@@ -121,12 +120,5 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
 
     private String getHttpsUrl(String id, int port) {
         return httpsUrl = String.format(HTTP_URL_FORMAT, "https", id, port);
-    }
-
-    void bindConfigurer(Configurer service) {
-        this.configurer.bind(service);
-    }
-    void unbindConfigurer(Configurer service) {
-        this.configurer.unbind(service);
     }
 }

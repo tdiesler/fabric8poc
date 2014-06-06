@@ -20,12 +20,13 @@
 
 package io.fabric8.container.wildfly;
 
+import io.fabric8.api.process.ProcessBuilder;
+import io.fabric8.spi.AbstractContainerBuilder;
+
+import java.net.InetAddress;
 import java.nio.file.Path;
 
 import org.jboss.gravia.resource.MavenCoordinates;
-
-import io.fabric8.spi.AbstractContainerBuilder;
-import io.fabric8.api.process.ProcessBuilder;
 
 
 
@@ -43,6 +44,12 @@ public final class WildFlyContainerBuilder extends AbstractContainerBuilder<Wild
 
     private WildFlyContainerBuilder() {
         super(new WildFlyCreateOptions());
+    }
+
+    @Override
+    public WildFlyContainerBuilder targetHost(InetAddress targetHost) {
+        options.setTargetHost(targetHost);
+        return this;
     }
 
     public WildFlyContainerBuilder serverConfig(String serverConfig) {

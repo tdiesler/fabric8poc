@@ -19,6 +19,7 @@
  */
 package io.fabric8.api;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the associated host
      */
-    HostIdentity getHostIdentity();
+    InetAddress getHostIdentity();
 
     /**
      * Get the parent container

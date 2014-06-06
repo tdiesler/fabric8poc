@@ -113,7 +113,7 @@ public final class AttributesOpenType {
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
-        attributes.putAttribute(key, value);
+        attributes.addAttribute(key, value);
     }
 
     public static String[] getIndexNames() {

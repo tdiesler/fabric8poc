@@ -17,19 +17,39 @@
  * limitations under the License.
  * #L%
  */
+
 package io.fabric8.spi.process;
+
+import io.fabric8.api.Attributable;
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.AgentRegistration;
+
+import java.nio.file.Path;
 
 
 /**
- * The self registration process builder
+ * The managed root container
  *
  * @author thomas.diesler@jboss.com
- * @since 04-Jun-2014
+ * @since 26-Feb-2014
  */
-public class SelfRegistrationBuilder extends AbstractProcessBuilder<SelfRegistrationBuilder, SelfRegistrationOptions> {
+public interface ManagedProcess extends Attributable {
 
-    public SelfRegistrationBuilder() {
-        super(new SelfRegistrationOptions());
+    /**
+     * The attribute key for the {@link AgentRegistration}
+     */
+    AttributeKey<AgentRegistration> ATTRIBUTE_KEY_AGENT_REGISTRATION = AttributeKey.create("fabric8.agent.registration", AgentRegistration.class);
+
+    enum State {
+        CREATED, STARTED, STOPPED, DESTROYED
     }
 
+    ProcessOptions getCreateOptions();
+
+    ProcessIdentity getIdentity();
+
+    Path getHomePath();
+
+    State getState();
 }

@@ -53,7 +53,7 @@ public class RuntimeServiceImpl extends AbstractComponent implements RuntimeServ
     }
 
     @Override
-    public String getIdentity() {
+    public String getRuntimeIdentity() {
         return identity;
     }
 
@@ -83,7 +83,6 @@ public class RuntimeServiceImpl extends AbstractComponent implements RuntimeServ
     }
 
     private String getPropertyInternal(String key, String defaultValue) {
-        Object raw = RuntimeLocator.getRequiredRuntime().getProperty(key);
-        return raw != null ? String.valueOf(raw) : defaultValue;
+        return (String) RuntimeLocator.getRequiredRuntime().getProperty(key, defaultValue);
     }
 }

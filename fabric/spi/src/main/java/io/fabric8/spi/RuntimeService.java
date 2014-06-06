@@ -27,10 +27,14 @@ public interface RuntimeService {
 
     String DEFAULT_ENV_PREFIX = "FABRIC8_";
 
+    String PROPERTY_AGENT_JMX_SERVER_URL = "fabric8.agent.jmx.server.url";
+    String PROPERTY_AGENT_JMX_USERNAME = "fabric8.agent.jmx.username";
+    String PROPERTY_AGENT_JMX_PASSWORD = "fabric8.agent.jmx.password";
+
     /**
      * Get the identity for the current container
      */
-    String getIdentity();
+    String getRuntimeIdentity();
 
     /**
      * Get the home path of the current runtime.

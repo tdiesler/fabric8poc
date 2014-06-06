@@ -21,11 +21,11 @@ package io.fabric8.spi.management;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.HostIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.AttributeSupport;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -119,7 +119,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public HostIdentity getHostIdentity() {
+        public InetAddress getHostIdentity() {
             throw new UnsupportedOperationException();
         }
 

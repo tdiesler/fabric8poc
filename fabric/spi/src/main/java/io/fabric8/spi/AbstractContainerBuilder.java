@@ -19,15 +19,17 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.OptionsProvider;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.gravia.resource.Version;
 
-public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends MutableCreateOptions> extends AbstractAttributableBuilder<B> implements ContainerBuilder<B, T> {
+public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends MutableCreateOptions> implements ContainerBuilder<B, T> {
 
     protected final T options;
 
@@ -60,6 +62,20 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
     @SuppressWarnings("unchecked")
     public B addOptions(OptionsProvider<B> optionsProvider) {
         return optionsProvider.addBuilderOptions((B) this);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <V> B addAttribute(AttributeKey<V> key, V value) {
+        options.addAttribute(key, value);
+        return (B) this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public B addAttributes(Map<AttributeKey<?>, Object> atts) {
+        options.addAttributes(atts);
+        return (B) this;
     }
 
     @Override
