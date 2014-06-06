@@ -19,30 +19,52 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.Attributable;
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.JMXServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
 
-public abstract class AbstractJMXServiceEndpoint extends AttributeSupport implements JMXServiceEndpoint {
+/**
+ * An abstract JMX service endpoint
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 06-Jun-2014
+ */
+public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint<JMXServiceEndpoint> implements JMXServiceEndpoint {
 
-    public AbstractJMXServiceEndpoint(Attributable attributes) {
-        String jmxServiceURL = attributes.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServiceURL);
-        setImmutable(true);
+    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity<JMXServiceEndpoint> identity, Map<AttributeKey<?>, Object> attributes) {
+        super(identity, attributes);
+    }
+
+    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity<JMXServiceEndpoint> identity, String jmxServerUrl) {
+        super(identity, getJmxServerAttributes(jmxServerUrl));
+    }
+
+    private static Map<AttributeKey<?>, Object> getJmxServerAttributes(String jmxServerUrl) {
+        if (jmxServerUrl != null) {
+            return Collections.<AttributeKey<?>, Object> singletonMap(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
+        return ManagementUtils.getJMXConnector(this, jmxUsername, jmxPassword, timeout, unit);
     }
 
     @Override
     public <T> T getMBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException {
         return ManagementUtils.getMBeanProxy(server, oname, type);
-    }
-
-    public String toString() {
-        return "JMXServiceEndpoint" + getAttributes();
     }
 }

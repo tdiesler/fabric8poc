@@ -17,53 +17,50 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.test.smoke.embedded;
-
-import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-
-import java.util.Set;
+package io.fabric8.test.smoke;
 
 import io.fabric8.api.Container;
-import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
-import io.fabric8.api.CreateOptions;
 import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.smoke.PrePostConditions;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXConnector;
 
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Test basic container functionality.
+ * Test current container functionality.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public class BasicContainerLifecycleTest {
+public abstract class CurrentContainerTestBase {
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
+    static String[] tomcatJmx = new String[] {null, null};
+    static String[] karafJmx = new String[] {"karaf", "karaf"};
+    static String[] wildflyJmx = new String[] {null, null};
+    static Map<RuntimeType, String[]> credentials = new HashMap<>();
+    static {
+        credentials.put(RuntimeType.TOMCAT, tomcatJmx);
+        credentials.put(RuntimeType.KARAF, karafJmx);
+        credentials.put(RuntimeType.WILDFLY, wildflyJmx);
     }
 
     @Before
@@ -93,37 +90,20 @@ public class BasicContainerLifecycleTest {
 
         Assume.assumeFalse(RuntimeType.OTHER == RuntimeType.getRuntimeType());
 
+        String[] userpass = credentials.get(RuntimeType.getRuntimeType());
         JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
-    }
-
-    @Test
-    public void testContainerLifecycle() throws Exception {
-
-        CreateOptions options = EmbeddedContainerBuilder.create("cntA").getCreateOptions();
-
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Container cntA = cntManager.createContainer(options);
-        ContainerIdentity cntIdA = cntA.getIdentity();
-
-        Assert.assertEquals("cntA", cntIdA.getCanonicalForm());
-        Assert.assertSame(State.CREATED, cntA.getState());
-        Assert.assertEquals(ProfileVersion.DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
-
-        cntA = cntManager.startContainer(cntIdA, null);
-        Assert.assertSame(State.STARTED, cntA.getState());
-        Assert.assertEquals(DEFAULT_PROFILE_VERSION, cntA.getProfileVersion());
-
-        cntA = cntManager.stopContainer(cntIdA);
-        Assert.assertSame(State.STOPPED, cntA.getState());
-
-        cntA = cntManager.destroyContainer(cntIdA);
-        Assert.assertSame(State.DESTROYED, cntA.getState());
-
+        JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {
-            cntManager.startContainer(cntIdA, null);
-            Assert.fail("IllegalStateException expected");
-        } catch (IllegalStateException e) {
-            // expected
+            // Access containers through JMX
+            MBeanServerConnection server = connector.getMBeanServerConnection();
+            ContainerManagement cntManagement = jmxEndpoint.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
+            Assert.assertNotNull("ContainerManagement not null", cntManagement);
+            Set<String> containerIds = cntManagement.getContainerIds();
+            Assert.assertEquals("One container", 1, containerIds.size());
+            ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
+            Assert.assertEquals(cnt.getIdentity(), cntId);
+        } finally {
+            connector.close();
         }
-   }
+    }
 }

@@ -63,7 +63,9 @@ public class NetworkAttributeProviderImpl extends AbstractAttributeProvider impl
 
     @Override
     public String getIp() {
-        return ip;
+        // [TODO] compute ip
+        // return ip;
+        return localIp;
     }
 
     @Override

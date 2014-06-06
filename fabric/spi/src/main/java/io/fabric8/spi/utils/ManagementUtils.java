@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.MBeanServerConnection;
@@ -35,9 +36,15 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.jboss.gravia.runtime.Module;
+import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.MBeanProxy;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 
 /**
  * A set of management utils
@@ -94,6 +101,28 @@ public final class ManagementUtils {
             throw new IllegalStateException(ex);
         }
 
+        // Find the fabric8-container-wildfly-connector module and use its classloader
+        if (RuntimeType.KARAF == RuntimeType.getRuntimeType() && jmxServiceURL.startsWith("service:jmx:http-remoting-jmx")) {
+            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
+            if (env.get(classLoaderKey) == null) {
+                Runtime runtime = RuntimeLocator.getRequiredRuntime();
+                String symbolicName = "fabric8-container-wildfly-connector";
+                Set<Module> modules = runtime.getModules(symbolicName, null);
+                IllegalStateAssertion.assertFalse(modules.isEmpty(), "Cannot find module: " + symbolicName);
+                ClassLoader classLoader = modules.iterator().next().adapt(ClassLoader.class);
+                env.put(classLoaderKey, classLoader);
+            }
+        }
+
+        // Find the org.jboss.remoting-jmx module and use its classloader
+        if (RuntimeType.WILDFLY == RuntimeType.getRuntimeType()) {
+            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
+            if (env.get(classLoaderKey) == null) {
+                ClassLoader classLoader = JmxEnvironmentEnhancer.getClassLoader(env);
+                env.put(classLoaderKey, classLoader);
+            }
+        }
+
         Exception lastException = null;
         JMXConnector connector = null;
         long end = System.currentTimeMillis() + unit.toMillis(timeout);
@@ -113,5 +142,18 @@ public final class ManagementUtils {
             throw new IllegalStateException("Cannot obtain JMXConnector for: " + jmxServiceURL, lastException);
         }
         return connector;
+    }
+
+    // Confine the usage of jboss-modules to an additional class
+    // This prevents NoClassDefFoundError: org/jboss/modules/ModuleLoadException
+    static class JmxEnvironmentEnhancer {
+        static ClassLoader getClassLoader(Map<String, Object> env) {
+            try {
+                ModuleIdentifier moduleid = ModuleIdentifier.fromString("org.jboss.remoting-jmx");
+                return org.jboss.modules.Module.getBootModuleLoader().loadModule(moduleid).getClassLoader();
+            } catch (ModuleLoadException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
     }
 }

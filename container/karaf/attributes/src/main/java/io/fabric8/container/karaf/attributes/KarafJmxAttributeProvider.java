@@ -53,7 +53,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     static final String MANAGEMENT_PID = "org.apache.karaf.management";
 
     //private static final String JMX_URL_FORMAT = "service:jmx:rmi://${container:%s/fabric8.ip}:%d/jndi/rmi://${container:%s/fabric8.ip}:%d/karaf-%s";
-    private static final String JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/karaf-%s";
+    private static final String JMX_URL_FORMAT = "service:jmx:rmi://%s:%d/jndi/rmi://%s:%d/karaf-root";
 
     //private static final String JMX_SERVICE_URL = "serviceUrl";
     private static final String RMI_REGISTRY_BINDING_PORT_KEY = "rmiRegistryPort";
@@ -125,7 +125,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     }
 
     private String getJmxUrl(String ip, int serverConnectionPort, int registryConnectionPort) {
-        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, serverConnectionPort, ip, registryConnectionPort, ip);
+        return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, serverConnectionPort, ip, registryConnectionPort);
     }
 
     void bindConfigurer(Configurer service) {

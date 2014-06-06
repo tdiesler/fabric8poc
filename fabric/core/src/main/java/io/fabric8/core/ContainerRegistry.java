@@ -79,12 +79,22 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles, Set<ServiceEndpoint> endpoints) {
         IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
         ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
-        ContainerState cntState = new ContainerState(parentState, identity, options, versionState, profiles);
-        containers.put(identity, new Registration(cntState));
+        ContainerState cntState = new ContainerState(parentState, identity, options, versionState, profiles, getEndpointIds(endpoints));
+        containers.put(identity, new Registration(cntState, endpoints));
         return cntState.immutableContainer();
+    }
+
+    private Set<ServiceEndpointIdentity<?>> getEndpointIds(Set<ServiceEndpoint> endpoints) {
+        Set<ServiceEndpointIdentity<?>> result = new HashSet<>();
+        if (endpoints != null) {
+            for (ServiceEndpoint ep : endpoints) {
+                result.add(ep.getIdentity());
+            }
+        }
+        return result;
     }
 
     Set<ContainerIdentity> getContainerIdentities() {
@@ -151,13 +161,13 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        return cntState.getServiceEndpoint(type);
+        Registration creg = getRequiredRegistration(identity);
+        return creg.getServiceEndpoint(type);
     }
 
     ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        return cntState.getServiceEndpoint(endpointId);
+        Registration creg = getRequiredRegistration(identity);
+        return creg.getServiceEndpoint(endpointId);
     }
 
     private ContainerState getContainerState(ContainerIdentity identity) {
@@ -191,9 +201,15 @@ public final class ContainerRegistry extends AbstractComponent {
 
         private final ContainerState cntState;
         private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
+        private final Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
 
-        private Registration(ContainerState cntState) {
+        private Registration(ContainerState cntState, Set<ServiceEndpoint> endpoints) {
             this.cntState = cntState;
+            if (endpoints != null) {
+                for (ServiceEndpoint ep : endpoints) {
+                    this.endpoints.put(ep.getIdentity(), ep);
+                }
+            }
         }
 
         ContainerState getContainerState() {
@@ -217,6 +233,28 @@ public final class ContainerRegistry extends AbstractComponent {
                 resourceHandles.remove(resid);
             }
         }
+
+        @SuppressWarnings("unchecked")
+        <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
+            IllegalArgumentAssertion.assertNotNull(type, "type");
+            T endpoint = null;
+            for (ServiceEndpoint ep : endpoints.values()) {
+                if (type.isAssignableFrom(ep.getClass())) {
+                    if (endpoint == null) {
+                        endpoint = (T) ep;
+                    } else {
+                        LOGGER.warn("Multiple service endpoints of type {} for: {}", type.getName(), cntState.getIdentity());
+                        endpoint = null;
+                        break;
+                    }
+                }
+            }
+            return endpoint;
+        }
+
+        ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity<?> identity) {
+            return endpoints.get(identity);
+        }
     }
 
     private final static class ContainerState {
@@ -226,14 +264,16 @@ public final class ContainerRegistry extends AbstractComponent {
         private final AttributeSupport attributes;
         private final List<String> profiles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
+        private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
         private ProfileVersionState versionState;
         private State state;
 
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles) {
+        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles, Set<ServiceEndpointIdentity<?>> endpoints) {
             IllegalArgumentAssertion.assertNotNull(identity, "identity");
             IllegalArgumentAssertion.assertNotNull(options, "options");
             IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
             this.attributes = new AttributeSupport(options.getAttributes(), true);
+            this.endpoints.addAll(endpoints);
             this.profiles.addAll(profiles);
             this.parentState = parentState;
             this.versionState = versionState;
@@ -278,34 +318,7 @@ public final class ContainerRegistry extends AbstractComponent {
         }
 
         Set<ServiceEndpointIdentity<?>> getServiceEndpointIdentities() {
-            return Collections.unmodifiableSet(new HashSet<>(getServiceEndpoints().keySet()));
-        }
-
-        @SuppressWarnings("unchecked")
-        <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
-            IllegalArgumentAssertion.assertNotNull(type, "type");
-            T endpoint = null;
-            for (ServiceEndpoint ep : getServiceEndpoints().values()) {
-                if (type.isAssignableFrom(ep.getClass())) {
-                    if (endpoint == null) {
-                        endpoint = (T) ep;
-                    } else {
-                        LOGGER.warn("Multiple service endpoints of type {} for: {}", type.getName(), identity);
-                        endpoint = null;
-                        break;
-                    }
-                }
-            }
-            return endpoint;
-        }
-
-        ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity<?> identity) {
-            return getServiceEndpoints().get(identity);
-        }
-
-        Map<ServiceEndpointIdentity<?>, ServiceEndpoint> getServiceEndpoints() {
-            Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
-            return Collections.unmodifiableMap(endpoints);
+            return Collections.unmodifiableSet(endpoints);
         }
 
         ImmutableContainer immutableContainer() {

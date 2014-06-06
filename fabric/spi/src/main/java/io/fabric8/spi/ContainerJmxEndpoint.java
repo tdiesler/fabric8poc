@@ -15,33 +15,31 @@
 
 package io.fabric8.spi;
 
-import io.fabric8.api.Container;
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.utils.ManagementUtils;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
-import javax.management.remote.JMXConnector;
-
+/**
+ * An abstract JMX service endpoint
+ *
+ * @author thomas.diesler@jboss.com
+ * @since 06-Jun-2014
+ */
 public class ContainerJmxEndpoint extends AbstractJMXServiceEndpoint {
 
-    private final Container container;
-    private final ServiceEndpointIdentity<JMXServiceEndpoint> endpointIdentity;
-
-    public ContainerJmxEndpoint(Container container, ServiceEndpointIdentity<JMXServiceEndpoint> endpointIdentity) {
-        super(container);
-        this.container = container;
-        this.endpointIdentity = endpointIdentity;
+    public ContainerJmxEndpoint(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes) {
+        super(getEndpointIdentity(identity), attributes);
     }
 
-    @Override
-    public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-        return ManagementUtils.getJMXConnector(container, jmxUsername, jmxPassword, timeout, unit);
+    public ContainerJmxEndpoint(ContainerIdentity identity, String jmxServerUrl) {
+        super(getEndpointIdentity(identity), jmxServerUrl);
     }
 
-    @Override
-    public ServiceEndpointIdentity<JMXServiceEndpoint> getIdentity() {
-        return endpointIdentity;
+    private static ServiceEndpointIdentity<JMXServiceEndpoint> getEndpointIdentity(ContainerIdentity identity) {
+        String idspec = identity.getSymbolicName() + "-" + JMXServiceEndpoint.class.getSimpleName();
+        return ServiceEndpointIdentity.create(idspec , JMXServiceEndpoint.class);
     }
 }

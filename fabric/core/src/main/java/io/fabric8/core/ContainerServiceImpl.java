@@ -45,6 +45,7 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.BootConfiguration;
+import io.fabric8.spi.ContainerJmxEndpoint;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
@@ -227,9 +228,13 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             // Get boot profiles
             List<String> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());
 
+            // Get JMX service endpoint
+            String jmxServerUrl = jmxProvider.get().getJmxServerUrl();
+            Set<ServiceEndpoint> endpoints = Collections.<ServiceEndpoint>singleton(new ContainerJmxEndpoint(currentIdentity, jmxServerUrl));
+
             LockHandle writeLock = aquireWriteLock(currentIdentity);
             try {
-                Container container = registry.createContainer(null, currentIdentity, options, versionState, profiles);
+                Container container = registry.createContainer(null, currentIdentity, options, versionState, profiles, endpoints);
                 LOGGER.info("Create current container: {}", container);
 
                 final CountDownLatch provisionLatch = new CountDownLatch(1);
@@ -291,7 +296,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             try {
                 ContainerRegistry registry = containerRegistry.get();
                 ProfileVersionState versionState = getRequiredProfileVersionState(options.getProfileVersion());
-                container = registry.createContainer(parentId, identity, options, versionState, options.getProfiles());
+                container = registry.createContainer(parentId, identity, options, versionState, options.getProfiles(), null);
                 LOGGER.info("Create container: {}", container);
 
                 // Update parent/child association
