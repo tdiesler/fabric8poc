@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi;
 
+import java.io.Serializable;
+
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
@@ -28,7 +30,9 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 07-Jun-2014
  */
-public final class AgentIdentity {
+public final class AgentIdentity implements Serializable {
+
+    private static final long serialVersionUID = -5725118775732949024L;
 
     private final String name;
 

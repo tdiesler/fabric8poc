@@ -20,19 +20,19 @@ package io.fabric8.domain.agent.internal;
  */
 
 
+import io.fabric8.spi.AgentIdentity;
+import io.fabric8.spi.AgentRegistration;
+import io.fabric8.spi.AgentTopology;
+import io.fabric8.spi.process.MutableAgentTopology;
+import io.fabric8.spi.process.ProcessIdentity;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 
-import io.fabric8.spi.AgentIdentity;
-import io.fabric8.spi.AgentRegistration;
-import io.fabric8.spi.AgentTopology;
-import io.fabric8.spi.process.ProcessIdentity;
-
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -41,7 +41,6 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 08-Jun-2014
  */
-@Ignore
 public class AgentSerializationTest {
 
     @Test

@@ -2,6 +2,7 @@ package io.fabric8.spi;
 
 import io.fabric8.spi.utils.ManagementUtils;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
@@ -13,7 +14,9 @@ import javax.management.remote.JMXConnector;
  * @author thomas.diesler@jboss.com
  * @since 07-Jun-2014
  */
-public final class AgentRegistration {
+public final class AgentRegistration implements Serializable {
+
+    private static final long serialVersionUID = -5413283194351021389L;
 
     private final AgentIdentity identity;
     private final InetAddress targetHost;

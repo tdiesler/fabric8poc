@@ -30,6 +30,7 @@ import io.fabric8.spi.RuntimeIdentity;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.process.ImmutableManagedProcess;
 import io.fabric8.spi.process.ManagedProcess;
+import io.fabric8.spi.process.MutableAgentTopology;
 import io.fabric8.spi.process.ProcessHandler;
 import io.fabric8.spi.process.ProcessHandlerFactory;
 import io.fabric8.spi.process.ProcessIdentity;
@@ -59,7 +60,6 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
 import javax.management.StandardEmitterMBean;
-import javax.management.StandardMBean;
 import javax.management.remote.JMXConnector;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -74,8 +74,6 @@ import org.jboss.gravia.runtime.LifecycleException;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The agent controller
@@ -85,13 +83,9 @@ import org.slf4j.LoggerFactory;
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(Agent.class)
-public final class AgentService extends AbstractComponent implements Agent, NotificationEmitter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
+public final class AgentService extends AbstractComponent implements Agent {
 
     private final AtomicInteger processCount = new AtomicInteger();
-    private final NotificationBroadcasterSupport notificationSupport = new NotificationBroadcasterSupport();
-    private final AtomicLong sequenceNumber = new AtomicLong();
 
     @Reference(referenceInterface = ConfigurationAdmin.class)
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
@@ -113,6 +107,9 @@ public final class AgentService extends AbstractComponent implements Agent, Noti
     // The  {@link ProcessHandler}s with this Agent
     @Reference(referenceInterface = ProcessHandlerFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     private final Set<ProcessHandlerFactory> processHandlerFactories = new CopyOnWriteArraySet<>();
+
+    private final AtomicLong sequenceNumber = new AtomicLong();
+    private StandardEmitterMBean agentMBean;
 
     private AgentRegistration localAgent;
     private AgentIdentity agentId;
@@ -143,8 +140,8 @@ public final class AgentService extends AbstractComponent implements Agent, Noti
         agentTopology.addAgent(localAgent);
 
         // Register the {@link Agent} MBean
-        StandardMBean mbean = new StandardEmitterMBean(this, Agent.class, notificationSupport);
-        mbeanServer.get().registerMBean(mbean, Agent.OBJECT_NAME);
+        agentMBean = new StandardEmitterMBean(this, Agent.class, new NotificationBroadcasterSupport());
+        mbeanServer.get().registerMBean(agentMBean, Agent.OBJECT_NAME);
 
         // Register this agent with the cluster
         AgentTopology topology = registerAgentWithCluster(localAgent);
@@ -160,7 +157,7 @@ public final class AgentService extends AbstractComponent implements Agent, Noti
     private AgentTopology registerAgentWithCluster(AgentRegistration agentReg) throws Exception {
 
         String jmxRemoteServerUrl = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_SERVER_URL);
-        if (true) //jmxRemoteServerUrl == null)
+        if (jmxRemoteServerUrl == null)
             return null;
 
         String jmxRemoteUsername = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_USERNAME);
@@ -226,7 +223,7 @@ public final class AgentService extends AbstractComponent implements Agent, Noti
     public AgentTopology registerAgent(AgentRegistration agentReg) {
         agentTopology.addAgent(agentReg);
         long seq = sequenceNumber.incrementAndGet();
-        notificationSupport.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, this, seq, agentReg.toString()));
+        agentMBean.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, agentReg, seq, agentReg.toString()));
         return agentTopology.immutableTopology();
     }
 
@@ -261,26 +258,6 @@ public final class AgentService extends AbstractComponent implements Agent, Noti
         } else {
             throw new UnsupportedOperationException();
         }
-    }
-
-    @Override
-    public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) {
-        notificationSupport.addNotificationListener(listener, filter, handback);
-    }
-
-    @Override
-    public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
-        notificationSupport.removeNotificationListener(listener);
-    }
-
-    @Override
-    public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback) throws ListenerNotFoundException {
-        notificationSupport.removeNotificationListener(listener, filter, handback);
-    }
-
-    @Override
-    public MBeanNotificationInfo[] getNotificationInfo() {
-        return notificationSupport.getNotificationInfo();
     }
 
     private ProcessRegistration getRequiredProcessRegistration(ProcessIdentity processId) {

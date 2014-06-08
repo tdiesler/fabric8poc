@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi.process;
 
+import java.io.Serializable;
+
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
@@ -27,7 +29,9 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ProcessIdentity {
+public final class ProcessIdentity implements Serializable {
+
+    private static final long serialVersionUID = 8749532481983621343L;
 
     private final String name;
 

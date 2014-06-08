@@ -89,6 +89,10 @@ public final class ManagementUtils {
             String[] credentials = new String[] { jmxUsername, jmxPassword };
             env.put(JMXConnector.CREDENTIALS, credentials);
         }
+        // Make SPI classes visible by default
+        if (env.get(JMXConnectorFactory.DEFAULT_CLASS_LOADER) == null) {
+            env.put(JMXConnectorFactory.DEFAULT_CLASS_LOADER, ManagementUtils.class.getClassLoader());
+        }
         return getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 

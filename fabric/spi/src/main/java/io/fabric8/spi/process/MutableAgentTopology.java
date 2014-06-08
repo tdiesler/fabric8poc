@@ -1,10 +1,10 @@
-package io.fabric8.domain.agent.internal;
+package io.fabric8.spi.process;
 
 import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
-import io.fabric8.spi.process.ProcessIdentity;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +21,7 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  * @author thomas.diesler@jboss.com
  * @since 07-Jun-2014
  */
-final class MutableAgentTopology implements AgentTopology {
+public final class MutableAgentTopology implements AgentTopology {
 
     private final Map<AgentIdentity, AgentRegistration> agentTopology = new ConcurrentHashMap<>();
     private final Map<ProcessIdentity, AgentIdentity> processTopology = new ConcurrentHashMap<>();
@@ -47,53 +47,55 @@ final class MutableAgentTopology implements AgentTopology {
         return Collections.unmodifiableMap(new HashMap<>(processTopology));
     }
 
-    void addAgent(AgentRegistration agentReg) {
+    public void addAgent(AgentRegistration agentReg) {
         IllegalArgumentAssertion.assertNotNull(agentReg, "agentReg");
         agentTopology.put(agentReg.getIdentity(), agentReg);
     }
 
-    AgentRegistration removeAgent(AgentIdentity agentId) {
+    public AgentRegistration removeAgent(AgentIdentity agentId) {
         IllegalArgumentAssertion.assertNotNull(agentId, "agentId");
         return agentTopology.remove(agentId);
     }
 
-    void addProcess(ProcessIdentity processId, AgentIdentity agentId) {
+    public void addProcess(ProcessIdentity processId, AgentIdentity agentId) {
         IllegalArgumentAssertion.assertNotNull(processId, "processId");
         IllegalArgumentAssertion.assertNotNull(agentId, "agentId");
         getRequiredAgentRegistration(agentId);
         processTopology.put(processId, agentId);
     }
 
-    void removeProcess(ProcessIdentity processId) {
+    public void removeProcess(ProcessIdentity processId) {
         processTopology.remove(processId);
     }
 
-    void updateTopology(AgentTopology topology) {
+    public void updateTopology(AgentTopology topology) {
         for (AgentIdentity agentId : topology.getAgentIdentities()) {
             agentTopology.put(agentId, topology.getAgentRegistration(agentId));
         }
         processTopology.putAll(topology.getProcessMapping());
     }
 
-    AgentTopology immutableTopology() {
+    public AgentTopology immutableTopology() {
         return new ImmutableAgentTopology(agentTopology, processTopology);
     }
 
-    AgentRegistration getRequiredAgentRegistration(AgentIdentity agentId) {
+    public AgentRegistration getRequiredAgentRegistration(AgentIdentity agentId) {
         IllegalArgumentAssertion.assertNotNull(agentId, "agentId");
         AgentRegistration agentReg = agentTopology.get(agentId);
         IllegalStateAssertion.assertNotNull(agentReg, "Cannot find agent registration for: " + agentId);
         return agentReg;
     }
 
-    AgentRegistration getRequiredAgentRegistration(ProcessIdentity processId) {
+    public AgentRegistration getRequiredAgentRegistration(ProcessIdentity processId) {
         IllegalArgumentAssertion.assertNotNull(processId, "processId");
         AgentIdentity agentId = processTopology.get(processId);
         IllegalStateAssertion.assertNotNull(agentId, "Cannot find agent identity for: " + processId);
         return getRequiredAgentRegistration(agentId);
     }
 
-    static final class ImmutableAgentTopology implements AgentTopology {
+    private static final class ImmutableAgentTopology implements AgentTopology, Serializable {
+
+        private static final long serialVersionUID = 7107739953897138959L;
 
         private final Map<AgentIdentity, AgentRegistration> agentTopology = new HashMap<>();
         private final Map<ProcessIdentity, AgentIdentity> processTopology = new HashMap<>();

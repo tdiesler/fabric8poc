@@ -40,6 +40,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.ListenerNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationListener;
@@ -151,6 +153,42 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
     public final Future<ManagedProcess> start() {
         State state = managedProcess.getState();
         assertNotDestroyed(state);
+
+        // Setup a call back notification to get the JMX connection of the started process
+        final CountDownLatch latch = new CountDownLatch(1);
+        String jmxAgentServiceURL = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL);
+        String jmxAgentUsername = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME);
+        String jmxAgentPassword = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD);
+        JMXConnector connector = ManagementUtils.getJMXConnector(jmxAgentServiceURL, jmxAgentUsername, jmxAgentPassword, 200, TimeUnit.MILLISECONDS);
+        try {
+            final MBeanServerConnection server = connector.getMBeanServerConnection();
+            server.addNotificationListener(Agent.OBJECT_NAME, new NotificationListener() {
+                @Override
+                public void handleNotification(Notification notification, Object handback) {
+                    String eventType = notification.getType();
+                    if (NOTIFICATION_TYPE_AGENT_REGISTRATION.equals(eventType)) {
+                        AgentRegistration agentReg = (AgentRegistration) notification.getSource();
+                        String agentName = agentReg.getIdentity().getName();
+                        String procName = (String) handback;
+                        if (agentName.equals(procName)) {
+                            try {
+                                server.removeNotificationListener(Agent.OBJECT_NAME, this);
+                            } catch (Exception ex) {
+                                // ignore
+                            }
+                            latch.countDown();
+                        }
+                    }
+                }
+            }, null, managedProcess.getIdentity().getName());
+        } catch (RuntimeException rte) {
+            throw rte;
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        } finally {
+            IOUtils.safeClose(connector);
+        }
+
         try {
             if (state == State.CREATED || state == State.STOPPED) {
                 doStart(managedProcess);
@@ -161,31 +199,6 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
             throw new LifecycleException("Cannot start container", ex);
         }
 
-        /* Setup a call back notification to get the JMX connection of the started process
-        final CountDownLatch latch = new CountDownLatch(1);
-        String jmxAgentServiceURL = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL);
-        String jmxAgentUsername = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME);
-        String jmxAgentPassword = managedProcess.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD);
-        JMXConnector connector = ManagementUtils.getJMXConnector(jmxAgentServiceURL, jmxAgentUsername, jmxAgentPassword, 200, TimeUnit.MILLISECONDS);
-        try {
-            MBeanServerConnection server = connector.getMBeanServerConnection();
-            server.addNotificationListener(Agent.OBJECT_NAME, new NotificationListener() {
-                @Override
-                public void handleNotification(Notification notification, Object handback) {
-                    String eventType = notification.getType();
-                    if (NOTIFICATION_TYPE_AGENT_REGISTRATION.equals(eventType) && managedProcess.getIdentity().equals(handback)) {
-                        latch.countDown();
-                    }
-                }
-            }, null, managedProcess.getIdentity());
-        } catch (RuntimeException rte) {
-            throw rte;
-        } catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        } finally {
-            IOUtils.safeClose(connector);
-        }
-        */
         return new ProcessFuture(managedProcess); //, latch);
     }
 
