@@ -224,6 +224,13 @@ public class FabricZooKeeperServer extends AbstractComponent {
         return serverConfig;
     }
 
+    void bindConfigurer(Configurer configurer){
+        this.configurer=configurer;
+    }
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer=null;
+    }
+
     interface Destroyable {
         void destroy() throws Exception;
     }

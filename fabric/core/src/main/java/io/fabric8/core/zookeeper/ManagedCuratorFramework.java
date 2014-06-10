@@ -224,6 +224,13 @@ public class ManagedCuratorFramework  extends AbstractComponent {
         this.aclProvider.unbind(service);
     }
 
+    void bindConfigurer(Configurer configurer){
+        this.configurer=configurer;
+    }
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer=null;
+    }
+
     void bindConnectionStateListener(ConnectionStateListener connectionStateListener) {
         connectionStateListeners.add(connectionStateListener);
         State curr = state.get();
