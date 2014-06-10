@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * An immutable container
@@ -46,7 +47,9 @@ import org.jboss.gravia.resource.Version;
 public final class ImmutableContainer extends AttributeSupport implements Container {
 
     private final ContainerIdentity identity;
+    private final RuntimeType runtimeType;
     private final State state;
+
 
     private Version profileVersion;
     private Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
@@ -54,9 +57,10 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private List<String> profiles = new ArrayList<>();
     private ContainerIdentity parent;
 
-    private ImmutableContainer(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
+    private ImmutableContainer(ContainerIdentity identity, RuntimeType runtimeType, Map<AttributeKey<?>, Object> attributes, State state) {
         super(attributes, true);
         this.identity = identity;
+        this.runtimeType = runtimeType;
         this.state = state;
     }
 
@@ -68,6 +72,11 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     @Override
     public ContainerIdentity getIdentity() {
         return identity;
+    }
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return null;
     }
 
     @Override
@@ -131,8 +140,8 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     public static class Builder {
         private final ImmutableContainer container;
 
-        public Builder(ContainerIdentity identity, Map<AttributeKey<?>, Object> attributes, State state) {
-            container = new ImmutableContainer(identity, attributes, state);
+        public Builder(ContainerIdentity identity, RuntimeType runtimeType, Map<AttributeKey<?>, Object> attributes, State state) {
+            container = new ImmutableContainer(identity, runtimeType, attributes, state);
         }
 
         public Builder addProfileVersion(Version version) {

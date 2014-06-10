@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * A fabric container
@@ -49,6 +50,11 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
      * Get the container state
      */
     State getState();
+
+    /**
+     * The type of the container.
+     */
+    RuntimeType getRuntimeType();
 
     /**
      * Get the associated host

@@ -23,6 +23,7 @@ package io.fabric8.api;
 import java.util.List;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * Container create options
@@ -33,6 +34,8 @@ import org.jboss.gravia.resource.Version;
 public interface CreateOptions extends Attributable {
 
     ContainerIdentity getIdentity();
+
+    RuntimeType getRuntimeType();
 
     Version getProfileVersion();
 

@@ -235,6 +235,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 {
                     addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
                 }
+
+                @Override
+                public RuntimeType getRuntimeType() {
+                    return RuntimeType.getRuntimeType();
+                }
             };
 
             LockHandle writeLock = aquireWriteLock(currentIdentity);

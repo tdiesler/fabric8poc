@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
@@ -39,6 +40,11 @@ public final class WildFlyCreateOptions extends WildFlyProcessOptions implements
     @Override
     public ContainerIdentity getIdentity() {
         return ContainerIdentity.create(getIdentityPrefix());
+    }
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return RuntimeType.WILDFLY;
     }
 
     @Override

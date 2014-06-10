@@ -151,6 +151,8 @@ public final class RemoteContainerService extends AbstractComponent {
 
         private final ContainerIdentity identity;
         private final ManagedProcess process;
+        private final CreateOptions createOptions;
+
 
         private Version profileVersion;
         /*
@@ -164,6 +166,7 @@ public final class RemoteContainerService extends AbstractComponent {
             super(process.getAttributes(), true);
             this.identity = ContainerIdentity.create(process.getIdentity().getName());
             this.process = process;
+            this.createOptions = (CreateOptions) process.getCreateOptions();
         }
 
         Set<ContainerIdentity> getChildIdentities() {
@@ -183,7 +186,7 @@ public final class RemoteContainerService extends AbstractComponent {
         }
 
         ImmutableContainer immutableContainer() {
-            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
+            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, createOptions.getRuntimeType(), getAttributes(), getState());
             // [TODO] child, profiles, endpoints on managed container
             //builder.addParent(parentState != null ? parentState.getIdentity() : null);
             //builder.addProfileVersion(profileVersion);

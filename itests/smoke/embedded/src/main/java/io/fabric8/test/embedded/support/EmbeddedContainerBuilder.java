@@ -23,6 +23,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.spi.AbstractContainerBuilder;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder.EmbeddedCreateOptions;
+import org.jboss.gravia.runtime.RuntimeType;
 
 public final class EmbeddedContainerBuilder extends AbstractContainerBuilder<EmbeddedContainerBuilder, EmbeddedCreateOptions> {
 
@@ -48,6 +49,11 @@ public final class EmbeddedContainerBuilder extends AbstractContainerBuilder<Emb
 
         EmbeddedCreateOptions(String identity) {
             setIdentity(ContainerIdentity.createFrom(identity));
+        }
+
+        @Override
+        public RuntimeType getRuntimeType() {
+            return RuntimeType.OTHER;
         }
     }
 }

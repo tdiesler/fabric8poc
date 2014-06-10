@@ -39,6 +39,7 @@ import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * CompositeData support for a {@link Container}.
@@ -125,6 +126,11 @@ public final class ContainerOpenType {
 
         @Override
         public State getState() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public RuntimeType getRuntimeType() {
             throw new UnsupportedOperationException();
         }
 

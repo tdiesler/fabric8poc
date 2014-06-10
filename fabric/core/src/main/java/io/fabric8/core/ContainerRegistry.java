@@ -261,6 +261,7 @@ public final class ContainerRegistry extends AbstractComponent {
 
         private final ContainerState parentState;
         private final ContainerIdentity identity;
+        private final CreateOptions createOptions;
         private final AttributeSupport attributes;
         private final List<String> profiles = new ArrayList<>();
         private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
@@ -272,6 +273,7 @@ public final class ContainerRegistry extends AbstractComponent {
             IllegalArgumentAssertion.assertNotNull(identity, "identity");
             IllegalArgumentAssertion.assertNotNull(options, "options");
             IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
+            this.createOptions = options;
             this.attributes = new AttributeSupport(options.getAttributes(), true);
             this.endpoints.addAll(endpoints);
             this.profiles.addAll(profiles);
@@ -279,6 +281,7 @@ public final class ContainerRegistry extends AbstractComponent {
             this.versionState = versionState;
             this.identity = identity;
             this.state = State.CREATED;
+
         }
 
         ContainerIdentity getIdentity() {
@@ -323,7 +326,7 @@ public final class ContainerRegistry extends AbstractComponent {
 
         ImmutableContainer immutableContainer() {
             assertReadLock();
-            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, getAttributes(), getState());
+            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, createOptions.getRuntimeType(), getAttributes(), getState());
             builder.addParent(parentState != null ? parentState.getIdentity() : null);
             builder.addProfileVersion(versionState != null ? versionState.getIdentity() : null);
             builder.addChildren(getChildIdentities());
