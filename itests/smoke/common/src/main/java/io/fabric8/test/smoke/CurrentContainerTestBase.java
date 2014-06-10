@@ -29,8 +29,6 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.spi.RuntimeService;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 

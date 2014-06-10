@@ -24,22 +24,17 @@ import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.ProvisionEventListener;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.Agent;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.process.ManagedProcess;
+import io.fabric8.spi.process.ProcessIdentity;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -54,8 +49,6 @@ import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.LifecycleException;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link RemoteContainerService}
@@ -67,19 +60,13 @@ import org.slf4j.LoggerFactory;
 @Service(RemoteContainerService.class)
 public final class RemoteContainerService extends AbstractComponent {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteContainerService.class);
-
     @Reference(referenceInterface = Agent.class)
     private final ValidatingReference<Agent> agent = new ValidatingReference<>();
-
-    private final Map<ContainerIdentity, ManagedContainerState> containers = new ConcurrentHashMap<ContainerIdentity, ManagedContainerState>();
 
     @Activate
     void activate() {
         activateComponent();
     }
-
-    // @Modified not implemented - we get a new component with every config change
 
     @Deactivate
     void deactivate() {
@@ -100,42 +87,34 @@ public final class RemoteContainerService extends AbstractComponent {
         IllegalArgumentAssertion.assertTrue(options instanceof ProcessOptions, "Invalid process options: " + options);
         ProcessOptions processOptions = (ProcessOptions) options;
         ManagedProcess process = agent.get().createProcess(processOptions);
-        ManagedContainerState cntState = new ManagedContainerState(process);
-        containers.put(cntState.getIdentity(), cntState);
-        return cntState.immutableContainer();
+        return new ManagedContainerState(process).immutableContainer();
     }
 
+    // [TODO] provision event for remote containers
     Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
-        ManagedContainerState cntState = getRequiredContainerState(identity);
-        LOGGER.info("Start container: {}", cntState);
-        ManagedProcess process = cntState.getManagedProcess();
-        Future<ManagedProcess> future = agent.get().startProcess(process.getIdentity());
-        ManagedProcess result;
+        Future<ManagedProcess> future = agent.get().startProcess(getProcessIdentity(identity));
+        ManagedProcess process;
         try {
-            result = future.get(10, TimeUnit.SECONDS);
-            containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(result));
+            process = future.get(10, TimeUnit.SECONDS);
         } catch (Exception ex) {
-            throw new LifecycleException("Cannot get future process value after start for: " + process, ex);
+            throw new LifecycleException("Cannot get future process value after start for: " + identity, ex);
         }
-        return cntState.immutableContainer();
+        return new ManagedContainerState(process).immutableContainer();
     }
 
     Container stopContainer(ContainerIdentity identity) {
-        ManagedContainerState cntState = getRequiredContainerState(identity);
-        LOGGER.info("Stop container: {}", cntState);
-        ManagedProcess process = cntState.getManagedProcess();
-        Future<ManagedProcess> future = agent.get().stopProcess(process.getIdentity());
-        ManagedProcess result;
+        Future<ManagedProcess> future = agent.get().stopProcess(getProcessIdentity(identity));
+        ManagedProcess process;
         try {
-            result = future.get(10, TimeUnit.SECONDS);
-            containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(result));
+            process = future.get(10, TimeUnit.SECONDS);
         } catch (Exception ex) {
-            throw new LifecycleException("Cannot get future process value after stop for: " + process, ex);
+            throw new LifecycleException("Cannot get future process value after stop for: " + identity, ex);
         }
-        return cntState.immutableContainer();
+        return new ManagedContainerState(process).immutableContainer();
     }
 
     Container destroyContainer(ContainerIdentity identity) {
+
         ManagedContainerState cntState = getRequiredContainerState(identity);
         Set<ContainerIdentity> childIdentities = cntState.getChildIdentities();
         IllegalStateAssertion.assertTrue(childIdentities.isEmpty(), "Cannot destroy a container that has active child containers: " + cntState);
@@ -144,11 +123,9 @@ public final class RemoteContainerService extends AbstractComponent {
         if (cntState.getState() == State.STARTED) {
             stopContainer(identity);
         }
-        LOGGER.info("Destroy container: {}", cntState);
-        containers.remove(identity);
+
         ManagedProcess process = cntState.getManagedProcess();
         process = agent.get().destroyProcess(process.getIdentity());
-        containers.put(cntState.getIdentity(), cntState = new ManagedContainerState(process));
         return cntState.immutableContainer();
     }
 
@@ -161,9 +138,13 @@ public final class RemoteContainerService extends AbstractComponent {
     }
 
     private ManagedContainerState getRequiredContainerState(ContainerIdentity identity) {
-        ManagedContainerState cntState = containers.get(identity);
-        IllegalStateAssertion.assertNotNull(cntState, "Container not registered: " + identity);
-        return cntState;
+        ManagedProcess process = agent.get().getManagedProcess(getProcessIdentity(identity));
+        IllegalStateAssertion.assertNotNull(process, "Cannot obtain managed process: " + identity);
+        return new ManagedContainerState(process);
+    }
+
+    private ProcessIdentity getProcessIdentity(ContainerIdentity identity) {
+        return ProcessIdentity.create(identity.getSymbolicName());
     }
 
     static class ManagedContainerState extends AttributeSupport {
