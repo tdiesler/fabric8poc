@@ -74,4 +74,69 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
 
     private void activateInternal() {
     }
+
+    protected void bindRuntimeService(RuntimeService runtimeService) {
+        this.runtimeService = runtimeService;
+    }
+
+    protected void unbindRuntimeService(RuntimeService runtimeService) {
+        this.runtimeService = null;
+    }
+
+    protected void bindBootConfiguration(BootConfiguration bootConfiguration) {
+        this.bootConfiguration = bootConfiguration;
+    }
+
+    protected void unbindBootConfiguration(BootConfiguration bootConfiguration) {
+        this.bootConfiguration = null;
+    }
+
+    protected void bindBootstrapService(BootstrapService bootstrapService) {
+        this.bootstrapService = bootstrapService;
+    }
+
+    protected void unbindBootstrapService(BootstrapService bootstrapService) {
+        this.bootstrapService = null;
+    }
+
+    protected void bindContainerManager(ContainerManager containerManager) {
+        this.containerManager = containerManager;
+    }
+
+    protected void unbindContainerManager(ContainerManager containerManager) {
+        this.containerManager = null;
+    }
+
+    protected void bindContainerService(ContainerService containerService) {
+        this.containerService = containerService;
+    }
+
+    protected void unbindContainerService(ContainerService containerService) {
+        this.containerService = null;
+    }
+
+    protected void bindMBeansProvider(MBeansProvider mBeansProvider) {
+        this.mBeansProvider = mBeansProvider;
+    }
+
+    protected void unbindMBeansProvider(MBeansProvider mBeansProvider) {
+        this.mBeansProvider = null;
+    }
+
+    protected void bindProfileManager(ProfileManager profileManager) {
+        this.profileManager = profileManager;
+    }
+
+    protected void unbindProfileManager(ProfileManager profileManager) {
+        this.profileManager = null;
+    }
+
+    protected void bindProvisioner(Provisioner provisioner) {
+        this.provisioner = provisioner;
+    }
+
+    protected void unbindProvisioner(Provisioner provisioner) {
+        this.provisioner = null;
+    }
+
 }
