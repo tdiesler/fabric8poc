@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-//@Component(name = "io.fabric8.zookeeper.acl", policy = ConfigurationPolicy.OPTIONAL, immediate = true)
-//@Service({ACLProvider.class })
+@Component(configurationPid = ZookeeperConstants.ZOOKEEPER_ACL_PID, policy = ConfigurationPolicy.OPTIONAL, immediate = true)
+@Service({ACLProvider.class })
 public class FabricACLProvider extends AbstractComponent implements ACLProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricACLProvider.class);

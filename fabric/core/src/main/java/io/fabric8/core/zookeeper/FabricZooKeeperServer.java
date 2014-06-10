@@ -17,16 +17,12 @@ package io.fabric8.core.zookeeper;
 
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
@@ -40,8 +36,14 @@ import org.apache.zookeeper.server.quorum.QuorumStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
-@Component(label = "Fabric8 ZooKeeper Server", configurationPid = ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
+
+@Component(label = "Fabric8 ZooKeeper Server", configurationPid = ZookeeperConstants.ZOOKEEPER_SERVER_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true, metatype = true)
 @org.apache.felix.scr.annotations.Properties({
         @Property(name = "clientPort", intValue = FabricZooKeeperServer.DEFAULT_CLIENT_PORT, label = "Client Port", description = "The port to listen for client connections"),
         @Property(name = "tickTime", intValue = ZooKeeperServer.DEFAULT_TICK_TIME, label = "Tick Time", description = "The basic time unit in milliseconds used by ZooKeeper. It is used to do heartbeats and the minimum session timeout will be twice the tickTime"),
@@ -54,7 +56,7 @@ import org.slf4j.LoggerFactory;
         @Property(name = "clientPortAddress", value = FabricZooKeeperServer.DEFAULT_CLIENT_PORT_ADDRESS, label = "Client Port Address", description = "The address (ipv4, ipv6 or hostname) to listen for client connections; that is, the address that clients attempt to connect to"),
         @Property(name = "minSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MINIMUM_SESSION_TIMEOUT, label = "Minimum Session Timeout", description = "The minimum session timeout in milliseconds that the server will allow the client to negotiate"),
         @Property(name = "maxSessionTimeout", intValue = FabricZooKeeperServer.DEFAULT_MAXIMUM_SESSION_TIMEOUT, label = "Maximum Session Timeout", description = "Limits the number of concurrent connections (at the socket level) that a single client, identified by IP address, may make to a single member of the ZooKeeper ensemble"), })
-*/
+
 public class FabricZooKeeperServer extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricZooKeeperServer.class);

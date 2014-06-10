@@ -15,14 +15,30 @@
 
 package io.fabric8.core.zookeeper;
 
-import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MULTIPLE;
-import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
-import static org.jboss.gravia.utils.IOUtils.safeClose;
 import io.fabric8.core.utils.PasswordEncoder;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.StringUtils;
+import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.api.ACLProvider;
+import org.apache.curator.framework.state.ConnectionState;
+import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,23 +49,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.curator.ensemble.fixed.FixedEnsembleProvider;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.api.ACLProvider;
-import org.apache.curator.framework.state.ConnectionState;
-import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.RetryNTimes;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Reference;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.CONNECTION_TIMEOUT;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_INTERVAL_MS;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.RETRY_POLICY_MAX_RETRIES;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.SESSION_TIMEOUT;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PASSWORD;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_PID;
+import static io.fabric8.core.zookeeper.ZookeeperConstants.ZOOKEEPER_URL;
+import static org.apache.felix.scr.annotations.ReferenceCardinality.OPTIONAL_MULTIPLE;
+import static org.apache.felix.scr.annotations.ReferencePolicy.DYNAMIC;
+import static org.jboss.gravia.utils.IOUtils.safeClose;
 
-/*
 @Component(configurationPid = ZOOKEEPER_PID, label = "Fabric8 ZooKeeper Client Factory", policy = ConfigurationPolicy.OPTIONAL, immediate = true, metatype = true)
 @Properties(
         {
@@ -61,7 +71,6 @@ import org.slf4j.LoggerFactory;
                 @Property(name = SESSION_TIMEOUT, label = "Session Timeout", description = "The amount of time to wait before timing out the session", value = "${zookeeper.session.timeout}")
         }
 )
-*/
 public class ManagedCuratorFramework  extends AbstractComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManagedCuratorFramework.class);
 

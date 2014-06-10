@@ -18,6 +18,7 @@ public interface ZookeeperConstants {
 
     String ZOOKEEPER_PID = "io.fabric8.zookeeper";
     String ZOOKEEPER_SERVER_PID = "io.fabric8.zookeeper.server";
+    String ZOOKEEPER_ACL_PID = "io.fabric8.zookeeper.acl";
 
     String ZOOKEEPER_URL = "zookeeper.url";
     String ZOOKEEPER_PASSWORD = "zookeeper.password";
