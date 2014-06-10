@@ -19,6 +19,7 @@
  */
 package io.fabric8.domain.agent.internal;
 
+import static io.fabric8.domain.agent.internal.AgentLogger.LOGGER;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.Agent;
 import io.fabric8.spi.AgentIdentity;
@@ -50,15 +51,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.JMException;
-import javax.management.ListenerNotFoundException;
-import javax.management.MBeanNotificationInfo;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
-import javax.management.NotificationEmitter;
-import javax.management.NotificationFilter;
-import javax.management.NotificationListener;
 import javax.management.StandardEmitterMBean;
 import javax.management.remote.JMXConnector;
 
@@ -112,7 +108,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     private StandardEmitterMBean agentMBean;
 
     private AgentRegistration localAgent;
-    private AgentIdentity agentId;
 
     @Activate
     void activate(Map<String, Object> config) throws Exception {
@@ -129,7 +124,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     private void activateInternal() throws Exception {
 
         String runtimeId = RuntimeIdentity.getIdentity();
-        agentId = AgentIdentity.create(runtimeId);
+        AgentIdentity agentId = AgentIdentity.create(runtimeId);
 
         // Register this Agent
         InetAddress targetHost = InetAddress.getByName(networkProvider.get().getIp());
@@ -139,18 +134,42 @@ public final class AgentService extends AbstractComponent implements Agent {
         localAgent = new AgentRegistration(agentId, targetHost, jmxServerUrl, jmxUsername, jmxPassword);
         agentTopology.addAgent(localAgent);
 
+        LOGGER.info("Bootstrap agent: {}", localAgent);
+
         // Register the {@link Agent} MBean
         agentMBean = new StandardEmitterMBean(this, Agent.class, new NotificationBroadcasterSupport());
         mbeanServer.get().registerMBean(agentMBean, Agent.OBJECT_NAME);
 
-        // Register this agent with the cluster
+        /* Register this agent with the cluster
         AgentTopology topology = registerAgentWithCluster(localAgent);
         if (topology != null) {
             agentTopology.updateTopology(topology);
         }
+        */
     }
 
     private void deactivateInternal() throws JMException {
+
+        /* Unregister this agent from the cluster
+        for (AgentRegistration agentReg : agentTopology.getAgentRegistrations().values()) {
+            if (!agentReg.equals(localAgent)) {
+                try {
+                    JMXConnector connector = agentReg.getJMXConnector(200, TimeUnit.MILLISECONDS);
+                    try {
+                        MBeanServerConnection server = connector.getMBeanServerConnection();
+                        Agent agent = ManagementUtils.getMBeanProxy(server, Agent.OBJECT_NAME, Agent.class);
+                        agent.unregisterAgent(localAgent.getIdentity());
+                    } finally {
+                        IOUtils.safeClose(connector);
+                    }
+                } catch (Exception ex) {
+                    LOGGER.warn("Cannot unregister agent '" + localAgent + "' from: " + agentReg, ex);
+                }
+            }
+        }
+        */
+
+        // Unregister the {@link Agent} MBean
         mbeanServer.get().unregisterMBean(OBJECT_NAME);
     }
 
@@ -162,13 +181,13 @@ public final class AgentService extends AbstractComponent implements Agent {
 
         String jmxRemoteUsername = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_USERNAME);
         String jmxRemotePassword = runtimeService.get().getProperty(RuntimeService.PROPERTY_AGENT_JMX_PASSWORD);
-        JMXConnector jmxConnector = ManagementUtils.getJMXConnector(jmxRemoteServerUrl, jmxRemoteUsername, jmxRemotePassword, 200, TimeUnit.MILLISECONDS);
+        JMXConnector connector = ManagementUtils.getJMXConnector(jmxRemoteServerUrl, jmxRemoteUsername, jmxRemotePassword, 200, TimeUnit.MILLISECONDS);
         try {
-            MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
+            MBeanServerConnection server = connector.getMBeanServerConnection();
             Agent agent = ManagementUtils.getMBeanProxy(server, Agent.OBJECT_NAME, Agent.class);
             return agent.registerAgent(agentReg);
         } finally {
-            IOUtils.safeClose(jmxConnector);
+            IOUtils.safeClose(connector);
         }
     }
 
@@ -195,11 +214,12 @@ public final class AgentService extends AbstractComponent implements Agent {
     @Override
     public ManagedProcess createProcess(ProcessOptions options) {
         if (localAgentIsTarget(options)) {
+            LOGGER.info("Create process: {}", options);
             ProcessHandler handler = getProcessHandler(options, 10, TimeUnit.SECONDS);
             ProcessIdentity processId = getProcessIdentity(options);
-            ManagedProcess process = handler.create(localAgent, options, processId);
+            ManagedProcess process = handler.create(options, processId);
             localProcesses.put(processId, new ProcessRegistration(handler, process));
-            agentTopology.addProcess(processId, agentId);
+            agentTopology.addProcess(processId, localAgent.getIdentity());
             return new ImmutableManagedProcess(process);
         } else {
             throw new UnsupportedOperationException();
@@ -221,9 +241,19 @@ public final class AgentService extends AbstractComponent implements Agent {
 
     @Override
     public AgentTopology registerAgent(AgentRegistration agentReg) {
+        LOGGER.info("Register agent: {}", agentReg);
         agentTopology.addAgent(agentReg);
         long seq = sequenceNumber.incrementAndGet();
-        agentMBean.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, agentReg, seq, agentReg.toString()));
+        agentMBean.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, agentReg, seq, "Agent registered: " + agentReg));
+        return agentTopology.immutableTopology();
+    }
+
+    @Override
+    public AgentTopology unregisterAgent(AgentIdentity agentId) {
+        LOGGER.info("Unregister agent: {}", agentId);
+        AgentRegistration agentReg = agentTopology.removeAgent(agentId);
+        long seq = sequenceNumber.incrementAndGet();
+        agentMBean.sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_DEREGISTRATION, agentId, seq, "Agent deregistered: " + agentReg));
         return agentTopology.immutableTopology();
     }
 
@@ -231,6 +261,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     public Future<ManagedProcess> startProcess(ProcessIdentity processId) throws LifecycleException {
         if (localAgentIsTarget(processId)) {
             ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            LOGGER.info("Start process: {}", preg);
             return preg.getProcessHandler().start();
         } else {
             throw new UnsupportedOperationException();
@@ -241,6 +272,12 @@ public final class AgentService extends AbstractComponent implements Agent {
     public Future<ManagedProcess> stopProcess(ProcessIdentity processId) throws LifecycleException {
         if (localAgentIsTarget(processId)) {
             ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            LOGGER.info("Stop process: {}", preg);
+
+            // [TODO] remove hack that cleans up topology for stopped process
+            AgentIdentity agentId = AgentIdentity.create(processId.getName());
+            agentTopology.removeAgent(agentId);
+
             return preg.getProcessHandler().stop();
         } else {
             throw new UnsupportedOperationException();
@@ -251,6 +288,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     public ManagedProcess destroyProcess(ProcessIdentity processId) {
         if (localAgentIsTarget(processId)) {
             ProcessRegistration preg = getRequiredProcessRegistration(processId);
+            LOGGER.info("Destroy process: {}", preg);
             ManagedProcess result = preg.getProcessHandler().destroy();
             agentTopology.removeProcess(processId);
             localProcesses.remove(processId);
@@ -273,7 +311,7 @@ public final class AgentService extends AbstractComponent implements Agent {
 
     private boolean localAgentIsTarget(ProcessIdentity processId) {
         AgentRegistration agentReg = agentTopology.getRequiredAgentRegistration(processId);
-        return agentId.equals(agentReg.getIdentity());
+        return localAgent.getIdentity().equals(agentReg.getIdentity());
     }
 
     private ProcessHandler getProcessHandler(ProcessOptions options, long timeout, TimeUnit unit) {
@@ -281,9 +319,8 @@ public final class AgentService extends AbstractComponent implements Agent {
         long end = now + unit.toMillis(timeout);
         while (now < end) {
             for (ProcessHandlerFactory factory : processHandlerFactories) {
-                ProcessHandler handler = factory.accept(options);
-                if (handler != null) {
-                    return handler;
+                if (factory.accept(options)) {
+                    return factory.createProcessHandler(mbeanServer.get(), localAgent);
                 }
             }
             try {

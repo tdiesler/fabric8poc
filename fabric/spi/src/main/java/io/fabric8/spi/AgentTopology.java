@@ -22,7 +22,6 @@ package io.fabric8.spi;
 import io.fabric8.spi.process.ProcessIdentity;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * The process/agent topology
@@ -32,12 +31,11 @@ import java.util.Set;
  */
 public interface AgentTopology {
 
-    Set<AgentIdentity> getAgentIdentities();
+    Map<AgentIdentity, AgentRegistration> getAgentRegistrations();
+
+    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
 
     AgentRegistration getAgentRegistration(AgentIdentity agentId);
 
     AgentRegistration getAgentRegistration(ProcessIdentity processId);
-
-    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
-
 }

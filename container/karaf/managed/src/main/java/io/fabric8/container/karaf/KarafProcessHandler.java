@@ -23,6 +23,7 @@ package io.fabric8.container.karaf;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
+import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
@@ -37,6 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.management.MBeanServer;
+
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -48,8 +51,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 public final class KarafProcessHandler extends AbstractProcessHandler {
 
-    public KarafProcessHandler() {
-        super(new RuntimePropertiesProvider());
+    public KarafProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
+        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
     }
 
     @Override

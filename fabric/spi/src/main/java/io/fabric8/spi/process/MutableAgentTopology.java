@@ -7,9 +7,7 @@ import io.fabric8.spi.AgentTopology;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -27,8 +25,8 @@ public final class MutableAgentTopology implements AgentTopology {
     private final Map<ProcessIdentity, AgentIdentity> processTopology = new ConcurrentHashMap<>();
 
     @Override
-    public Set<AgentIdentity> getAgentIdentities() {
-        return Collections.unmodifiableSet(new HashSet<>(agentTopology.keySet()));
+    public Map<AgentIdentity, AgentRegistration> getAgentRegistrations() {
+        return Collections.unmodifiableMap(new HashMap<>(agentTopology));
     }
 
     @Override
@@ -69,9 +67,7 @@ public final class MutableAgentTopology implements AgentTopology {
     }
 
     public void updateTopology(AgentTopology topology) {
-        for (AgentIdentity agentId : topology.getAgentIdentities()) {
-            agentTopology.put(agentId, topology.getAgentRegistration(agentId));
-        }
+        agentTopology.putAll(topology.getAgentRegistrations());
         processTopology.putAll(topology.getProcessMapping());
     }
 
@@ -106,8 +102,8 @@ public final class MutableAgentTopology implements AgentTopology {
         }
 
         @Override
-        public Set<AgentIdentity> getAgentIdentities() {
-            return Collections.unmodifiableSet(new HashSet<>(agentTopology.keySet()));
+        public Map<AgentIdentity, AgentRegistration> getAgentRegistrations() {
+            return Collections.unmodifiableMap(new HashMap<>(agentTopology));
         }
 
         @Override

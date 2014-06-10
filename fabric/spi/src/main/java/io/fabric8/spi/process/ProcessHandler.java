@@ -22,7 +22,6 @@ package io.fabric8.spi.process;
 import java.util.concurrent.Future;
 
 import io.fabric8.api.process.ProcessOptions;
-import io.fabric8.spi.AgentRegistration;
 
 import org.jboss.gravia.runtime.LifecycleException;
 
@@ -35,7 +34,7 @@ import org.jboss.gravia.runtime.LifecycleException;
  */
 public interface ProcessHandler {
 
-    ManagedProcess create(AgentRegistration agentReg, ProcessOptions options, ProcessIdentity identity);
+    ManagedProcess create(ProcessOptions options, ProcessIdentity identity);
 
     Future<ManagedProcess> start() throws LifecycleException;
 

@@ -23,6 +23,7 @@ package io.fabric8.container.wildfly;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
+import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
 
@@ -35,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.management.MBeanServer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -62,8 +64,8 @@ import org.w3c.dom.Element;
  */
 public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
-    public WildFlyProcessHandler() {
-        super(new RuntimePropertiesProvider());
+    public WildFlyProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
+        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
     }
 
     @Override

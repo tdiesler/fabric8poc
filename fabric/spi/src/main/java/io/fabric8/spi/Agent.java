@@ -44,6 +44,8 @@ public interface Agent {
 
     String NOTIFICATION_TYPE_AGENT_REGISTRATION = "AgentRegistration";
 
+    String NOTIFICATION_TYPE_AGENT_DEREGISTRATION = "AgentDeregistration";
+
     Set<String> getProcessHandlers();
 
     Set<ProcessIdentity> getProcessIdentities();
@@ -61,4 +63,6 @@ public interface Agent {
     AgentTopology getAgentTopology();
 
     AgentTopology registerAgent(AgentRegistration agentReg);
+
+    AgentTopology unregisterAgent(AgentIdentity agentId);
 }

@@ -64,9 +64,15 @@
         
         <!-- Test Dependencies -->
         <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-wildfly-connector</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-runtime-embedded</artifactId>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

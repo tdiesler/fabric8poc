@@ -88,23 +88,21 @@ public final class ManagementUtils {
 
         // Find the fabric8-container-wildfly-connector module and use its classloader
         if (RuntimeType.KARAF == RuntimeType.getRuntimeType() && jmxServiceURL.startsWith("service:jmx:http-remoting-jmx")) {
-            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
-            if (env.get(classLoaderKey) == null) {
+            if (env.get(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER) == null) {
                 Runtime runtime = RuntimeLocator.getRequiredRuntime();
                 String symbolicName = "fabric8-container-wildfly-connector";
                 Set<Module> modules = runtime.getModules(symbolicName, null);
                 IllegalStateAssertion.assertFalse(modules.isEmpty(), "Cannot find module: " + symbolicName);
                 ClassLoader classLoader = modules.iterator().next().adapt(ClassLoader.class);
-                env.put(classLoaderKey, classLoader);
+                env.put(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER, classLoader);
             }
         }
 
         // Find the org.jboss.remoting-jmx module and use its classloader
         if (RuntimeType.WILDFLY == RuntimeType.getRuntimeType()) {
-            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
-            if (env.get(classLoaderKey) == null) {
+            if (env.get(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER) == null) {
                 ClassLoader classLoader = JmxEnvironmentEnhancer.getClassLoader(env);
-                env.put(classLoaderKey, classLoader);
+                env.put(JMXConnectorFactory.PROTOCOL_PROVIDER_CLASS_LOADER, classLoader);
             }
         }
 
