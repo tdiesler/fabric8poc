@@ -74,4 +74,69 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
 
     private void activateInternal() {
     }
+
+    void bindRuntimeService(RuntimeService runtimeService) {
+        this.runtimeService = runtimeService;
+    }
+
+    void unbindRuntimeService(RuntimeService runtimeService) {
+        this.runtimeService = null;
+    }
+
+    void bindBootConfiguration(BootConfiguration bootConfiguration) {
+        this.bootConfiguration = bootConfiguration;
+    }
+
+    void unbindBootConfiguration(BootConfiguration bootConfiguration) {
+        this.bootConfiguration = null;
+    }
+
+    void bindBootstrapService(BootstrapService bootstrapService) {
+        this.bootstrapService = bootstrapService;
+    }
+
+    void unbindBootstrapService(BootstrapService bootstrapService) {
+        this.bootstrapService = null;
+    }
+
+    void bindContainerManager(ContainerManager containerManager) {
+        this.containerManager = containerManager;
+    }
+
+    void unbindContainerManager(ContainerManager containerManager) {
+        this.containerManager = null;
+    }
+
+    void bindContainerService(ContainerService containerService) {
+        this.containerService = containerService;
+    }
+
+    void unbindContainerService(ContainerService containerService) {
+        this.containerService = null;
+    }
+
+    void bindMBeansProvider(MBeansProvider mBeansProvider) {
+        this.mBeansProvider = mBeansProvider;
+    }
+
+    void unbindMBeansProvider(MBeansProvider mBeansProvider) {
+        this.mBeansProvider = null;
+    }
+
+    void bindProfileManager(ProfileManager profileManager) {
+        this.profileManager = profileManager;
+    }
+
+    void unbindProfileManager(ProfileManager profileManager) {
+        this.profileManager = null;
+    }
+
+    void bindProvisioner(Provisioner provisioner) {
+        this.provisioner = provisioner;
+    }
+
+    void unbindProvisioner(Provisioner provisioner) {
+        this.provisioner = null;
+    }
+
 }

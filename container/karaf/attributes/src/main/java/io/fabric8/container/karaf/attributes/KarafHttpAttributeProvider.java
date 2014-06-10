@@ -121,4 +121,11 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
     private String getHttpsUrl(String id, int port) {
         return httpsUrl = String.format(HTTP_URL_FORMAT, "https", id, port);
     }
+
+    void bindConfigurer(Configurer configurer) {
+        this.configurer = configurer;
+    }
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer = null;
+    }
 }

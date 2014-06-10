@@ -154,4 +154,12 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
+
+    void bindConfigurer(Configurer configurer) {
+        this.configurer = configurer;
+    }
+    void unbindConfigurer(Configurer configurer) {
+        this.configurer = null;
+    }
+
 }

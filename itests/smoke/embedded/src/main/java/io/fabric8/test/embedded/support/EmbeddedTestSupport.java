@@ -21,6 +21,8 @@ package io.fabric8.test.embedded.support;
 
 import io.fabric8.spi.BootstrapComplete;
 
+import java.io.File;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.runtime.Runtime;
@@ -41,6 +43,16 @@ public abstract class EmbeddedTestSupport {
             "fabric8-container-karaf-managed", "fabric8-container-tomcat-managed", "fabric8-container-wildfly-managed" };
 
     public static void beforeClass() throws Exception {
+
+        URL location = EmbeddedTestSupport.class.getProtectionDomain().getCodeSource().getLocation();
+        File basedir = new File(location.getPath()).getParentFile().getParentFile();
+
+        System.setProperty("log4j.configuration", "file://"+new File(basedir, "src/test/resources/logging.properties").getCanonicalPath());
+        System.setProperty("basedir", basedir.getCanonicalPath());
+        System.setProperty("runtime.id", "embedded");
+        System.setProperty("runtime.home", new File(basedir, "target/home").getCanonicalPath());
+        System.setProperty("runtime.data", new File(basedir, "target/home/data").getCanonicalPath());
+        System.setProperty("runtime.conf", new File(basedir, "target/home/conf").getCanonicalPath());
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
