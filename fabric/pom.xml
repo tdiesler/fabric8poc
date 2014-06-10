@@ -38,6 +38,7 @@
         <module>api</module>
         <module>spi</module>
         <module>core</module>
+        <module>git</module>
     </modules>
     
 </project>

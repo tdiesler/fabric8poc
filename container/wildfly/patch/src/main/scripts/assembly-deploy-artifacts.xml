@@ -48,6 +48,7 @@
                 <include>*:fabric8-container-wildfly-managed:jar</include>
                 <include>*:fabric8-container-wildfly-attributes:jar</include>
                 <include>*:fabric8-domain-agent:jar</include>
+                <include>*:fabric8-git:jar</include>
                 <include>*:guava:jar</include>
                 <include>*:zookeeper:jar</include>
             </includes>

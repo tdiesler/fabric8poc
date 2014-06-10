@@ -30,6 +30,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.git.GitService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
@@ -108,6 +109,8 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
+    @Reference(referenceInterface = GitService.class)
+    private final ValidatingReference<GitService> gitService = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileRegistry.class)
     private final ValidatingReference<ProfileRegistry> profileRegistry = new ValidatingReference<>();
 
@@ -521,6 +524,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
+    }
+
+    void bindGitService(GitService service) {
+        gitService.bind(service);
+    }
+    void unbindGitService(GitService service) {
+        gitService.bind(service);
     }
 
     void bindProfileRegistry(ProfileRegistry service) {

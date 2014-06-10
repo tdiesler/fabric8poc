@@ -20,7 +20,7 @@
   -->
 
 
-<module xmlns="urn:jboss:module:1.1" name="io.fabric8.service">
+<module xmlns="urn:jboss:module:1.1" name="io.fabric8.core">
 
     <properties>
         <property name="jboss.api" value="private"/>
@@ -28,6 +28,7 @@
 
     <resources>
         <resource-root path="fabric8-core-${project.version}.jar"/>
+        <resource-root path="fabric8-git-${project.version}.jar"/>
     </resources>
 
     <dependencies>

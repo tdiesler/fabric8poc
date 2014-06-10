@@ -21,8 +21,8 @@ package io.fabric8.test.embedded.support;
 
 import io.fabric8.spi.BootstrapComplete;
 
-import java.io.File;
-import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.gravia.runtime.Runtime;
@@ -39,20 +39,19 @@ import org.junit.Assert;
 public abstract class EmbeddedTestSupport {
 
     private static String[] moduleNames = new String[] { "gravia-provision", "gravia-resolver", "gravia-repository",
-            "fabric8-api", "fabric8-spi", "fabric8-domain-agent", "fabric8-core",
+            "fabric8-api", "fabric8-spi", "fabric8-core", "fabric8-git", "fabric8-domain-agent",
             "fabric8-container-karaf-managed", "fabric8-container-tomcat-managed", "fabric8-container-wildfly-managed" };
 
     public static void beforeClass() throws Exception {
 
-        URL location = EmbeddedTestSupport.class.getProtectionDomain().getCodeSource().getLocation();
-        File basedir = new File(location.getPath()).getParentFile().getParentFile();
+        Path basedir = Paths.get("").toAbsolutePath();
+        Path homeDir = basedir.resolve(Paths.get("target", "home"));
 
-        System.setProperty("log4j.configuration", "file://"+new File(basedir, "src/test/resources/logging.properties").getCanonicalPath());
-        System.setProperty("basedir", basedir.getCanonicalPath());
         System.setProperty("runtime.id", "embedded");
-        System.setProperty("runtime.home", new File(basedir, "target/home").getCanonicalPath());
-        System.setProperty("runtime.data", new File(basedir, "target/home/data").getCanonicalPath());
-        System.setProperty("runtime.conf", new File(basedir, "target/home/conf").getCanonicalPath());
+        System.setProperty("basedir", basedir.toString());
+        System.setProperty("runtime.home", homeDir.toString());
+        System.setProperty("runtime.data", homeDir.resolve("data").toString());
+        System.setProperty("runtime.conf", homeDir.resolve("conf").toString());
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {

@@ -99,9 +99,10 @@
             <include name="fabric8-domain-agent-*"/>
         </fileset>
     </copy>
-    <copy todir="${wildfly.patch.dir}/modules/io/fabric8/service/main" overwrite="true">
+    <copy todir="${wildfly.patch.dir}/modules/io/fabric8/core/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
         	<include name="fabric8-core-*"/>
+        	<include name="fabric8-git-*"/>
         </fileset>
     </copy>
     <copy todir="${wildfly.patch.dir}/modules/org/wildfly/extension/fabric/main" overwrite="true">

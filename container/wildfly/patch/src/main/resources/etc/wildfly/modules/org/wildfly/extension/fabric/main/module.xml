@@ -33,7 +33,7 @@
     <dependencies>
         <module name="io.fabric8.api"/>
         <module name="io.fabric8.spi"/>
-        <module name="io.fabric8.service"/>
+        <module name="io.fabric8.core"/>
         <module name="org.jboss.as.controller"/>
         <module name="org.jboss.as.security"/>
         <module name="org.jboss.as.server"/>
