@@ -24,7 +24,6 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItem.Filter;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
-import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.Failure;
@@ -44,13 +43,11 @@ import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
-import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.BootConfiguration;
-import io.fabric8.spi.ContainerJmxEndpoint;
+import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
-import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.permit.PermitManager;
@@ -67,6 +64,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -144,8 +142,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
-    @Reference(referenceInterface = JmxAttributeProvider.class)
-    private final ValidatingReference<JmxAttributeProvider> jmxProvider = new ValidatingReference<>();
+    @Reference(referenceInterface = ContainerRegistration.class)
+    private final ValidatingReference<ContainerRegistration> containerRegistration = new ValidatingReference<>();
+    @Reference(referenceInterface = CurrentContainerService.class)
+    private final ValidatingReference<CurrentContainerService> currentContainerService = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
@@ -218,56 +218,31 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Create the current container
         ContainerRegistry registry = containerRegistry.get();
-        if (!registry.getContainerIdentities().contains(currentIdentity)) {
+        Container container = registry.getRequiredContainer(currentIdentity);
 
-            // Get boot profile version
-            Version bootVersion = bootConfiguration.get().getVersion();
-            ProfileVersionState versionState = getRequiredProfileVersionState(bootVersion);
-
-            // Get boot profiles
-            List<String> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());
-
-            // Get JMX service endpoint
-            final String jmxServerUrl = jmxProvider.get().getJmxServerUrl();
-            Set<ServiceEndpoint> endpoints = Collections.<ServiceEndpoint>singleton(new ContainerJmxEndpoint(currentIdentity, jmxServerUrl));
-
-            CreateOptions options = new AbstractCreateOptions() {
-                {
-                    addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
-                }
-
+        LockHandle writeLock = aquireWriteLock(currentIdentity);
+        try {
+            final CountDownLatch provisionLatch = new CountDownLatch(1);
+            ProvisionEventListener provisionListener = new ProvisionEventListener() {
                 @Override
-                public RuntimeType getRuntimeType() {
-                    return RuntimeType.getRuntimeType();
+                public void processEvent(ProvisionEvent event) {
+                    provisionLatch.countDown();
                 }
             };
 
-            LockHandle writeLock = aquireWriteLock(currentIdentity);
+            // Start the current container
+            startContainerInternal(container, provisionListener);
+
             try {
-                Container container = registry.createContainer(null, currentIdentity, options, versionState, profiles, endpoints);
-                LOGGER.info("Create current container: {}", container);
-
-                final CountDownLatch provisionLatch = new CountDownLatch(1);
-                ProvisionEventListener provisionListener = new ProvisionEventListener() {
-                    @Override
-                    public void processEvent(ProvisionEvent event) {
-                        provisionLatch.countDown();
-                    }
-                };
-
-                // Start the current container
-                startContainerInternal(container, provisionListener);
-
-                try {
-                    boolean success = provisionLatch.await(10, TimeUnit.SECONDS);
-                    IllegalStateAssertion.assertTrue(success, "Cannot provision current container");
-                } catch (InterruptedException ex) {
-                    throw new IllegalStateException(ex);
-                }
-            } finally {
-                writeLock.unlock();
+                boolean success = provisionLatch.await(10, TimeUnit.SECONDS);
+                IllegalStateAssertion.assertTrue(success, "Cannot provision current container");
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
             }
+        } finally {
+            writeLock.unlock();
         }
+
     }
 
     @Override
@@ -305,8 +280,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             LockHandle readLock = aquireReadLock(identity);
             try {
                 ContainerRegistry registry = containerRegistry.get();
-                ProfileVersionState versionState = getRequiredProfileVersionState(options.getProfileVersion());
-                container = registry.createContainer(parentId, identity, options, versionState, options.getProfiles(), null);
+                container = registry.createContainer(parentId, identity, options, options.getProfileVersion(), options.getProfiles(), new LinkedHashSet<ServiceEndpoint>());
                 LOGGER.info("Create container: {}", container);
 
                 // Update parent/child association
@@ -666,8 +640,9 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Get list of resources for removal
         ContainerRegistry registry = containerRegistry.get();
+        CurrentContainerService resourceHolder = currentContainerService.get();
         List<ResourceIdentity> removalPending = new ArrayList<>();
-        Map<ResourceIdentity, ResourceHandle> currentResources = registry.getResourceHandles(identity);
+        Map<ResourceIdentity, ResourceHandle> currentResources = resourceHolder.getResourceHandles();
         for (ResourceIdentity resid : currentResources.keySet()) {
             if (allResources.get(resid) == null) {
                 removalPending.add(resid);
@@ -680,7 +655,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             ResourceHandle handle = currentResources.get(resid);
             handle.uninstall();
         }
-        registry.removeResourceHandles(identity, removalPending);
+        resourceHolder.removeResourceHandles(removalPending);
 
         // Install added resources
         Map<ResourceIdentity, ResourceHandle> addedResources = new LinkedHashMap<>();
@@ -691,7 +666,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 addedResources.put(resid, handle);
             }
         }
-        registry.addResourceHandles(identity, addedResources);
+        resourceHolder.addResourceHandles(addedResources);
 
         event = new ProvisionEvent(container, EventType.PROVISIONED, effective);
         eventDispatcher.get().dispatchProvisionEvent(event, listener);
@@ -873,11 +848,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         containerRegistry.unbind(service);
     }
 
-    void bindJmxProvider(JmxAttributeProvider service) {
-        jmxProvider.bind(service);
+    void bindContainerRegistration(ContainerRegistration service) {
+        containerRegistration.bind(service);
     }
-    void unbindJmxProvider(JmxAttributeProvider service) {
-        jmxProvider.unbind(service);
+    void unbindContainerRegistration(ContainerRegistration service) {
+        containerRegistration.unbind(service);
+    }
+
+    void bindCurrentContainerService(CurrentContainerService service) {
+        currentContainerService.bind(service);
+    }
+    void unbindCurrentContainerService(CurrentContainerService service) {
+        currentContainerService.unbind(service);
     }
 
     void bindProfileService(ProfileService service) {

@@ -19,8 +19,14 @@
  */
 package io.fabric8.test.embedded.support;
 
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerAttributes;
+import io.fabric8.api.FabricException;
 import io.fabric8.spi.AbstractJMXAttributeProvider;
+import io.fabric8.spi.AttributeProvider;
+import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 
 import java.io.File;
@@ -28,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +46,9 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -48,6 +58,7 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
+import io.fabric8.spi.utils.HostUtils;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.AbstractResourceInstaller;
@@ -135,7 +146,17 @@ public class EmbeddedUtils {
                 }
 
                 // Register the JMXAttributeProvider
-                syscontext.registerService(JmxAttributeProvider.class, new EmbeddedJmxAttributeProvider(jmxServerUrl), null);
+                Hashtable<String, Object> props = new Hashtable<>();
+                props.put("type", ContainerAttributes.TYPE);
+                props.put("classifier", "jmx");
+                syscontext.registerService(new String[]{AttributeProvider.class.getCanonicalName(), JmxAttributeProvider.class.getCanonicalName()}, new EmbeddedJmxAttributeProvider(jmxServerUrl), props);
+
+                props = new Hashtable<>();
+                props.put("type", ContainerAttributes.TYPE);
+                props.put("classifier", "network");
+                // Register the NetworkAttributeProvider
+                syscontext.registerService(new String[]{AttributeProvider.class.getCanonicalName(), NetworkAttributeProvider.class.getCanonicalName()}, new EmbeddedNetworkAttributeProvider(), props);
+
 
                 // Add initial runtime resources
                 String resname = "environment.xml";
@@ -317,9 +338,40 @@ public class EmbeddedUtils {
     }
 
     static final class EmbeddedJmxAttributeProvider extends AbstractJMXAttributeProvider {
-
         EmbeddedJmxAttributeProvider(String jmxServerUrl) {
             super(jmxServerUrl, null, null);
+        }
+    }
+
+    static final class EmbeddedNetworkAttributeProvider extends AttributeSupport implements NetworkAttributeProvider {
+        EmbeddedNetworkAttributeProvider() {
+            addAttribute(ContainerAttributes.ATTRIBUTE_KEY_HOSTNAME, getLocalHostName());
+            addAttribute(ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP, getLocalIp());
+            addAttribute(ContainerAttributes.ATTRIBUTE_KEY_BIND_ADDRESS, "0.0.0.0");
+            addAttribute(ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER, ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP.getName());
+        }
+
+        @Override
+        public String getIp() {
+            return getLocalIp();
+        }
+
+        @Override
+        public String getLocalIp() {
+            try {
+                return HostUtils.getLocalIp();
+            } catch (UnknownHostException e) {
+                throw FabricException.launderThrowable(e);
+            }
+        }
+
+        @Override
+        public String getLocalHostName() {
+            try {
+                return HostUtils.getLocalHostName();
+            } catch (UnknownHostException e) {
+                throw FabricException.launderThrowable(e);
+            }
         }
     }
 }
