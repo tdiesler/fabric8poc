@@ -50,6 +50,8 @@
                 <include>*:fabric8-domain-agent:jar</include>
                 <include>*:fabric8-git:jar</include>
                 <include>*:guava:jar</include>
+                <include>*:jolokia-osgi:jar</include>
+                <include>*:json-simple:jar</include>
                 <include>*:zookeeper:jar</include>
             </includes>
             <scope>provided</scope>

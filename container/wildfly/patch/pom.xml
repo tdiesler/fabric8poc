@@ -121,6 +121,11 @@
             <artifactId>zookeeper</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-osgi</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     
     <build>

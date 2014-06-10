@@ -29,6 +29,7 @@
         <bundle>mvn:io.fabric8.poc/fabric8-domain-agent/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-git/${project.version}</bundle>
         <bundle>mvn:io.fabric8.poc/fabric8-spi/${project.version}</bundle>
+        <bundle>mvn:org.jolokia/jolokia-osgi/${version.jolokia}</bundle>
     </feature>
 
     <feature name="curator" version="${project.version}" resolver="(obr)">

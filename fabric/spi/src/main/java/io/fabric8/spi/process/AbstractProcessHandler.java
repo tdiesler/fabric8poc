@@ -22,7 +22,6 @@ package io.fabric8.spi.process;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.process.ProcessOptions;
-import io.fabric8.spi.Agent;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.ManagedProcess.State;
 import io.fabric8.spi.utils.HostUtils;
@@ -31,16 +30,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
-import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
-import javax.management.Notification;
-import javax.management.NotificationListener;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -53,6 +47,7 @@ import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.runtime.LifecycleException;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
+import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -117,7 +112,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
                         IllegalStateAssertion.assertTrue(parentDir.exists() || parentDir.mkdirs(), "Cannot create target directory: " + parentDir);
 
                         FileOutputStream fos = new FileOutputStream(targetFile);
-                        copyStream(ais, fos);
+                        IOUtils.copyStream(ais, fos);
                         fos.close();
 
                         if (needContainerHome && homeDir == null) {
@@ -296,22 +291,6 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
 
     protected int nextAvailablePort(int portValue, InetAddress bindAddr) {
         return HostUtils.nextAvailablePort(portValue, bindAddr);
-    }
-
-    // [TODO] call IOUtils.copyStream()
-    private static long copyStream(InputStream input, OutputStream output) throws IOException {
-        return copyStream(input, output, 8024);
-    }
-
-    private static long copyStream(InputStream input, OutputStream output, int buffersize) throws IOException {
-        final byte[] buffer = new byte[buffersize];
-        int n = 0;
-        long count=0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            count += n;
-        }
-        return count;
     }
 
     /**

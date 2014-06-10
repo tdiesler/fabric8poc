@@ -56,7 +56,7 @@ import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.runtime.ModuleActivatorBridge;
+import org.jboss.gravia.runtime.BundleActivatorBridge;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
@@ -160,7 +160,7 @@ public abstract class RequirementItemTestBase {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_A + ".war");
         archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
-        archive.addClasses(CamelTransformHttpActivator.class, ModuleActivatorBridge.class);
+        archive.addClasses(CamelTransformHttpActivator.class, BundleActivatorBridge.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -168,9 +168,9 @@ public abstract class RequirementItemTestBase {
                     OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
                     builder.addBundleManifestVersion(2);
                     builder.addBundleSymbolicName(RESOURCE_A);
-                    builder.addBundleActivator(ModuleActivatorBridge.class);
+                    builder.addBundleActivator(BundleActivatorBridge.class);
                     builder.addManifestHeader(Constants.MODULE_ACTIVATOR, CamelTransformHttpActivator.class.getName());
-                    builder.addImportPackages(ModuleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
+                    builder.addImportPackages(BundleActivatorBridge.class, Runtime.class, Servlet.class, HttpServlet.class, HttpService.class);
                     builder.addImportPackages(CamelContext.class, DefaultCamelContext.class, RouteBuilder.class, RouteDefinition.class);
                     builder.addBundleClasspath("WEB-INF/classes");
                     return builder.openStream();

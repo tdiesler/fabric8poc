@@ -39,6 +39,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.gravia.Constants;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.repository.Repository;
 import org.jboss.gravia.resolver.Resolver;
@@ -64,6 +65,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.jolokia.osgi.JolokiaActivator;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
@@ -110,17 +112,7 @@ public class FabricBootstrapService extends AbstractService<Void> {
         // Install and start this as a {@link Module}
         ModuleClassLoader classLoader = (ModuleClassLoader) getClass().getClassLoader();
         try {
-            URL extensionURL = null;
-            Enumeration<URL> resources = classLoader.getResources(JarFile.MANIFEST_NAME);
-            while (resources.hasMoreElements()) {
-                URL nextURL = resources.nextElement();
-                if (nextURL.getPath().contains("wildfly-extension")) {
-                    extensionURL = nextURL;
-                    break;
-                }
-            }
-            Manifest manifest = new Manifest(extensionURL.openStream());
-            Dictionary<String, String> headers = new ManifestHeadersProvider(manifest).getHeaders();
+            Dictionary<String, String> headers = getManifestHeaders(classLoader, "wildfly-extension");
             module = runtime.installModule(classLoader, headers);
 
             // Attach the {@link ModuleEntriesProvider} so
@@ -137,14 +129,17 @@ public class FabricBootstrapService extends AbstractService<Void> {
             throw new StartException(ex);
         }
 
-        // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
-        /*
-        Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
-        handlers.add(new KarafContainerCreateHandler());
-        handlers.add(new TomcatContainerCreateHandler());
-        handlers.add(new WildFlyContainerCreateHandler());
-        registerContainerCreateHandlers(syscontext, handlers);
-        */
+        // Install and start the Jolokia module
+        try {
+            classLoader = (ModuleClassLoader) JolokiaActivator.class.getClassLoader();
+            Dictionary<String, String> headers = getManifestHeaders(classLoader, "jolokia-osgi");
+            headers.put(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
+            runtime.installModule(classLoader, headers).start();
+        } catch (RuntimeException rte) {
+            throw rte;
+        } catch (Exception ex) {
+            throw new StartException(ex);
+        }
 
         // Open service trackers for {@link Resolver}, {@link Repository}, {@link Provisioner}
         trackers = new HashSet<ServiceTracker<?, ?>>();
@@ -165,6 +160,21 @@ public class FabricBootstrapService extends AbstractService<Void> {
             throw new StartException("Cannot read branding properties from: " + resname);
         }
         System.out.println(brandingProperties.getProperty("welcome"));
+    }
+
+    private Dictionary<String, String> getManifestHeaders(ModuleClassLoader classLoader, String jarNamePart) throws IOException {
+        URL manifestURL = null;
+        Enumeration<URL> resources = classLoader.getResources(JarFile.MANIFEST_NAME);
+        while (resources.hasMoreElements()) {
+            URL nextURL = resources.nextElement();
+            if (nextURL.getPath().contains(jarNamePart)) {
+                manifestURL = nextURL;
+                break;
+            }
+        }
+        Manifest manifest = new Manifest(manifestURL.openStream());
+        Dictionary<String, String> headers = new ManifestHeadersProvider(manifest).getHeaders();
+        return headers;
     }
 
     @Override
