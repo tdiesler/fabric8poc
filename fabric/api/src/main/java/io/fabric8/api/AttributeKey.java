@@ -40,6 +40,7 @@ public final class AttributeKey<T> {
     private static final String ATTRIBUTE_KEY_FORMAT = "(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
     private static final Pattern ATTRIBUTE_KEY_PATTERN = Pattern.compile(String.format(ATTRIBUTE_KEY_FORMAT, GROUP, GROUP, GROUP));
 
+    
     /**
      * A factory to create an attribute value
      */
