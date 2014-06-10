@@ -150,7 +150,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getEndpointIdentities(Class<T> type) {
+        public Set<ServiceEndpoint> getEndpoints(Class type) {
             throw new UnsupportedOperationException();
         }
 

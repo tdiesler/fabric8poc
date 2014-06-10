@@ -36,7 +36,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({AttributeProvider.class, NetworkAttributeProvider.class})
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "network")
+})
 public class NetworkAttributeProviderImpl extends AbstractAttributeProvider implements NetworkAttributeProvider {
 
     private static final String ATTRIBUTE_POINTER_FORMAT = "${container:%s/%s}";
@@ -63,8 +66,6 @@ public class NetworkAttributeProviderImpl extends AbstractAttributeProvider impl
 
     @Override
     public String getIp() {
-        // [TODO] compute ip
-        // return ip;
         return localIp;
     }
 

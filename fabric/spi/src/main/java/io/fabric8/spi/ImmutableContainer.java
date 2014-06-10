@@ -52,7 +52,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
 
 
     private Version profileVersion;
-    private Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
+    private Set<ServiceEndpoint> endpoints = new HashSet<>();
     private Set<ContainerIdentity> children = new HashSet<>();
     private List<String> profiles = new ArrayList<>();
     private ContainerIdentity parent;
@@ -110,11 +110,11 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public <T extends ServiceEndpoint> Set<ServiceEndpointIdentity<?>> getEndpointIdentities(Class<T> type) {
-        Set<ServiceEndpointIdentity<?>> result = new HashSet<>();
-        for (ServiceEndpointIdentity<?> epid : endpoints) {
-            if (type == null || type.isAssignableFrom(epid.getType())) {
-                result.add(epid);
+    public Set<ServiceEndpoint> getEndpoints(Class type) {
+        Set<ServiceEndpoint> result = new HashSet<>();
+        for (ServiceEndpoint endpoint : endpoints) {
+            if (type == null || type.isAssignableFrom(endpoint.getIdentity().getType())) {
+                result.add(endpoint);
             }
         }
         return Collections.unmodifiableSet(result);
@@ -149,7 +149,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
             return this;
         }
 
-        public Builder addServiceEndpoints(Set<ServiceEndpointIdentity<?>> endpoints) {
+        public Builder addServiceEndpoints(Set<ServiceEndpoint> endpoints) {
             container.endpoints.addAll(endpoints);
             return this;
         }

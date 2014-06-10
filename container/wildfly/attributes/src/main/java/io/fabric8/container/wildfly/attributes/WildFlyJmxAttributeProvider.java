@@ -35,9 +35,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({ AttributeProvider.class, JmxAttributeProvider.class})
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "jmx")
+})
 public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider {
 
     private static final String JMX_REMOTE_PORT = "jboss.management.http.port";

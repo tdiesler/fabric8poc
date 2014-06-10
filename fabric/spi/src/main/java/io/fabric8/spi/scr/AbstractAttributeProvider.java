@@ -16,14 +16,11 @@
 package io.fabric8.spi.scr;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.spi.AttributeListener;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.AttributeSupport;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * An abstract component for {@link AttributeProvider}.
@@ -31,17 +28,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public abstract class AbstractAttributeProvider extends AbstractComponent implements AttributeProvider {
 
     private final AttributeSupport delegate = new AttributeSupport();
-    private final List<AttributeListener> listeners = new CopyOnWriteArrayList<>();
-
-    @Override
-    public void addListener(AttributeListener listener) {
-        listeners.add(listener);
-    }
-
-    @Override
-    public void removeListener(AttributeListener listener) {
-        listeners.remove(listener);
-    }
 
     @Override
     public Set<AttributeKey<?>> getAttributeKeys() {
@@ -77,21 +63,11 @@ public abstract class AbstractAttributeProvider extends AbstractComponent implem
 
     public <T> T putAttribute(AttributeKey<T> key, T value) {
         T oldValue = delegate.addAttribute(key, value);
-        for (AttributeListener listener : listeners) {
-            if (oldValue == null) {
-                listener.attributeAdded(key, value);
-            } else {
-                listener.attributeChanged(key, value);
-            }
-        }
         return oldValue;
     }
 
     public <T> T removeAttribute(AttributeKey<T> key) {
         T value = delegate.removeAttribute(key);
-        for (AttributeListener listener : listeners) {
-            listener.attributeRemoved(key, value);
-        }
         return value;
     }
 }

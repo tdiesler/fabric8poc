@@ -35,7 +35,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(configurationPid = SecureShellAttributeProvider.SSH_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service(AttributeProvider.class)
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "ssh")
+})
 public class SecureShellAttributeProvider extends AbstractAttributeProvider {
 
     static final String SSH_PID = "org.apache.karaf.shell";

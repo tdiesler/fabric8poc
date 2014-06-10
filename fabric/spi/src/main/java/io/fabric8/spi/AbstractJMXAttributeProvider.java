@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.ContainerAttributes;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
@@ -27,7 +28,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractJMXAttributeProvider implements JmxAttributeProvider {
+public class AbstractJMXAttributeProvider extends AttributeSupport implements JmxAttributeProvider {
 
     private final String jmxServerUrl;
     private final String jmxUsername;
@@ -38,6 +39,7 @@ public class AbstractJMXAttributeProvider implements JmxAttributeProvider {
         this.jmxServerUrl = jmxServerUrl;
         this.jmxUsername = jmxUsername;
         this.jmxPassword = jmxPassword;
+        this.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
     }
 
     @Override

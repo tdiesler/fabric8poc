@@ -49,7 +49,10 @@ import org.slf4j.LoggerFactory;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "http")
+})
 public class TomcatHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TomcatHttpAttributeProvider.class);

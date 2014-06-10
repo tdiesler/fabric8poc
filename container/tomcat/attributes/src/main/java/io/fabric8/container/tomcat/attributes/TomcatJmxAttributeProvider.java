@@ -35,9 +35,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({ AttributeProvider.class, JmxAttributeProvider.class})
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "jmx")
+})
 public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider  {
 
     private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";

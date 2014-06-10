@@ -24,32 +24,35 @@ import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.FabricException;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
-import io.fabric8.spi.AttributeSupport;
+import io.fabric8.core.zookeeper.ZkPath;
+import io.fabric8.spi.AbstractServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
+import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.StringUtils;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.provision.ResourceHandle;
-import org.jboss.gravia.resource.ResourceIdentity;
+import org.apache.zookeeper.KeeperException;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +70,8 @@ public final class ContainerRegistry extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRegistry.class);
 
-    private final Map<ContainerIdentity, Registration> containers = new ConcurrentHashMap<ContainerIdentity, Registration>();
+    @Reference(referenceInterface = CuratorFramework.class)
+    private ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
 
     @Activate
     void activate() {
@@ -79,329 +83,601 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles, Set<ServiceEndpoint> endpoints) {
-        IllegalStateAssertion.assertTrue(getContainerState(identity) == null, "Container already exists: " + identity);
-        ContainerState parentState = parentId != null ? getRequiredContainerState(parentId) : null;
-        ContainerState cntState = new ContainerState(parentState, identity, options, versionState, profiles, getEndpointIds(endpoints));
-        containers.put(identity, new Registration(cntState, endpoints));
-        return cntState.immutableContainer();
-    }
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, Version version, List<String> profiles, Set<ServiceEndpoint> endpoints) {
+        IllegalStateAssertion.assertTrue(getContainer(identity) == null, "Container already exists: " + identity);
+        Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED)
+                .addParent(parentId)
+                .addProfiles(profiles)
+                .addProfileVersion(version)
+                .addServiceEndpoints(endpoints)
+                .build();
 
-    private Set<ServiceEndpointIdentity<?>> getEndpointIds(Set<ServiceEndpoint> endpoints) {
-        Set<ServiceEndpointIdentity<?>> result = new HashSet<>();
-        if (endpoints != null) {
-            for (ServiceEndpoint ep : endpoints) {
-                result.add(ep.getIdentity());
-            }
-        }
-        return result;
+        storeInternal(cnt);
+        return cnt;
     }
 
     Set<ContainerIdentity> getContainerIdentities() {
         assertValid();
-        return Collections.unmodifiableSet(containers.keySet());
+        return Collections.unmodifiableSet(getContainerIdentitiesInternal());
     }
 
     void addChildToParent(ContainerIdentity parentId, ContainerIdentity childId) {
-        ContainerState parentState = getRequiredContainerState(parentId);
-        ContainerState childState = getRequiredContainerState(childId);
-        parentState.addChild(childState);
+        Container parent = getRequiredContainer(parentId);
+        Set<ContainerIdentity> existingChildren = new LinkedHashSet<>(parent.getChildIdentities());
+        existingChildren.add(childId);
+        setParentInternal(childId, parentId);
+        setChildIdentitiesInternal(parentId, existingChildren);
     }
 
     void removeChildFromParent(ContainerIdentity parentId, ContainerIdentity childId) {
-        ContainerState parentState = getRequiredContainerState(parentId);
-        parentState.removeChild(childId);
+        Container parent = getRequiredContainer(parentId);
+        Set<ContainerIdentity> existingChildren = new LinkedHashSet<>(parent.getChildIdentities());
+        existingChildren.remove(childId);
+        setParentInternal(childId, parentId);
+        setChildIdentitiesInternal(parentId, existingChildren);
     }
 
     Container getContainer(ContainerIdentity identity) {
-        ContainerState cntState = getContainerState(identity);
-        return cntState != null ? cntState.immutableContainer() : null;
+        return readInternal(identity);
     }
 
     boolean hasContainer(ContainerIdentity identity) {
-        return containers.containsKey(identity);
+        return readInternal(identity) != null;
     }
 
     Container getRequiredContainer(ContainerIdentity identity) {
-        return getRequiredContainerState(identity).immutableContainer();
+        Container container = readInternal(identity);
+        IllegalStateAssertion.assertNotNull(container, "Container not registered: " + identity);
+        return container;
     }
 
     Container startContainer(ContainerIdentity identity) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        return cntState.start().immutableContainer();
+        setStateInternal(identity, State.STARTED);
+        return getRequiredContainer(identity);
     }
 
     Container stopContainer(ContainerIdentity identity) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        return cntState.stop().immutableContainer();
+        setStateInternal(identity, State.STOPPED);
+        return getRequiredContainer(identity);
     }
 
     Container destroyContainer(ContainerIdentity identity) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        containers.remove(identity);
-        return cntState.destroy().immutableContainer();
+        return removeInternal(identity);
     }
 
     Container setProfileVersion(ContainerIdentity identity, ProfileVersionState versionState) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        cntState.setProfileVersion(versionState);
-        return cntState.immutableContainer();
+        setVersionIntenral(identity, versionState.getIdentity());
+        return getRequiredContainer(identity);
     }
 
     Container addProfiles(ContainerIdentity identity, List<String> profiles) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        cntState.addProfiles(profiles);
-        return cntState.immutableContainer();
+        List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
+        allProfiles.addAll(profiles);
+        setProfilesInternal(identity, allProfiles);
+        return getRequiredContainer(identity);
     }
 
     Container removeProfiles(ContainerIdentity identity, List<String> profiles) {
-        ContainerState cntState = getRequiredContainerState(identity);
-        cntState.removeProfiles(profiles);
-        return cntState.immutableContainer();
+        List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
+        allProfiles.removeAll(profiles);
+        setProfilesInternal(identity, allProfiles);
+        return getRequiredContainer(identity);
     }
 
     <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
-        Registration creg = getRequiredRegistration(identity);
-        return creg.getServiceEndpoint(type);
+        Set<ServiceEndpoint> allEndpoints = getServiceEndpointsInternal(identity);
+        Set<ServiceEndpoint> result = getServiceEndpointsInternal(identity);
+        for (ServiceEndpoint ep : allEndpoints) {
+            if (ep.getIdentity().getType().isAssignableFrom(type)) {
+                return (T) ep;
+            }
+        }
+        throw new FabricException("Container:" + identity.getSymbolicName()+ " does not have endpoints of type:" + type);
     }
 
     ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
-        Registration creg = getRequiredRegistration(identity);
-        return creg.getServiceEndpoint(endpointId);
+       return getServiceEndpointInternal(identity, endpointId.getSymbolicName());
     }
 
-    private ContainerState getContainerState(ContainerIdentity identity) {
-        Registration creg = containers.get(identity);
-        return creg != null ? creg.getContainerState() : null;
+    Container addServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        assertValid();
+        addServiceEndpointInternal(identity, endpoint);
+        return getRequiredContainer(identity);
     }
 
-    private ContainerState getRequiredContainerState(ContainerIdentity identity) {
-        return getRequiredRegistration(identity).getContainerState();
+
+    Container removeServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        assertValid();
+        addServiceEndpointInternal(identity, endpoint);
+        return getRequiredContainer(identity);
     }
 
-    private Registration getRequiredRegistration(ContainerIdentity identity) {
-        Registration creg = containers.get(identity);
-        IllegalStateAssertion.assertNotNull(creg, "Container not registered: " + identity);
-        return creg;
+    Container setServiceEndpoints(ContainerIdentity identity, Set<ServiceEndpoint> endpoint) {
+        assertValid();
+        setServiceEndpointsInternal(identity, endpoint);
+        return getRequiredContainer(identity);
     }
 
-    Map<ResourceIdentity, ResourceHandle> getResourceHandles(ContainerIdentity identity) {
-        return getRequiredRegistration(identity).getResourceHandles();
+    private void storeInternal(Container container) {
+        ContainerIdentity identity = container.getIdentity();
+        String id = identity.getSymbolicName();
+        Container existing = getContainer(identity);
+        try {
+            if (existing == null) {
+                curator.get().create().creatingParentsIfNeeded().forPath(ZkPath.CONTAINER.getPath(id));
+            }
+            setParentInternal(identity, container.getParentIdentity());
+            setChildIdentitiesInternal(identity, container.getChildIdentities());
+            setRuntimeTypeInternal(identity, container.getRuntimeType());
+            setProfilesInternal(identity, container.getProfileIdentities());
+            setVersionIntenral(identity, container.getProfileVersion());
+            setAttributesIntenral(ZkPath.CONTAINER_ATTRIBUTES.getPath(id), container.getAttributes());
+            setStateInternal(identity, container.getState());
+            setServiceEndpointsInternal(identity, container.getEndpoints(null));
+        } catch (Exception e) {
+            throw FabricException.launderThrowable(e);
+        }
     }
 
-    void addResourceHandles(ContainerIdentity identity, Map<ResourceIdentity, ResourceHandle> handles) {
-        getRequiredRegistration(identity).addResourceHandles(handles);
+    private Container readInternal(ContainerIdentity identity) {
+        Container result = null;
+        String id = identity.getSymbolicName();
+        try {
+            if (curator.get().checkExists().forPath(ZkPath.CONTAINER.getPath(id)) != null) {
+
+                ContainerIdentity parentIdentity = getParentInternal(identity);
+                Map<AttributeKey<?>, Object> attributes = getAttributesInternal(ZkPath.CONTAINER_ATTRIBUTES.getPath(id));
+                RuntimeType type = getRuntimeTypeInternal(identity);
+                List<String> profiles = getProfileIdentities(identity);
+                Version version = getVersionInternal(identity);
+                State state = getStateInternal(identity);
+                Set<ContainerIdentity> children = getChildIdentitiesInternal(identity);
+                Set<ServiceEndpoint> endpoints = getServiceEndpointsInternal(identity);
+
+                result = new ImmutableContainer.Builder(identity, type, attributes, state)
+                        .addProfiles(profiles)
+                        .addProfileVersion(version)
+                        .addParent(parentIdentity)
+                        .addChildren(children)
+                        .addServiceEndpoints(endpoints)
+                        .build();
+            }
+        } catch (Exception ex) {
+            throw FabricException.launderThrowable(ex);
+        }
+        return result;
     }
 
-    void removeResourceHandles(ContainerIdentity identity, Collection<ResourceIdentity> handles) {
-        getRequiredRegistration(identity).removeResourceHandles(handles);
+    private Container removeInternal(ContainerIdentity identity) {
+        setStateInternal(identity, State.DESTROYED);
+        Container result = getContainer(identity);
+        try {
+            curator.get().delete().deletingChildrenIfNeeded().forPath(ZkPath.CONTAINER.getPath(identity.getSymbolicName()));
+        } catch (Exception e) {
+            throw FabricException.launderThrowable(e);
+        }
+        return result;
     }
 
-    private final static class Registration {
+    private Set<ContainerIdentity> getContainerIdentitiesInternal() {
+        Set<ContainerIdentity> identities = new LinkedHashSet<>();
+        try {
+            String containersPath = ZkPath.CONTAINERS.getPath();
+            List<String> containers = curator.get().getChildren().forPath(containersPath);
+            for (String container : containers) {
+                identities.add(ContainerIdentity.create(container));
+            }
+            return Collections.unmodifiableSet(identities);
+        } catch (KeeperException.NoNodeException ex) {
+            return Collections.emptySet();
+        } catch (Exception e) {
+            throw new FabricException("Failed to list containers.", e);
+        }
+    }
 
-        private final ContainerState cntState;
-        private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
-        private final Map<ServiceEndpointIdentity<?>, ServiceEndpoint> endpoints = new HashMap<>();
+    /**
+     * Reads the {@link io.fabric8.api.Container.State} of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          The {@link io.fabric8.api.Container.State}
+     */
+    private Container.State getStateInternal(ContainerIdentity identity) {
+        String id = identity.getSymbolicName();
+        try {
+            String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_STATE.getPath(id)));
+            if (data != null && !data.isEmpty()) {
+                return State.valueOf(data);
+            } else {
+                return State.CREATED;
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " state.", e);
+        }
+    }
 
-        private Registration(ContainerState cntState, Set<ServiceEndpoint> endpoints) {
-            this.cntState = cntState;
-            if (endpoints != null) {
-                for (ServiceEndpoint ep : endpoints) {
-                    this.endpoints.put(ep.getIdentity(), ep);
+    /**
+     * Sets the {@link io.fabric8.api.Container.State} of the {@link io.fabric8.api.Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity          The target {@link io.fabric8.api.ContainerIdentity}.
+     * @param state             The state {@link io.fabric8.api.ContainerIdentity}.
+     */
+    private void setStateInternal(ContainerIdentity identity, State state) {
+        String id = identity.getSymbolicName();
+        try {
+            String containersParentPath = ZkPath.CONTAINER_STATE.getPath(id);
+            if (curator.get().checkExists().forPath(containersParentPath) != null) {
+                curator.get().setData().forPath(containersParentPath, state.name().getBytes());
+            } else {
+                curator.get().create().forPath(containersParentPath, state.name().getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " state.", e);
+        }
+    }
+
+
+    /**
+     * Reads the {@link io.fabric8.api.ContainerIdentity} of the parent of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          The parent's {@link io.fabric8.api.ContainerIdentity}.
+     */
+    private ContainerIdentity getParentInternal(ContainerIdentity identity) {
+        String id = identity.getSymbolicName();
+        try {
+            String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_PARENT.getPath(id))).trim();
+            if (data != null && !data.isEmpty()) {
+                return ContainerIdentity.createFrom(data);
+            } else {
+                return null;
+            }
+        } catch (KeeperException.NoNodeException e) {
+            return null;
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " parent identity.", e);
+        }
+    }
+
+    /**
+     * Sets the parent identity of the {@link io.fabric8.api.Container}.
+     * @param identity          The target {@link io.fabric8.api.ContainerIdentity}.
+     * @param parentIdentity    The parent {@link io.fabric8.api.ContainerIdentity}.
+     */
+    private void setParentInternal(ContainerIdentity identity, ContainerIdentity parentIdentity) {
+        String id = identity.getSymbolicName();
+        byte[] parentId = parentIdentity != null ? parentIdentity.getSymbolicName().getBytes() : new byte[0];
+
+        try {
+            String containersParentPath = ZkPath.CONTAINER_PARENT.getPath(id);
+            if (curator.get().checkExists().forPath(containersParentPath) != null) {
+                curator.get().setData().forPath(containersParentPath, parentId);
+            } else {
+                curator.get().create().creatingParentsIfNeeded().forPath(containersParentPath, parentId);
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " parent identity.", e);
+        }
+    }
+
+    /**
+     * Reads the {@link io.fabric8.api.ContainerIdentity} of the children of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          A set containing the children {@link io.fabric8.api.ContainerIdentity} items.
+     */
+    private Set<ContainerIdentity> getChildIdentitiesInternal(ContainerIdentity identity) {
+        Set<ContainerIdentity> childIdentities = new LinkedHashSet<>();
+        String id = identity.getSymbolicName();
+        try {
+            String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_CHILDREN.getPath(id))).trim();
+            if (!data.isEmpty()) {
+                for (String child : data.split(" +")) {
+                    childIdentities.add(ContainerIdentity.create(child));
                 }
             }
-        }
-
-        ContainerState getContainerState() {
-            return cntState;
-        }
-
-        Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
-            return Collections.unmodifiableMap(resourceHandles);
-        }
-
-        void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
-            cntState.assertNotDestroyed();
-            cntState.assertWriteLock();
-            resourceHandles.putAll(handles);
-        }
-
-        void removeResourceHandles(Collection<ResourceIdentity> handles) {
-            cntState.assertNotDestroyed();
-            cntState.assertWriteLock();
-            for (ResourceIdentity resid : handles) {
-                resourceHandles.remove(resid);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        <T extends ServiceEndpoint> T getServiceEndpoint(Class<T> type) {
-            IllegalArgumentAssertion.assertNotNull(type, "type");
-            T endpoint = null;
-            for (ServiceEndpoint ep : endpoints.values()) {
-                if (type.isAssignableFrom(ep.getClass())) {
-                    if (endpoint == null) {
-                        endpoint = (T) ep;
-                    } else {
-                        LOGGER.warn("Multiple service endpoints of type {} for: {}", type.getName(), cntState.getIdentity());
-                        endpoint = null;
-                        break;
-                    }
-                }
-            }
-            return endpoint;
-        }
-
-        ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity<?> identity) {
-            return endpoints.get(identity);
+            return Collections.unmodifiableSet(childIdentities);
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " child identities.", e);
         }
     }
 
-    private final static class ContainerState {
+    /**
+     * Sets the child {@link io.fabric8.api.ContainerIdentity} of the {@link io.fabric8.api.Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity          The target {@link io.fabric8.api.ContainerIdentity}.
+     * @param childIdentities   A set with the {@link io.fabric8.api.ContainerIdentity} of the children.
+     */
+    private void setChildIdentitiesInternal(ContainerIdentity identity, Set<ContainerIdentity> childIdentities) {
+        String id = identity.getSymbolicName();
+        String data = joinContainerIdentities(childIdentities, " ").trim();
 
-        private final ContainerState parentState;
-        private final ContainerIdentity identity;
-        private final CreateOptions createOptions;
-        private final AttributeSupport attributes;
-        private final List<String> profiles = new ArrayList<>();
-        private final Map<ContainerIdentity, ContainerState> children = new HashMap<>();
-        private final Set<ServiceEndpointIdentity<?>> endpoints = new HashSet<>();
-        private ProfileVersionState versionState;
-        private State state;
-
-        private ContainerState(ContainerState parentState, ContainerIdentity identity, CreateOptions options, ProfileVersionState versionState, List<String> profiles, Set<ServiceEndpointIdentity<?>> endpoints) {
-            IllegalArgumentAssertion.assertNotNull(identity, "identity");
-            IllegalArgumentAssertion.assertNotNull(options, "options");
-            IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
-            this.createOptions = options;
-            this.attributes = new AttributeSupport(options.getAttributes(), true);
-            this.endpoints.addAll(endpoints);
-            this.profiles.addAll(profiles);
-            this.parentState = parentState;
-            this.versionState = versionState;
-            this.identity = identity;
-            this.state = State.CREATED;
-
+        try {
+            String containerChildren = ZkPath.CONTAINER_CHILDREN.getPath(id);
+            if (curator.get().checkExists().forPath(containerChildren) != null) {
+                curator.get().setData().forPath(containerChildren, data.getBytes());
+            } else {
+                curator.get().create().creatingParentsIfNeeded().forPath(containerChildren, data.getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " children.", e);
         }
+    }
 
-        ContainerIdentity getIdentity() {
-            return identity;
+    /**
+     * Reads the {@link org.jboss.gravia.runtime.RuntimeType} of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          The {@link org.jboss.gravia.runtime.RuntimeType}.
+     */
+    private RuntimeType getRuntimeTypeInternal(ContainerIdentity identity) {
+        String id = identity.getSymbolicName();
+        try {
+            String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_TYPE.getPath(id)));
+            return RuntimeType.valueOf(data);
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+" runtime type.", e);
         }
+    }
 
-        State getState() {
-            return state;
-        }
+    /**
+     * Reads the {@link org.jboss.gravia.runtime.RuntimeType} of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity      The identity of the {@link Container}.
+     * @param runtimeType   The {@link org.jboss.gravia.runtime.RuntimeType}.
+     */
+    private void setRuntimeTypeInternal(ContainerIdentity identity, RuntimeType runtimeType) {
+        String id = identity.getSymbolicName();
+        String data = runtimeType.name();
 
-        Map<AttributeKey<?>, Object> getAttributes() {
-            return attributes.getAttributes();
+        try {
+            String containerTypePath = ZkPath.CONTAINER_TYPE.getPath(id);
+            if (curator.get().checkExists().forPath(containerTypePath) != null) {
+                curator.get().setData().forPath(containerTypePath, data.getBytes());
+            } else {
+                curator.get().create().forPath(containerTypePath, data.getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " runtime type.", e);
         }
+    }
 
-        /*
-        Set<AttributeKey<?>> getAttributeKeys() {
-            return attributes.getAttributeKeys();
-        }
 
-        <T> T getAttribute(AttributeKey<T> key) {
-            return attributes.getAttribute(key);
+    /**
+     * Reads the identities of the {@link io.fabric8.api.Profile} items associated with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          A List of Profile Identities.
+     */
+    private List<String> getProfileIdentities(ContainerIdentity identity) {
+        final List<String> profiles = new ArrayList<>();
+        try {
+            for (String profile : new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_PROFILES.getPath(identity.getSymbolicName()))).split(" +")) {
+                profiles.add(profile);
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+" profile identities.", e);
         }
+        return Collections.unmodifiableList(profiles);
+    }
 
-        <T> boolean hasAttribute(AttributeKey<T> key) {
-            return attributes.hasAttribute(key);
-        }
-        */
+    /**
+     * Sets the {@link io.fabric8.api.Profile} identities of the {@link io.fabric8.api.Container}.
+     * @param identity          The target {@link io.fabric8.api.ContainerIdentity}.
+     * @param profiles    The parent {@link io.fabric8.api.ContainerIdentity}.
+     */
+    private void setProfilesInternal(ContainerIdentity identity, List<String> profiles) {
+        String id = identity.getSymbolicName();
+        String data = StringUtils.join(profiles, " ");
 
-        Set<ContainerIdentity> getChildIdentities() {
-            assertReadLock();
-            return Collections.unmodifiableSet(new HashSet<>(children.keySet()));
+        try {
+            String containerProfilesPath = ZkPath.CONTAINER_CONFIG_PROFILES.getPath(id);
+            if (curator.get().checkExists().forPath(containerProfilesPath) != null) {
+                curator.get().setData().forPath(containerProfilesPath, data.getBytes());
+            } else {
+                curator.get().create().creatingParentsIfNeeded().forPath(containerProfilesPath, data.getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " profiles.", e);
         }
+    }
 
-        List<String> getProfileIdentities() {
-            assertReadLock();
-            return Collections.unmodifiableList(new ArrayList<>(profiles));
+    /**
+     * Reads the {@link Version} associated with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          The {@link Version}.
+     */
+    private Version getVersionInternal(ContainerIdentity identity) {
+        try {
+            String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_VERSION.getPath(identity.getSymbolicName())));
+            return Version.parseVersion(data);
+        }catch (Exception e) {
+            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+ " version.", e);
         }
+    }
 
-        Set<ServiceEndpointIdentity<?>> getServiceEndpointIdentities() {
-            return Collections.unmodifiableSet(endpoints);
+    /**
+     * Writes the {@link Version} associated with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     */
+    private void setVersionIntenral(ContainerIdentity identity, Version version) {
+        String id = identity.getSymbolicName();
+        String data = version.toString();
+        try {
+            String containerVersionPath = ZkPath.CONTAINER_CONFIG_VERSION.getPath(id);
+            if (curator.get().checkExists().forPath(containerVersionPath) != null) {
+                curator.get().setData().forPath(containerVersionPath, data.getBytes());
+            } else {
+                curator.get().create().creatingParentsIfNeeded().forPath(containerVersionPath, data.getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " version.", e);
         }
+    }
 
-        ImmutableContainer immutableContainer() {
-            assertReadLock();
-            ImmutableContainer.Builder builder = new ImmutableContainer.Builder(identity, createOptions.getRuntimeType(), getAttributes(), getState());
-            builder.addParent(parentState != null ? parentState.getIdentity() : null);
-            builder.addProfileVersion(versionState != null ? versionState.getIdentity() : null);
-            builder.addChildren(getChildIdentities());
-            builder.addProfiles(getProfileIdentities());
-            builder.addServiceEndpoints(getServiceEndpointIdentities());
-            return builder.build();
+    /**
+     * Reads the attributes stored under the specified path.
+     * @param basePath      The path that contains the attributes
+     * @return          A {@link Map} of {@link io.fabric8.api.AttributeKey} -> Value.
+     */
+    private Map<AttributeKey<?>, Object> getAttributesInternal(String basePath) {
+        Map<AttributeKey<?>, Object> attributes = new HashMap<>();
+        try {
+            for (String path : curator.get().getChildren().forPath(basePath)) {
+                String attributePath = ZKPaths.makePath(basePath, path);
+                String attributeData = new String(curator.get().getData().forPath(attributePath));
+                AttributeKey key = AttributeKey.create(attributeData);
+                Object value = key.parse(attributeData);
+                attributes.put(key, value);
+            }
+            return attributes;
+        } catch (Exception e) {
+            throw new FabricException("Failed to read attributes from:" + basePath +".", e);
         }
+    }
 
-        void addChild(ContainerState childState) {
-            assertNotDestroyed();
-            assertWriteLock();
-            children.put(childState.getIdentity(), childState);
-        }
+    /**
+     /**
+     * Reads the attributes stored under the specified path.
+     * @param basePath      The path that contains the attributes
+     * @param attributes    A {@link Map} of {@link io.fabric8.api.AttributeKey} -> Value.
+     */
+    private void setAttributesIntenral(String basePath, Map<AttributeKey<?>, Object> attributes) {
+        try {
+            if (curator.get().checkExists().forPath(basePath) != null) {
+                curator.get().delete().deletingChildrenIfNeeded().forPath(basePath);
+            }
+            curator.get().create().creatingParentsIfNeeded().forPath(basePath);
 
-        void removeChild(ContainerIdentity identity) {
-            assertNotDestroyed();
-            assertWriteLock();
-            children.remove(identity);
+            for(Map.Entry<AttributeKey<?>, Object> entry : attributes.entrySet()) {
+                AttributeKey key = entry.getKey();
+                Object value = entry.getValue();
+                String attributePath = ZKPaths.makePath(basePath, key.getName());
+                String data = key.toString(value);
+                curator.get().create().creatingParentsIfNeeded().forPath(attributePath, data.getBytes());
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write attributes at:" + basePath + ".", e);
         }
+    }
 
-        void setProfileVersion(ProfileVersionState versionState) {
-            assertNotDestroyed();
-            assertWriteLock();
-            this.versionState = versionState;
-        }
+    /**
+     * Writes the {@link io.fabric8.api.ServiceEndpoint} items associated with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @param endpoints The set of {@link io.fabric8.api.ServiceEndpoint} items.
+     */
+    private void setServiceEndpointsInternal(ContainerIdentity identity, Set<ServiceEndpoint> endpoints) {
+        String containerEndpointsPath = ZkPath.CONTAINER_ENDPOINTS.getPath(identity.getSymbolicName());
+        try {
+            if (curator.get().checkExists().forPath(containerEndpointsPath) != null) {
+                curator.get().delete().deletingChildrenIfNeeded().forPath(containerEndpointsPath);
+            }
+            curator.get().create().creatingParentsIfNeeded().forPath(containerEndpointsPath);
 
-        void addProfiles(List<String> identities) {
-            assertNotDestroyed();
-            assertWriteLock();
-            profiles.addAll(identities);
-        }
+            for (ServiceEndpoint endpoint : endpoints) {
+                ServiceEndpointIdentity endpointId = endpoint.getIdentity();
+                Class type = endpointId.getType();
+                String name = endpointId.getSymbolicName();
+                String endpointPath = ZKPaths.makePath(containerEndpointsPath, name);
+                String data = type.getCanonicalName();
+                curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, data.getBytes());
+                setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
 
-        void removeProfiles(List<String> identities) {
-            assertNotDestroyed();
-            assertWriteLock();
-            profiles.removeAll(identities);
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " endpoints.", e);
         }
+    }
 
-        ContainerState start() {
-            assertNotDestroyed();
-            assertWriteLock();
-            state = State.STARTED;
-            return this;
-        }
+    /**
+     * Reads the {@link io.fabric8.api.ServiceEndpoint} items associated with the specified {@link io.fabric8.api.ContainerIdentity}.
+     * @param identity  The identity of the {@link Container}.
+     * @return          The set of {@link ServiceEndpoint} items.
+     */
+    private Set<ServiceEndpoint> getServiceEndpointsInternal(ContainerIdentity identity) {
+        Set<ServiceEndpoint> endpoints = new LinkedHashSet<>();
+        String containerEndpointsPath = ZkPath.CONTAINER_ENDPOINTS.getPath(identity.getSymbolicName());
+        try {
+            List<String> names = curator.get().getChildren().forPath(containerEndpointsPath);
 
-        ContainerState stop() {
-            assertNotDestroyed();
-            assertWriteLock();
-            state = State.STOPPED;
-            return this;
+            for (String name : names) {
+                endpoints.add(getServiceEndpointInternal(identity, name));
+            }
+        } catch (KeeperException.NoNodeException e) {
+          return Collections.emptySet();
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " endpoints.", e);
         }
+        return endpoints;
+    }
 
-        ContainerState destroy() {
-            assertNotDestroyed();
-            assertWriteLock();
-            state = State.DESTROYED;
-            return this;
+    private ServiceEndpoint getServiceEndpointInternal(ContainerIdentity identity, String endpointName) {
+        assertValid();
+        String id = identity.getSymbolicName();
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id,endpointName);
+        try {
+            String typeAsString = new String(curator.get().getData().forPath(endpointPath));
+            Class type = Class.forName(typeAsString);
+            ServiceEndpointIdentity endpointId = ServiceEndpointIdentity.create(endpointName, type);
+            Map<AttributeKey<?>, Object> endpointAttributes = getAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"));
+            return   new AbstractServiceEndpoint(ServiceEndpointIdentity.create(endpointName, type), endpointAttributes);
+        } catch (Exception e) {
+            throw new FabricException("Failed to read endpoint from:" + endpointPath);
         }
+    }
 
-        private void assertNotDestroyed() {
-            IllegalStateAssertion.assertFalse(state == State.DESTROYED, "Container already destroyed: " + this);
-        }
+    /**
+     * Associates a {@link io.fabric8.api.ContainerIdentity} with a {@link io.fabric8.api.ServiceEndpoint}.
+     * @param identity  The identity of the container.
+     * @param endpoint  The service endpoint.
+     */
+    private void addServiceEndpointInternal(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        assertValid();
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpoint.getIdentity().getSymbolicName());
+        try {
+            if (curator.get().checkExists().forPath(endpointPath) != null) {
+                curator.get().delete().deletingChildrenIfNeeded().forPath(endpointPath);
+            }
+            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, endpoint.getIdentity().getType().getCanonicalName().getBytes());
 
-        private void assertReadLock() {
-            ContainerLockManager.assertReadLock(identity);
-        }
+            ServiceEndpointIdentity endpointId = endpoint.getIdentity();
+            Class type = endpointId.getType();
+            String name = endpointId.getSymbolicName();
+            String data = type.getCanonicalName();
+            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, data.getBytes());
+            setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
 
-        private void assertWriteLock() {
-            ContainerLockManager.assertWriteLock(identity);
-        }
 
-        @Override
-        public String toString() {
-            Version profileVersion = versionState != null ? versionState.getIdentity() : null;
-            return "ContainerState[id=" + identity + ",state=" + state + ",version=" + profileVersion + "]";
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " endpoints.", e);
         }
+    }
+
+    /**
+     * Removes the association of a {@link io.fabric8.api.ContainerIdentity} with a {@link io.fabric8.api.ServiceEndpoint}.
+     * @param identity  The identity of the container.
+     * @param endpoint  The service endpoint.
+     */
+    private void removeServiceEndpointInternal(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        assertValid();
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpoint.getIdentity().getSymbolicName());
+        try {
+            if (curator.get().checkExists().forPath(endpointPath) != null) {
+                curator.get().delete().deletingChildrenIfNeeded().forPath(endpointPath);
+            }
+        } catch (Exception e) {
+            throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " endpoints.", e);
+        }
+    }
+
+    private static String joinContainerIdentities(Iterable<ContainerIdentity> identities, String separator) {
+        StringBuilder builder = new StringBuilder();
+        for (ContainerIdentity identity : identities) {
+            if (builder.length() > 0) {
+                builder.append(separator);
+            }
+            builder.append(identity.getSymbolicName());
+        }
+        return builder.toString();
+    }
+
+
+    void bindCurator(CuratorFramework service) {
+        curator.bind(service);
+    }
+
+    void unbindCurator(CuratorFramework service) {
+        curator.unbind(service);
     }
 }

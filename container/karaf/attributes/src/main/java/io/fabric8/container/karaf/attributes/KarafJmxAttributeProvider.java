@@ -45,8 +45,11 @@ import org.slf4j.LoggerFactory;
 // mvn:org.apache.karaf.management/org.apache.karaf.management.server/2.3.3
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, ConfigurationListener.class, JmxAttributeProvider.class })
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+@Service({ AttributeProvider.class, JmxAttributeProvider.class,  ConfigurationListener.class})
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "jmx")
+})
 public class KarafJmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener, JmxAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KarafJmxAttributeProvider.class);
