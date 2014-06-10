@@ -52,8 +52,8 @@ import org.junit.Test;
  */
 public class ProfileOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
+    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class);
+    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class);
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -99,12 +99,6 @@ public class ProfileOpenTypeTest {
         prfManager.removeProfile(defaultVersion, prfC.getIdentity());
     }
 
-    public static class StringValueFactory implements ValueFactory<String> {
-        @Override
-        public String createFrom(Object source) {
-            return (String) source;
-        }
-    }
 
     static class CompositeDataOptionsProvider implements OptionsProvider<ProfileBuilder> {
 

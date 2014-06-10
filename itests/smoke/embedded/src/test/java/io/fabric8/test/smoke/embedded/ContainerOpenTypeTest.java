@@ -53,8 +53,8 @@ import org.junit.Test;
  */
 public class ContainerOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class, new StringValueFactory());
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class, new StringValueFactory());
+    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class);
+    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class);
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -98,13 +98,6 @@ public class ContainerOpenTypeTest {
         Assert.assertEquals(cntA.getAttributes(), cntC.getAttributes());
 
         cntManager.destroyContainer(idC);
-    }
-
-    public static class StringValueFactory implements ValueFactory<String> {
-        @Override
-        public String createFrom(Object source) {
-            return (String) source;
-        }
     }
 
     static class CompositeDataOptionsProvider implements OptionsProvider<EmbeddedContainerBuilder> {

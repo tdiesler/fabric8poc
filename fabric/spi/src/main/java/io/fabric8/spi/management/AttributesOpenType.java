@@ -73,9 +73,8 @@ public final class AttributesOpenType {
             AttributeKey<?> key = entry.getKey();
             String name = key.getName();
             String type = key.getType() != null ? key.getType().getName() : null;
-            String factory = key.getFactory() != null ? key.getFactory().getClass().getName() : null;
             String value = entry.getValue().toString();
-            Object[] itemValues = new Object[] { name, value, type, factory };
+            Object[] itemValues = new Object[] { name, value, type };
             try {
                 dataArr[index++] = new CompositeDataSupport(AttributeType.getArrayType(), itemNames, itemValues);
             } catch (OpenDataException ex) {
@@ -90,26 +89,15 @@ public final class AttributesOpenType {
         String name = (String) attData.get(AttributeType.ITEM_KEY);
         String valStr = (String) attData.get(AttributeType.ITEM_VALUE);
         String typeName = (String) attData.get(AttributeType.ITEM_TYPE);
-        String factoryName = (String) attData.get(AttributeType.ITEM_FACTORY);
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain type name");
         IllegalStateAssertion.assertNotNull(typeName, "Cannot obtain factory name");
         AttributeKey key;
-        ValueFactory factory;
         Class type;
         Object value;
         try {
             type = Class.forName(typeName, true, classLoader);
-            if (factoryName != null) {
-                Class<?> factoryType = Class.forName(factoryName, true, classLoader);
-                factory = (ValueFactory<?>) factoryType.newInstance();
-                key = AttributeKey.create(name, type, factory);
-                value = factory.createFrom(valStr);
-            } else if (String.class.getName().equals(typeName)) {
-                key = AttributeKey.create(name, type);
-                value = valStr;
-            } else {
-                throw new IllegalStateException("No factory for attribute type: " + typeName);
-            }
+            key = AttributeKey.create(name, type);
+            value = key.getFactory().createFrom(valStr);
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -130,7 +118,6 @@ public final class AttributesOpenType {
         public static final String ITEM_KEY = "key";
         public static final String ITEM_VALUE = "value";
         public static final String ITEM_TYPE = "type";
-        public static final String ITEM_FACTORY = "factory";
 
         private static final CompositeType compositeType;
         static {
@@ -146,11 +133,11 @@ public final class AttributesOpenType {
         }
 
         public static String[] getItemNames() {
-            return new String[] { ITEM_KEY, ITEM_VALUE, ITEM_TYPE, ITEM_FACTORY };
+            return new String[] { ITEM_KEY, ITEM_VALUE, ITEM_TYPE };
         }
 
         public static OpenType<?>[] getItemTypes() {
-            return new OpenType<?>[] { SimpleType.STRING, SimpleType.STRING, SimpleType.STRING, SimpleType.STRING };
+            return new OpenType<?>[] { SimpleType.STRING, SimpleType.STRING, SimpleType.STRING};
         }
     }
 }
