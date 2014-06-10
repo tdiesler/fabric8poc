@@ -20,30 +20,20 @@
 package io.fabric8.test.smoke.embedded;
 
 import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
-
-import java.util.Set;
-
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.RuntimeService;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
 
-import org.jboss.gravia.runtime.Runtime;
-import org.jboss.gravia.runtime.RuntimeLocator;
-import org.jboss.gravia.runtime.RuntimeType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,26 +64,6 @@ public class BasicContainerLifecycleTest {
     @After
     public void postConditions() {
         PrePostConditions.assertPostConditions();
-    }
-
-    @Test
-    public void testCurrentContainer() throws Exception {
-
-        Runtime runtime = RuntimeLocator.getRequiredRuntime();
-        String runtimeId = (String) runtime.getProperty(RuntimeService.RUNTIME_IDENTITY);
-        ContainerIdentity currentId = ContainerIdentity.create(runtimeId);
-
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Container cnt = cntManager.getCurrentContainer();
-        Assert.assertEquals(currentId, cnt.getIdentity());
-
-        Set<ServiceEndpointIdentity<?>> epids = cnt.getEndpointIdentities(null);
-        Assert.assertEquals(1, epids.size());
-        Assert.assertEquals(runtimeId + "-JMXServiceEndpoint", epids.iterator().next().getSymbolicName());
-
-        Assume.assumeFalse(RuntimeType.OTHER == RuntimeType.getRuntimeType());
-
-        JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
     }
 
     @Test

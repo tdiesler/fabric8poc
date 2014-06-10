@@ -67,6 +67,11 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
+    public <T> T getRequiredAttribute(AttributeKey<T> key) {
+        return attributes.getRequiredAttribute(key);
+    }
+
+    @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         return attributes.hasAttribute(key);
     }

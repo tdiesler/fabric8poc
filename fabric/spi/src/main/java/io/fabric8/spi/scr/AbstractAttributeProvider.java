@@ -54,6 +54,11 @@ public abstract class AbstractAttributeProvider extends AbstractComponent implem
     }
 
     @Override
+    public <T> T getRequiredAttribute(AttributeKey<T> key) {
+        return delegate.getRequiredAttribute(key);
+    }
+
+    @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         return delegate.hasAttribute(key);
     }

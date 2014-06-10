@@ -61,6 +61,14 @@ public class AttributeSupport implements Attributable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getRequiredAttribute(AttributeKey<T> key) {
+        T value = (T) attributes.get(key);
+        IllegalStateAssertion.assertNotNull(value, "Cannot obtain attribute: " + key);
+        return value;
+    }
+
+    @Override
     public <T> boolean hasAttribute(AttributeKey<T> key) {
         return attributes.containsKey(key);
     }

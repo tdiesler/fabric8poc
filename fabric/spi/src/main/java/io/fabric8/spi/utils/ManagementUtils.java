@@ -20,9 +20,6 @@
 
 package io.fabric8.spi.utils;
 
-import io.fabric8.api.Attributable;
-import io.fabric8.api.ContainerAttributes;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
@@ -76,34 +73,18 @@ public final class ManagementUtils {
         return mbeanProxy;
     }
 
-    public static JMXConnector getJMXConnector(Attributable attributes, String username, String password, long timeout, TimeUnit unit) {
-        String jmxServiceURL = attributes.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        IllegalStateAssertion.assertNotNull(jmxServiceURL, "Cannot obtain container attribute: JMX_SERVER_URL");
-        return getJMXConnector(jmxServiceURL, username, password, timeout, unit);
-    }
-
     public static JMXConnector getJMXConnector(String jmxServiceURL, String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
         IllegalArgumentAssertion.assertNotNull(jmxServiceURL, "jmxServiceURL");
-        Map<String, Object> env = new HashMap<String, Object>();
+        Map<String, Object> env = getDefaultEnvironment(jmxServiceURL);
         if (jmxUsername != null && jmxPassword != null) {
             String[] credentials = new String[] { jmxUsername, jmxPassword };
             env.put(JMXConnector.CREDENTIALS, credentials);
         }
-        // Make SPI classes visible by default
-        if (env.get(JMXConnectorFactory.DEFAULT_CLASS_LOADER) == null) {
-            env.put(JMXConnectorFactory.DEFAULT_CLASS_LOADER, ManagementUtils.class.getClassLoader());
-        }
         return getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 
-    public static JMXConnector getJMXConnector(String jmxServiceURL, Map<String, Object> env, long timeout, TimeUnit unit) {
-
-        JMXServiceURL serviceURL;
-        try {
-            serviceURL = new JMXServiceURL(jmxServiceURL);
-        } catch (MalformedURLException ex) {
-            throw new IllegalStateException(ex);
-        }
+    public static Map<String, Object> getDefaultEnvironment(String jmxServiceURL) {
+        Map<String, Object> env = new HashMap<String, Object>();
 
         // Find the fabric8-container-wildfly-connector module and use its classloader
         if (RuntimeType.KARAF == RuntimeType.getRuntimeType() && jmxServiceURL.startsWith("service:jmx:http-remoting-jmx")) {
@@ -127,12 +108,29 @@ public final class ManagementUtils {
             }
         }
 
+        // Make SPI classes visible by default
+        if (env.get(JMXConnectorFactory.DEFAULT_CLASS_LOADER) == null) {
+            env.put(JMXConnectorFactory.DEFAULT_CLASS_LOADER, ManagementUtils.class.getClassLoader());
+        }
+
+        return env;
+    }
+
+    public static JMXConnector getJMXConnector(String jmxServiceURL, Map<String, Object> env, long timeout, TimeUnit unit) {
+
+        JMXServiceURL serviceURL;
+        try {
+            serviceURL = new JMXServiceURL(jmxServiceURL);
+        } catch (MalformedURLException ex) {
+            throw new IllegalStateException(ex);
+        }
+
         Exception lastException = null;
-        JMXConnector connector = null;
-        long end = System.currentTimeMillis() + unit.toMillis(timeout);
-        while (connector == null && System.currentTimeMillis() < end) {
+        long now = System.currentTimeMillis();
+        long end = now + unit.toMillis(timeout);
+        while (now <= end) {
             try {
-                connector = JMXConnectorFactory.connect(serviceURL, env);
+                return JMXConnectorFactory.connect(serviceURL, env);
             } catch (Exception ex) {
                 lastException = ex;
                 try {
@@ -141,11 +139,10 @@ public final class ManagementUtils {
                     break;
                 }
             }
+            now = System.currentTimeMillis();
         }
-        if (connector == null) {
-            throw new IllegalStateException("Cannot obtain JMXConnector for: " + jmxServiceURL, lastException);
-        }
-        return connector;
+
+        throw new IllegalStateException("Cannot obtain JMXConnector for: " + jmxServiceURL, lastException);
     }
 
     // Confine the usage of jboss-modules to an additional class

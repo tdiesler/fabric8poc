@@ -19,13 +19,14 @@
  */
 package io.fabric8.spi;
 
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL;
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,9 @@ import java.util.concurrent.TimeUnit;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXServiceURL;
+
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * An abstract JMX service endpoint
@@ -51,16 +55,42 @@ public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint<JMXServi
     }
 
     private static Map<AttributeKey<?>, Object> getJmxServerAttributes(String jmxServerUrl) {
-        if (jmxServerUrl != null) {
-            return Collections.<AttributeKey<?>, Object> singletonMap(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
-        } else {
-            return Collections.emptyMap();
+        IllegalArgumentAssertion.assertNotNull(jmxServerUrl, "jmxServerUrl");
+        return Collections.<AttributeKey<?>, Object> singletonMap(ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
+    }
+
+    @Override
+    public JMXServiceURL getServiceURL() {
+        JMXServiceURL serviceURL;
+        try {
+            String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+            serviceURL = new JMXServiceURL(jmxServiceURL);
+        } catch (MalformedURLException ex) {
+            throw new IllegalStateException(ex);
         }
+        return serviceURL;
+    }
+
+    @Override
+    public Map<String, Object> getDefaultEnvironment() {
+        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        return ManagementUtils.getDefaultEnvironment(jmxServiceURL);
+    }
+
+    @Override
+    public JMXConnector getJMXConnector(Map<String, Object> env, String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
+        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        if (jmxUsername != null && jmxPassword != null) {
+            String[] credentials = new String[] { jmxUsername, jmxPassword };
+            env.put(JMXConnector.CREDENTIALS, credentials);
+        }
+        return ManagementUtils.getJMXConnector(jmxServiceURL, env, timeout, unit);
     }
 
     @Override
     public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-        return ManagementUtils.getJMXConnector(this, jmxUsername, jmxPassword, timeout, unit);
+        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        return ManagementUtils.getJMXConnector(jmxServiceURL, jmxUsername, jmxPassword, timeout, unit);
     }
 
     @Override
