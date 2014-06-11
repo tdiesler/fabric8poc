@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public final class AttributeKey<T> {
 
     private static final String GROUP = "[a-zA-Z0-9\\.\\-]+";
-    private static final String ATTRIBUTE_KEY_FORMAT = "name=(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
+    private static final String ATTRIBUTE_KEY_FORMAT = "(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
     private static final Pattern ATTRIBUTE_KEY_PATTERN = Pattern.compile(String.format(ATTRIBUTE_KEY_FORMAT, GROUP, GROUP, GROUP));
 
     /**
@@ -143,7 +143,7 @@ public final class AttributeKey<T> {
         }
         IllegalArgumentAssertion.assertNotNull(type, "Cannot obtain value type");
         IllegalArgumentAssertion.assertTrue(factory == null || type == factory.getType(), "Provided type does not match factory type");
-        StringBuffer buffer = new StringBuffer("name=" + name);
+        StringBuffer buffer = new StringBuffer(name);
         if (type != String.class) {
             buffer.append(",type=" + type.getName());
         }
@@ -154,7 +154,7 @@ public final class AttributeKey<T> {
             }
         }
         canonicalForm = buffer.toString();
-        toString = "Key[" + canonicalForm + "]";
+        toString = "Key[name=" + canonicalForm + "]";
     }
 
     public String getName() {

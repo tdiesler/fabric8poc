@@ -148,6 +148,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     private void validate() {
+        mutableProfile.addAttributes(getAttributes());
         String identity = mutableProfile.getIdentity();
         IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
         for (char ch : ILLEGAL_IDENTITY_CHARS) {
