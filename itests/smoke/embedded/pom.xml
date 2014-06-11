@@ -22,12 +22,7 @@
 <!--
     Set these VM properties in your IDE debugger
      
-    -Dbasedir=${workspace_loc:fabric8-itests-smoke-embedded}
     -Dlog4j.configuration=file://${workspace_loc:fabric8-itests-smoke-embedded}/src/test/resources/logging.properties
-    -Druntime.id=embedded
-    -Druntime.home=${workspace_loc:fabric8-itests-smoke-embedded}/target/home
-    -Druntime.data=${workspace_loc:fabric8-itests-smoke-embedded}/target/home/data
-    -Druntime.conf=${workspace_loc:fabric8-itests-smoke-embedded}/target/home/conf
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
