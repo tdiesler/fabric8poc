@@ -19,7 +19,12 @@
  */
 package io.fabric8.test.embedded.support;
 
+import static io.fabric8.spi.RuntimeService.RUNTIME_CONF_DIR;
+import static io.fabric8.spi.RuntimeService.RUNTIME_DATA_DIR;
+import static io.fabric8.spi.RuntimeService.RUNTIME_HOME_DIR;
+import static io.fabric8.spi.RuntimeService.RUNTIME_IDENTITY;
 import io.fabric8.spi.BootstrapComplete;
+import io.fabric8.spi.utils.FileUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,11 +52,11 @@ public abstract class EmbeddedTestSupport {
         Path basedir = Paths.get("").toAbsolutePath();
         Path homeDir = basedir.resolve(Paths.get("target", "home"));
 
-        System.setProperty("runtime.id", "embedded");
         System.setProperty("basedir", basedir.toString());
-        System.setProperty("runtime.home", homeDir.toString());
-        System.setProperty("runtime.data", homeDir.resolve("data").toString());
-        System.setProperty("runtime.conf", homeDir.resolve("conf").toString());
+        System.setProperty(RUNTIME_IDENTITY, "embedded");
+        System.setProperty(RUNTIME_HOME_DIR, homeDir.toString());
+        System.setProperty(RUNTIME_DATA_DIR, homeDir.resolve("data").toString());
+        System.setProperty(RUNTIME_CONF_DIR, homeDir.resolve("conf").toString());
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
@@ -67,5 +72,8 @@ public abstract class EmbeddedTestSupport {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
+
+        Path homePath = Paths.get(System.getProperty(RUNTIME_HOME_DIR));
+        FileUtils.deleteRecursively(homePath);
     }
 }

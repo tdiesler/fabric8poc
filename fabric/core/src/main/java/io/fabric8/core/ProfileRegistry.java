@@ -19,18 +19,26 @@
  */
 package io.fabric8.core;
 
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_IDENTITY;
+import static io.fabric8.api.Constants.DEFAULT_PROFILE_VERSION;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import io.fabric8.api.Container;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
-import io.fabric8.api.ProfileItem;
-import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ResourceItem;
-import io.fabric8.spi.DefaultResourceItem;
-import io.fabric8.spi.ImmutableProfile;
-import io.fabric8.spi.ImmutableProfileVersion;
+import io.fabric8.spi.DefaultProfileBuilder;
+import io.fabric8.spi.DefaultProfileVersionBuilder;
+import io.fabric8.spi.DefaultProfileXMLReader;
+import io.fabric8.spi.DefaultProfileXMLWriter;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -38,7 +46,6 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,16 +58,14 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.repository.spi.AbstractContentHandler;
 import org.jboss.gravia.resource.Capability;
 import org.jboss.gravia.resource.ContentCapability;
 import org.jboss.gravia.resource.ContentNamespace;
-import org.jboss.gravia.resource.DefaultResourceBuilder;
-import org.jboss.gravia.resource.Requirement;
-import org.jboss.gravia.resource.Resource;
-import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.Version;
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
@@ -73,8 +78,12 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 @Service(ProfileRegistry.class)
 public final class ProfileRegistry extends AbstractComponent {
 
-    private Map<Version, Map<String, Profile>> profileVersions = new HashMap<>();
-    private Path profilesDir;
+    private static String PROFILES_FILE = "profiles.xml";
+
+    private Path workspace;
+
+    @Reference(referenceInterface = RuntimeService.class)
+    private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     @Activate
     void activate() {
@@ -84,89 +93,172 @@ public final class ProfileRegistry extends AbstractComponent {
 
     @Deactivate
     void deactivate() {
+        dactivateInternal();
         deactivateComponent();
     }
 
     private void activateInternal() {
-        profilesDir = Paths.get(".", "target", "profiles").toAbsolutePath();
+        Path dataPath = runtimeService.get().getDataPath();
+        workspace = dataPath.resolve("profiles");
+
+        // Add the default profile version
+        File defaultFile = getProfilesFile(DEFAULT_PROFILE_VERSION);
+        if (!defaultFile.exists()) {
+            Profile profile = new DefaultProfileBuilder(DEFAULT_PROFILE_IDENTITY)
+                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
+                .getProfile();
+
+            LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
+                .addProfile(profile)
+                .getProfileVersion();
+
+            addProfileVersionInternal(profileVersion);
+        }
+    }
+
+    private void dactivateInternal() {
     }
 
     Set<Version> getVersions() {
         assertValid();
-        synchronized (profileVersions) {
-            return Collections.unmodifiableSet(new HashSet<>(profileVersions.keySet()));
+        synchronized (workspace) {
+            Set<Version> versions = new HashSet<>();
+            for (String name : workspace.toFile().list()) {
+                if (workspace.resolve(name).toFile().isDirectory()) {
+                    versions.add(Version.parseVersion(name));
+                }
+            }
+            return Collections.unmodifiableSet(versions);
         }
     }
 
-    ProfileVersion getProfileVersion(Version version) {
+    /**
+     * Get the {@link LinkedProfileVersion} for the given version
+     * @return null if the version does not exist
+     */
+    LinkedProfileVersion getProfileVersion(Version version) {
         assertValid();
-        ProfileVersion profileVersion = null;
-        synchronized (profileVersions) {
-            Map<String, Profile> profiles = profileVersions.get(version);
-            if (profiles != null) {
-                profileVersion = new ImmutableProfileVersion(version, profiles.keySet(), null);
+        return getProfileVersionInternal(version);
+    }
+
+    private LinkedProfileVersion getProfileVersionInternal(Version version) {
+        File profilesFile = getProfilesFile(version);
+        if (profilesFile.exists()) {
+            return getProfileVersionBuilder(version).getProfileVersion();
+        } else {
+            return null;
+        }
+    }
+
+    private ProfileVersionBuilder getProfileVersionBuilder(Version version) {
+        ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
+        synchronized (workspace) {
+            File profilesFile = getRequiredProfilesFile(version);
+
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(profilesFile);
+                DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
+                Profile profile = reader.nextProfile();
+                while (profile != null) {
+                    builder.addProfile(profile);
+                    profile = reader.nextProfile();
+                }
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot profile version: " + version, ex);
+            } finally {
+                IOUtils.safeClose(fis);
             }
         }
-        return profileVersion;
+        return builder;
     }
 
-    ProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
+    LinkedProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
-        synchronized (profileVersions) {
+        return addProfileVersionInternal(profileVersion);
+    }
+
+    private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
+        synchronized (workspace) {
             Version version = profileVersion.getIdentity();
-            Map<String, Profile> linkedProfiles = profileVersion.getLinkedProfiles();
-            for (Profile profile : linkedProfiles.values()) {
-                addProfile(version, profile);
-            }
-            return getProfileVersion(version);
+            Path versionPath = getProfileVersionPath(version);
+            IllegalStateAssertion.assertFalse(versionPath.toFile().exists(), "Profile version path already exists: " + versionPath);
+            IllegalStateAssertion.assertTrue(versionPath.toFile().mkdirs(), "Cannot create profile version directory: " + versionPath);
+            return writeProfileVersion(profileVersion);
         }
     }
 
-    ProfileVersion removeProfileVersion(Version version) {
+    LinkedProfileVersion removeProfileVersion(Version version) {
         assertValid();
-        synchronized (profileVersions) {
-            ProfileVersion profileVersion = getProfileVersion(version);
-            profileVersions.remove(version);
+        synchronized (workspace) {
+            LinkedProfileVersion profileVersion = getProfileVersion(version);
+            deleteProfileVersionPath(version);
             return profileVersion;
         }
     }
 
     Profile getProfile(Version version, String identity) {
         assertValid();
-        synchronized (profileVersions) {
-            Map<String, Profile> profiles = profileVersions.get(version);
-            return profiles != null ? profiles.get(identity) : null;
+        Profile result = null;
+        synchronized (workspace) {
+            FileInputStream fis = null;
+            try {
+                File profilesFile = getRequiredProfilesFile(version);
+                fis = new FileInputStream(profilesFile);
+                DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
+                Profile profile = reader.nextProfile();
+                while (profile != null) {
+                    if (profile.getIdentity().equals(identity)) {
+                        result = profile;
+                        break;
+                    }
+                    profile = reader.nextProfile();
+                }
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot profile version: " + version, ex);
+            } finally {
+                IOUtils.safeClose(fis);
+            }
         }
+        return result;
+    }
+
+    Profile getRequiredProfile(Version version, String identity) {
+        Profile profile = getProfile(version, identity);
+        IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile '" + identity + "' from: " + version);
+        return profile;
     }
 
     Profile addProfile(Version version, Profile profile) {
         assertValid();
-        synchronized (profileVersions) {
-            Map<String, Profile> profiles = profileVersions.get(version);
-            if (profiles == null) {
-                profiles = new HashMap<>();
-                profileVersions.put(version, profiles);
-            }
-            List<ProfileItem> profileItems = new ArrayList<>();
-            for (ProfileItem item : profile.getProfileItems(null)) {
-                if (item instanceof ResourceItem) {
-                    ResourceItem resitem = (ResourceItem) item;
-                    Resource resource = processResourceItem(profile, resitem);
-                    item = new DefaultResourceItem(resource);
-                }
-                profileItems.add(item);
-            }
-            profile = new ImmutableProfile(version, profile.getIdentity(), profile.getAttributes(), profile.getParents(), profileItems, null);
-            profiles.put(profile.getIdentity(), profile);
-            return profile;
+        synchronized (workspace) {
+            ProfileVersionBuilder builder = getProfileVersionBuilder(version);
+            writeProfileVersion(builder.addProfile(profile).getProfileVersion());
+            return getProfile(version, profile.getIdentity());
+        }
+    }
+
+    Profile updateProfile(Version version, Profile profile) {
+        assertValid();
+        synchronized (workspace) {
+            String identity = profile.getIdentity();
+            ProfileVersionBuilder builder = getProfileVersionBuilder(version);
+            builder.removeProfile(identity);
+            deleteProfilePath(version, identity);
+            writeProfileVersion(builder.addProfile(profile).getProfileVersion());
+            return getProfile(version, identity);
         }
     }
 
     Profile removeProfile(Version version, String identity) {
         assertValid();
-        synchronized (profileVersions) {
-            Map<String, Profile> profiles = profileVersions.get(version);
-            return profiles != null ? profiles.remove(identity) : null;
+        synchronized (workspace) {
+            Profile profile = getRequiredProfile(version, identity);
+            ProfileVersionBuilder builder = getProfileVersionBuilder(version);
+            builder.removeProfile(identity);
+            deleteProfilePath(version, identity);
+            writeProfileVersion(builder.getProfileVersion());
+            return profile;
         }
     }
 
@@ -175,11 +267,8 @@ public final class ProfileRegistry extends AbstractComponent {
         String version = url.getHost();
         String profile = path.substring(1, path.lastIndexOf('/'));
         String item = path.substring(path.lastIndexOf('/') + 1);
-        Path profileVersionPath = Paths.get(profilesDir.toString(), version);
-        IllegalStateAssertion.assertTrue(profileVersionPath.toFile().isDirectory(), "Cannot find version directory: " + profileVersionPath);
-        Path profilePath = Paths.get(profileVersionPath.toString(), profile);
-        IllegalStateAssertion.assertTrue(profilePath.toFile().isDirectory(), "Cannot find profile directory: " + profilePath);
-        Path itemPath = Paths.get(profilePath.toString(), item);
+        Path profilePath = getRequiredProfilePath(Version.parseVersion(version), profile);
+        Path itemPath = profilePath.resolve(item);
         IllegalStateAssertion.assertTrue(itemPath.toFile().isDirectory(), "Cannot find item directory: " + itemPath);
         int cntindex = 0;
         Version resourceVersion = null;
@@ -217,31 +306,95 @@ public final class ProfileRegistry extends AbstractComponent {
         return contentPath.toFile().toURI().toURL().openConnection();
     }
 
-    private Resource processResourceItem(Profile profile, ResourceItem item) {
-        IllegalArgumentAssertion.assertNotNull(profile, "profile");
-        IllegalArgumentAssertion.assertNotNull(item, "item");
-        Resource resource = item.getResource();
-
-        // Copy non-content capabilities
-        ResourceBuilder builder = new DefaultResourceBuilder();
-        for (Capability cap : resource.getCapabilities(null)) {
-            if (!ContentNamespace.CONTENT_NAMESPACE.equals(cap.getNamespace())) {
-                builder.addCapability(cap.getNamespace(), cap.getAttributes(), cap.getDirectives());
-            }
+    private LinkedProfileVersion writeProfileVersion(LinkedProfileVersion profileVersion) {
+        Version version = profileVersion.getIdentity();
+        FileOutputStream fos = null;
+        try {
+            File profilesFile = getProfilesFile(version);
+            fos = new FileOutputStream(profilesFile);
+            DefaultProfileXMLWriter writer = new DefaultProfileXMLWriter(fos, new ResourceItemContentHandler());
+            writer.writeProfileVersion(profileVersion);
+            writer.close();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot add profile version: " + version, ex);
+        } finally {
+            IOUtils.safeClose(fos);
         }
+        return getProfileVersionInternal(version);
+    }
 
-        // Process the content capabilities & update the contentURL
-        List<Capability> ccaps = resource.getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
-        for (int i = 0; i < ccaps.size(); i++) {
-            ContentCapability ccap = ccaps.get(i).adapt(ContentCapability.class);
-            Path profilePath = Paths.get(profilesDir.toString(), profile.getVersion().toString(), profile.getIdentity());
-            Path targetPath = Paths.get(profilePath.toString(), item.getSymbolicName(), item.getVersion().toString(), "content" + i);
+    private Path getProfileVersionPath(Version version) {
+        return workspace.resolve(version.toString());
+    }
+
+    private Path getRequiredProfileVersionPath(Version version) {
+        Path versionPath = getProfileVersionPath(version);
+        IllegalStateAssertion.assertTrue(versionPath.toFile().exists(), "Cannot find profile version directory: " + versionPath);
+        return versionPath;
+    }
+
+    private Path getProfilePath(Version version, String identity) {
+        return getProfileVersionPath(version).resolve(identity);
+    }
+
+    private Path getRequiredProfilePath(Version version, String identity) {
+        Path profilePath = getProfilePath(version, identity);
+        IllegalStateAssertion.assertTrue(profilePath.toFile().exists(), "Cannot find profile directory: " + profilePath);
+        return profilePath;
+    }
+
+    private File getProfilesFile(Version version) {
+        Path versionPath = getProfileVersionPath(version);
+        return versionPath.resolve(PROFILES_FILE).toFile();
+    }
+
+    private File getRequiredProfilesFile(Version version) {
+        File profilesFile = getProfilesFile(version);
+        IllegalStateAssertion.assertTrue(profilesFile.exists(), "Profiles file does not exist: " + profilesFile);
+        return profilesFile;
+    }
+
+    private void deleteProfilePath(Version version, String identity) {
+        Path profilePath = getProfilePath(version, identity);
+        try {
+            FileUtils.deleteRecursively(profilePath);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot delete profile path: " + profilePath);
+        }
+    }
+
+    private void deleteProfileVersionPath(Version version) {
+        Path versionPath = getRequiredProfileVersionPath(version);
+        try {
+            FileUtils.deleteRecursively(versionPath);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot delete profile version path: " + versionPath);
+        }
+    }
+
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
+    }
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
+    }
+
+    class ResourceItemContentHandler extends AbstractContentHandler {
+
+        @Override
+        public Map<String, Object> process(ContentCapability ccap) throws IOException {
+            Profile profile = getContextItem(Profile.class);
+            ResourceItem resItem = getContextItem(ResourceItem.class);
+            Path profilePath = getProfileVersionPath(profile.getVersion()).resolve(profile.getIdentity());
+            List<Capability> ccaps = resItem.getResource().getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
+            int i = ccaps.indexOf(ccap);
+            Path targetPath = Paths.get(profilePath.toString(), resItem.getSymbolicName(), resItem.getVersion().toString(), "content" + i);
             URL contentURL;
             try {
                 File targetDir = targetPath.toFile().getParentFile();
                 IllegalStateAssertion.assertTrue(targetDir.isDirectory() || targetDir.mkdirs(), "Cannot create directory: " + targetDir);
                 Files.copy(getRequiredCapabilityContent(ccap), targetPath, REPLACE_EXISTING);
-                String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + item.getSymbolicName() + "?version=" + item.getVersion();
+                String spec = "profile://" + profile.getVersion() + "/" + profile.getIdentity() + "/" + resItem.getSymbolicName() + "?version=" + resItem.getVersion();
                 if (ccaps.size() > 1) {
                     spec += "&cntindex=" + i;
                 }
@@ -251,23 +404,17 @@ public final class ProfileRegistry extends AbstractComponent {
             }
             Map<String, Object> atts = new HashMap<>(ccap.getAttributes());
             atts.remove(ContentNamespace.CAPABILITY_STREAM_ATTRIBUTE);
-            builder.addContentCapability(contentURL, atts, ccap.getDirectives());
+            atts.put(ContentNamespace.CAPABILITY_URL_ATTRIBUTE, contentURL);
+            return atts;
         }
 
-        // Copy the requirements
-        for (Requirement req : resource.getRequirements(null)) {
-            builder.addRequirement(req.getNamespace(), req.getAttributes(), req.getDirectives());
+        private InputStream getRequiredCapabilityContent(ContentCapability ccap) throws IOException {
+            InputStream content = ccap.getContentStream();
+            if (content == null) {
+                content = ccap.getContentURL().openStream();
+            }
+            IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + ccap);
+            return content;
         }
-
-        return builder.getResource();
-    }
-
-    private InputStream getRequiredCapabilityContent(ContentCapability ccap) throws IOException {
-        InputStream content = ccap.getContentStream();
-        if (content == null) {
-            content = ccap.getContentURL().openStream();
-        }
-        IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + ccap);
-        return content;
     }
 }

@@ -1,8 +1,9 @@
+package io.fabric8.spi;
 /*
  * #%L
- * Fabric8 :: API
+ * Gravia :: Repository
  * %%
- * Copyright (C) 2014 Red Hat
+ * Copyright (C) 2012 - 2014 JBoss by Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +18,19 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
 
-import java.util.Map;
+import io.fabric8.api.LinkedProfileVersion;
 
-
+import java.io.Closeable;
+import java.io.IOException;
 
 /**
- * The content of a configuration profile item
+ * Write repository contnet.
  *
  * @author thomas.diesler@jboss.com
- * @since 27-May-2014
+ * @since 11-Jun-2014
  */
-public interface Configuration {
+public interface ProfileWriter extends Closeable {
 
-    String DEFAULT_MERGE_ID = "default";
-    String DELETED_MARKER = "#deleted#";
-
-    String getMergeId();
-
-    Map<String, Object> getAttributes();
-
-    Object getAttribute(String key);
-
-    Map<String, String> getDirectives();
-
-    String getDirective(String key);
+    void writeProfileVersion(LinkedProfileVersion profileVersion) throws IOException;
 }

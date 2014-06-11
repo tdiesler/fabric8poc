@@ -36,7 +36,7 @@ public interface ConfigurationItemBuilder extends Builder<ConfigurationItemBuild
 
     ConfigurationItemBuilder addConfiguration(Map<String, Object> attributes);
 
-    ConfigurationItemBuilder addConfiguration(String mergeIndex, Map<String, Object> attributes, Map<String, String> directives);
+    ConfigurationItemBuilder addConfiguration(String mergeId, Map<String, Object> attributes, Map<String, String> directives);
 
     ConfigurationItem getConfigurationItem();
 

@@ -19,7 +19,6 @@
  */
 package io.fabric8.test.embedded.support;
 
-import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.FabricException;
 import io.fabric8.spi.AbstractJMXAttributeProvider;
@@ -28,6 +27,7 @@ import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
+import io.fabric8.spi.utils.HostUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,8 +47,6 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -58,7 +56,6 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
-import io.fabric8.spi.utils.HostUtils;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.AbstractResourceInstaller;

@@ -95,7 +95,8 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     @Override
     public ProfileBuilder addResourceItem(Resource resource) {
-        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
+        String itemId = resource.getIdentity().getCanonicalForm();
+        mutableProfile.addProfileItem(new DefaultResourceItem(itemId, resource));
         return this;
     }
 
@@ -107,7 +108,8 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
             icap.getAttributes().put(IdentityNamespace.CAPABILITY_SHARED_ATTRIBUTE, Boolean.TRUE);
             resource = builder.getResource();
         }
-        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
+        String itemId = resource.getIdentity().getCanonicalForm();
+        mutableProfile.addProfileItem(new DefaultResourceItem(itemId, resource));
         return this;
     }
 
@@ -119,13 +121,15 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
             icap.getAttributes().put(IdentityNamespace.CAPABILITY_TYPE_ATTRIBUTE, IdentityNamespace.TYPE_REFERENCE);
             resource = builder.getResource();
         }
-        mutableProfile.addProfileItem(new DefaultResourceItem(resource));
+        String itemId = resource.getIdentity().getCanonicalForm();
+        mutableProfile.addProfileItem(new DefaultResourceItem(itemId, resource));
         return this;
     }
 
     @Override
     public ProfileBuilder addRequirementItem(Requirement requirement) {
-        mutableProfile.addProfileItem(new DefaultRequirementItem(requirement));
+        String itemId = (String) requirement.getAttribute(IdentityNamespace.IDENTITY_NAMESPACE);
+        mutableProfile.addProfileItem(new DefaultRequirementItem(itemId, requirement));
         return this;
     }
 

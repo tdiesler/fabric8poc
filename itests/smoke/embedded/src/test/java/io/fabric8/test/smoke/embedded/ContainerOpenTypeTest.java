@@ -20,7 +20,6 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;

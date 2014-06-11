@@ -31,8 +31,6 @@ import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.git.GitService;
-import io.fabric8.spi.DefaultProfileBuilder;
-import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.ImmutableProfileVersion;
@@ -118,27 +116,12 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
 
     @Activate
     void activate() {
-        activateInternal();
         activateComponent(PERMIT, this);
     }
 
     @Deactivate
     void deactivate() {
         deactivateComponent(PERMIT);
-    }
-
-    private void activateInternal() {
-
-        // Add the default profile version
-        Profile profile = new DefaultProfileBuilder(DEFAULT_PROFILE_IDENTITY)
-                .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
-                .getProfile();
-
-        LinkedProfileVersion profileVersion = new DefaultProfileVersionBuilder(DEFAULT_PROFILE_VERSION)
-                .addProfile(profile)
-                .getProfileVersion();
-
-        addProfileVersionInternal(profileVersion);
     }
 
     @Override
@@ -272,10 +255,6 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public ProfileVersion addProfileVersion(ProfileVersion profileVersion) {
         assertValid();
-        return addProfileVersionInternal((LinkedProfileVersion) profileVersion);
-    }
-
-    private ProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
         Version version = profileVersion.getIdentity();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -283,7 +262,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             IllegalStateAssertion.assertNull(registry.getProfileVersion(version), "ProfileVersion already exists: " + profileVersion);
             IllegalStateAssertion.assertFalse(profileVersion.getProfileIdentities().isEmpty(), "ProfileVersion must contain at least one profile: " + profileVersion);
             LOGGER.info("Add profile version: {}", version);
-            return registry.addProfileVersion(profileVersion);
+            return registry.addProfileVersion((LinkedProfileVersion) profileVersion);
         } finally {
             writeLock.unlock();
         }
@@ -458,8 +437,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
             LOGGER.info("Update profile: {}", profile);
             try {
                 ProfileRegistry registry = profileRegistry.get();
-                registry.removeProfile(version, profileId);
-                Profile updated = registry.addProfile(version, profile);
+                Profile updated = registry.updateProfile(version, profile);
                 ProfileEvent event = new ProfileEvent(updated, ProfileEvent.EventType.UPDATED);
                 eventDispatcher.get().dispatchProfileEvent(event, listener);
                 return updated;

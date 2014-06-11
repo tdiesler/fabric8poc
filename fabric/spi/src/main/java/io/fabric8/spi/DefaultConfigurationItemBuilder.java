@@ -46,15 +46,15 @@ public final class DefaultConfigurationItemBuilder implements ConfigurationItemB
 
     @Override
     public ConfigurationItemBuilder addConfiguration(Map<String, Object> attributes) {
-        DefaultConfiguration config = new DefaultConfiguration(Configuration.DEFAULT_MERGE_INDEX, attributes, null);
-        configurations.put(config.getMergeIndex(), config);
+        DefaultConfiguration config = new DefaultConfiguration(Configuration.DEFAULT_MERGE_ID, attributes, null);
+        configurations.put(config.getMergeId(), config);
         return this;
     }
 
     @Override
-    public ConfigurationItemBuilder addConfiguration(String mergeIndex, Map<String, Object> attributes, Map<String, String> directives) {
-        DefaultConfiguration config = new DefaultConfiguration(mergeIndex, attributes, directives);
-        configurations.put(config.getMergeIndex(), config);
+    public ConfigurationItemBuilder addConfiguration(String mergeId, Map<String, Object> attributes, Map<String, String> directives) {
+        DefaultConfiguration config = new DefaultConfiguration(mergeId, attributes, directives);
+        configurations.put(config.getMergeId(), config);
         return this;
     }
 
@@ -76,7 +76,7 @@ public final class DefaultConfigurationItemBuilder implements ConfigurationItemB
 
         @Override
         public Map<String, Object> getDefaultAttributes() {
-            Configuration config = configurations.get(Configuration.DEFAULT_MERGE_INDEX);
+            Configuration config = configurations.get(Configuration.DEFAULT_MERGE_ID);
             IllegalStateAssertion.assertNotNull(config, "Cannot obtain default attributes from: " + this);
             return config.getAttributes();
         }
@@ -130,19 +130,19 @@ public final class DefaultConfigurationItemBuilder implements ConfigurationItemB
 
     static class DefaultConfiguration implements Configuration {
 
-        private final String mergeIndex;
+        private final String mergeId;
         private final Map<String, Object> attributes;
         private final Map<String, String> directives;
 
-        DefaultConfiguration(String mergeIndex, Map<String, Object> atts, Map<String, String> dirs) {
-            this.mergeIndex = mergeIndex;
+        DefaultConfiguration(String mergeId, Map<String, Object> atts, Map<String, String> dirs) {
+            this.mergeId = mergeId;
             attributes = atts != null ? new HashMap<String, Object>(atts) : Collections.<String, Object> emptyMap();
             directives = dirs != null ? new HashMap<String, String>(dirs) : Collections.<String, String> emptyMap();
         }
 
         @Override
-        public String getMergeIndex() {
-            return mergeIndex;
+        public String getMergeId() {
+            return mergeId;
         }
 
         @Override
@@ -167,7 +167,7 @@ public final class DefaultConfigurationItemBuilder implements ConfigurationItemB
 
         @Override
         public String toString() {
-            return "[id=" + mergeIndex + ",atts=" + attributes + ",dirs=" + directives + "]";
+            return "[id=" + mergeId + ",atts=" + attributes + ",dirs=" + directives + "]";
         }
     }
 }

@@ -89,7 +89,7 @@ public final class ProfileUtils {
         String itemId = targetItem.getIdentity();
         ConfigurationItemBuilder itemBuilder = ConfigurationItemBuilder.Factory.create(itemId);
         for (Configuration tagetConfig : targetItem.getConfigurations(null)) {
-            String mergeIndex = tagetConfig.getMergeIndex();
+            String mergeIndex = tagetConfig.getMergeId();
             Map<String, Object> atts = new LinkedHashMap<>(tagetConfig.getAttributes());
             Map<String, String> dirs = new LinkedHashMap<>(tagetConfig.getDirectives());
             Configuration thisConfig = thisItem.getConfiguration(mergeIndex);

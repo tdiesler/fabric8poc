@@ -20,8 +20,8 @@ public final class DefaultResourceItem extends AbstractProfileItem implements Re
 
     private final Resource resource;
 
-    public DefaultResourceItem(Resource resource) {
-        super(resource.getIdentity().getCanonicalForm());
+    public DefaultResourceItem(String itemId, Resource resource) {
+        super(itemId);
         IllegalArgumentAssertion.assertNotNull(resource, "resource");
         this.resource = resource;
     }

@@ -20,7 +20,6 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -52,8 +51,8 @@ import org.junit.Test;
  */
 public class ProfileOpenTypeTest {
 
-    static AttributeKey<String> AKEY = AttributeKey.create("AKey", String.class);
-    static AttributeKey<String> BKEY = AttributeKey.create("BKey", String.class);
+    static AttributeKey<String> AKEY = AttributeKey.create("AKey");
+    static AttributeKey<String> BKEY = AttributeKey.create("BKey");
 
     @BeforeClass
     public static void beforeClass() throws Exception {

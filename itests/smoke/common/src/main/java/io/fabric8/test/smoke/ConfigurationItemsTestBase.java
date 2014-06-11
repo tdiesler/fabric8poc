@@ -94,6 +94,8 @@ public abstract class ConfigurationItemsTestBase {
                 .addConfigurationItem("some.pid", Collections.singletonMap("foo", (Object) "bar"))
                 .getProfile();
 
+        Assert.assertEquals("Two items", 2, updateProfile.getProfileItems(null).size());
+
         // Setup the profile listener
         final AtomicReference<CountDownLatch> latchA = new AtomicReference<CountDownLatch>(new CountDownLatch(1));
         ProfileEventListener profileListener = new ProfileEventListener() {
@@ -129,7 +131,7 @@ public abstract class ConfigurationItemsTestBase {
         Profile defaultProfile = prfManager.updateProfile(updateProfile, profileListener);
         Assert.assertTrue("ProfileEvent received", latchA.get().await(500, TimeUnit.MILLISECONDS));
         Assert.assertTrue("ProvisionEvent received", latchB.get().await(500, TimeUnit.MILLISECONDS));
-        Assert.assertEquals("One item", 2, defaultProfile.getProfileItems(null).size());
+        Assert.assertEquals("Two items", 2, defaultProfile.getProfileItems(null).size());
 
         // Verify the configuration
         config = configAdmin.getConfiguration("some.pid");

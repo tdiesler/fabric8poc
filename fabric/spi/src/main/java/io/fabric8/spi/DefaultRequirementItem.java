@@ -2,7 +2,6 @@ package io.fabric8.spi;
 
 import io.fabric8.api.RequirementItem;
 
-import org.jboss.gravia.resource.IdentityNamespace;
 import org.jboss.gravia.resource.Requirement;
 
 /**
@@ -15,10 +14,8 @@ public final class DefaultRequirementItem extends AbstractProfileItem implements
 
     private final Requirement requirement;
 
-    // Multiple req items with the same resource symbolic name, but different versions
-    // are not supported in the same profile. Also applies to the effective profile
-    public DefaultRequirementItem(Requirement requirement) {
-        super((String) requirement.getAttribute(IdentityNamespace.IDENTITY_NAMESPACE));
+    public DefaultRequirementItem(String itemId, Requirement requirement) {
+        super(itemId);
         this.requirement = requirement;
     }
 
