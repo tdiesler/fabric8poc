@@ -35,7 +35,7 @@ import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +102,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     void addChildToParent(ContainerIdentity parentId, ContainerIdentity childId) {
+        ContainerLockManager.assertWriteLock(parentId);
         Container parent = getRequiredContainer(parentId);
         Set<ContainerIdentity> existingChildren = new LinkedHashSet<>(parent.getChildIdentities());
         existingChildren.add(childId);
@@ -110,6 +111,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     void removeChildFromParent(ContainerIdentity parentId, ContainerIdentity childId) {
+        ContainerLockManager.assertWriteLock(parentId);
         Container parent = getRequiredContainer(parentId);
         Set<ContainerIdentity> existingChildren = new LinkedHashSet<>(parent.getChildIdentities());
         existingChildren.remove(childId);
@@ -118,6 +120,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     Container getContainer(ContainerIdentity identity) {
+        ContainerLockManager.assertReadLock(identity);
         return readInternal(identity);
     }
 
@@ -132,25 +135,30 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     Container startContainer(ContainerIdentity identity) {
+        ContainerLockManager.assertWriteLock(identity);
         setStateInternal(identity, State.STARTED);
         return getRequiredContainer(identity);
     }
 
     Container stopContainer(ContainerIdentity identity) {
+        ContainerLockManager.assertWriteLock(identity);
         setStateInternal(identity, State.STOPPED);
         return getRequiredContainer(identity);
     }
 
     Container destroyContainer(ContainerIdentity identity) {
+        ContainerLockManager.assertWriteLock(identity);
         return removeInternal(identity);
     }
 
     Container setProfileVersion(ContainerIdentity identity, ProfileVersionState versionState) {
+        ContainerLockManager.assertWriteLock(identity);
         setVersionIntenral(identity, versionState.getIdentity());
         return getRequiredContainer(identity);
     }
 
     Container addProfiles(ContainerIdentity identity, List<String> profiles) {
+        ContainerLockManager.assertWriteLock(identity);
         List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
         allProfiles.addAll(profiles);
         setProfilesInternal(identity, allProfiles);
@@ -158,6 +166,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     Container removeProfiles(ContainerIdentity identity, List<String> profiles) {
+        ContainerLockManager.assertWriteLock(identity);
         List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
         allProfiles.removeAll(profiles);
         setProfilesInternal(identity, allProfiles);
@@ -165,6 +174,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+        ContainerLockManager.assertReadLock(identity);
         Set<ServiceEndpoint> allEndpoints = getServiceEndpointsInternal(identity);
         Set<ServiceEndpoint> result = getServiceEndpointsInternal(identity);
         for (ServiceEndpoint ep : allEndpoints) {
@@ -176,10 +186,12 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+        ContainerLockManager.assertWriteLock(identity);
        return getServiceEndpointInternal(identity, endpointId.getSymbolicName());
     }
 
     Container addServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        ContainerLockManager.assertWriteLock(identity);
         assertValid();
         addServiceEndpointInternal(identity, endpoint);
         return getRequiredContainer(identity);
@@ -187,18 +199,21 @@ public final class ContainerRegistry extends AbstractComponent {
 
 
     Container removeServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
+        ContainerLockManager.assertWriteLock(identity);
         assertValid();
         addServiceEndpointInternal(identity, endpoint);
         return getRequiredContainer(identity);
     }
 
     Container setServiceEndpoints(ContainerIdentity identity, Set<ServiceEndpoint> endpoint) {
+        ContainerLockManager.assertWriteLock(identity);
         assertValid();
         setServiceEndpointsInternal(identity, endpoint);
         return getRequiredContainer(identity);
     }
 
     private void storeInternal(Container container) {
+        LOGGER.debug("Storing container {}.", container.getIdentity());
         ContainerIdentity identity = container.getIdentity();
         String id = identity.getSymbolicName();
         Container existing = getContainer(identity);
@@ -220,6 +235,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     private Container readInternal(ContainerIdentity identity) {
+        LOGGER.debug("Reading container {}.", identity);
         Container result = null;
         String id = identity.getSymbolicName();
         try {
@@ -249,6 +265,7 @@ public final class ContainerRegistry extends AbstractComponent {
     }
 
     private Container removeInternal(ContainerIdentity identity) {
+        LOGGER.debug("Storing container {}.", identity);
         setStateInternal(identity, State.DESTROYED);
         Container result = getContainer(identity);
         try {
@@ -512,13 +529,15 @@ public final class ContainerRegistry extends AbstractComponent {
      * @return          A {@link Map} of {@link io.fabric8.api.AttributeKey} -> Value.
      */
     private Map<AttributeKey<?>, Object> getAttributesInternal(String basePath) {
-        Map<AttributeKey<?>, Object> attributes = new HashMap<>();
+        Map<AttributeKey<?>, Object> attributes = new LinkedHashMap<>();
         try {
             for (String path : curator.get().getChildren().forPath(basePath)) {
-                String attributePath = ZKPaths.makePath(basePath, path);
-                String attributeData = new String(curator.get().getData().forPath(attributePath));
-                AttributeKey key = AttributeKey.create(attributeData);
-                Object value = key.parse(attributeData);
+                String attributeKeyPath = ZKPaths.makePath(basePath, path);
+                String attributeValuePath = ZKPaths.makePath(attributeKeyPath, "value");
+                String keyData = new String(curator.get().getData().forPath(attributeKeyPath));
+                String valueData = new String(curator.get().getData().forPath(attributeValuePath));
+                AttributeKey key = AttributeKey.createFrom(keyData);
+                Object value = key.getFactory().createFrom(valueData);
                 attributes.put(key, value);
             }
             return attributes;
@@ -543,9 +562,11 @@ public final class ContainerRegistry extends AbstractComponent {
             for(Map.Entry<AttributeKey<?>, Object> entry : attributes.entrySet()) {
                 AttributeKey key = entry.getKey();
                 Object value = entry.getValue();
-                String attributePath = ZKPaths.makePath(basePath, key.getName());
-                String data = key.toString(value);
-                curator.get().create().creatingParentsIfNeeded().forPath(attributePath, data.getBytes());
+                String attributeKeyPath = ZKPaths.makePath(basePath, key.getName());
+                String attributeValuePath = ZKPaths.makePath(attributeKeyPath, "value");
+                String data = value.toString();
+                curator.get().create().creatingParentsIfNeeded().forPath(attributeKeyPath, key.getCanonicalForm().getBytes());
+                curator.get().create().creatingParentsIfNeeded().forPath(attributeValuePath, data.getBytes());
             }
         } catch (Exception e) {
             throw new FabricException("Failed to write attributes at:" + basePath + ".", e);

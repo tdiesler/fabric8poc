@@ -21,6 +21,7 @@ import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.JMXServiceEndpoint;
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
@@ -80,6 +81,9 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     @Reference(referenceInterface = BootConfiguration.class)
     private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
 
+    @Reference(referenceInterface = ContainerLockManager.class)
+    private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
+
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
 
@@ -105,9 +109,18 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     private void activateInternal() {
         // Create the current container
         currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
+
+        LockHandle writeLock = aquireWriteLock(currentIdentity);
+        try {
+            registerContainer(currentIdentity);
+        } finally {
+            writeLock.unlock();
+        }
+
+    }
+
+    private void registerContainer(ContainerIdentity identity) {
         ContainerRegistry registry = containerRegistry.get();
-
-
         //Create Initial Endpoints
         Set<ServiceEndpoint> endpoints = new LinkedHashSet<>();
         if (attributes.containsKey(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)) {
@@ -151,6 +164,14 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         }
     }
 
+    private LockHandle aquireWriteLock(ContainerIdentity identity) {
+        return containerLocks.get().aquireWriteLock(identity);
+    }
+
+    private LockHandle aquireReadLock(ContainerIdentity identity) {
+        return containerLocks.get().aquireReadLock(identity);
+    }
+
     void bindAttributeProvider(AttributeProvider provider) {
         addAttributes(provider);
         attributeProviders.add(provider);
@@ -169,6 +190,12 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         runtimeService.unbind(service);
     }
 
+    void bindContainerLocks(ContainerLockManager service) {
+        containerLocks.bind(service);
+    }
+    void unbindContainerLocks(ContainerLockManager service) {
+        containerLocks.unbind(service);
+    }
 
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);

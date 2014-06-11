@@ -24,6 +24,7 @@ import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.resource.ResourceIdentity;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -35,7 +36,7 @@ public class CurrentContainerService extends AbstractComponent {
 
     @Activate
     void activate() {
-      activateComponent();
+        activateComponent();
     }
 
     @Deactivate
@@ -44,11 +45,11 @@ public class CurrentContainerService extends AbstractComponent {
     }
 
     Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
-        return resourceHandles;
+        return Collections.unmodifiableMap(resourceHandles);
     }
 
     void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
-       resourceHandles.putAll(handles);
+        resourceHandles.putAll(handles);
     }
 
     void removeResourceHandles(Collection<ResourceIdentity> handles) {
