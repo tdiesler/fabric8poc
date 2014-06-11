@@ -71,7 +71,10 @@ public enum ZkPath {
     CONTAINER_ATTRIBUTE_GEOLOCATION("/fabric/registry/containers/{container}/attributes/geoloc"),
 
     CONTAINER_ENDPOINTS("/fabric/registry/containers/{container}/endpoints"),
-    CONTAINER_ENDPOINT("/fabric/registry/containers/{container}/endpoints/{endpoint}");
+    CONTAINER_ENDPOINT("/fabric/registry/containers/{container}/endpoints/{endpoint}"),
+
+    LOCKS("/fabric/registry/locks"),
+    LOCK_CONTAINER("/fabric/registry/locks/{container}");
 
 
 
