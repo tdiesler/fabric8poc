@@ -127,6 +127,8 @@ public final class AttributeKey<T> {
     private AttributeKey(String name, Class<T> optionalType, ValueFactory<T> customFactory) {
         IllegalArgumentAssertion.assertNotNull(name, "name");
         this.name = name;
+
+        // Assign type
         if (optionalType != null) {
             type = optionalType;
         } else {
@@ -136,22 +138,25 @@ public final class AttributeKey<T> {
                 type = (Class<T>) String.class;
             }
         }
+        IllegalArgumentAssertion.assertNotNull(type, "Cannot obtain value type");
+
+        // Assign factory
         if (customFactory != null) {
             factory = customFactory;
+            IllegalArgumentAssertion.assertTrue(type == factory.getType(), "Provided type does not match factory type");
         } else {
-            factory = (ValueFactory<T>) SUPPORTED_VALUE_FACTORIES.get(type);
+            ValueFactory<T> supportedFactory = (ValueFactory<T>) SUPPORTED_VALUE_FACTORIES.get(type);
+            factory = supportedFactory != null ? supportedFactory : (ValueFactory<T>) STRING_VALUE_FACTORY;
         }
-        IllegalArgumentAssertion.assertNotNull(type, "Cannot obtain value type");
-        IllegalArgumentAssertion.assertTrue(factory == null || type == factory.getType(), "Provided type does not match factory type");
+
+        // Assign cononical form
         StringBuffer buffer = new StringBuffer(name);
         if (type != String.class) {
             buffer.append(",type=" + type.getName());
         }
-        if (factory != null) {
-            String factoryName = factory.getClass().getName();
-            if (!factoryName.startsWith(AttributeKey.class.getName())) {
-                buffer.append(",factory=" + factoryName);
-            }
+        String factoryName = factory.getClass().getName();
+        if (!factoryName.startsWith(AttributeKey.class.getName())) {
+            buffer.append(",factory=" + factoryName);
         }
         canonicalForm = buffer.toString();
         toString = "Key[name=" + canonicalForm + "]";

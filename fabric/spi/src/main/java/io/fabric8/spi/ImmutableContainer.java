@@ -76,7 +76,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
 
     @Override
     public RuntimeType getRuntimeType() {
-        return null;
+        return runtimeType;
     }
 
     @Override
