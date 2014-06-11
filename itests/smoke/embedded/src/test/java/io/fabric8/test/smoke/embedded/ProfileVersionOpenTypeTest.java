@@ -19,7 +19,6 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.api.AttributeKey.ValueFactory;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
@@ -91,13 +90,6 @@ public class ProfileVersionOpenTypeTest {
         Assert.assertEquals(prfvA.getProfileIdentities(), prfvC.getProfileIdentities());
 
         prfManager.removeProfileVersion(version);
-    }
-
-    public static class StringValueFactory implements ValueFactory<String> {
-        @Override
-        public String createFrom(Object source) {
-            return (String) source;
-        }
     }
 
     static class CompositeDataOptionsProvider implements OptionsProvider<ProfileVersionBuilder> {

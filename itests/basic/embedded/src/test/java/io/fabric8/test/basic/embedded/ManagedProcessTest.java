@@ -25,28 +25,20 @@ import io.fabric8.container.karaf.KarafProcessBuilder;
 import io.fabric8.container.tomcat.TomcatProcessBuilder;
 import io.fabric8.container.wildfly.WildFlyProcessBuilder;
 import io.fabric8.spi.Agent;
-import io.fabric8.spi.AgentIdentity;
-import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
-import io.fabric8.spi.RuntimeIdentity;
 import io.fabric8.spi.process.ManagedProcess;
 import io.fabric8.spi.process.ManagedProcess.State;
 import io.fabric8.spi.process.ProcessIdentity;
-import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
-import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -86,7 +78,6 @@ public class ManagedProcessTest {
     }
 
     @Test
-    @Ignore
     public void testManagedTomcat() throws Exception {
 
         ProcessOptions options = TomcatProcessBuilder.create()

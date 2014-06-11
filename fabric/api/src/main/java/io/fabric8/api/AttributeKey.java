@@ -36,14 +36,19 @@ import java.util.regex.Pattern;
  */
 public final class AttributeKey<T> {
 
-    public static final String ATTRIBUTE_FORMAT = "key=%s;type=%s;value=%s";
-    public static final String GROUP = "([a-zA-Z0-9\\.\\-]+)";
-    public static final Pattern ATTRIBUTE_PATTERN = Pattern.compile(String.format(ATTRIBUTE_FORMAT, GROUP, GROUP, GROUP));
+    private static final String GROUP = "[a-zA-Z0-9\\.\\-]+";
+    private static final String ATTRIBUTE_KEY_FORMAT = "name=(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
+    private static final Pattern ATTRIBUTE_KEY_PATTERN = Pattern.compile(String.format(ATTRIBUTE_KEY_FORMAT, GROUP, GROUP, GROUP));
 
     /**
      * A factory to create an attribute value
      */
     public interface ValueFactory<T> {
+
+        /**
+         * Get the value type that this factory creates
+         */
+        Class<T> getType();
 
         /**
          * Create the attribute value from the given source
@@ -52,154 +57,104 @@ public final class AttributeKey<T> {
         T createFrom(Object source);
     }
 
-    public static final ValueFactory<String> STRING_VALUE_FACTORY = new ValueFactory<String>() {
-        @Override
-        public String createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof String) {
-                return (String) source;
-            } else {
-                return String.valueOf(source);
-            }
-        }
-    };
-
-    public static final ValueFactory<Short> SHORT_VALUE_FACTORY = new ValueFactory<Short>() {
-        @Override
-        public Short createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Short) {
-                return (Short) source;
-            } else if (source instanceof Number) {
-                return ((Number)source).shortValue();
-            } else {
-                return Short.parseShort(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    public static final ValueFactory<Integer> INT_VALUE_FACTORY = new ValueFactory<Integer>() {
-        @Override
-        public Integer createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Integer) {
-                return (Integer) source;
-            } else if (source instanceof Number) {
-                return ((Number)source).intValue();
-            } else {
-                return Integer.parseInt(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    public static final ValueFactory<Long> LONG_VALUE_FACTORY = new ValueFactory<Long>() {
-        @Override
-        public Long createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Long) {
-                return (Long) source;
-            } else if (source instanceof Number) {
-                return ((Number)source).longValue();
-            } else {
-                return Long.parseLong(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    public static final ValueFactory<Float> FLOAT_VALUE_FACTORY = new ValueFactory<Float>() {
-        @Override
-        public Float createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Float) {
-                return (Float) source;
-            } else if (source instanceof Number) {
-                return ((Number)source).floatValue();
-            } else {
-                return Float.parseFloat(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    public static final ValueFactory<Double> DOUBLE_VALUE_FACTORY = new ValueFactory<Double>() {
-        @Override
-        public Double createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Double) {
-                return (Double) source;
-            } else if (source instanceof Number) {
-                return ((Number)source).doubleValue();
-            } else {
-                return Double.parseDouble(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    public static final ValueFactory<Boolean> BOOLEAN_VALUE_FACTORY = new ValueFactory<Boolean>() {
-        @Override
-        public Boolean createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Long) {
-                return (Boolean) source;
-            } else {
-                return Boolean.parseBoolean(STRING_VALUE_FACTORY.createFrom(source));
-            }
-        }
-    };
-
-    private final Class<T> type;
     private final String name;
+    private final Class<T> type;
     private final ValueFactory<T> factory;
-    private final String tostring;
+    private final String canonicalForm;
+    private final String toString;
 
-    private static final Map<Class, ValueFactory> SUPPORTED_VALUE_FACTORIES = new HashMap<>();
-
-    static {
-        SUPPORTED_VALUE_FACTORIES.put(String.class, STRING_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Short.class, SHORT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Integer.class, INT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Long.class, LONG_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Double.class, DOUBLE_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Float.class, FLOAT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Boolean.class, BOOLEAN_VALUE_FACTORY);
+    /**
+     * Create an attribute key with the given name
+     */
+    public static <T> AttributeKey<T> create(String name) {
+        IllegalArgumentAssertion.assertNotNull(name, "name");
+        return new AttributeKey<>(name, null, null);
     }
 
-    public static <T> AttributeKey<T> create(String str) {
-        IllegalArgumentAssertion.assertNotNull(str, "string");
-        Matcher matcher = ATTRIBUTE_PATTERN.matcher(str);
-        if (matcher.matches()) {
-            String name = matcher.group(1);
-            String type = matcher.group(2);
-            try {
-                Class<T> clazz = (Class<T>) Class.forName(type);
-                return create(name, clazz);
-            } catch (Exception e) {
-                throw FabricException.launderThrowable(e);
-            }
-        } else {
-            throw new IllegalArgumentException("String: "+str+" does not match pattern:"+ ATTRIBUTE_PATTERN.toString());
-        }
-    }
-
+    /**
+     * Create an attribute key for the given type
+     */
     public static <T> AttributeKey<T> create(Class<T> type) {
         IllegalArgumentAssertion.assertNotNull(type, "type");
-        return new AttributeKey<T>(type.getName(), type, SUPPORTED_VALUE_FACTORIES.get(type));
+        return new AttributeKey<T>(type.getName(), type, null);
     }
 
+    /**
+     * Create an attribute key with the given name and type
+     */
     public static <T> AttributeKey<T> create(String name, Class<T> type) {
-        return new AttributeKey<T>(name, type, SUPPORTED_VALUE_FACTORIES.get(type));
+        return new AttributeKey<T>(name, type, null);
     }
 
-    private static <T> AttributeKey<T> create(String name, Class<T> type, ValueFactory<T> factory) {
+    /**
+     * Create an attribute key with the given name and type
+     */
+    public static <T> AttributeKey<T> create(String name, ValueFactory<T> factory) {
+        return new AttributeKey<T>(name, null, factory);
+    }
+
+    /**
+     * Create an attribute key from its canonical form.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> AttributeKey<T> createFrom(String canonical) {
+        IllegalArgumentAssertion.assertNotNull(canonical, "canonical");
+        Matcher matcherA = ATTRIBUTE_KEY_PATTERN.matcher(canonical);
+        IllegalArgumentAssertion.assertTrue(matcherA.matches(), "Parameter '" + canonical + "'does not match pattern: " + ATTRIBUTE_KEY_PATTERN);
+        String name = matcherA.group(1);
+        String typeName = matcherA.group("type");
+        String factoryName = matcherA.group("factory");
+        ValueFactory<T> factory = null;
+        if (factoryName != null) {
+            try {
+                factory = (ValueFactory<T>) Class.forName(factoryName).newInstance();
+            } catch (Exception ex) {
+                throw new IllegalStateException("Cannot load factory: " + factoryName);
+            }
+        }
+        Class<T> type = null;
+        if (typeName != null) {
+            try {
+                type = (Class<T>) Class.forName(typeName);
+            } catch (ClassNotFoundException ex) {
+                type = (Class<T>) SUPPORTED_TYPE_NAMES.get(typeName);
+            }
+        }
         return new AttributeKey<T>(name, type, factory);
     }
 
-    private AttributeKey(String name, Class<T> type, ValueFactory<T> factory) {
+    @SuppressWarnings("unchecked")
+    private AttributeKey(String name, Class<T> optionalType, ValueFactory<T> customFactory) {
         IllegalArgumentAssertion.assertNotNull(name, "name");
-        IllegalArgumentAssertion.assertNotNull(type, "type");
         this.name = name;
-        this.type = type;
-        this.factory = factory;
-        this.tostring = "Key[name=" + name + ",type=" + type.getName() + "]";
+        if (optionalType != null) {
+            type = optionalType;
+        } else {
+            if (customFactory != null) {
+                type = customFactory.getType();
+            } else {
+                type = (Class<T>) String.class;
+            }
+        }
+        if (customFactory != null) {
+            factory = customFactory;
+        } else {
+            factory = (ValueFactory<T>) SUPPORTED_VALUE_FACTORIES.get(type);
+        }
+        IllegalArgumentAssertion.assertNotNull(type, "Cannot obtain value type");
+        IllegalArgumentAssertion.assertTrue(factory == null || type == factory.getType(), "Provided type does not match factory type");
+        StringBuffer buffer = new StringBuffer("name=" + name);
+        if (type != String.class) {
+            buffer.append(",type=" + type.getName());
+        }
+        if (factory != null) {
+            String factoryName = factory.getClass().getName();
+            if (!factoryName.startsWith(AttributeKey.class.getName())) {
+                buffer.append(",factory=" + factoryName);
+            }
+        }
+        canonicalForm = buffer.toString();
+        toString = "Key[" + canonicalForm + "]";
     }
 
     public String getName() {
@@ -214,24 +169,14 @@ public final class AttributeKey<T> {
         return factory;
     }
 
-    public T parse(String str) {
-        IllegalArgumentAssertion.assertNotNull(str, "string");
-        Matcher matcher = ATTRIBUTE_PATTERN.matcher(str);
-        if (matcher.matches()) {
-            String value = matcher.group(3);
-            return factory.createFrom(value);
-        } else {
-            throw new IllegalArgumentException("String: " + str + " does not match pattern:" + ATTRIBUTE_PATTERN.toString());
-        }
-    }
-
-    public String toString(T value) {
-        return String.format(ATTRIBUTE_FORMAT, getName(), getType().getCanonicalName(), value);
+    public String getCanonicalForm() {
+        return canonicalForm;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AttributeKey)) return false;
+        if (!(obj instanceof AttributeKey))
+            return false;
         AttributeKey<?> other = (AttributeKey<?>) obj;
         return other.name.equals(name);
     }
@@ -243,6 +188,117 @@ public final class AttributeKey<T> {
 
     @Override
     public String toString() {
-        return tostring;
+        return toString;
+    }
+
+    private static final ValueFactory<String> STRING_VALUE_FACTORY = new AbstractValueFactory<String>(String.class) {
+        @Override
+        public String createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            return source.toString();
+        }
+    };
+
+    private static final ValueFactory<Short> SHORT_VALUE_FACTORY = new AbstractValueFactory<Short>(Short.class) {
+        @Override
+        public Short createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).shortValue();
+            } else {
+                return Short.parseShort(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Integer> INT_VALUE_FACTORY = new AbstractValueFactory<Integer>(Integer.class) {
+        @Override
+        public Integer createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).intValue();
+            } else {
+                return Integer.parseInt(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Long> LONG_VALUE_FACTORY = new AbstractValueFactory<Long>(Long.class) {
+        @Override
+        public Long createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).longValue();
+            } else {
+                return Long.parseLong(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Float> FLOAT_VALUE_FACTORY = new AbstractValueFactory<Float>(Float.class) {
+        @Override
+        public Float createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).floatValue();
+            } else {
+                return Float.parseFloat(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Double> DOUBLE_VALUE_FACTORY = new AbstractValueFactory<Double>(Double.class) {
+        @Override
+        public Double createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).doubleValue();
+            } else {
+                return Double.parseDouble(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Boolean> BOOLEAN_VALUE_FACTORY = new AbstractValueFactory<Boolean>(Boolean.class) {
+        @Override
+        public Boolean createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            return Boolean.parseBoolean(source.toString());
+        }
+    };
+
+    private static abstract class AbstractValueFactory<T> implements ValueFactory<T> {
+        private final Class<T> type;
+
+        AbstractValueFactory(Class<T> type) {
+            this.type = type;
+        }
+
+        @Override
+        public Class<T> getType() {
+            return type;
+        }
+    }
+
+    private static final Map<Class<?>, ValueFactory<?>> SUPPORTED_VALUE_FACTORIES = new HashMap<>();
+    static {
+        SUPPORTED_VALUE_FACTORIES.put(String.class, STRING_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Short.class, SHORT_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Integer.class, INT_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Long.class, LONG_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Double.class, DOUBLE_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Float.class, FLOAT_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Boolean.class, BOOLEAN_VALUE_FACTORY);
+    }
+    private static final Map<String, Class<?>> SUPPORTED_TYPE_NAMES = new HashMap<>();
+    static {
+        SUPPORTED_TYPE_NAMES.put("string", String.class);
+        SUPPORTED_TYPE_NAMES.put("short", Short.class);
+        SUPPORTED_TYPE_NAMES.put("int", Integer.class);
+        SUPPORTED_TYPE_NAMES.put("integer", Integer.class);
+        SUPPORTED_TYPE_NAMES.put("long", Long.class);
+        SUPPORTED_TYPE_NAMES.put("double", Double.class);
+        SUPPORTED_TYPE_NAMES.put("float", Float.class);
+        SUPPORTED_TYPE_NAMES.put("boolean", Boolean.class);
     }
 }

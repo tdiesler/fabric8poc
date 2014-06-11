@@ -16,6 +16,9 @@
 package io.fabric8.api;
 
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,79 +26,248 @@ public class AttributeKeyTest {
 
     @Test
     public void testCreateStringAttribute() {
-        String str = "key=my.key;type=java.lang.String;value=my.value";
-        AttributeKey<String> key = AttributeKey.create(str);
-        Assert.assertNotNull(key);
+        AttributeKey<String> key = AttributeKey.create("my.key");
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(String.class, key.getType());
-        String value = key.parse(str);
-        Assert.assertNotNull(value);
+        String value = key.getFactory().createFrom("my.value");
         Assert.assertEquals("my.value", value);
-        Assert.assertEquals(str, key.toString(value));
+        Assert.assertEquals("Key[name=my.key]", key.toString());
+        Assert.assertEquals("name=my.key", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", String.class);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(String.class, key.getType());
+        value = key.getFactory().createFrom("my.value");
+        Assert.assertEquals("my.value", value);
+        Assert.assertEquals("Key[name=my.key]", key.toString());
+        Assert.assertEquals("name=my.key", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=string");
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(String.class, key.getType());
+        value = key.getFactory().createFrom("my.value");
+        Assert.assertEquals("my.value", value);
+        Assert.assertEquals("Key[name=my.key]", key.toString());
+        Assert.assertEquals("name=my.key", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key");
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(String.class, key.getType());
+        value = key.getFactory().createFrom("my.value");
+        Assert.assertEquals("my.value", value);
+        Assert.assertEquals("Key[name=my.key]", key.toString());
+        Assert.assertEquals("name=my.key", key.getCanonicalForm());
     }
 
     @Test
     public void testCreateShortAttribute() {
-        String str = "key=my.key;type=java.lang.Short;value=1";
-        AttributeKey<Short> key = AttributeKey.create(str);
+        AttributeKey<Short> key = AttributeKey.createFrom("name=my.key,type=short");
         Assert.assertNotNull(key);
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(Short.class, key.getType());
-        short value = key.parse(str);
-        Assert.assertNotNull(value);
+        short value = key.getFactory().createFrom("1");
         Assert.assertEquals(1, value);
-        Assert.assertEquals(str, key.toString(value));
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Short]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Short", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Short.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Short.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Short]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Short", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Short");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Short.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Short]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Short", key.getCanonicalForm());
     }
 
     @Test
-    public void testCreateIntAttribute() {
-        String str = "key=my.key;type=java.lang.Integer;value=1";
-        AttributeKey<Integer> key = AttributeKey.create(str);
+    public void testCreateIntegerAttribute() {
+        AttributeKey<Integer> key = AttributeKey.createFrom("name=my.key,type=integer");
         Assert.assertNotNull(key);
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(Integer.class, key.getType());
-        int value = key.parse(str);
-        Assert.assertNotNull(value);
+        int value = key.getFactory().createFrom("1");
         Assert.assertEquals(1, value);
-        Assert.assertEquals(str, key.toString(value));
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Integer]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Integer", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Integer.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Integer.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Integer]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Integer", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=int");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Integer.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Integer]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Integer", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Integer");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Integer.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Integer]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Integer", key.getCanonicalForm());
     }
 
     @Test
     public void testCreateLongAttribute() {
-        String str = "key=my.key;type=java.lang.Long;value=1";
-        AttributeKey<Long> key = AttributeKey.create(str);
+        AttributeKey<Long> key = AttributeKey.createFrom("name=my.key,type=long");
         Assert.assertNotNull(key);
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(Long.class, key.getType());
-        long value = key.parse(str);
-        Assert.assertNotNull(value);
+        long value = key.getFactory().createFrom("1");
         Assert.assertEquals(1, value);
-        Assert.assertEquals(str, key.toString(value));
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Long]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Long", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Long.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Long.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Long]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Long", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Long");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Long.class, key.getType());
+        value = key.getFactory().createFrom("1");
+        Assert.assertEquals(1, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Long]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Long", key.getCanonicalForm());
     }
 
     @Test
     public void testCreateFloatAttribute() {
-        String str = "key=my.key;type=java.lang.Float;value=1.0";
-        AttributeKey<Float> key = AttributeKey.create(str);
+        AttributeKey<Float> key = AttributeKey.createFrom("name=my.key,type=float");
         Assert.assertNotNull(key);
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(Float.class, key.getType());
-        float value = key.parse(str);
-        Assert.assertNotNull(value);
+        float value = key.getFactory().createFrom("1.0");
         Assert.assertEquals(1.0, value, 0);
-        Assert.assertEquals(str, key.toString(value));
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Float]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Float", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Float.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Float.class, key.getType());
+        value = key.getFactory().createFrom("1.0");
+        Assert.assertEquals(1.0, value, 0);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Float]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Float", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Float");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Float.class, key.getType());
+        value = key.getFactory().createFrom("1.0");
+        Assert.assertEquals(1.0, value, 0);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Float]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Float", key.getCanonicalForm());
+    }
+
+    @Test
+    public void testCreateDoubleAttribute() {
+        AttributeKey<Double> key = AttributeKey.createFrom("name=my.key,type=double");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Double.class, key.getType());
+        double value = key.getFactory().createFrom("1.0");
+        Assert.assertEquals(1.0, value, 0);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Double]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Double", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Double.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Double.class, key.getType());
+        value = key.getFactory().createFrom("1.0");
+        Assert.assertEquals(1.0, value, 0);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Double]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Double", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Double");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Double.class, key.getType());
+        value = key.getFactory().createFrom("1.0");
+        Assert.assertEquals(1.0, value, 0);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Double]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Double", key.getCanonicalForm());
     }
 
     @Test
     public void testCreateBooleanAttribute() {
-        String str = "key=my.key;type=java.lang.Boolean;value=true";
-        AttributeKey<Boolean> key = AttributeKey.create(str);
+        AttributeKey<Boolean> key = AttributeKey.createFrom("name=my.key,type=boolean");
         Assert.assertNotNull(key);
         Assert.assertEquals("my.key", key.getName());
         Assert.assertEquals(Boolean.class, key.getType());
-        boolean value = key.parse(str);
-        Assert.assertNotNull(value);
-        Assert.assertTrue(value);
-        Assert.assertEquals(str, key.toString(value));
+        boolean value = key.getFactory().createFrom("true");
+        Assert.assertEquals(true, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Boolean]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Boolean", key.getCanonicalForm());
+
+        key = AttributeKey.create("my.key", Boolean.class);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Boolean.class, key.getType());
+        value = key.getFactory().createFrom("true");
+        Assert.assertEquals(true, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Boolean]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Boolean", key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,type=java.lang.Boolean");
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(Boolean.class, key.getType());
+        value = key.getFactory().createFrom("true");
+        Assert.assertEquals(true, value);
+        Assert.assertEquals("Key[name=my.key,type=java.lang.Boolean]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.lang.Boolean", key.getCanonicalForm());
+    }
+
+
+    @Test
+    public void testCreateURLAttribute() throws MalformedURLException {
+        AttributeKey<URL> key = AttributeKey.create("my.key", new URLValueFactory());
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(URL.class, key.getType());
+        URL value = key.getFactory().createFrom("http://foo");
+        Assert.assertEquals(new URL("http://foo"), value);
+        String factoryName = URLValueFactory.class.getName();
+        Assert.assertEquals("Key[name=my.key,type=java.net.URL,factory=" + factoryName + "]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.net.URL,factory=" + factoryName, key.getCanonicalForm());
+
+        key = AttributeKey.createFrom("name=my.key,factory=" + factoryName);
+        Assert.assertNotNull(key);
+        Assert.assertEquals("my.key", key.getName());
+        Assert.assertEquals(URL.class, key.getType());
+        value = key.getFactory().createFrom("http://foo");
+        Assert.assertEquals(new URL("http://foo"), value);
+        Assert.assertEquals("Key[name=my.key,type=java.net.URL,factory=" + factoryName + "]", key.toString());
+        Assert.assertEquals("name=my.key,type=java.net.URL,factory=" + factoryName, key.getCanonicalForm());
     }
 }
