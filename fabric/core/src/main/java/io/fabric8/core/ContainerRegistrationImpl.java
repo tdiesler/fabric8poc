@@ -28,22 +28,9 @@ import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AbstractJMXServiceEndpoint;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.BootConfiguration;
-import io.fabric8.spi.ContainerJmxEndpoint;
 import io.fabric8.spi.ContainerRegistration;
-import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import io.fabric8.spi.scr.ValidatingReference;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -55,9 +42,16 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
-import org.jboss.gravia.runtime.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerRegistration.class)
@@ -69,9 +63,9 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
             bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
     private AttributeProvider networkAttributeProvider;
 
-  //  @Reference(referenceInterface = AttributeProvider.class, target = "(&(type="+ContainerAttributes.TYPE+")(classifier=jmx))",
-  //          bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
-  //  private AttributeProvider jmxAttributeProvider;
+    @Reference(referenceInterface = AttributeProvider.class, target = "(&(type="+ContainerAttributes.TYPE+")(classifier=jmx))",
+            bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
+    private AttributeProvider jmxAttributeProvider;
 
     @Reference(referenceInterface = AttributeProvider.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,

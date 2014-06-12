@@ -44,15 +44,15 @@ public class CurrentContainerService extends AbstractComponent {
         deactivateComponent();
     }
 
-    Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
+    synchronized Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
         return Collections.unmodifiableMap(resourceHandles);
     }
 
-    void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
+    synchronized void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
         resourceHandles.putAll(handles);
     }
 
-    void removeResourceHandles(Collection<ResourceIdentity> handles) {
+    synchronized void removeResourceHandles(Collection<ResourceIdentity> handles) {
         for (ResourceIdentity resourceIdentity : handles) {
             resourceHandles.remove(resourceIdentity);
         }

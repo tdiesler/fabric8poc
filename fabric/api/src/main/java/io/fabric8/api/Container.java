@@ -81,7 +81,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
      * Get the set of available service endpoints for the given type
      * @param type null for all types
      */
-    Set<ServiceEndpoint> getEndpoints(Class type);
+    <T> Set<T> getEndpoints(Class<T> type);
 
     /**
      * Get the profile version

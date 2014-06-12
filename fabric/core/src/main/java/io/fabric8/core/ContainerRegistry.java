@@ -185,9 +185,9 @@ public final class ContainerRegistry extends AbstractComponent {
         throw new FabricException("Container:" + identity.getSymbolicName()+ " does not have endpoints of type:" + type);
     }
 
-    ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
         ContainerLockManager.assertWriteLock(identity);
-       return getServiceEndpointInternal(identity, endpointId.getSymbolicName());
+       return (T) getServiceEndpointInternal(identity, endpointId.getSymbolicName());
     }
 
     Container addServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
@@ -228,7 +228,7 @@ public final class ContainerRegistry extends AbstractComponent {
             setVersionIntenral(identity, container.getProfileVersion());
             setAttributesIntenral(ZkPath.CONTAINER_ATTRIBUTES.getPath(id), container.getAttributes());
             setStateInternal(identity, container.getState());
-            setServiceEndpointsInternal(identity, container.getEndpoints(null));
+            setServiceEndpointsInternal(identity, container.<ServiceEndpoint>getEndpoints(null));
         } catch (Exception e) {
             throw FabricException.launderThrowable(e);
         }

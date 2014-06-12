@@ -729,7 +729,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<?> endpointId) {
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
         LockHandle readLock = aquireReadLock(identity);
         try {
             ContainerRegistry registry = containerRegistry.get();
