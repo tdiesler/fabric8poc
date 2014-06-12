@@ -107,6 +107,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
 
         public MutableProfileVersion(LinkedProfileVersion linkedVersion) {
             linkedProfiles.putAll(linkedVersion.getLinkedProfiles());
+            identity = linkedVersion.getIdentity();
         }
 
         private LinkedProfileVersion immutableProfileVersion() {

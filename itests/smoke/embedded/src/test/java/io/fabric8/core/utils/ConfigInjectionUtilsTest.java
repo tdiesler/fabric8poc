@@ -16,6 +16,8 @@
 package io.fabric8.core.utils;
 
 
+import io.fabric8.core.utils.ConfigInjectionUtils;
+
 import org.junit.Assert;
 import org.junit.Test;
 

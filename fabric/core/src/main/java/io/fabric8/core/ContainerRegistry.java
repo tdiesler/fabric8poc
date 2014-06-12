@@ -27,11 +27,12 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.FabricException;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.core.zookeeper.ZkPath;
 import io.fabric8.spi.AbstractServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
+import io.fabric8.spi.scr.ValidatingReference;
+import io.fabric8.spi.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,8 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.fabric8.spi.scr.ValidatingReference;
-import io.fabric8.spi.utils.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.felix.scr.annotations.Activate;
@@ -151,9 +150,9 @@ public final class ContainerRegistry extends AbstractComponent {
         return removeInternal(identity);
     }
 
-    Container setProfileVersion(ContainerIdentity identity, ProfileVersionState versionState) {
+    Container setProfileVersion(ContainerIdentity identity, Version version) {
         ContainerLockManager.assertWriteLock(identity);
-        setVersionIntenral(identity, versionState.getIdentity());
+        setVersionInternal(identity, version);
         return getRequiredContainer(identity);
     }
 
@@ -225,7 +224,7 @@ public final class ContainerRegistry extends AbstractComponent {
             setChildIdentitiesInternal(identity, container.getChildIdentities());
             setRuntimeTypeInternal(identity, container.getRuntimeType());
             setProfilesInternal(identity, container.getProfileIdentities());
-            setVersionIntenral(identity, container.getProfileVersion());
+            setVersionInternal(identity, container.getProfileVersion());
             setAttributesIntenral(ZkPath.CONTAINER_ATTRIBUTES.getPath(id), container.getAttributes());
             setStateInternal(identity, container.getState());
             setServiceEndpointsInternal(identity, container.<ServiceEndpoint>getEndpoints(null));
@@ -508,7 +507,7 @@ public final class ContainerRegistry extends AbstractComponent {
      * Writes the {@link Version} associated with the specified {@link io.fabric8.api.ContainerIdentity}.
      * @param identity  The identity of the {@link Container}.
      */
-    private void setVersionIntenral(ContainerIdentity identity, Version version) {
+    private void setVersionInternal(ContainerIdentity identity, Version version) {
         String id = identity.getSymbolicName();
         String data = version.toString();
         try {

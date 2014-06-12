@@ -50,13 +50,16 @@ public abstract class EmbeddedTestSupport {
     public static void beforeClass() throws Exception {
 
         Path basedir = Paths.get("").toAbsolutePath();
-        Path homeDir = basedir.resolve(Paths.get("target", "home"));
+        Path homePath = basedir.resolve(Paths.get("target", "home"));
 
         System.setProperty("basedir", basedir.toString());
         System.setProperty(RUNTIME_IDENTITY, "embedded");
-        System.setProperty(RUNTIME_HOME_DIR, homeDir.toString());
-        System.setProperty(RUNTIME_DATA_DIR, homeDir.resolve("data").toString());
-        System.setProperty(RUNTIME_CONF_DIR, homeDir.resolve("conf").toString());
+        System.setProperty(RUNTIME_HOME_DIR, homePath.toString());
+        System.setProperty(RUNTIME_DATA_DIR, homePath.resolve("data").toString());
+        System.setProperty(RUNTIME_CONF_DIR, homePath.resolve("conf").toString());
+
+        // Delete the container's home directory - every test case starts fresh
+        FileUtils.deleteRecursively(homePath);
 
         // Install and start the bootstrap modules
         for (String name : moduleNames) {
@@ -72,8 +75,5 @@ public abstract class EmbeddedTestSupport {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         Assert.assertTrue(runtime.shutdown().awaitShutdown(20, TimeUnit.SECONDS));
         RuntimeLocator.releaseRuntime();
-
-        Path homePath = Paths.get(System.getProperty(RUNTIME_HOME_DIR));
-        FileUtils.deleteRecursively(homePath);
     }
 }

@@ -42,7 +42,6 @@ import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.core.ProfileServiceImpl.ProfileVersionState;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.ContainerService;
@@ -462,7 +461,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container setVersionInternal(Container container, Version nextVersion, ProvisionEventListener listener) throws ProvisionException {
 
-        ProfileVersionState nextVersionState = ((ProfileServiceImpl) profileService.get()).getRequiredProfileVersionState(nextVersion);
+        ProfileVersion nextProfileVersion = profileService.get().getRequiredProfileVersion(nextVersion);
         LOGGER.info("Set container version: {} <= {}", container, nextVersion);
 
         // Provision the next profiles
@@ -470,7 +469,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         provisionProfilesInternal(container, nextVersion, identities, listener);
 
         ContainerRegistry registry = containerRegistry.get();
-        return registry.setProfileVersion(container.getIdentity(), nextVersionState);
+        return registry.setProfileVersion(container.getIdentity(), nextVersion);
     }
 
     @Override
@@ -806,11 +805,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container getRequiredContainer(ContainerIdentity identity) {
         return containerRegistry.get().getRequiredContainer(identity);
-    }
-
-    private ProfileVersionState getRequiredProfileVersionState(Version version) {
-        ProfileServiceImpl profileVersions = (ProfileServiceImpl) profileService.get();
-        return profileVersions.getRequiredProfileVersionState(version);
     }
 
     void bindBootConfiguration(BootConfiguration service) {
