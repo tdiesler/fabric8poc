@@ -34,9 +34,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties(
-        @Property(name = "type", value = ContainerAttributes.TYPE)
-)
+@Properties({
+        @Property(name = "type", value = ContainerAttributes.TYPE),
+        @Property(name = "classifier", value = "http")
+})
 public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider  {
 
     private static final String HTTP_PORT = "jboss.management.http.port";

@@ -26,7 +26,7 @@ package io.fabric8.spi;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public interface HttpAttributeProvider {
+public interface HttpAttributeProvider extends AttributeProvider {
 
     String getHttpsUrl();
 

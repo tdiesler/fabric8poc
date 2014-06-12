@@ -20,20 +20,26 @@
 package io.fabric8.core;
 
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.FabricException;
 import io.fabric8.api.LockHandle;
+import io.fabric8.core.zookeeper.ZkPath;
+import io.fabric8.core.zookeeper.locks.Lock;
+import io.fabric8.core.zookeeper.locks.ReadWriteLock;
 import io.fabric8.spi.scr.AbstractComponent;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import io.fabric8.spi.scr.ValidatingReference;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.curator.framework.recipes.locks.InterProcessReadWriteLock;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
@@ -49,9 +55,12 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 @Service(ContainerLockManager.class)
 public final class ContainerLockManager extends AbstractComponent {
 
-    private final Map<ContainerIdentity, ReentrantReadWriteLock> containerLocks = new HashMap<>();
+    private final Map<ContainerIdentity, ReadWriteLock> containerLocks = new HashMap<>();
     private final static ThreadLocal<Stack<ContainerIdentity>> readLockAssociation = new ThreadLocal<>();
     private final static ThreadLocal<Stack<ContainerIdentity>> writeLockAssociation = new ThreadLocal<>();
+
+    @Reference(referenceInterface = CuratorFramework.class)
+    private ValidatingReference<CuratorFramework> curator = new ValidatingReference<>();
 
     @Activate
     void activate() {
@@ -65,8 +74,8 @@ public final class ContainerLockManager extends AbstractComponent {
 
     LockHandle aquireWriteLock(ContainerIdentity identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
-        ReentrantReadWriteLock readWriteLock = getReadWriteLock(identity);
-        final WriteLock writeLock = readWriteLock.writeLock();
+        ReadWriteLock readWriteLock = getReadWriteLock(identity);
+        final Lock writeLock = readWriteLock.writeLock();
 
         boolean success;
         try {
@@ -88,8 +97,8 @@ public final class ContainerLockManager extends AbstractComponent {
 
     LockHandle aquireReadLock(ContainerIdentity identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
-        ReentrantReadWriteLock readWriteLock = getReadWriteLock(identity);
-        final ReadLock readLock = readWriteLock.readLock();
+        ReadWriteLock readWriteLock = getReadWriteLock(identity);
+        final Lock readLock = readWriteLock.readLock();
 
         boolean success;
         try {
@@ -134,14 +143,77 @@ public final class ContainerLockManager extends AbstractComponent {
         return stack;
     }
 
-    private ReentrantReadWriteLock getReadWriteLock(ContainerIdentity identity) {
+    private ReadWriteLock getReadWriteLock(ContainerIdentity identity) {
         synchronized (containerLocks) {
-            ReentrantReadWriteLock readWriteLock = containerLocks.get(identity);
+            ReadWriteLock readWriteLock = containerLocks.get(identity);
             if (readWriteLock == null) {
-                readWriteLock = new ReentrantReadWriteLock();
+                String path = ZkPath.LOCK_CONTAINER.getPath(identity.getSymbolicName());
+                try {
+                    curator.get().create().creatingParentsIfNeeded().forPath(path);
+                } catch (Exception e) {
+                    FabricException.launderThrowable(e);
+                }
+
+                readWriteLock = new InternalReadWriteLock(new InterProcessReadWriteLock(curator.get(), path));
                 containerLocks.put(identity, readWriteLock);
             }
             return readWriteLock;
         }
+    }
+
+
+    private class InternalReadWriteLock implements ReadWriteLock {
+
+        private final InterProcessReadWriteLock delegate;
+
+        private InternalReadWriteLock(InterProcessReadWriteLock delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Lock readLock() {
+            return new InternalLock(delegate.readLock());
+        }
+
+        @Override
+        public Lock writeLock() {
+            return new InternalLock(delegate.writeLock());
+        }
+    }
+
+    private class InternalLock implements Lock {
+
+        private final InterProcessMutex delegate;
+
+        private InternalLock(InterProcessMutex mutex) {
+            this.delegate = mutex;
+        }
+
+        @Override
+        public void unlock() {
+            try {
+                delegate.release();
+            } catch (Exception e) {
+                FabricException.launderThrowable(e);
+            }
+        }
+
+        @Override
+        public boolean tryLock(long time, TimeUnit unit) {
+            try {
+                return delegate.acquire(time, unit);
+            } catch (Exception e) {
+                FabricException.launderThrowable(e);
+                return false;
+            }
+        }
+    }
+
+    void bindCurator(CuratorFramework service) {
+        curator.bind(service);
+    }
+
+    void unbindCurator(CuratorFramework service) {
+        curator.unbind(service);
     }
 }

@@ -38,7 +38,10 @@ import org.apache.felix.scr.annotations.Service;
 
 @Component(configurationPid = KarafHttpAttributeProvider.PAX_WEB_PID, policy = ConfigurationPolicy.REQUIRE, immediate = true)
 @Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties(@Property(name = "type", value = ContainerAttributes.TYPE))
+@Properties({
+                @Property(name = "type", value = ContainerAttributes.TYPE),
+                @Property(name = "classifier", value = "http")
+})
 public class KarafHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     static final String PAX_WEB_PID = "org.ops4j.pax.web";
