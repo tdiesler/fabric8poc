@@ -26,9 +26,8 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.FabricException;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.core.zookeeper.ZkPath;
-import io.fabric8.spi.AbstractServiceEndpoint;
+import io.fabric8.spi.SimpleServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -177,16 +176,16 @@ public final class ContainerRegistry extends AbstractComponent {
         Set<ServiceEndpoint> allEndpoints = getServiceEndpointsInternal(identity);
         Set<ServiceEndpoint> result = getServiceEndpointsInternal(identity);
         for (ServiceEndpoint ep : allEndpoints) {
-            if (ep.getIdentity().getType().isAssignableFrom(type)) {
+            if (ep.getType().equals(type.getCanonicalName())) {
                 return (T) ep;
             }
         }
         throw new FabricException("Container:" + identity.getSymbolicName()+ " does not have endpoints of type:" + type);
     }
 
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
+    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, String endpointId) {
         ContainerLockManager.assertWriteLock(identity);
-       return (T) getServiceEndpointInternal(identity, endpointId.getSymbolicName());
+       return (T) getServiceEndpointInternal(identity, endpointId);
     }
 
     Container addServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
@@ -586,12 +585,9 @@ public final class ContainerRegistry extends AbstractComponent {
             curator.get().create().creatingParentsIfNeeded().forPath(containerEndpointsPath);
 
             for (ServiceEndpoint endpoint : endpoints) {
-                ServiceEndpointIdentity endpointId = endpoint.getIdentity();
-                Class type = endpointId.getType();
-                String name = endpointId.getSymbolicName();
-                String endpointPath = ZKPaths.makePath(containerEndpointsPath, name);
-                String data = type.getCanonicalName();
-                curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, data.getBytes());
+                String endpointId = endpoint.getIdentity();
+                String endpointPath = ZKPaths.makePath(containerEndpointsPath, endpointId);
+                curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, endpoint.getType().getBytes());
                 setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
 
             }
@@ -622,16 +618,13 @@ public final class ContainerRegistry extends AbstractComponent {
         return endpoints;
     }
 
-    private ServiceEndpoint getServiceEndpointInternal(ContainerIdentity identity, String endpointName) {
-        assertValid();
+    private ServiceEndpoint getServiceEndpointInternal(ContainerIdentity identity, String endpointId) {
         String id = identity.getSymbolicName();
-        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id,endpointName);
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id,endpointId);
         try {
-            String typeAsString = new String(curator.get().getData().forPath(endpointPath));
-            Class type = Class.forName(typeAsString);
-            ServiceEndpointIdentity endpointId = ServiceEndpointIdentity.create(endpointName, type);
+            String type = new String(curator.get().getData().forPath(endpointPath));
             Map<AttributeKey<?>, Object> endpointAttributes = getAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"));
-            return   new AbstractServiceEndpoint(ServiceEndpointIdentity.create(endpointName, type), endpointAttributes);
+            return  new SimpleServiceEndpoint(endpointId, type, endpointAttributes);
         } catch (Exception e) {
             throw new FabricException("Failed to read endpoint from:" + endpointPath);
         }
@@ -643,19 +636,15 @@ public final class ContainerRegistry extends AbstractComponent {
      * @param endpoint  The service endpoint.
      */
     private void addServiceEndpointInternal(ContainerIdentity identity, ServiceEndpoint endpoint) {
-        assertValid();
-        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpoint.getIdentity().getSymbolicName());
+        String endpointId = endpoint.getIdentity();
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpointId);
         try {
             if (curator.get().checkExists().forPath(endpointPath) != null) {
                 curator.get().delete().deletingChildrenIfNeeded().forPath(endpointPath);
             }
-            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, endpoint.getIdentity().getType().getCanonicalName().getBytes());
+            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, endpoint.getType().getBytes());
 
-            ServiceEndpointIdentity endpointId = endpoint.getIdentity();
-            Class type = endpointId.getType();
-            String name = endpointId.getSymbolicName();
-            String data = type.getCanonicalName();
-            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath, data.getBytes());
+            curator.get().create().creatingParentsIfNeeded().forPath(endpointPath);
             setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
 
 
@@ -670,8 +659,8 @@ public final class ContainerRegistry extends AbstractComponent {
      * @param endpoint  The service endpoint.
      */
     private void removeServiceEndpointInternal(ContainerIdentity identity, ServiceEndpoint endpoint) {
-        assertValid();
-        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpoint.getIdentity().getSymbolicName());
+        String endpointId = endpoint.getIdentity();
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpointId);
         try {
             if (curator.get().checkExists().forPath(endpointPath) != null) {
                 curator.get().delete().deletingChildrenIfNeeded().forPath(endpointPath);

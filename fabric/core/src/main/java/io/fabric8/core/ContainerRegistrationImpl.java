@@ -20,10 +20,8 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
-import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AbstractJMXServiceEndpoint;
 import io.fabric8.spi.AttributeProvider;
@@ -118,7 +116,7 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         //Create Initial Endpoints
         Set<ServiceEndpoint> endpoints = new LinkedHashSet<>();
         if (attributes.containsKey(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)) {
-            endpoints.add(new AbstractJMXServiceEndpoint(ServiceEndpointIdentity.create("jmx", JMXServiceEndpoint.class), (String) attributes.get(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)));
+            endpoints.add(new AbstractJMXServiceEndpoint("jmx", (String) attributes.get(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)));
         }
 
         Container container = registry.getContainer(currentIdentity);

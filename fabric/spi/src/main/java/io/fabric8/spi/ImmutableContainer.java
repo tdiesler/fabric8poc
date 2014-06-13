@@ -23,7 +23,6 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -109,11 +108,12 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
         throw new UnsupportedOperationException();
     }
 
+    //TODO: This is pretty much broken
     @Override
     public Set<ServiceEndpoint> getEndpoints(Class type) {
         Set<ServiceEndpoint> result = new HashSet<>();
         for (ServiceEndpoint endpoint : endpoints) {
-            if (type == null || type.isAssignableFrom(endpoint.getIdentity().getType())) {
+            if (type == null || type.isAssignableFrom(endpoint.getClass())) {
                 result.add(endpoint);
             }
         }

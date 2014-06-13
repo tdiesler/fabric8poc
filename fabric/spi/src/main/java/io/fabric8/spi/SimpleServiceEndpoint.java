@@ -21,7 +21,6 @@ package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 
 import java.util.Map;
 
@@ -31,18 +30,24 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractServiceEndpoint<T extends ServiceEndpoint> extends AttributeSupport implements ServiceEndpoint {
+public class SimpleServiceEndpoint<T extends ServiceEndpoint> extends AttributeSupport implements ServiceEndpoint {
 
-    private final ServiceEndpointIdentity<T> identity;
+    private final String identity;
+    private final String type;
 
-    public AbstractServiceEndpoint(ServiceEndpointIdentity<T> identity, Map<AttributeKey<?>, Object> attributes) {
+    public SimpleServiceEndpoint(String identity, String type, Map<AttributeKey<?>, Object> attributes) {
         super(attributes, true);
         this.identity = identity;
+        this.type = type;
     }
 
     @Override
-    public ServiceEndpointIdentity<T> getIdentity() {
+    public String getIdentity() {
         return identity;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public String toString() {

@@ -17,7 +17,9 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
+
+import io.fabric8.api.ServiceEndpoint;
 
 import java.io.IOException;
 import java.util.Map;

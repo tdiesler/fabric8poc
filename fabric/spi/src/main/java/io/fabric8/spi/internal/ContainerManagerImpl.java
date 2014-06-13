@@ -29,8 +29,8 @@ import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.ServiceEndpointFacotryLocator;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -268,7 +268,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, String endpointId) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();

@@ -41,7 +41,6 @@ import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.ContainerService;
@@ -49,6 +48,7 @@ import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
+import io.fabric8.spi.ServiceEndpointFacotryLocator;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
@@ -721,14 +721,15 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle readLock = aquireReadLock(identity);
         try {
             ContainerRegistry registry = containerRegistry.get();
-            return registry.getServiceEndpoint(identity, type);
+            ServiceEndpoint endpoint =  registry.getServiceEndpoint(identity, type);
+            return ServiceEndpointFacotryLocator.getFactory(type).create(endpoint);
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, String endpointId) {
         LockHandle readLock = aquireReadLock(identity);
         try {
             ContainerRegistry registry = containerRegistry.get();
