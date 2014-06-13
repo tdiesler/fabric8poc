@@ -24,11 +24,9 @@ import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
-import io.fabric8.api.JMXServiceEndpoint;
+import io.fabric8.spi.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.management.ContainerManagement;
-import io.fabric8.spi.ContainerJmxEndpoint;
 import io.fabric8.spi.RuntimeService;
 
 import java.util.Set;
@@ -79,14 +77,13 @@ public abstract class CurrentContainerTestBase {
 
         Set<ServiceEndpoint> endpoints = cnt.getEndpoints(null);
         Assert.assertEquals(1, endpoints.size());
-        Assert.assertEquals("jmx", endpoints.iterator().next().getIdentity().getSymbolicName());
+        Assert.assertEquals("jmx", endpoints.iterator().next().getIdentity());
 
         String jmxServerUrl = cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
         Assert.assertNotNull("JMX server URL not null", jmxServerUrl);
 
         String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
-        ServiceEndpoint serviceEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
-        ContainerJmxEndpoint jmxEndpoint = new ContainerJmxEndpoint(currentId, serviceEndpoint.getAttributes());
+        JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
         JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {
             // Access containers through JMX

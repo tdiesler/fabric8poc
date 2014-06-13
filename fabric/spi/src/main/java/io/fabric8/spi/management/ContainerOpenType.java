@@ -22,7 +22,6 @@ package io.fabric8.spi.management;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.AttributeSupport;
 
 import java.net.InetAddress;
