@@ -34,13 +34,11 @@ import java.util.regex.Pattern;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class AttributeKey<T> {
+public final class AttributeKey<T> implements Identity {
 
-    private static final String GROUP = "[a-zA-Z0-9\\.\\-]+";
-    private static final String ATTRIBUTE_KEY_FORMAT = "(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
-    private static final Pattern ATTRIBUTE_KEY_PATTERN = Pattern.compile(String.format(ATTRIBUTE_KEY_FORMAT, GROUP, GROUP, GROUP));
+    public static final String ATTRIBUTE_KEY_FORMAT = "(%s)(,type=(?<type>%s))?(,factory=(?<factory>%s))?";
+    public static final Pattern ATTRIBUTE_KEY_PATTERN = Pattern.compile(String.format(ATTRIBUTE_KEY_FORMAT, Identity.GROUP, Identity.GROUP, Identity.GROUP));
 
-    
     /**
      * A factory to create an attribute value
      */
@@ -99,12 +97,10 @@ public final class AttributeKey<T> {
      */
     @SuppressWarnings("unchecked")
     public static <T> AttributeKey<T> createFrom(String canonical) {
-        IllegalArgumentAssertion.assertNotNull(canonical, "canonical");
-        Matcher matcherA = ATTRIBUTE_KEY_PATTERN.matcher(canonical);
-        IllegalArgumentAssertion.assertTrue(matcherA.matches(), "Parameter '" + canonical + "'does not match pattern: " + ATTRIBUTE_KEY_PATTERN);
-        String name = matcherA.group(1);
-        String typeName = matcherA.group("type");
-        String factoryName = matcherA.group("factory");
+        Matcher matcher = assertCanonicalForm(canonical);
+        String name = matcher.group(1);
+        String typeName = matcher.group("type");
+        String factoryName = matcher.group("factory");
         ValueFactory<T> factory = null;
         if (factoryName != null) {
             try {
@@ -160,7 +156,15 @@ public final class AttributeKey<T> {
             buffer.append(",factory=" + factoryName);
         }
         canonicalForm = buffer.toString();
+        assertCanonicalForm(canonicalForm);
         toString = "Key[name=" + canonicalForm + "]";
+    }
+
+    private static Matcher assertCanonicalForm(String canonical) {
+        IllegalArgumentAssertion.assertNotNull(canonical, "canonical");
+        Matcher matcher = ATTRIBUTE_KEY_PATTERN.matcher(canonical);
+        IllegalArgumentAssertion.assertTrue(matcher.matches(), "Parameter '" + canonical + "'does not match pattern: " + ATTRIBUTE_KEY_PATTERN);
+        return matcher;
     }
 
     public String getName() {
@@ -175,6 +179,7 @@ public final class AttributeKey<T> {
         return factory;
     }
 
+    @Override
     public String getCanonicalForm() {
         return canonicalForm;
     }

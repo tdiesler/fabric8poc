@@ -19,6 +19,9 @@
  */
 package io.fabric8.api;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 
@@ -28,35 +31,48 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-abstract class AbstractIdentity {
+abstract class AbstractIdentity implements Identity {
+
+    private static final Pattern NAME_PATTERN = Pattern.compile(String.format("(%s)", GROUP));
 
     private final String symbolicName;
 
     AbstractIdentity(String symbolicName) {
         IllegalArgumentAssertion.assertNotNull(symbolicName, "symbolicName");
         this.symbolicName = symbolicName;
+        assertCanonicalForm(NAME_PATTERN, symbolicName);
+    }
+
+    static Matcher assertCanonicalForm(Pattern pattern, String canonical) {
+        IllegalArgumentAssertion.assertNotNull(canonical, "canonical");
+        Matcher matcher = pattern.matcher(canonical);
+        IllegalArgumentAssertion.assertTrue(matcher.matches(), "Parameter '" + canonical + "' does not match pattern: " + pattern);
+        return matcher;
     }
 
     public String getSymbolicName() {
         return symbolicName;
     }
 
-    public abstract String getCanonicalForm();
+    @Override
+    public String getCanonicalForm() {
+        return symbolicName;
+    }
 
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof AbstractIdentity)) return false;
         AbstractIdentity other = (AbstractIdentity) obj;
-        return other.symbolicName.equals(symbolicName);
+        return other.getCanonicalForm().equals(getCanonicalForm());
     }
 
     @Override
     public int hashCode() {
-        return symbolicName.hashCode();
+        return getCanonicalForm().hashCode();
     }
 
     @Override
     public String toString() {
-        return symbolicName;
+        return getCanonicalForm();
     }
 }

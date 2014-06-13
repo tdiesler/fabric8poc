@@ -19,16 +19,23 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.Identity;
 import io.fabric8.api.ProfileItem;
+
+import java.util.regex.Pattern;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 public abstract class AbstractProfileItem implements ProfileItem {
 
+    private static final Pattern NAME_PATTERN = Pattern.compile(String.format("(%s)", Identity.GROUP));
+
     private final String identity;
 
     protected AbstractProfileItem(String identity) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
+        boolean matches = NAME_PATTERN.matcher(identity).matches();
+        IllegalArgumentAssertion.assertTrue(matches, "Identity '" + identity + "' does not match pattern: " + NAME_PATTERN);
         this.identity = identity;
     }
 
