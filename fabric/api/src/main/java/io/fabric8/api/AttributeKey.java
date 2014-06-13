@@ -19,12 +19,12 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * A typed attribute key

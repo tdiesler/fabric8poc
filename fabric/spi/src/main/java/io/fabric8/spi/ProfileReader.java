@@ -20,10 +20,9 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.Profile;
+import io.fabric8.api.VersionIdentity;
 
 import java.io.IOException;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * A reader for profiles.
@@ -33,7 +32,7 @@ import org.jboss.gravia.resource.Version;
  */
 public interface ProfileReader {
 
-    Version getProfileVersion() throws IOException;
+    VersionIdentity getProfileVersion() throws IOException;
 
     Profile nextProfile();
 

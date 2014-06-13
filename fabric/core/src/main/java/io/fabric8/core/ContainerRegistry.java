@@ -27,6 +27,7 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.FabricException;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.core.zookeeper.ZkPath;
 import io.fabric8.spi.AbstractServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
@@ -82,7 +83,7 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, Version version, List<String> profiles, Set<ServiceEndpoint> endpoints) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<String> profiles, Set<ServiceEndpoint> endpoints) {
         IllegalStateAssertion.assertTrue(getContainer(identity) == null, "Container already exists: " + identity);
         Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED)
                 .addParent(parentId)
@@ -150,7 +151,7 @@ public final class ContainerRegistry extends AbstractComponent {
         return removeInternal(identity);
     }
 
-    Container setProfileVersion(ContainerIdentity identity, Version version) {
+    Container setProfileVersion(ContainerIdentity identity, VersionIdentity version) {
         ContainerLockManager.assertWriteLock(identity);
         setVersionInternal(identity, version);
         return getRequiredContainer(identity);
@@ -244,7 +245,7 @@ public final class ContainerRegistry extends AbstractComponent {
                 Map<AttributeKey<?>, Object> attributes = getAttributesInternal(ZkPath.CONTAINER_ATTRIBUTES.getPath(id));
                 RuntimeType type = getRuntimeTypeInternal(identity);
                 List<String> profiles = getProfileIdentities(identity);
-                Version version = getVersionInternal(identity);
+                VersionIdentity version = getVersionInternal(identity);
                 State state = getStateInternal(identity);
                 Set<ContainerIdentity> children = getChildIdentitiesInternal(identity);
                 Set<ServiceEndpoint> endpoints = getServiceEndpointsInternal(identity);
@@ -494,10 +495,10 @@ public final class ContainerRegistry extends AbstractComponent {
      * @param identity  The identity of the {@link Container}.
      * @return          The {@link Version}.
      */
-    private Version getVersionInternal(ContainerIdentity identity) {
+    private VersionIdentity getVersionInternal(ContainerIdentity identity) {
         try {
             String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_VERSION.getPath(identity.getSymbolicName())));
-            return Version.parseVersion(data);
+            return VersionIdentity.createFrom(data);
         }catch (Exception e) {
             throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+ " version.", e);
         }
@@ -507,9 +508,9 @@ public final class ContainerRegistry extends AbstractComponent {
      * Writes the {@link Version} associated with the specified {@link io.fabric8.api.ContainerIdentity}.
      * @param identity  The identity of the {@link Container}.
      */
-    private void setVersionInternal(ContainerIdentity identity, Version version) {
-        String id = identity.getSymbolicName();
-        String data = version.toString();
+    private void setVersionInternal(ContainerIdentity identity, VersionIdentity version) {
+        String id = identity.getCanonicalForm();
+        String data = version.getCanonicalForm();
         try {
             String containerVersionPath = ZkPath.CONTAINER_CONFIG_VERSION.getPath(id);
             if (curator.get().checkExists().forPath(containerVersionPath) != null) {

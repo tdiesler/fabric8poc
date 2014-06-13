@@ -25,6 +25,7 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilders;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.DefaultConfigurationItemBuilder;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
@@ -38,7 +39,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
 
 /**
  * A provider service for the {@link ProfileBuilders}
@@ -66,17 +66,17 @@ public final class ProfileBuildersImpl extends AbstractComponent implements Prof
     @Override
     public ProfileVersionBuilder profileVersionBuilder() {
         assertValid();
-        return new DefaultProfileVersionBuilder((Version) null);
+        return new DefaultProfileVersionBuilder((VersionIdentity) null);
     }
 
     @Override
-    public ProfileVersionBuilder profileVersionBuilder(Version version) {
+    public ProfileVersionBuilder profileVersionBuilder(VersionIdentity version) {
         assertValid();
         return new DefaultProfileVersionBuilder(version);
     }
 
     @Override
-    public ProfileVersionBuilder profileVersionBuilderFrom(Version version) {
+    public ProfileVersionBuilder profileVersionBuilderFrom(VersionIdentity version) {
         assertValid();
         LinkedProfileVersion linkedVersion = profileService.get().getLinkedProfileVersion(version);
         return linkedVersion != null ? new DefaultProfileVersionBuilder(linkedVersion) : new DefaultProfileVersionBuilder(version);
@@ -101,7 +101,7 @@ public final class ProfileBuildersImpl extends AbstractComponent implements Prof
     }
 
     @Override
-    public ProfileBuilder profileBuilderFrom(Version version, String identity) {
+    public ProfileBuilder profileBuilderFrom(VersionIdentity version, String identity) {
         LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, identity);
         return new DefaultProfileBuilder(linkedProfile);
     }

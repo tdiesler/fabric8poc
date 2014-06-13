@@ -36,6 +36,7 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
@@ -44,7 +45,6 @@ import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -105,7 +105,7 @@ public class ComplexContainerTest {
         Assert.assertTrue(cntParent.getProfileIdentities().contains(DEFAULT_PROFILE_IDENTITY));
 
         // Build a new profile version
-        Version version20 = Version.parseVersion("2.0");
+        VersionIdentity version20 = VersionIdentity.createFrom("2.0");
         ProfileVersion profVersion20 = ProfileVersionBuilder.Factory.create(version20)
                 .addProfile(ProfileBuilder.Factory.create("dummy").getProfile())
                 .getProfileVersion();

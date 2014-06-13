@@ -15,6 +15,7 @@
 
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
@@ -31,7 +32,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 @Component(configurationPid = "io.fabric8.boot", policy = ConfigurationPolicy.REQUIRE, immediate = true)
@@ -42,7 +42,7 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
     Configurer configurer;
 
     private final Map<String, Object> configuration = new HashMap<>();
-    private Version version;
+    private VersionIdentity version;
     private Set<String> profiles;
 
     @Activate
@@ -50,7 +50,7 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
         this.configuration.putAll(configurer.configure(source, this));
         IllegalStateAssertion.assertTrue(configuration.containsKey(VERSION), VERSION + " is required");
         IllegalStateAssertion.assertTrue(configuration.containsKey(PROFILE), PROFILE + " is required");
-        version = Version.parseVersion(String.valueOf(configuration.get(VERSION)));
+        version = VersionIdentity.createFrom(String.valueOf(configuration.get(VERSION)));
         profiles = Collections.unmodifiableSet(
                 new LinkedHashSet<>(
                         Arrays.asList(String.valueOf(configuration.get(PROFILE)).split(" +"))
@@ -64,7 +64,7 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
     }
 
     @Override
-    public Version getVersion() {
+    public VersionIdentity getVersion() {
         return version;
     }
 

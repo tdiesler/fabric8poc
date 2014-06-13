@@ -27,12 +27,12 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -74,7 +74,7 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
-        Version version = Version.parseVersion("1.1");
+        VersionIdentity version = VersionIdentity.createFrom("1.1");
 
         Profile profileFoo = ProfileBuilder.Factory.create("foo")
                 .addConfigurationItem("some.pid", Collections.singletonMap("xxx", (Object) "yyy"))

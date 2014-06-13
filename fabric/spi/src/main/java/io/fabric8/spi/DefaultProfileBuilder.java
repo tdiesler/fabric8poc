@@ -25,6 +25,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +40,6 @@ import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.ResourceIdentity;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ResourceUtils;
 
@@ -64,7 +64,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder profileVersion(Version version) {
+    public ProfileBuilder profileVersion(VersionIdentity version) {
         mutableProfile.setVersion(version);
         return this;
     }
@@ -169,7 +169,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         private final List<String> parentProfiles = new ArrayList<>();
         private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
         private String identity;
-        private Version version;
+        private VersionIdentity version;
 
         private MutableProfile(String identity) {
             this.identity = identity;
@@ -199,11 +199,11 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public Version getVersion() {
+        public VersionIdentity getVersion() {
             return version;
         }
 
-        private void setVersion(Version version) {
+        private void setVersion(VersionIdentity version) {
             this.version = version;
         }
 

@@ -21,8 +21,6 @@ package io.fabric8.api;
 
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
-
 
 /**
  * A profile version
@@ -30,9 +28,9 @@ import org.jboss.gravia.resource.Version;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface ProfileVersion extends Identifiable<Version> {
+public interface ProfileVersion extends Identifiable<VersionIdentity> {
 
-    Version DEFAULT_PROFILE_VERSION = new Version("1.0");
+    VersionIdentity DEFAULT_PROFILE_VERSION = VersionIdentity.create("1.0");
 
     /**
      * Get the associated profiles

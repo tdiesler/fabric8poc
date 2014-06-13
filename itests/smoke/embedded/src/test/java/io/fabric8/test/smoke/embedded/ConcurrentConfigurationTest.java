@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.spi.ContainerService;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;

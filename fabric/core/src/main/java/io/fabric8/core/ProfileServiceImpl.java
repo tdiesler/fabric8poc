@@ -30,6 +30,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ImmutableProfile;
 import io.fabric8.spi.ImmutableProfileVersion;
@@ -56,7 +57,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
@@ -112,16 +112,16 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public LockHandle aquireProfileVersionLock(Version version) {
+    public LockHandle aquireProfileVersionLock(VersionIdentity version) {
         assertValid();
         return aquireWriteLock(version);
     }
 
-    private LockHandle aquireWriteLock(Version version) {
+    private LockHandle aquireWriteLock(VersionIdentity version) {
         return profileRegistry.get().aquireWriteLock(version);
     }
 
-    private LockHandle aquireReadLock(Version version) {
+    private LockHandle aquireReadLock(VersionIdentity version) {
         return profileRegistry.get().aquireReadLock(version);
     }
 
@@ -132,20 +132,20 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Version> getVersions() {
+    public Set<VersionIdentity> getVersions() {
         assertValid();
         return profileRegistry.get().getVersions();
     }
 
     @Override
-    public Set<ProfileVersion> getProfileVersions(Set<Version> identities) {
+    public Set<ProfileVersion> getProfileVersions(Set<VersionIdentity> identities) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         Set<ProfileVersion> result = new HashSet<ProfileVersion>();
         if (identities == null) {
             identities = registry.getVersions();
         }
-        for (Version version : identities) {
+        for (VersionIdentity version : identities) {
             ProfileVersion prfVersion = registry.getProfileVersion(version);
             if (prfVersion != null) {
                 result.add(prfVersion);
@@ -155,13 +155,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public ProfileVersion getProfileVersion(Version version) {
+    public ProfileVersion getProfileVersion(VersionIdentity version) {
         assertValid();
         return profileRegistry.get().getProfileVersion(version);
     }
 
     @Override
-    public LinkedProfileVersion getLinkedProfileVersion(Version version) {
+    public LinkedProfileVersion getLinkedProfileVersion(VersionIdentity version) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {
@@ -187,7 +187,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public ProfileVersion removeProfileVersion(Version version) {
+    public ProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -197,7 +197,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
                 LockHandle readLock = lockManager.aquireReadLock(cntid);
                 try {
                     Container container = cntRegistry.getContainer(cntid);
-                    Version cntVersion = container.getProfileVersion();
+                    VersionIdentity cntVersion = container.getProfileVersion();
                     IllegalStateAssertion.assertFalse(version.equals(cntVersion), "Cannot remove profile version used by: " + container);
                 } finally {
                     readLock.unlock();
@@ -211,7 +211,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<String> getProfileIdentities(Version version) {
+    public Set<String> getProfileIdentities(VersionIdentity version) {
         assertValid();
         return getRequiredProfileVersion(version).getProfileIdentities();
     }
@@ -223,25 +223,25 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getProfile(Version version, String profileId) {
+    public Profile getProfile(VersionIdentity version, String profileId) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.getProfile(version, profileId);
     }
 
     @Override
-    public Profile getEffectiveProfile(Version version, String profileId) {
+    public Profile getEffectiveProfile(VersionIdentity version, String profileId) {
         assertValid();
         return ProfileUtils.getEffectiveProfile(getLinkedProfile(version, profileId));
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(Version version, String profileId) {
+    public LinkedProfile getLinkedProfile(VersionIdentity version, String profileId) {
         assertValid();
         return getLinkedProfileInternal(version, profileId, new HashMap<String, LinkedProfile>());
     }
 
-    private LinkedProfile getLinkedProfileInternal(Version version, String profileId, Map<String, LinkedProfile> linkedProfiles) {
+    private LinkedProfile getLinkedProfileInternal(VersionIdentity version, String profileId, Map<String, LinkedProfile> linkedProfiles) {
         Profile profile = getRequiredProfile(version, profileId);
         Map<String, LinkedProfile> linkedParents = getLinkedParents(profile, linkedProfiles);
         return new ImmutableProfile(profile.getVersion(), profile.getIdentity(), profile.getAttributes(), profile.getParents(), profile.getProfileItems(null), linkedParents);
@@ -261,7 +261,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Profile> getProfiles(Version version, Set<String> identities) {
+    public Set<Profile> getProfiles(VersionIdentity version, Set<String> identities) {
         assertValid();
         Set<Profile> result = new HashSet<Profile>();
         ProfileVersion profileVersion = getRequiredProfileVersion(version);
@@ -275,14 +275,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile addProfile(Version version, Profile profile) {
+    public Profile addProfile(VersionIdentity version, Profile profile) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.addProfile(version, profile);
     }
 
     @Override
-    public Profile removeProfile(Version version, String profileId) {
+    public Profile removeProfile(VersionIdentity version, String profileId) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -321,14 +321,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public ProfileVersion getRequiredProfileVersion(Version version) {
+    public ProfileVersion getRequiredProfileVersion(VersionIdentity version) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.getRequiredProfileVersion(version);
     }
 
     @Override
-    public Profile getRequiredProfile(Version version, String profileId) {
+    public Profile getRequiredProfile(VersionIdentity version, String profileId) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.getRequiredProfile(version, profileId);

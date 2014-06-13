@@ -34,6 +34,13 @@ public class ProfileIdentityTest {
         Assert.assertEquals("aaa", idA.getCanonicalForm());
         Assert.assertEquals(idA, ProfileIdentity.createFrom(idA.getCanonicalForm()));
         Assert.assertNull("Revision is null", idA.getRevision());
+
+        try {
+            ProfileIdentity.createFrom("invalid@char");
+            Assert.fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ex) {
+            // expected
+        }
     }
 
     @Test

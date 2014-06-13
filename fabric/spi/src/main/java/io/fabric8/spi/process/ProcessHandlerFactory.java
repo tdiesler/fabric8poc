@@ -19,10 +19,10 @@
  */
 package io.fabric8.spi.process;
 
-import javax.management.MBeanServer;
-
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
+
+import javax.management.MBeanServer;
 
 
 /**

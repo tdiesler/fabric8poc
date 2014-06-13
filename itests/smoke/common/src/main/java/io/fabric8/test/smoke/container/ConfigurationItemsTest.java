@@ -21,8 +21,8 @@ package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.test.smoke.PrePostConditions;
 import io.fabric8.test.smoke.ConfigurationItemsTestBase;
+import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.InputStream;
 

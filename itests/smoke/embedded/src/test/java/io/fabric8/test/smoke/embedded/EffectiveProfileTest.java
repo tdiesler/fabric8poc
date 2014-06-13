@@ -28,13 +28,13 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +49,7 @@ import org.junit.Test;
  */
 public class EffectiveProfileTest {
 
-    Version version = Version.parseVersion("2.0");
+    VersionIdentity version = VersionIdentity.createFrom("2.0");
     String identityA = "A";
     String identityB = "B";
     String identityC = "C";

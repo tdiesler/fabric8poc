@@ -24,6 +24,7 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.utils.ProfileUtils;
 
 import java.util.ArrayList;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.gravia.resource.ResourceIdentity;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
@@ -47,13 +47,13 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 public final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
 
-    private final Version version;
+    private final VersionIdentity version;
     private final String identity;
     private final List<String> parentIdentities = new ArrayList<>();
     private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
     private Map<String, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(Version version, String identity, Map<AttributeKey<?>, Object> attributes, List<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+    public ImmutableProfile(VersionIdentity version, String identity, Map<AttributeKey<?>, Object> attributes, List<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
         super(attributes, true);
         this.identity = identity;
         this.version = version;
@@ -73,7 +73,7 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public Version getVersion() {
+    public VersionIdentity getVersion() {
         return version;
     }
 

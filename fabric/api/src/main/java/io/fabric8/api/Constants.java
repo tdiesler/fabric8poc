@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.resource.Version;
 
 /**
  * Fabric constants
@@ -32,7 +31,7 @@ public interface Constants {
     /**
      * The default profile version
      */
-    Version DEFAULT_PROFILE_VERSION = Version.parseVersion("1.0");
+    VersionIdentity DEFAULT_PROFILE_VERSION = VersionIdentity.createFrom("1.0");
 
     /**
      * The default profile name

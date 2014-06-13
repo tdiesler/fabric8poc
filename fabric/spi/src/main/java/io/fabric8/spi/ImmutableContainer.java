@@ -23,7 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 
 /**
@@ -50,8 +49,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private final RuntimeType runtimeType;
     private final State state;
 
-
-    private Version profileVersion;
+    private VersionIdentity profileVersion;
     private Set<ServiceEndpoint> endpoints = new HashSet<>();
     private Set<ContainerIdentity> children = new HashSet<>();
     private List<String> profiles = new ArrayList<>();
@@ -90,7 +88,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public Version getProfileVersion() {
+    public VersionIdentity getProfileVersion() {
         return profileVersion;
     }
 
@@ -144,7 +142,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
             container = new ImmutableContainer(identity, runtimeType, attributes, state);
         }
 
-        public Builder addProfileVersion(Version version) {
+        public Builder addProfileVersion(VersionIdentity version) {
             container.profileVersion = version;
             return this;
         }

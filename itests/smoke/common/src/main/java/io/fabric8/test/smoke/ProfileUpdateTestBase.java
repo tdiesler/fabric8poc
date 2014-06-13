@@ -38,6 +38,7 @@ import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.ContainerService;
 
 import java.util.Collections;
@@ -46,7 +47,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -77,7 +77,7 @@ public abstract class ProfileUpdateTestBase  {
     @Test
     public void testProfileUpdate() throws Exception {
 
-        final Version version12 = Version.parseVersion("1.2");
+        final VersionIdentity version12 = VersionIdentity.createFrom("1.2");
         final String identityA = "foo";
 
         // Build a profile version

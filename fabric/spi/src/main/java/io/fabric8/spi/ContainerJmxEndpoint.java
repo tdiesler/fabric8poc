@@ -18,7 +18,6 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.JMXServiceEndpoint;
-import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 
 import java.util.Map;

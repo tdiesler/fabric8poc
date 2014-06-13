@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.api.management.ProfileVersionManagement;
@@ -49,7 +50,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
 
 /**
  * A provider of system MBeans
@@ -167,7 +167,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileVersionIds() {
             Set<String> result = new HashSet<String>();
-            for (Version version : profileManager.getVersions()) {
+            for (VersionIdentity version : profileManager.getVersions()) {
                 result.add(version.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -175,7 +175,7 @@ public final class MBeansProvider extends AbstractComponent {
 
         @Override
         public CompositeData getProfileVersion(String identity) {
-            ProfileVersion pversion = profileManager.getProfileVersion(Version.parseVersion(identity));
+            ProfileVersion pversion = profileManager.getProfileVersion(VersionIdentity.createFrom(identity));
             return pversion != null ? ProfileVersionOpenType.getCompositeData(pversion) : null;
         }
     }
@@ -191,7 +191,7 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileIds(String version) {
             Set<String> result = new HashSet<String>();
-            for (String prfid : profileManager.getProfileIdentities(Version.parseVersion(version))) {
+            for (String prfid : profileManager.getProfileIdentities(VersionIdentity.createFrom(version))) {
                 result.add(prfid.toString());
             }
             return Collections.unmodifiableSet(result);
@@ -199,7 +199,7 @@ public final class MBeansProvider extends AbstractComponent {
 
         @Override
         public CompositeData getProfile(String version, String identity) {
-            Profile profile = profileManager.getProfile(Version.parseVersion(version), identity);
+            Profile profile = profileManager.getProfile(VersionIdentity.createFrom(version), identity);
             return profile != null ? ProfileOpenType.getCompositeData(profile) : null;
         }
     }

@@ -25,11 +25,11 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.List;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,7 +56,7 @@ public class ProfileCopyTest {
     @Test
     public void testProfileCopy() throws Exception {
 
-        Version version = Constants.DEFAULT_PROFILE_VERSION;
+        VersionIdentity version = Constants.DEFAULT_PROFILE_VERSION;
         String identity = Constants.DEFAULT_PROFILE_IDENTITY;
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();

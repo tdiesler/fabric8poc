@@ -28,6 +28,7 @@ import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.git.GitService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
@@ -92,7 +93,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     private static String PROFILES_FILE = "profiles.xml";
 
-    private final Map<Version, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<>();
+    private final Map<VersionIdentity, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<>();
     private final RegistryCache registryCache = new RegistryCache();
     private Path workspace;
 
@@ -135,7 +136,7 @@ public final class ProfileRegistry extends AbstractComponent {
     private void dactivateInternal() {
     }
 
-    LockHandle aquireWriteLock(Version version) {
+    LockHandle aquireWriteLock(VersionIdentity version) {
 
         final WriteLock writeLock = getReadWriteLock(version).writeLock();
 
@@ -155,7 +156,7 @@ public final class ProfileRegistry extends AbstractComponent {
         };
     }
 
-    LockHandle aquireReadLock(Version version) {
+    LockHandle aquireReadLock(VersionIdentity version) {
 
         final ReadLock readLock = getReadWriteLock(version).readLock();
 
@@ -175,7 +176,7 @@ public final class ProfileRegistry extends AbstractComponent {
         };
     }
 
-    private ReentrantReadWriteLock getReadWriteLock(Version version) {
+    private ReentrantReadWriteLock getReadWriteLock(VersionIdentity version) {
         IllegalArgumentAssertion.assertNotNull(version, "version");
         ReentrantReadWriteLock readWriteLock;
         synchronized (versionLocks) {
@@ -188,20 +189,20 @@ public final class ProfileRegistry extends AbstractComponent {
         return readWriteLock;
     }
 
-    Set<Version> getVersions() {
+    Set<VersionIdentity> getVersions() {
         assertValid();
-        Set<Version> versions = new HashSet<>();
+        Set<VersionIdentity> versions = new HashSet<>();
         synchronized (workspace) {
             for (String name : workspace.toFile().list()) {
                 if (workspace.resolve(name).toFile().isDirectory()) {
-                    versions.add(Version.parseVersion(name));
+                    versions.add(VersionIdentity.createFrom(name));
                 }
             }
         }
         return Collections.unmodifiableSet(versions);
     }
 
-    LinkedProfileVersion getProfileVersion(Version version) {
+    LinkedProfileVersion getProfileVersion(VersionIdentity version) {
         assertValid();
         LockHandle readLock = aquireReadLock(version);
         try {
@@ -215,14 +216,14 @@ public final class ProfileRegistry extends AbstractComponent {
      * Get the {@link LinkedProfileVersion} for the given version
      * @return null if the version does not exist
      */
-    private LinkedProfileVersion getProfileVersionInternal(Version version) {
+    private LinkedProfileVersion getProfileVersionInternal(VersionIdentity version) {
         File profilesFile = getProfilesFile(version);
         return profilesFile.exists() ? registryCache.getProfileVersion(version) : null;
     }
 
     LinkedProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
-        Version version = profileVersion.getIdentity();
+        VersionIdentity version = profileVersion.getIdentity();
         LockHandle writeLock = aquireWriteLock(version);
         try {
             return addProfileVersionInternal(profileVersion);
@@ -232,7 +233,7 @@ public final class ProfileRegistry extends AbstractComponent {
     }
 
     private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
-        Version version = profileVersion.getIdentity();
+        VersionIdentity version = profileVersion.getIdentity();
         LOGGER.info("Add profile version: {}", version);
         Path versionPath = getProfileVersionPath(version);
         IllegalStateAssertion.assertFalse(versionPath.toFile().exists(), "Profile version path already exists: " + versionPath);
@@ -240,7 +241,7 @@ public final class ProfileRegistry extends AbstractComponent {
         return writeProfileVersion(profileVersion);
     }
 
-    LinkedProfileVersion removeProfileVersion(Version version) {
+    LinkedProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -257,7 +258,7 @@ public final class ProfileRegistry extends AbstractComponent {
      * Get the profile for the given version and identity
      * @return null if the profile does not exist
      */
-    Profile getProfile(Version version, String identity) {
+    Profile getProfile(VersionIdentity version, String identity) {
         assertValid();
         Profile result = null;
         LockHandle readLock = aquireReadLock(version);
@@ -285,16 +286,16 @@ public final class ProfileRegistry extends AbstractComponent {
         return result;
     }
 
-    Profile getRequiredProfile(Version version, String identity) {
+    Profile getRequiredProfile(VersionIdentity version, String identity) {
         Profile profile = getProfile(version, identity);
         IllegalStateAssertion.assertNotNull(profile, "Cannot obtain profile '" + identity + "' from: " + version);
         return profile;
     }
 
-    Profile addProfile(Version version, Profile profile) {
+    Profile addProfile(VersionIdentity version, Profile profile) {
         assertValid();
         String identity = profile.getIdentity();
-        Version pversion = profile.getVersion();
+        VersionIdentity pversion = profile.getVersion();
         IllegalStateAssertion.assertTrue(pversion == null || version.equals(pversion), "Unexpected profile version: " + profile);
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -309,7 +310,7 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    Profile updateProfile(Version version, Profile profile) {
+    Profile updateProfile(VersionIdentity version, Profile profile) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -326,7 +327,7 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    Profile removeProfile(Version version, String identity) {
+    Profile removeProfile(VersionIdentity version, String identity) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -346,12 +347,13 @@ public final class ProfileRegistry extends AbstractComponent {
     URLConnection getProfileURLConnection(URL url) throws IOException {
         assertValid();
         String path = url.getPath();
-        String version = url.getHost();
+        String verstr = url.getHost();
         String profile = path.substring(1, path.lastIndexOf('/'));
         String item = path.substring(path.lastIndexOf('/') + 1);
-        LockHandle readLock = aquireReadLock(Version.parseVersion(version));
+        VersionIdentity version = VersionIdentity.createFrom(verstr);
+        LockHandle readLock = aquireReadLock(version);
         try {
-            Path profilePath = getRequiredProfilePath(Version.parseVersion(version), profile);
+            Path profilePath = getRequiredProfilePath(version, profile);
             Path itemPath = profilePath.resolve(item);
             IllegalStateAssertion.assertTrue(itemPath.toFile().isDirectory(), "Cannot find item directory: " + itemPath);
             int cntindex = 0;
@@ -375,8 +377,8 @@ public final class ProfileRegistry extends AbstractComponent {
                 versionPath = Paths.get(itemPath.toString(), resourceVersion.toString());
             } else {
                 Version higest = Version.emptyVersion;
-                for (String verstr : itemPath.toFile().list()) {
-                    Version nextver = Version.parseVersion(verstr);
+                for (String resver : itemPath.toFile().list()) {
+                    Version nextver = Version.parseVersion(resver);
                     if (nextver.compareTo(higest) > 0) {
                         higest = nextver;
                     }
@@ -394,7 +396,7 @@ public final class ProfileRegistry extends AbstractComponent {
     }
 
     private LinkedProfileVersion writeProfileVersion(LinkedProfileVersion profileVersion) {
-        Version version = profileVersion.getIdentity();
+        VersionIdentity version = profileVersion.getIdentity();
         registryCache.invalidate(version);
         FileOutputStream fos = null;
         try {
@@ -411,38 +413,38 @@ public final class ProfileRegistry extends AbstractComponent {
         return getProfileVersionInternal(version);
     }
 
-    private Path getProfileVersionPath(Version version) {
-        return workspace.resolve(version.toString());
+    private Path getProfileVersionPath(VersionIdentity version) {
+        return workspace.resolve(version.getVersion().toString());
     }
 
-    private Path getRequiredProfileVersionPath(Version version) {
+    private Path getRequiredProfileVersionPath(VersionIdentity version) {
         Path versionPath = getProfileVersionPath(version);
         IllegalStateAssertion.assertTrue(versionPath.toFile().exists(), "Cannot find profile version directory: " + versionPath);
         return versionPath;
     }
 
-    private Path getProfilePath(Version version, String identity) {
+    private Path getProfilePath(VersionIdentity version, String identity) {
         return getProfileVersionPath(version).resolve(identity);
     }
 
-    private Path getRequiredProfilePath(Version version, String identity) {
+    private Path getRequiredProfilePath(VersionIdentity version, String identity) {
         Path profilePath = getProfilePath(version, identity);
         IllegalStateAssertion.assertTrue(profilePath.toFile().exists(), "Cannot find profile directory: " + profilePath);
         return profilePath;
     }
 
-    private File getProfilesFile(Version version) {
+    private File getProfilesFile(VersionIdentity version) {
         Path versionPath = getProfileVersionPath(version);
         return versionPath.resolve(PROFILES_FILE).toFile();
     }
 
-    private File getRequiredProfilesFile(Version version) {
+    private File getRequiredProfilesFile(VersionIdentity version) {
         File profilesFile = getProfilesFile(version);
         IllegalStateAssertion.assertTrue(profilesFile.exists(), "Profiles file does not exist: " + profilesFile);
         return profilesFile;
     }
 
-    private void deleteProfilePath(Version version, String identity) {
+    private void deleteProfilePath(VersionIdentity version, String identity) {
         Path profilePath = getProfilePath(version, identity);
         try {
             FileUtils.deleteRecursively(profilePath);
@@ -451,7 +453,7 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    private void deleteProfileVersionPath(Version version) {
+    private void deleteProfileVersionPath(VersionIdentity version) {
         Path versionPath = getRequiredProfileVersionPath(version);
         try {
             FileUtils.deleteRecursively(versionPath);
@@ -460,7 +462,7 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    LinkedProfileVersion getRequiredProfileVersion(Version version) {
+    LinkedProfileVersion getRequiredProfileVersion(VersionIdentity version) {
         LinkedProfileVersion profileVersion = getProfileVersion(version);
         IllegalStateAssertion.assertNotNull(profileVersion, "Cannot obtain profile version: " + version);
         return profileVersion;
@@ -482,9 +484,9 @@ public final class ProfileRegistry extends AbstractComponent {
 
     private class RegistryCache {
 
-        private final Map<Version, LinkedProfileVersion> cacheMap = new HashMap<>();
+        private final Map<VersionIdentity, LinkedProfileVersion> cacheMap = new HashMap<>();
 
-        LinkedProfileVersion getProfileVersion(Version version) {
+        LinkedProfileVersion getProfileVersion(VersionIdentity version) {
             LinkedProfileVersion linkedVersion = cacheMap.get(version);
             if (linkedVersion == null) {
                 ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
@@ -508,7 +510,7 @@ public final class ProfileRegistry extends AbstractComponent {
             return linkedVersion;
         }
 
-        void invalidate(Version version) {
+        void invalidate(VersionIdentity version) {
             cacheMap.remove(version);
         }
     }

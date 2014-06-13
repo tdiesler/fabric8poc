@@ -16,6 +16,7 @@
 package io.fabric8.api;
 
 
+import org.jboss.gravia.resource.Version;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,24 +30,38 @@ public class VersionIdentityTest {
 
     @Test
     public void testSimpleIdentity() {
-        VersionIdentity idA = VersionIdentity.create("aaa");
-        Assert.assertEquals("aaa", idA.getSymbolicName());
-        Assert.assertEquals("aaa", idA.getCanonicalForm());
+        VersionIdentity idA = VersionIdentity.create("1.0");
+        Assert.assertEquals(Version.parseVersion("1.0"), idA.getVersion());
+        Assert.assertEquals("1.0.0", idA.getCanonicalForm());
         Assert.assertEquals(idA, VersionIdentity.createFrom(idA.getCanonicalForm()));
         Assert.assertNull("Revision is null", idA.getRevision());
+
+        try {
+            VersionIdentity.createFrom("foo");
+            Assert.fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ex) {
+            // expected
+        }
+
+        try {
+            VersionIdentity.createFrom("1.0,rev=invalid@char");
+            Assert.fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ex) {
+            // expected
+        }
     }
 
     @Test
     public void testRevisonIdentity() {
-        VersionIdentity idA = VersionIdentity.create("aaa", null);
-        Assert.assertEquals("aaa", idA.getSymbolicName());
-        Assert.assertEquals("aaa", idA.getCanonicalForm());
+        VersionIdentity idA = VersionIdentity.create("1.0", null);
+        Assert.assertEquals(Version.parseVersion("1.0"), idA.getVersion());
+        Assert.assertEquals("1.0.0", idA.getCanonicalForm());
         Assert.assertEquals(idA, VersionIdentity.createFrom(idA.getCanonicalForm()));
         Assert.assertNull("Revision is null", idA.getRevision());
 
-        VersionIdentity idB = VersionIdentity.create("aaa", "bbb");
-        Assert.assertEquals("aaa", idB.getSymbolicName());
-        Assert.assertEquals("aaa,rev=bbb", idB.getCanonicalForm());
+        VersionIdentity idB = VersionIdentity.create("1.0", "bbb");
+        Assert.assertEquals(Version.parseVersion("1.0"), idB.getVersion());
+        Assert.assertEquals("1.0.0,rev=bbb", idB.getCanonicalForm());
         Assert.assertEquals(idB, VersionIdentity.createFrom(idB.getCanonicalForm()));
         Assert.assertEquals("bbb", idB.getRevision());
 

@@ -24,6 +24,7 @@ import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AbstractJMXServiceEndpoint;
 import io.fabric8.spi.AttributeProvider;
@@ -32,6 +33,7 @@ import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -124,7 +126,7 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         Container container = registry.getContainer(currentIdentity);
         if (container == null) {
             // Get boot profile version
-            Version bootVersion = bootConfiguration.get().getVersion();
+            VersionIdentity bootVersion = bootConfiguration.get().getVersion();
 
             // Get boot profiles
             List<String> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());

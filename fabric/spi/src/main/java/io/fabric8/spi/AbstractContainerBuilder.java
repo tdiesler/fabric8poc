@@ -23,11 +23,10 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.OptionsProvider;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.gravia.resource.Version;
 
 public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>, T extends MutableCreateOptions> implements ContainerBuilder<B, T> {
 
@@ -46,7 +45,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B profileVersion(Version version) {
+    public B profileVersion(VersionIdentity version) {
         options.setVersion(version);
         return (B) this;
     }

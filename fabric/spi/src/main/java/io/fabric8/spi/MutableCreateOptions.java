@@ -23,11 +23,10 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * Mutable container create options
@@ -39,7 +38,7 @@ public interface MutableCreateOptions extends CreateOptions {
 
     void setIdentity(ContainerIdentity identity);
 
-    void setVersion(Version version);
+    void setVersion(VersionIdentity version);
 
     void setProfiles(List<String> profiles);
 

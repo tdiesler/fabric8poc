@@ -22,13 +22,12 @@ package io.fabric8.spi;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.permit.PermitKey;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * The internal profile service
@@ -43,9 +42,9 @@ public interface ProfileService extends ProfileManager {
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
 
-    ProfileVersion getRequiredProfileVersion(Version version);
+    ProfileVersion getRequiredProfileVersion(VersionIdentity version);
 
-    Profile getRequiredProfile(Version version, String identity);
+    Profile getRequiredProfile(VersionIdentity version, String identity);
 
     /**
      * Get an url connection to content in the profile registry

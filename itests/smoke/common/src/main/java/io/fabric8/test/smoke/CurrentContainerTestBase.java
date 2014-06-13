@@ -26,7 +26,6 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.spi.ContainerJmxEndpoint;
 import io.fabric8.spi.RuntimeService;

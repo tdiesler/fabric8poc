@@ -22,6 +22,7 @@ package io.fabric8.spi.management;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
@@ -36,7 +37,6 @@ import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
 import org.jboss.gravia.resource.ResourceIdentity;
-import org.jboss.gravia.resource.Version;
 
 /**
  * CompositeData support for a {@link Profile}.
@@ -117,7 +117,7 @@ public final class ProfileOpenType {
         }
 
         @Override
-        public Version getVersion() {
+        public VersionIdentity getVersion() {
             throw new UnsupportedOperationException();
         }
 

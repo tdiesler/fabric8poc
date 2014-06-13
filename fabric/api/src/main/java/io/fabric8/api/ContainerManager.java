@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.gravia.provision.ProvisionException;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
 
 /**
@@ -108,7 +107,7 @@ public interface ContainerManager {
     /**
      * Set the profile version for the container with the given identity
      */
-    Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException;
+    Container setProfileVersion(ContainerIdentity identity, VersionIdentity version, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Add profiles to the container with the given identity

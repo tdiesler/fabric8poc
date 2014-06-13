@@ -27,6 +27,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootstrapComplete;
 
 import java.util.Iterator;
@@ -37,7 +38,6 @@ import java.util.Set;
 import org.jboss.gravia.resource.Capability;
 import org.jboss.gravia.resource.IdentityNamespace;
 import org.jboss.gravia.resource.Resource;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
@@ -86,10 +86,10 @@ public final class PrePostConditions {
 
         // One (default) profile version
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        Set<Version> profileVersions = prfManager.getVersions();
+        Set<VersionIdentity> profileVersions = prfManager.getVersions();
         Assert.assertEquals("One profile version", 1, profileVersions.size());
-        Version defaultVersion = profileVersions.iterator().next();
-        Assert.assertEquals("1.0.0", defaultVersion.toString());
+        VersionIdentity defaultVersion = profileVersions.iterator().next();
+        Assert.assertEquals("1.0.0", defaultVersion.getCanonicalForm());
 
         // Default profile content
         Profile defaultProfile = prfManager.getDefaultProfile();

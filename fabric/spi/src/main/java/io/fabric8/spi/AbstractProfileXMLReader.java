@@ -29,6 +29,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.ProfilesNamespace100.Attribute;
 import io.fabric8.spi.ProfilesNamespace100.Element;
 
@@ -47,7 +48,6 @@ import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.RequirementBuilder;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceBuilder;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -60,7 +60,7 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 public abstract class AbstractProfileXMLReader implements ProfileReader {
 
     private final Map<String, String> attributes = new HashMap<String, String>();
-    private final Version profileVersion;
+    private final VersionIdentity profileVersion;
     private final XMLStreamReader reader;
 
     public AbstractProfileXMLReader(InputStream inputStream) {
@@ -76,7 +76,7 @@ public abstract class AbstractProfileXMLReader implements ProfileReader {
         } catch (Exception ex) {
             throw new IllegalStateException("Cannot read resource element: " + reader.getLocation(), ex);
         }
-        profileVersion = Version.parseVersion(attributes.get(Attribute.VERSION.getLocalName()));
+        profileVersion = VersionIdentity.createFrom(attributes.get(Attribute.VERSION.getLocalName()));
     }
 
     protected abstract XMLStreamReader createXMLStreamReader(InputStream inputSteam);
@@ -84,7 +84,7 @@ public abstract class AbstractProfileXMLReader implements ProfileReader {
     protected abstract ResourceBuilder createResourceBuilder();
 
     @Override
-    public Version getProfileVersion() {
+    public VersionIdentity getProfileVersion() {
         return profileVersion;
     }
 

@@ -42,6 +42,7 @@ import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.ContainerService;
@@ -340,7 +341,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         container = registry.startContainer(container.getIdentity());
 
         // Provision the container profiles
-        Version version = container.getProfileVersion();
+        VersionIdentity version = container.getProfileVersion();
         List<String> identities = container.getProfileIdentities();
         provisionProfilesInternal(container, version, identities, listener);
 
@@ -448,7 +449,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
+    public Container setProfileVersion(ContainerIdentity identity, VersionIdentity version, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         LockHandle writeLock = aquireWriteLock(identity);
         try {
@@ -459,7 +460,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container setVersionInternal(Container container, Version nextVersion, ProvisionEventListener listener) throws ProvisionException {
+    private Container setVersionInternal(Container container, VersionIdentity nextVersion, ProvisionEventListener listener) throws ProvisionException {
 
         ProfileVersion nextProfileVersion = profileService.get().getRequiredProfileVersion(nextVersion);
         LOGGER.info("Set container version: {} <= {}", container, nextVersion);
@@ -488,7 +489,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Add container profiles: {} <= {}", container, profiles);
 
         // Provision the profiles
-        Version version = container.getProfileVersion();
+        VersionIdentity version = container.getProfileVersion();
         List<String> effective = new ArrayList<>(container.getProfileIdentities());
         effective.addAll(profiles);
         provisionProfilesInternal(container, version, effective, listener);
@@ -514,7 +515,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Remove container profiles: {} => {}", container, profiles);
 
         // Unprovision the profiles
-        Version version = container.getProfileVersion();
+        VersionIdentity version = container.getProfileVersion();
         List<String> effective = new ArrayList<>(container.getProfileIdentities());
         effective.removeAll(profiles);
         provisionProfilesInternal(container, version, effective, listener);
@@ -530,7 +531,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LockHandle readLock = aquireReadLock(identity);
         try {
             Container container = getRequiredContainer(identity);
-            Version version = container.getProfileVersion();
+            VersionIdentity version = container.getProfileVersion();
             List<String> identities = container.getProfileIdentities();
             return getEffectiveProfileInternal(container, version, identities);
         } finally {
@@ -538,7 +539,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Profile getEffectiveProfileInternal(Container container, Version version, List<String> identities) {
+    private Profile getEffectiveProfileInternal(Container container, VersionIdentity version, List<String> identities) {
         LockHandle readLock = aquireReadLock(container.getIdentity());
         try {
             StringBuffer effectiveId = new StringBuffer("effective#" + version + "[");
@@ -565,12 +566,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         LOGGER.info("Update container profile: {} <= {}", container, identity);
 
         // Provision the profile
-        Version version = container.getProfileVersion();
+        VersionIdentity version = container.getProfileVersion();
         List<String> identities = container.getProfileIdentities();
         provisionProfilesInternal(container, version, identities, listener);
     }
 
-    private void provisionProfilesInternal(Container container, Version version, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
+    private void provisionProfilesInternal(Container container, VersionIdentity version, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
         if (container.getState() == State.STARTED) {
             Profile effective = getEffectiveProfileInternal(container, version, identities);
             provisionEffectiveProfile(container, effective, listener);

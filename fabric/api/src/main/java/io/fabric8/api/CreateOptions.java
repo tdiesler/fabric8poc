@@ -22,7 +22,6 @@ package io.fabric8.api;
 
 import java.util.List;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 
 /**
@@ -37,7 +36,7 @@ public interface CreateOptions extends Attributable {
 
     RuntimeType getRuntimeType();
 
-    Version getProfileVersion();
+    VersionIdentity getProfileVersion();
 
     List<String> getProfiles();
 }

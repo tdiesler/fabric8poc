@@ -15,10 +15,10 @@
 
 package io.fabric8.spi;
 
+import io.fabric8.api.VersionIdentity;
+
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * A holder for the initial container Configuration.
@@ -31,7 +31,9 @@ public interface BootConfiguration {
     String VERSION = "version";
     String PROFILE = "profile";
 
-    Version getVersion();
+    VersionIdentity getVersion();
+
     Set<String> getProfiles();
+
     Map<String, Object> getConfiguration();
 }

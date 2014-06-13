@@ -22,8 +22,6 @@ package io.fabric8.api;
 
 import java.util.List;
 
-import org.jboss.gravia.resource.Version;
-
 /**
  * A builder for a fabric container
  *
@@ -34,7 +32,7 @@ public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends Cr
 
     B identity(String identity);
 
-    B profileVersion(Version version);
+    B profileVersion(VersionIdentity version);
 
     B profiles(List<String> profiles);
 

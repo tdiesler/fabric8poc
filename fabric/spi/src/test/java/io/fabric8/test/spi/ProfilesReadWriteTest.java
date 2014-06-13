@@ -24,6 +24,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.DefaultConfigurationItemBuilder;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
@@ -55,7 +56,6 @@ import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceBuilder;
 import org.jboss.gravia.resource.ResourceIdentity;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
@@ -90,7 +90,7 @@ public class ProfilesReadWriteTest {
             .addAttribute(KEYA, "valD")
             .getProfile();
 
-        Version version = Version.parseVersion("1.0");
+        VersionIdentity version = VersionIdentity.createFrom("1.0");
         LinkedProfileVersion exp = new DefaultProfileVersionBuilder(version)
             .addProfile(prfA)
             .addProfile(prfB)
@@ -118,7 +118,7 @@ public class ProfilesReadWriteTest {
             .addProfileItem(itemB)
             .getProfile();
 
-        Version version = Version.parseVersion("1.0");
+        VersionIdentity version = VersionIdentity.createFrom("1.0");
         LinkedProfileVersion exp = new DefaultProfileVersionBuilder(version)
             .addProfile(prfA)
             .getProfileVersion();
@@ -139,7 +139,7 @@ public class ProfilesReadWriteTest {
             .addResourceItem(resA)
             .getProfile();
 
-        Version version = Version.parseVersion("1.0");
+        VersionIdentity version = VersionIdentity.createFrom("1.0");
         LinkedProfileVersion exp = new DefaultProfileVersionBuilder(version)
             .addProfile(prfA)
             .getProfileVersion();
@@ -158,7 +158,7 @@ public class ProfilesReadWriteTest {
             .addRequirementItem(requirement)
             .getProfile();
 
-        Version version = Version.parseVersion("1.0");
+        VersionIdentity version = VersionIdentity.createFrom("1.0");
         LinkedProfileVersion exp = new DefaultProfileVersionBuilder(version)
             .addProfile(prfA)
             .getProfileVersion();
@@ -177,7 +177,7 @@ public class ProfilesReadWriteTest {
             .addParentProfile(prfA.getIdentity())
             .getProfile();
 
-        Version version = Version.parseVersion("1.0");
+        VersionIdentity version = VersionIdentity.createFrom("1.0");
         LinkedProfileVersion exp = new DefaultProfileVersionBuilder(version)
             .addProfile(prfA)
             .addProfile(prfB)
@@ -200,7 +200,7 @@ public class ProfilesReadWriteTest {
     private LinkedProfileVersion readProfileVersion(String xmlString) {
         ByteArrayInputStream bais = new ByteArrayInputStream(xmlString.getBytes());
         DefaultProfileXMLReader reader = new DefaultProfileXMLReader(bais);
-        Version version = reader.getProfileVersion();
+        VersionIdentity version = reader.getProfileVersion();
         ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
         Profile profile = reader.nextProfile();
         while (profile != null) {

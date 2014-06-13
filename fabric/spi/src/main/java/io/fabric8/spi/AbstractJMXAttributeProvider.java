@@ -20,6 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.ContainerAttributes;
+
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**

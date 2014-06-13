@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ServiceLocator;
 
 
@@ -37,7 +36,7 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder identity(String identity);
 
-    ProfileBuilder profileVersion(Version version);
+    ProfileBuilder profileVersion(VersionIdentity version);
 
     ProfileBuilder addProfileItem(ProfileItem item);
 
@@ -71,7 +70,7 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
             return factory.profileBuilder(identity);
         }
 
-        public static ProfileBuilder createFrom(Version version, String identity) {
+        public static ProfileBuilder createFrom(VersionIdentity version, String identity) {
             ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
             return factory.profileBuilderFrom(version, identity);
         }

@@ -36,6 +36,7 @@ import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -49,7 +50,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.After;
 import org.junit.Assert;
@@ -70,7 +70,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public abstract class ConcurrentProfileTestBase {
 
-    static final Version version = Version.parseVersion("1.2");
+    static final VersionIdentity version = VersionIdentity.createFrom("1.2");
     static final String PID = "pidA";
 
     final ExecutorService executor = Executors.newFixedThreadPool(2);

@@ -22,7 +22,6 @@ package io.fabric8.api;
 import java.util.List;
 
 import org.jboss.gravia.resource.ResourceIdentity;
-import org.jboss.gravia.resource.Version;
 
 
 /**
@@ -43,7 +42,7 @@ public interface Profile extends Attributable, Identifiable<String> {
     /**
      * Get the associated profile version
      */
-    Version getVersion();
+    VersionIdentity getVersion();
 
     /**
      * Get the profile parents

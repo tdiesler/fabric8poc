@@ -27,9 +27,6 @@ import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Container;
 import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.ProfileVersion;
-import io.fabric8.api.ProfileVersionBuilder;
-import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
@@ -38,8 +35,12 @@ import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
+import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ProvisionEvent;
+import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -47,7 +48,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
@@ -173,7 +173,7 @@ public abstract class ConfigurationItemsTestBase {
                 .getProfile();
 
         // Build a profile version
-        Version version = Version.parseVersion("1.2");
+        VersionIdentity version = VersionIdentity.createFrom("1.2");
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
                 .addProfile(ProfileBuilder.Factory.create(DEFAULT_PROFILE_IDENTITY).getProfile())
                 .addProfile(profile)

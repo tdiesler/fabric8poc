@@ -20,6 +20,7 @@
 package io.fabric8.spi.management;
 
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
@@ -36,8 +37,6 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
-
-import org.jboss.gravia.resource.Version;
 
 /**
  * CompositeData support for a {@link ProfileVersion}.
@@ -103,17 +102,17 @@ public final class ProfileVersionOpenType {
 
     static class CompositeDataProfileVersion extends AttributeSupport implements ProfileVersion {
 
-        private final Version identity;
+        private final VersionIdentity identity;
         private final Set<String> profiles;
 
         private CompositeDataProfileVersion(CompositeData cdata, ClassLoader classLoader) {
-            identity = Version.parseVersion((String) cdata.get(ProfileVersionOpenType.ITEM_IDENTITY));
+            identity = VersionIdentity.createFrom((String) cdata.get(ProfileVersionOpenType.ITEM_IDENTITY));
             profiles = new HashSet<>(Arrays.asList((String[])cdata.get(ProfileVersionOpenType.ITEM_PROFILES)));
             setImmutable(true);
         }
 
         @Override
-        public Version getIdentity() {
+        public VersionIdentity getIdentity() {
             return identity;
         }
 

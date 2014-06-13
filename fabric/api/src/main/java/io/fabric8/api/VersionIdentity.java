@@ -22,37 +22,57 @@ package io.fabric8.api;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
+
 /**
  * A profile version identity
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class VersionIdentity extends AbstractIdentity {
+public final class VersionIdentity implements Identity {
 
     private static final String IDENTITY_FORMAT = "(%s)(,rev=(?<rev>%s))?";
     private static final Pattern IDENTITY_PATTERN = Pattern.compile(String.format(IDENTITY_FORMAT, GROUP, GROUP));
 
+    public static VersionIdentity emptyVersion = new VersionIdentity(Version.emptyVersion, null);
+
+    private final Version version;
     private final String revision;
 
-    public static VersionIdentity create(String symbolicName) {
-        return new VersionIdentity(symbolicName, null);
+    public static VersionIdentity create(String version) {
+        return new VersionIdentity(Version.parseVersion(version), null);
     }
 
-    public static VersionIdentity create(String symbolicName, String revision) {
-        return new VersionIdentity(symbolicName, revision);
+    public static VersionIdentity create(Version version) {
+        return new VersionIdentity(version, null);
+    }
+
+    public static VersionIdentity create(String version, String revision) {
+        return new VersionIdentity(Version.parseVersion(version), revision);
+    }
+
+    public static VersionIdentity create(Version version, String revision) {
+        return new VersionIdentity(version, revision);
     }
 
     public static VersionIdentity createFrom(String canonical) {
-        Matcher matcher = assertCanonicalForm(IDENTITY_PATTERN, canonical);
-        String symbolicName = matcher.group(1);
+        Matcher matcher = IDENTITY_PATTERN.matcher(canonical);
+        IllegalArgumentAssertion.assertTrue(matcher.matches(), "Identity '" + canonical + "' does not match pattern: " + IDENTITY_PATTERN);
+        String version = matcher.group(1);
         String revision = matcher.group("rev");
-        return new VersionIdentity(symbolicName, revision);
+        return new VersionIdentity(Version.parseVersion(version), revision);
     }
 
-    private VersionIdentity(String symbolicName, String revision) {
-        super(symbolicName);
+    private VersionIdentity(Version version, String revision) {
+        IllegalArgumentAssertion.assertNotNull(version, "version");
+        this.version = version;
         this.revision = revision;
+    }
+
+    public Version getVersion() {
+        return version;
     }
 
     public String getRevision() {
@@ -61,6 +81,23 @@ public final class VersionIdentity extends AbstractIdentity {
 
     @Override
     public String getCanonicalForm() {
-        return getSymbolicName() + (revision != null ? ",rev=" + revision : "");
+        return version + (revision != null ? ",rev=" + revision : "");
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof VersionIdentity)) return false;
+        VersionIdentity other = (VersionIdentity) obj;
+        return other.getCanonicalForm().equals(getCanonicalForm());
+    }
+
+    @Override
+    public int hashCode() {
+        return getCanonicalForm().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getCanonicalForm();
     }
 }

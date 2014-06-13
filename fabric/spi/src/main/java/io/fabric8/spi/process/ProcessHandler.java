@@ -19,9 +19,9 @@
  */
 package io.fabric8.spi.process;
 
-import java.util.concurrent.Future;
-
 import io.fabric8.api.process.ProcessOptions;
+
+import java.util.concurrent.Future;
 
 import org.jboss.gravia.runtime.LifecycleException;
 

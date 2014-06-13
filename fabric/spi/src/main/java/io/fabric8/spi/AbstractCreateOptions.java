@@ -23,6 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -38,7 +38,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
-    private Version version = ProfileVersion.DEFAULT_PROFILE_VERSION;
+    private VersionIdentity version = ProfileVersion.DEFAULT_PROFILE_VERSION;
     private List<String> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
 
     @Override
@@ -47,7 +47,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public Version getProfileVersion() {
+    public VersionIdentity getProfileVersion() {
         return version;
     }
 
@@ -88,7 +88,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public void setVersion(Version version) {
+    public void setVersion(VersionIdentity version) {
         IllegalArgumentAssertion.assertNotNull(version, "version");
         this.version = version;
     }

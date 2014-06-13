@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 
 /**
@@ -86,7 +85,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the profile version
      */
-    Version getProfileVersion();
+    VersionIdentity getProfileVersion();
 
     /**
      * Get the associated list of profiles

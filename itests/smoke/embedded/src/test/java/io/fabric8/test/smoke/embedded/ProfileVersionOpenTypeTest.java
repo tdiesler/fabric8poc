@@ -26,6 +26,7 @@ import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.management.ProfileVersionManagement;
 import io.fabric8.spi.management.ProfileVersionOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
@@ -36,7 +37,6 @@ import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.openmbean.CompositeData;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -63,7 +63,7 @@ public class ProfileVersionOpenTypeTest {
     @Test
     public void testComposisteData() throws Exception {
 
-        Version version = Version.parseVersion("2.0");
+        VersionIdentity version = VersionIdentity.createFrom("2.0");
 
         Profile prfA = ProfileBuilder.Factory.create("foo").getProfile();
 

@@ -23,20 +23,20 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileVersionBuilder;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
 
     private final MutableProfileVersion mutableVersion;
 
-    public DefaultProfileVersionBuilder(Version identity) {
+    public DefaultProfileVersionBuilder(VersionIdentity identity) {
         mutableVersion = new MutableProfileVersion(identity);
     }
 
@@ -45,7 +45,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     }
 
     @Override
-    public ProfileVersionBuilder identity(Version identity) {
+    public ProfileVersionBuilder identity(VersionIdentity identity) {
         mutableVersion.setIdentity(identity);
         return this;
     }
@@ -77,7 +77,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     }
 
     private void validate() {
-        Version version = mutableVersion.getIdentity();
+        VersionIdentity version = mutableVersion.getIdentity();
         IllegalStateAssertion.assertNotNull(version, "Identity cannot be null");
         Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
         IllegalStateAssertion.assertFalse(linkedProfiles.isEmpty(), "Profile version must have at least one profile");
@@ -86,7 +86,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
     }
 
-    private void validateLinkedProfile(Version version, String profileid, Map<String, Profile> linkedProfiles) {
+    private void validateLinkedProfile(VersionIdentity version, String profileid, Map<String, Profile> linkedProfiles) {
         Profile profile = linkedProfiles.get(profileid);
         IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
         IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
@@ -99,9 +99,9 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     private static class MutableProfileVersion implements LinkedProfileVersion {
 
         private final Map<String, Profile> linkedProfiles = new HashMap<>();
-        private Version identity;
+        private VersionIdentity identity;
 
-        private MutableProfileVersion(Version identity) {
+        private MutableProfileVersion(VersionIdentity identity) {
            this.identity = identity;
         }
 
@@ -115,11 +115,11 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
 
         @Override
-        public Version getIdentity() {
+        public VersionIdentity getIdentity() {
             return identity;
         }
 
-        private void setIdentity(Version identity) {
+        private void setIdentity(VersionIdentity identity) {
             this.identity = identity;
         }
 

@@ -30,6 +30,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
@@ -47,7 +48,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.provision.ProvisionException;
-import org.jboss.gravia.resource.Version;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerManager.class)
@@ -180,7 +180,7 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public Container setProfileVersion(ContainerIdentity identity, Version version, ProvisionEventListener listener) throws ProvisionException {
+    public Container setProfileVersion(ContainerIdentity identity, VersionIdentity version, ProvisionEventListener listener) throws ProvisionException {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();

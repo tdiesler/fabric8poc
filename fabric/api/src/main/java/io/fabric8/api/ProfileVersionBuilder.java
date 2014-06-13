@@ -19,7 +19,6 @@
  */
 package io.fabric8.api;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.ServiceLocator;
 
 /**
@@ -30,7 +29,7 @@ import org.jboss.gravia.runtime.ServiceLocator;
  */
 public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder> {
 
-    ProfileVersionBuilder identity(Version version);
+    ProfileVersionBuilder identity(VersionIdentity version);
 
     ProfileVersionBuilder addProfile(Profile profile);
 
@@ -45,12 +44,12 @@ public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder> {
             return factory.profileVersionBuilder();
         }
 
-        public static ProfileVersionBuilder create(Version version) {
+        public static ProfileVersionBuilder create(VersionIdentity version) {
             ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
             return factory.profileVersionBuilder(version);
         }
 
-        public static ProfileVersionBuilder createFrom(Version version) {
+        public static ProfileVersionBuilder createFrom(VersionIdentity version) {
             ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
             return factory.profileVersionBuilderFrom(version);
         }

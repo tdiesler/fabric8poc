@@ -20,6 +20,7 @@
 package io.fabric8.container.wildfly;
 
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.process.ManagedCreateOptions;
 import io.fabric8.spi.MutableCreateOptions;
 
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
@@ -35,7 +35,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
 public final class WildFlyCreateOptions extends WildFlyProcessOptions implements ManagedCreateOptions, MutableCreateOptions {
 
     private List<String> profiles = new ArrayList<>();
-    private Version version = Version.emptyVersion;
+    private VersionIdentity version = VersionIdentity.emptyVersion;
 
     @Override
     public ContainerIdentity getIdentity() {
@@ -48,7 +48,7 @@ public final class WildFlyCreateOptions extends WildFlyProcessOptions implements
     }
 
     @Override
-    public Version getProfileVersion() {
+    public VersionIdentity getProfileVersion() {
         return version;
     }
 
@@ -65,7 +65,7 @@ public final class WildFlyCreateOptions extends WildFlyProcessOptions implements
     }
 
     @Override
-    public void setVersion(Version version) {
+    public void setVersion(VersionIdentity version) {
         assertMutable();
         IllegalArgumentAssertion.assertNotNull(version, "version");
         this.version = version;

@@ -26,6 +26,7 @@ import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.spi.management.ProfileOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
@@ -36,7 +37,6 @@ import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.openmbean.CompositeData;
 
-import org.jboss.gravia.resource.Version;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -73,7 +73,7 @@ public class ProfileOpenTypeTest {
         Profile prfA = profileBuilder.getProfile();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
-        Version defaultVersion = prfManager.getDefaultProfileVersion().getIdentity();
+        VersionIdentity defaultVersion = prfManager.getDefaultProfileVersion().getIdentity();
         prfA = prfManager.addProfile(defaultVersion, prfA);
 
         MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();

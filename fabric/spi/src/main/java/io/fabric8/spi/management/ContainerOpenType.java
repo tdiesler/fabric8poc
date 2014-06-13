@@ -22,7 +22,7 @@ package io.fabric8.spi.management;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AttributeSupport;
 
 import java.net.InetAddress;
@@ -38,7 +38,6 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 
 /**
@@ -155,7 +154,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public Version getProfileVersion() {
+        public VersionIdentity getProfileVersion() {
             throw new UnsupportedOperationException();
         }
 

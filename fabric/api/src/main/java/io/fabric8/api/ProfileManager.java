@@ -21,7 +21,6 @@ package io.fabric8.api;
 
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.Runtime;
 
 /**
@@ -37,7 +36,7 @@ public interface ProfileManager {
     /**
      * Aquire an exclusive write lock for the given profile version
      */
-    LockHandle aquireProfileVersionLock(Version version);
+    LockHandle aquireProfileVersionLock(VersionIdentity version);
 
     /**
      * Get the default profile version
@@ -52,23 +51,23 @@ public interface ProfileManager {
     /**
      * Get the set of profile version identities in the cluster
      */
-    Set<Version> getVersions();
+    Set<VersionIdentity> getVersions();
 
     /**
      * Get the set of profile versions for the given identities
      * @param identities The requested identities or <code>null</code> for all profile versions
      */
-    Set<ProfileVersion> getProfileVersions(Set<Version> identities);
+    Set<ProfileVersion> getProfileVersions(Set<VersionIdentity> identities);
 
     /**
      * Get the profile version for the given identity
      */
-    ProfileVersion getProfileVersion(Version identity);
+    ProfileVersion getProfileVersion(VersionIdentity identity);
 
     /**
      * Get the linked profile version for the given identity
      */
-    LinkedProfileVersion getLinkedProfileVersion(Version identity);
+    LinkedProfileVersion getLinkedProfileVersion(VersionIdentity identity);
 
     /**
      * Add a profile version
@@ -78,43 +77,43 @@ public interface ProfileManager {
     /**
      * Remove a profile version
      */
-    ProfileVersion removeProfileVersion(Version identity);
+    ProfileVersion removeProfileVersion(VersionIdentity identity);
 
     /**
      * Get the profile idetities for a given version
      */
-    Set<String> getProfileIdentities(Version version);
+    Set<String> getProfileIdentities(VersionIdentity version);
 
     /**
      * Get the profiles for a given version and identities
      * @param identities The requested identities or <code>null</code> for all profiles
      */
-    Set<Profile> getProfiles(Version version, Set<String> identities);
+    Set<Profile> getProfiles(VersionIdentity version, Set<String> identities);
 
     /**
      * Get the profile for a given identity and version
      */
-    Profile getProfile(Version version, String identity);
+    Profile getProfile(VersionIdentity version, String identity);
 
     /**
      * Get the effective profile for a given identity and version
      */
-    Profile getEffectiveProfile(Version version, String identity);
+    Profile getEffectiveProfile(VersionIdentity version, String identity);
 
     /**
      * Get the linked profile for the given identity
      */
-    LinkedProfile getLinkedProfile(Version version, String identity);
+    LinkedProfile getLinkedProfile(VersionIdentity version, String identity);
 
     /**
      * Add a profile to the given version
      */
-    Profile addProfile(Version version, Profile profile);
+    Profile addProfile(VersionIdentity version, Profile profile);
 
     /**
      * Remove a profile from the given version
      */
-    Profile removeProfile(Version version, String identity);
+    Profile removeProfile(VersionIdentity version, String identity);
 
     /**
      * Update the given profile

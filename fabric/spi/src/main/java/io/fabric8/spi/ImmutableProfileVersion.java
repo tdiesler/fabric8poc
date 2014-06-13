@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
+import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,7 +29,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
 /**
@@ -41,11 +41,11 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 public final class ImmutableProfileVersion implements LinkedProfileVersion {
 
-    private final Version identity;
+    private final VersionIdentity identity;
     private final Set<String> profileIdentities = new HashSet<String>();
     private Map<String, Profile> linkedProfiles;
 
-    public ImmutableProfileVersion(Version version, Set<String> profileIdentities, Map<String, Profile> linkedProfiles) {
+    public ImmutableProfileVersion(VersionIdentity version, Set<String> profileIdentities, Map<String, Profile> linkedProfiles) {
         this.identity = version;
         this.profileIdentities.addAll(profileIdentities);
         if (linkedProfiles != null) {
@@ -55,7 +55,7 @@ public final class ImmutableProfileVersion implements LinkedProfileVersion {
     }
 
     @Override
-    public Version getIdentity() {
+    public VersionIdentity getIdentity() {
         return identity;
     }
 
