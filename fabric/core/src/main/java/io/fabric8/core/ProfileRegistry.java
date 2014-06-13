@@ -69,6 +69,7 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.repository.RepositoryWriter.ContentHandler;
 import org.jboss.gravia.repository.spi.AbstractContentHandler;
 import org.jboss.gravia.resource.Capability;
 import org.jboss.gravia.resource.ContentCapability;
@@ -138,9 +139,7 @@ public final class ProfileRegistry extends AbstractComponent {
     }
 
     LockHandle aquireWriteLock(VersionIdentity version) {
-
         final WriteLock writeLock = getReadWriteLock(version).writeLock();
-
         boolean success;
         try {
             success = writeLock.tryLock() || writeLock.tryLock(10, TimeUnit.SECONDS);
@@ -148,7 +147,6 @@ public final class ProfileRegistry extends AbstractComponent {
             success = false;
         }
         IllegalStateAssertion.assertTrue(success, "Cannot obtain write lock in time for: " + version);
-
         return new LockHandle() {
             @Override
             public void unlock() {
@@ -158,9 +156,7 @@ public final class ProfileRegistry extends AbstractComponent {
     }
 
     LockHandle aquireReadLock(VersionIdentity version) {
-
         final ReadLock readLock = getReadWriteLock(version).readLock();
-
         boolean success;
         try {
             success = readLock.tryLock() || readLock.tryLock(10, TimeUnit.SECONDS);
@@ -168,7 +164,6 @@ public final class ProfileRegistry extends AbstractComponent {
             success = false;
         }
         IllegalStateAssertion.assertTrue(success, "Cannot obtain read lock in time for: " + version);
-
         return new LockHandle() {
             @Override
             public void unlock() {
@@ -213,33 +208,14 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    /**
-     * Get the {@link LinkedProfileVersion} for the given version
-     * @return null if the version does not exist
-     */
-    private LinkedProfileVersion getProfileVersionInternal(VersionIdentity version) {
-        File profilesFile = getProfilesFile(version);
-        return profilesFile.exists() ? registryCache.getProfileVersion(version) : null;
-    }
-
     LinkedProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
-        VersionIdentity version = profileVersion.getIdentity();
-        LockHandle writeLock = aquireWriteLock(version);
+        LockHandle writeLock = aquireWriteLock(profileVersion.getIdentity());
         try {
             return addProfileVersionInternal(profileVersion);
         } finally {
             writeLock.unlock();
         }
-    }
-
-    private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
-        VersionIdentity version = profileVersion.getIdentity();
-        LOGGER.info("Add profile version: {}", version);
-        Path versionPath = getProfileVersionPath(version);
-        IllegalStateAssertion.assertFalse(versionPath.toFile().exists(), "Profile version path already exists: " + versionPath);
-        IllegalStateAssertion.assertTrue(versionPath.toFile().mkdirs(), "Cannot create profile version directory: " + versionPath);
-        return writeProfileVersion(profileVersion);
     }
 
     LinkedProfileVersion removeProfileVersion(VersionIdentity version) {
@@ -261,30 +237,20 @@ public final class ProfileRegistry extends AbstractComponent {
      */
     Profile getProfile(VersionIdentity version, ProfileIdentity identity) {
         assertValid();
-        Profile result = null;
         LockHandle readLock = aquireReadLock(version);
         try {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(getRequiredProfilesFile(version));
-                DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
-                Profile profile = reader.nextProfile();
-                while (profile != null) {
-                    if (profile.getIdentity().equals(identity)) {
-                        result = profile;
-                        break;
-                    }
-                    profile = reader.nextProfile();
+            Profile result = null;
+            LinkedProfileVersion linkedVersion = getRequiredProfileVersion(version);
+            for (Profile profile : linkedVersion.getLinkedProfiles().values()) {
+                if (profile.getIdentity().equals(identity)) {
+                    result = profile;
+                    break;
                 }
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot profile version: " + version, ex);
-            } finally {
-                IOUtils.safeClose(fis);
             }
+            return result;
         } finally {
             readLock.unlock();
         }
-        return result;
     }
 
     Profile getRequiredProfile(VersionIdentity version, ProfileIdentity identity) {
@@ -397,14 +363,30 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
+    private LinkedProfileVersion getProfileVersionInternal(VersionIdentity version) {
+        File profilesFile = getProfilesFile(version);
+        return profilesFile.exists() ? registryCache.getProfileVersion(version) : null;
+    }
+
+    private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
+        VersionIdentity version = profileVersion.getIdentity();
+        LOGGER.info("Add profile version: {}", version);
+        Path versionPath = getProfileVersionPath(version);
+        IllegalStateAssertion.assertFalse(versionPath.toFile().exists(), "Profile version path already exists: " + versionPath);
+        IllegalStateAssertion.assertTrue(versionPath.toFile().mkdirs(), "Cannot create profile version directory: " + versionPath);
+        return writeProfileVersion(profileVersion);
+    }
+
     private LinkedProfileVersion writeProfileVersion(LinkedProfileVersion profileVersion) {
         VersionIdentity version = profileVersion.getIdentity();
+        Path versionPath = getRequiredProfileVersionPath(version);
         registryCache.invalidate(version);
         FileOutputStream fos = null;
         try {
             File profilesFile = getProfilesFile(version);
             fos = new FileOutputStream(profilesFile);
-            DefaultProfileXMLWriter writer = new DefaultProfileXMLWriter(fos, new ResourceItemContentHandler());
+            ContentHandler contentHandler = new ResourceItemContentHandler(versionPath);
+            DefaultProfileXMLWriter writer = new DefaultProfileXMLWriter(fos, contentHandler);
             writer.writeProfileVersion(profileVersion);
             writer.close();
         } catch (IOException ex) {
@@ -473,6 +455,7 @@ public final class ProfileRegistry extends AbstractComponent {
     void bindGitService(GitService service) {
         gitService.bind(service);
     }
+
     void unbindGitService(GitService service) {
         gitService.bind(service);
     }
@@ -480,6 +463,7 @@ public final class ProfileRegistry extends AbstractComponent {
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }
@@ -489,41 +473,51 @@ public final class ProfileRegistry extends AbstractComponent {
         private final Map<VersionIdentity, LinkedProfileVersion> cacheMap = new HashMap<>();
 
         LinkedProfileVersion getProfileVersion(VersionIdentity version) {
-            LinkedProfileVersion linkedVersion = cacheMap.get(version);
-            if (linkedVersion == null) {
-                ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
-                FileInputStream fis = null;
-                try {
-                    fis = new FileInputStream(getRequiredProfilesFile(version));
-                    DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
-                    Profile profile = reader.nextProfile();
-                    while (profile != null) {
-                        builder.addProfile(profile);
-                        profile = reader.nextProfile();
+            synchronized (cacheMap) {
+                LinkedProfileVersion linkedVersion = cacheMap.get(version);
+                if (linkedVersion == null) {
+                    ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
+                    FileInputStream fis = null;
+                    try {
+                        fis = new FileInputStream(getRequiredProfilesFile(version));
+                        DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
+                        Profile profile = reader.nextProfile();
+                        while (profile != null) {
+                            builder.addProfile(profile);
+                            profile = reader.nextProfile();
+                        }
+                    } catch (IOException ex) {
+                        throw new IllegalStateException("Cannot profile version: " + version, ex);
+                    } finally {
+                        IOUtils.safeClose(fis);
                     }
-                } catch (IOException ex) {
-                    throw new IllegalStateException("Cannot profile version: " + version, ex);
-                } finally {
-                    IOUtils.safeClose(fis);
+                    linkedVersion = builder.getProfileVersion();
+                    cacheMap.put(version, linkedVersion);
                 }
-                linkedVersion = builder.getProfileVersion();
-                cacheMap.put(version, linkedVersion);
+                return linkedVersion;
             }
-            return linkedVersion;
         }
 
         void invalidate(VersionIdentity version) {
-            cacheMap.remove(version);
+            synchronized (cacheMap) {
+                cacheMap.remove(version);
+            }
         }
     }
 
-    private class ResourceItemContentHandler extends AbstractContentHandler {
+    static class ResourceItemContentHandler extends AbstractContentHandler {
+
+        private final Path versionPath;
+
+        ResourceItemContentHandler(Path versionPath) {
+            this.versionPath = versionPath;
+        }
 
         @Override
         public Map<String, Object> process(ContentCapability ccap) throws IOException {
             Profile profile = getContextItem(Profile.class);
             ResourceItem resItem = getContextItem(ResourceItem.class);
-            Path profilePath = getProfileVersionPath(profile.getVersion()).resolve(profile.getIdentity().getSymbolicName());
+            Path profilePath = versionPath.resolve(profile.getIdentity().getSymbolicName());
             List<Capability> ccaps = resItem.getResource().getCapabilities(ContentNamespace.CONTENT_NAMESPACE);
             int i = ccaps.indexOf(ccap);
             Path targetPath = Paths.get(profilePath.toString(), resItem.getSymbolicName(), resItem.getVersion().toString(), "content" + i);
