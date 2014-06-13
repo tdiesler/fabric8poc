@@ -30,7 +30,6 @@ import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.VersionIdentity;
-import io.fabric8.git.GitService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.DefaultProfileVersionBuilder;
 import io.fabric8.spi.DefaultProfileXMLReader;
@@ -54,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +69,19 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.eclipse.jgit.api.AddCommand;
+import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.CommitCommand;
+import org.eclipse.jgit.api.DeleteBranchCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.errors.RepositoryNotFoundException;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.jboss.gravia.repository.RepositoryWriter.ContentHandler;
 import org.jboss.gravia.repository.spi.AbstractContentHandler;
 import org.jboss.gravia.resource.Capability;
@@ -93,19 +106,18 @@ public final class ProfileRegistry extends AbstractComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileRegistry.class);
 
-    private static String PROFILES_FILE = "profiles.xml";
+    private static String PROFILES_METADATA_FILE = "profiles.xml";
 
     private final Map<VersionIdentity, ReentrantReadWriteLock> versionLocks = new ConcurrentHashMap<>();
-    private final RegistryCache registryCache = new RegistryCache();
+    private final ProfileVersionCache profileVersionCache = new ProfileVersionCache();
+    private GitRepository repository;
     private Path workspace;
 
-    @Reference(referenceInterface = GitService.class)
-    private final ValidatingReference<GitService> gitService = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     @Activate
-    void activate() {
+    void activate() throws IOException {
         activateInternal();
         activateComponent();
     }
@@ -116,13 +128,13 @@ public final class ProfileRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    private void activateInternal() {
+    private void activateInternal() throws IOException {
         Path dataPath = runtimeService.get().getDataPath();
         workspace = dataPath.resolve("profiles");
+        repository = new GitRepository(workspace);
 
         // Add the default profile version
-        File defaultFile = getProfilesFile(DEFAULT_PROFILE_VERSION);
-        if (!defaultFile.exists()) {
+        if (!repository.hasBranch(DEFAULT_PROFILE_VERSION.getVersion())) {
             Profile profile = new DefaultProfileBuilder(DEFAULT_PROFILE_IDENTITY)
                 .addConfigurationItem(Container.CONTAINER_SERVICE_PID, Collections.singletonMap("config.token", (Object) "default"))
                 .getProfile();
@@ -187,12 +199,10 @@ public final class ProfileRegistry extends AbstractComponent {
 
     Set<VersionIdentity> getVersions() {
         assertValid();
-        Set<VersionIdentity> versions = new HashSet<>();
-        synchronized (workspace) {
-            for (String name : workspace.toFile().list()) {
-                if (workspace.resolve(name).toFile().isDirectory()) {
-                    versions.add(VersionIdentity.createFrom(name));
-                }
+        final Set<VersionIdentity> versions = new HashSet<>();
+        for (String branch : repository.listBranches()) {
+            if (!branch.equals("master")) {
+                versions.add(VersionIdentity.createFrom(branch));
             }
         }
         return Collections.unmodifiableSet(versions);
@@ -208,6 +218,17 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
+    LinkedProfileVersion getRequiredProfileVersion(VersionIdentity version) {
+        LinkedProfileVersion profileVersion = getProfileVersion(version);
+        IllegalStateAssertion.assertNotNull(profileVersion, "Cannot obtain profile version: " + version);
+        return profileVersion;
+    }
+
+    private LinkedProfileVersion getProfileVersionInternal(VersionIdentity version) {
+        boolean hasBranch = repository.hasBranch(version.getVersion());
+        return hasBranch ? profileVersionCache.getProfileVersion(version) : null;
+    }
+
     LinkedProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(profileVersion.getIdentity());
@@ -218,13 +239,31 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
+    private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
+        VersionIdentity version = profileVersion.getIdentity();
+        IllegalStateAssertion.assertFalse(repository.hasBranch(version.getVersion()), "Profile version already exists: " + version);
+        String message = String.format("Add profile version: %s", profileVersion);
+        LOGGER.info(message);
+        return writeProfileVersion(profileVersion, message);
+    }
+
     LinkedProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            LOGGER.info("Remove profile version: {}", version);
-            LinkedProfileVersion profileVersion = getProfileVersion(version);
-            deleteProfileVersionPath(version);
+            LinkedProfileVersion profileVersion = getRequiredProfileVersion(version);
+            String message = String.format("Remove profile version: {}", version);
+            LOGGER.info(message);
+
+            // git reset --hard
+            repository.resetHard();
+
+            // git checkout master
+            repository.checkoutBranch(Version.emptyVersion, false);
+
+            // git branch -D [version]
+            repository.deleteBranch(version.getVersion());
+
             return profileVersion;
         } finally {
             writeLock.unlock();
@@ -266,11 +305,12 @@ public final class ProfileRegistry extends AbstractComponent {
         IllegalStateAssertion.assertTrue(pversion == null || version.equals(pversion), "Unexpected profile version: " + profile);
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            LOGGER.info("Add profile to version: {} <= {}", version, profile);
+            String message = String.format("Add profile to version: %s <= %s", version, profile);
+            LOGGER.info(message);
             LinkedProfileVersion linkedVersion = getRequiredProfileVersion(version);
             IllegalStateAssertion.assertNull(linkedVersion.getLinkedProfile(identity), "Profile already exists in version: " + version);
             DefaultProfileVersionBuilder builder = new DefaultProfileVersionBuilder(linkedVersion);
-            writeProfileVersion(builder.addProfile(profile).getProfileVersion());
+            writeProfileVersion(builder.addProfile(profile).getProfileVersion(), message);
             return getProfile(version, identity);
         } finally {
             writeLock.unlock();
@@ -281,13 +321,14 @@ public final class ProfileRegistry extends AbstractComponent {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            LOGGER.info("Update profile: {}", profile);
+            String message = String.format("Update profile: %s", profile);
+            LOGGER.info(message);
             ProfileIdentity identity = profile.getIdentity();
             LinkedProfileVersion linkedVersion = getProfileVersion(version);
             DefaultProfileVersionBuilder builder = new DefaultProfileVersionBuilder(linkedVersion);
             builder.removeProfile(identity);
             deleteProfilePath(version, identity);
-            writeProfileVersion(builder.addProfile(profile).getProfileVersion());
+            writeProfileVersion(builder.addProfile(profile).getProfileVersion(), message);
             return getProfile(version, identity);
         } finally {
             writeLock.unlock();
@@ -298,13 +339,13 @@ public final class ProfileRegistry extends AbstractComponent {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
-            LOGGER.info("Remove profile from version: {} => {}", version, identity);
+            String message = String.format("Remove profile from version: %s => %s", version, identity);
             Profile profile = getRequiredProfile(version, identity);
             LinkedProfileVersion linkedVersion = getProfileVersion(version);
             DefaultProfileVersionBuilder builder = new DefaultProfileVersionBuilder(linkedVersion);
             builder.removeProfile(identity);
             deleteProfilePath(version, identity);
-            writeProfileVersion(builder.getProfileVersion());
+            writeProfileVersion(builder.getProfileVersion(), message);
             return profile;
         } finally {
             writeLock.unlock();
@@ -363,69 +404,24 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    private LinkedProfileVersion getProfileVersionInternal(VersionIdentity version) {
-        File profilesFile = getProfilesFile(version);
-        return profilesFile.exists() ? registryCache.getProfileVersion(version) : null;
-    }
+    private LinkedProfileVersion writeProfileVersion(LinkedProfileVersion profileVersion, String message) {
 
-    private LinkedProfileVersion addProfileVersionInternal(LinkedProfileVersion profileVersion) {
         VersionIdentity version = profileVersion.getIdentity();
-        LOGGER.info("Add profile version: {}", version);
-        Path versionPath = getProfileVersionPath(version);
-        IllegalStateAssertion.assertFalse(versionPath.toFile().exists(), "Profile version path already exists: " + versionPath);
-        IllegalStateAssertion.assertTrue(versionPath.toFile().mkdirs(), "Cannot create profile version directory: " + versionPath);
-        return writeProfileVersion(profileVersion);
-    }
+        profileVersionCache.invalidate(version);
 
-    private LinkedProfileVersion writeProfileVersion(LinkedProfileVersion profileVersion) {
-        VersionIdentity version = profileVersion.getIdentity();
-        Path versionPath = getRequiredProfileVersionPath(version);
-        registryCache.invalidate(version);
-        FileOutputStream fos = null;
-        try {
-            File profilesFile = getProfilesFile(version);
-            fos = new FileOutputStream(profilesFile);
-            ContentHandler contentHandler = new ResourceItemContentHandler(versionPath);
-            DefaultProfileXMLWriter writer = new DefaultProfileXMLWriter(fos, contentHandler);
-            writer.writeProfileVersion(profileVersion);
-            writer.close();
-        } catch (IOException ex) {
-            throw new IllegalStateException("Cannot add profile version: " + version, ex);
-        } finally {
-            IOUtils.safeClose(fos);
-        }
+        repository.writeProfileVersion(profileVersion, message);
+
         return getProfileVersionInternal(version);
     }
 
-    private Path getProfileVersionPath(VersionIdentity version) {
-        return workspace.resolve(version.getVersion().toString());
-    }
-
-    private Path getRequiredProfileVersionPath(VersionIdentity version) {
-        Path versionPath = getProfileVersionPath(version);
-        IllegalStateAssertion.assertTrue(versionPath.toFile().exists(), "Cannot find profile version directory: " + versionPath);
-        return versionPath;
-    }
-
     private Path getProfilePath(VersionIdentity version, ProfileIdentity identity) {
-        return getProfileVersionPath(version).resolve(identity.getSymbolicName());
+        return workspace.resolve(identity.getSymbolicName());
     }
 
     private Path getRequiredProfilePath(VersionIdentity version, ProfileIdentity identity) {
         Path profilePath = getProfilePath(version, identity);
         IllegalStateAssertion.assertTrue(profilePath.toFile().exists(), "Cannot find profile directory: " + profilePath);
         return profilePath;
-    }
-
-    private File getProfilesFile(VersionIdentity version) {
-        Path versionPath = getProfileVersionPath(version);
-        return versionPath.resolve(PROFILES_FILE).toFile();
-    }
-
-    private File getRequiredProfilesFile(VersionIdentity version) {
-        File profilesFile = getProfilesFile(version);
-        IllegalStateAssertion.assertTrue(profilesFile.exists(), "Profiles file does not exist: " + profilesFile);
-        return profilesFile;
     }
 
     private void deleteProfilePath(VersionIdentity version, ProfileIdentity identity) {
@@ -437,38 +433,14 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    private void deleteProfileVersionPath(VersionIdentity version) {
-        Path versionPath = getRequiredProfileVersionPath(version);
-        try {
-            FileUtils.deleteRecursively(versionPath);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Cannot delete profile version path: " + versionPath);
-        }
-    }
-
-    LinkedProfileVersion getRequiredProfileVersion(VersionIdentity version) {
-        LinkedProfileVersion profileVersion = getProfileVersion(version);
-        IllegalStateAssertion.assertNotNull(profileVersion, "Cannot obtain profile version: " + version);
-        return profileVersion;
-    }
-
-    void bindGitService(GitService service) {
-        gitService.bind(service);
-    }
-
-    void unbindGitService(GitService service) {
-        gitService.bind(service);
-    }
-
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }
 
-    private class RegistryCache {
+    private class ProfileVersionCache {
 
         private final Map<VersionIdentity, LinkedProfileVersion> cacheMap = new HashMap<>();
 
@@ -476,22 +448,7 @@ public final class ProfileRegistry extends AbstractComponent {
             synchronized (cacheMap) {
                 LinkedProfileVersion linkedVersion = cacheMap.get(version);
                 if (linkedVersion == null) {
-                    ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
-                    FileInputStream fis = null;
-                    try {
-                        fis = new FileInputStream(getRequiredProfilesFile(version));
-                        DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
-                        Profile profile = reader.nextProfile();
-                        while (profile != null) {
-                            builder.addProfile(profile);
-                            profile = reader.nextProfile();
-                        }
-                    } catch (IOException ex) {
-                        throw new IllegalStateException("Cannot profile version: " + version, ex);
-                    } finally {
-                        IOUtils.safeClose(fis);
-                    }
-                    linkedVersion = builder.getProfileVersion();
+                    linkedVersion = repository.getProfileVersion(version);
                     cacheMap.put(version, linkedVersion);
                 }
                 return linkedVersion;
@@ -505,7 +462,7 @@ public final class ProfileRegistry extends AbstractComponent {
         }
     }
 
-    static class ResourceItemContentHandler extends AbstractContentHandler {
+    private static class ResourceItemContentHandler extends AbstractContentHandler {
 
         private final Path versionPath;
 
@@ -547,6 +504,167 @@ public final class ProfileRegistry extends AbstractComponent {
             }
             IllegalStateAssertion.assertNotNull(content, "Cannot obtain content from: " + ccap);
             return content;
+        }
+    }
+
+    private static class GitRepository {
+
+        private final Path workspace;
+        private final Git git;
+
+        GitRepository(Path workspace) throws IOException {
+            this.git = openOrInitWorkspace(workspace);
+            this.workspace = workspace;
+
+        }
+
+        LinkedProfileVersion getProfileVersion(VersionIdentity version) {
+
+            // git reset --hard
+            resetHard();
+
+            // git checkout [version]
+            checkoutBranch(version.getVersion(), false);
+
+            ProfileVersionBuilder builder = new DefaultProfileVersionBuilder(version);
+            FileInputStream fis = null;
+            try {
+                File metadataFile = workspace.resolve(PROFILES_METADATA_FILE).toFile();
+                fis = new FileInputStream(metadataFile);
+                DefaultProfileXMLReader reader = new DefaultProfileXMLReader(fis);
+                Profile profile = reader.nextProfile();
+                while (profile != null) {
+                    builder.addProfile(profile);
+                    profile = reader.nextProfile();
+                }
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot profile version: " + version, ex);
+            } finally {
+                IOUtils.safeClose(fis);
+            }
+
+            return builder.getProfileVersion();
+        }
+
+        void writeProfileVersion(LinkedProfileVersion profileVersion, String message) {
+
+            // git reset --hard
+            resetHard();
+
+            // git checkout -b [version]
+            Version version = profileVersion.getIdentity().getVersion();
+            checkoutBranch(version, true);
+
+            FileOutputStream fos = null;
+            try {
+                File metadataFile = workspace.resolve(PROFILES_METADATA_FILE).toFile();
+                fos = new FileOutputStream(metadataFile);
+                ContentHandler contentHandler = new ResourceItemContentHandler(workspace);
+                DefaultProfileXMLWriter writer = new DefaultProfileXMLWriter(fos, contentHandler);
+                writer.writeProfileVersion(profileVersion);
+                writer.close();
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot add profile version: " + profileVersion, ex);
+            } finally {
+                IOUtils.safeClose(fos);
+            }
+
+            // git add --all
+            addAll();
+
+            // git commit
+            commit(message);
+        }
+
+        DirCache addAll() {
+            try {
+                AddCommand addCmd = git.add().addFilepattern(".");
+                return addCmd.call();
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot add files", ex);
+            }
+        }
+
+        Ref checkoutBranch(Version version, boolean allowCreate) {
+            String branch = Version.emptyVersion != version ? version.toString() : "master";
+            try {
+                if (!allowCreate || hasBranch(version)) {
+                    CheckoutCommand checkoutCmd = git.checkout().setName(branch);
+                    return checkoutCmd.call();
+                } else {
+                    CheckoutCommand checkoutCmd = git.checkout().setCreateBranch(true).setName(branch);
+                    return checkoutCmd.call();
+                }
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot checkout branch: " + version, ex);
+            }
+        }
+
+        RevCommit commit(String message) {
+            try {
+                CommitCommand commitCmd = git.commit().setAll(true).setMessage(message).setCommitter(getDefaultCommiter());
+                return commitCmd.call();
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot commit: " + message, ex);
+            }
+        }
+
+        List<String> deleteBranch(Version version) {
+            String branch = version.toString();
+            try {
+                DeleteBranchCommand deleteCmd = git.branchDelete().setBranchNames(branch).setForce(true);
+                return deleteCmd.call();
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot checkout branch: " + version, ex);
+            }
+        }
+
+        boolean hasBranch(Version version) {
+            String branch = version.toString();
+            return listBranches().contains(branch);
+        }
+
+        Set<String> listBranches() {
+            Set<String> branches = new LinkedHashSet<>();
+            try {
+                for (Ref ref : git.branchList().call()) {
+                    String name = ref.getName();
+                    if (name.startsWith("refs/heads/")) {
+                        name = name.substring(11);
+                        branches.add(name);
+                    }
+                }
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot list branches", ex);
+            }
+            return branches;
+        }
+
+        Ref resetHard() {
+            try {
+                ResetCommand resetCmd = git.reset().setMode(ResetType.HARD);
+                return resetCmd.call();
+            } catch (GitAPIException ex) {
+                throw new IllegalStateException("Cannot reset workspace", ex);
+            }
+        }
+
+        private Git openOrInitWorkspace(Path workspace) throws IOException {
+            try {
+                return Git.open(workspace.toFile());
+            } catch (RepositoryNotFoundException e) {
+                try {
+                    Git git = Git.init().setDirectory(workspace.toFile()).call();
+                    git.commit().setMessage("First Commit").setCommitter(getDefaultCommiter()).call();
+                    return git;
+                } catch (GitAPIException ex) {
+                    throw new IOException(ex);
+                }
+            }
+        }
+
+        private PersonIdent getDefaultCommiter() {
+            return new PersonIdent("fabric", "user@fabric");
         }
     }
 }

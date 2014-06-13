@@ -112,11 +112,6 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>io.fabric8.poc</groupId>
-                                    <artifactId>fabric8-git</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>io.fabric8.poc</groupId>
                                     <artifactId>fabric8-spi</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>

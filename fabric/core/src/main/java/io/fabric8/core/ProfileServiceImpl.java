@@ -64,9 +64,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  * The internal {@link ProfileService}
  *
  * It is the owner of all {@link ProfileVersion} and {@link Profile} instances.
- * Internally it maintains mutable versions these instances. All mutating operations must go through this service.
- * The public API returns shallow immutable {@link ProfileVersion}, {@link Profile} instances,
- * mutable {@link ProfileVersionState} and {@link ProfileState} instances must not leak outside this service.
+ * All mutating operations on profiles must go through this service.
+ * The public API returns shallow immutable {@link ProfileVersion}, {@link Profile} instances.
  *
  * This service is protected by a permit.
  * Access without the calling client holding a permit is considered a programming error.
@@ -77,12 +76,10 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  * Read access to {@link ProfileVersion} and {@link Profile} can happen concurrently.
  * Each {@link ProfileVersion} instance is associated with a {@link ReentrantReadWriteLock}
  * Access to a {@link Profile} is protected by the lock of the associated {@link ProfileVersion}
- * The mutable {@link ProfileVersionState} and {@link ProfileState} must synchronize concurrent read operations,
- * write operations are synchronized by the lock on {@link ProfileVersion}
  *
  * A client may explicitly acquire a write lock for a {@link ProfileVersion}. This is necessary when
- * exclusive access to {@link ProfileVersion} content is required.
- * For example when provisioning a container - while doing so the {@link ProfileVersion} must be locked and cannot change.
+ * exclusive access to {@link ProfileVersion} content is required. For example when provisioning a container.
+ * While doing so the {@link ProfileVersion} must be locked and cannot change.
  *
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
@@ -160,12 +157,14 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public ProfileVersion getProfileVersion(VersionIdentity version) {
         assertValid();
-        return profileRegistry.get().getProfileVersion(version);
+        ProfileRegistry registry = profileRegistry.get();
+        return registry.getProfileVersion(version);
     }
 
     @Override
     public LinkedProfileVersion getLinkedProfileVersion(VersionIdentity version) {
         assertValid();
+        // Lock for composite operation
         LockHandle readLock = aquireReadLock(version);
         try {
             ProfileRegistry registry = profileRegistry.get();
@@ -192,6 +191,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public ProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
+        // Lock for composite operation
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ContainerRegistry cntRegistry = containerRegistry.get();
@@ -241,15 +241,23 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public LinkedProfile getLinkedProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
-        return getLinkedProfileInternal(version, profileId, new HashMap<ProfileIdentity, LinkedProfile>());
+        // Lock for composite operation
+        LockHandle readLock = aquireReadLock(version);
+        try {
+            return getLinkedProfileInternal(version, profileId, new HashMap<ProfileIdentity, LinkedProfile>());
+        } finally {
+            readLock.unlock();
+        }
     }
 
+    // locked by getLinkedProfile(VersionIdentity, ProfileIdentity)
     private LinkedProfile getLinkedProfileInternal(VersionIdentity version, ProfileIdentity profileId, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
         Profile profile = getRequiredProfile(version, profileId);
         Map<ProfileIdentity, LinkedProfile> linkedParents = getLinkedParents(profile, linkedProfiles);
         return new ImmutableProfile(profile.getVersion(), profile.getIdentity(), profile.getAttributes(), profile.getParents(), profile.getProfileItems(null), linkedParents);
     }
 
+    // locked by getLinkedProfile(VersionIdentity, ProfileIdentity)
     private Map<ProfileIdentity, LinkedProfile> getLinkedParents(Profile profile, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
         Map<ProfileIdentity, LinkedProfile> linkedParents = new HashMap<>();
         for (ProfileIdentity parentId : profile.getParents()) {
@@ -266,15 +274,21 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Set<Profile> getProfiles(VersionIdentity version, Set<ProfileIdentity> identities) {
         assertValid();
-        Set<Profile> result = new HashSet<Profile>();
-        ProfileVersion profileVersion = getRequiredProfileVersion(version);
-        for (ProfileIdentity profileId : profileVersion.getProfileIdentities()) {
-            if (identities == null || identities.contains(profileId)) {
-                result.add(getRequiredProfile(version, profileId));
+        // Lock for composite operation
+        LockHandle readLock = aquireReadLock(version);
+        try {
+            Set<Profile> result = new HashSet<Profile>();
+            ProfileVersion profileVersion = getRequiredProfileVersion(version);
+            for (ProfileIdentity profileId : profileVersion.getProfileIdentities()) {
+                if (identities == null || identities.contains(profileId)) {
+                    result.add(getRequiredProfile(version, profileId));
+                }
             }
+            IllegalStateAssertion.assertTrue(identities == null || result.size() == identities.size(), "Cannot obtain the full set of given profiles: " + identities);
+            return Collections.unmodifiableSet(result);
+        } finally {
+            readLock.unlock();
         }
-        IllegalStateAssertion.assertTrue(identities == null || result.size() == identities.size(), "Cannot obtain the full set of given profiles: " + identities);
-        return Collections.unmodifiableSet(result);
     }
 
     @Override
@@ -287,6 +301,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public Profile removeProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
+        // Lock for composite operation
         LockHandle writeLock = aquireWriteLock(version);
         try {
             ContainerRegistry cntRegistry = containerRegistry.get();

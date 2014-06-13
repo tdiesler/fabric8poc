@@ -63,10 +63,10 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Export-Package>
                             io.fabric8.git;version=${project.version};-noimport:=true,
+                            org.eclipse.jgit*;-noimport:=true
                         </Export-Package>
                         <Private-Package>
                             io.fabric8.git.internal,
-                            org.eclipse.jgit*
                         </Private-Package>
                         <Import-Package>
                             !com.googlecode.javaewah,
