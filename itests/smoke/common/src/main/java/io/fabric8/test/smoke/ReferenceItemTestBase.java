@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ResourceItem;
@@ -87,15 +88,16 @@ public abstract class ReferenceItemTestBase {
         Resource resourceA = builderA.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addReferenceResourceItem(resourceA)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(1, prfFoo.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = prfFoo.getProfileItem(identityA);
         Assert.assertEquals("profile://1.0.0/foo/refitemA?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
         InputStream input = new URL("profile://1.0.0/foo/refitemA").openStream();
         Assert.assertNotNull("URL stream not null", input);
@@ -103,14 +105,14 @@ public abstract class ReferenceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         input = new URL("container://refitemA").openStream();
         Assert.assertNotNull("URL stream not null", input);
         Assert.assertEquals("Hello", new BufferedReader(new InputStreamReader(input)).readLine());
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     private URL getItemURL(ResourceItem item, int index) {

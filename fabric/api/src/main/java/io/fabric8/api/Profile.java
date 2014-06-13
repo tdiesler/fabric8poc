@@ -35,9 +35,9 @@ import org.jboss.gravia.resource.ResourceIdentity;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public interface Profile extends Attributable, Identifiable<String> {
+public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
 
-    String DEFAULT_PROFILE_IDENTITY = "default";
+    ProfileIdentity DEFAULT_PROFILE_IDENTITY = ProfileIdentity.createFrom("default");
 
     /**
      * Get the associated profile version
@@ -47,7 +47,7 @@ public interface Profile extends Attributable, Identifiable<String> {
     /**
      * Get the profile parents
      */
-    List<String> getParents();
+    List<ProfileIdentity> getParents();
 
     /**
      * Get the profile item for the given name

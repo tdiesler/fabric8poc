@@ -20,6 +20,7 @@
 package io.fabric8.container.tomcat;
 
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.process.ManagedCreateOptions;
 import io.fabric8.spi.MutableCreateOptions;
@@ -34,7 +35,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 public final class TomcatCreateOptions extends TomcatProcessOptions implements ManagedCreateOptions, MutableCreateOptions {
 
-    private List<String> profiles = new ArrayList<>();
+    private List<ProfileIdentity> profiles = new ArrayList<>();
     private VersionIdentity version = VersionIdentity.emptyVersion;
 
     @Override
@@ -53,7 +54,7 @@ public final class TomcatCreateOptions extends TomcatProcessOptions implements M
     }
 
     @Override
-    public List<String> getProfiles() {
+    public List<ProfileIdentity> getProfiles() {
         return Collections.unmodifiableList(profiles);
     }
 
@@ -72,7 +73,7 @@ public final class TomcatCreateOptions extends TomcatProcessOptions implements M
     }
 
     @Override
-    public void setProfiles(List<String> profiles) {
+    public void setProfiles(List<ProfileIdentity> profiles) {
         assertMutable();
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
         this.profiles = new ArrayList<>(profiles);

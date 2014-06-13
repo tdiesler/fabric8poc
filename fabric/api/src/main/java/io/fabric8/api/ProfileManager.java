@@ -82,28 +82,28 @@ public interface ProfileManager {
     /**
      * Get the profile idetities for a given version
      */
-    Set<String> getProfileIdentities(VersionIdentity version);
+    Set<ProfileIdentity> getProfileIdentities(VersionIdentity version);
 
     /**
      * Get the profiles for a given version and identities
      * @param identities The requested identities or <code>null</code> for all profiles
      */
-    Set<Profile> getProfiles(VersionIdentity version, Set<String> identities);
+    Set<Profile> getProfiles(VersionIdentity version, Set<ProfileIdentity> identities);
 
     /**
      * Get the profile for a given identity and version
      */
-    Profile getProfile(VersionIdentity version, String identity);
+    Profile getProfile(VersionIdentity version, ProfileIdentity identity);
 
     /**
      * Get the effective profile for a given identity and version
      */
-    Profile getEffectiveProfile(VersionIdentity version, String identity);
+    Profile getEffectiveProfile(VersionIdentity version, ProfileIdentity identity);
 
     /**
      * Get the linked profile for the given identity
      */
-    LinkedProfile getLinkedProfile(VersionIdentity version, String identity);
+    LinkedProfile getLinkedProfile(VersionIdentity version, ProfileIdentity identity);
 
     /**
      * Add a profile to the given version
@@ -113,7 +113,7 @@ public interface ProfileManager {
     /**
      * Remove a profile from the given version
      */
-    Profile removeProfile(VersionIdentity version, String identity);
+    Profile removeProfile(VersionIdentity version, ProfileIdentity identity);
 
     /**
      * Update the given profile

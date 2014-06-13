@@ -21,7 +21,6 @@ package io.fabric8.api;
 
 import java.util.Set;
 
-
 /**
  * A profile version
  *
@@ -35,5 +34,5 @@ public interface ProfileVersion extends Identifiable<VersionIdentity> {
     /**
      * Get the associated profiles
      */
-    Set<String> getProfileIdentities();
+    Set<ProfileIdentity> getProfileIdentities();
 }

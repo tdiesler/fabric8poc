@@ -22,6 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.VersionIdentity;
 
@@ -35,6 +36,10 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder {
 
     private final MutableProfileVersion mutableVersion;
+
+    public DefaultProfileVersionBuilder(String canonical) {
+        mutableVersion = new MutableProfileVersion(VersionIdentity.createFrom(canonical));
+    }
 
     public DefaultProfileVersionBuilder(VersionIdentity identity) {
         mutableVersion = new MutableProfileVersion(identity);
@@ -65,7 +70,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     }
 
     @Override
-    public ProfileVersionBuilder removeProfile(String identity) {
+    public ProfileVersionBuilder removeProfile(ProfileIdentity identity) {
         mutableVersion.removeLinkedProfile(identity);
         return this;
     }
@@ -79,26 +84,26 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
     private void validate() {
         VersionIdentity version = mutableVersion.getIdentity();
         IllegalStateAssertion.assertNotNull(version, "Identity cannot be null");
-        Map<String, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
+        Map<ProfileIdentity, Profile> linkedProfiles = mutableVersion.getLinkedProfiles();
         IllegalStateAssertion.assertFalse(linkedProfiles.isEmpty(), "Profile version must have at least one profile");
-        for (String profileid : linkedProfiles.keySet()) {
+        for (ProfileIdentity profileid : linkedProfiles.keySet()) {
             validateLinkedProfile(version, profileid, linkedProfiles);
         }
     }
 
-    private void validateLinkedProfile(VersionIdentity version, String profileid, Map<String, Profile> linkedProfiles) {
-        Profile profile = linkedProfiles.get(profileid);
-        IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileid);
-        IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileid);
+    private void validateLinkedProfile(VersionIdentity version, ProfileIdentity profileId, Map<ProfileIdentity, Profile> linkedProfiles) {
+        Profile profile = linkedProfiles.get(profileId);
+        IllegalStateAssertion.assertNotNull(profile, "Profile not linked to version: " + profileId);
+        IllegalStateAssertion.assertNotNull(profile.getVersion(), "Profile has no version version: " + profileId);
         IllegalStateAssertion.assertEquals(version, profile.getVersion(), "Profile not linked to version: " + version);
-        for (String parentid : profile.getParents()) {
+        for (ProfileIdentity parentid : profile.getParents()) {
             validateLinkedProfile(version, parentid, linkedProfiles);
         }
     }
 
     private static class MutableProfileVersion implements LinkedProfileVersion {
 
-        private final Map<String, Profile> linkedProfiles = new HashMap<>();
+        private final Map<ProfileIdentity, Profile> linkedProfiles = new HashMap<>();
         private VersionIdentity identity;
 
         private MutableProfileVersion(VersionIdentity identity) {
@@ -124,17 +129,17 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
         }
 
         @Override
-        public Set<String> getProfileIdentities() {
+        public Set<ProfileIdentity> getProfileIdentities() {
             return Collections.unmodifiableSet(linkedProfiles.keySet());
         }
 
         @Override
-        public Profile getLinkedProfile(String identity) {
+        public Profile getLinkedProfile(ProfileIdentity identity) {
             return linkedProfiles.get(identity);
         }
 
         @Override
-        public Map<String, Profile> getLinkedProfiles() {
+        public Map<ProfileIdentity, Profile> getLinkedProfiles() {
             return Collections.unmodifiableMap(linkedProfiles);
         }
 
@@ -142,7 +147,7 @@ public final class DefaultProfileVersionBuilder implements ProfileVersionBuilder
             linkedProfiles.put(profile.getIdentity(), profile);
         }
 
-        private void removeLinkedProfile(String identity) {
+        private void removeLinkedProfile(ProfileIdentity identity) {
             linkedProfiles.remove(identity);
         }
     }

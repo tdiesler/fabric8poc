@@ -24,6 +24,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -50,16 +51,16 @@ import org.junit.Test;
 public class EffectiveProfileTest {
 
     VersionIdentity version = VersionIdentity.createFrom("2.0");
-    String identityA = "A";
-    String identityB = "B";
-    String identityC = "C";
+    ProfileIdentity identityA = ProfileIdentity.createFrom("A");
+    ProfileIdentity identityB = ProfileIdentity.createFrom("B");
+    ProfileIdentity identityC = ProfileIdentity.createFrom("C");
 
-    Map<String, Object>  configA = new HashMap<>();
-    Map<String, Object>  configB = new HashMap<>();
-    Map<String, Object>  configC = new HashMap<>();
-    Map<String, Object>  configC1 = new HashMap<>();
-    Map<String, Object>  effectB = new HashMap<>();
-    Map<String, Object>  effectC = new HashMap<>();
+    Map<String, Object> configA = new HashMap<>();
+    Map<String, Object> configB = new HashMap<>();
+    Map<String, Object> configC = new HashMap<>();
+    Map<String, Object> configC1 = new HashMap<>();
+    Map<String, Object> effectB = new HashMap<>();
+    Map<String, Object> effectC = new HashMap<>();
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -97,36 +98,20 @@ public class EffectiveProfileTest {
     @Test
     public void testEffectiveProfile() {
 
-        Profile prfA = ProfileBuilder.Factory.create(identityA)
-                .addConfigurationItem("confItem", configA)
-                .addConfigurationItem("confItemA", configA)
-                .addConfigurationItem("confItemA1", configA)
-                .getProfile();
+        Profile prfA = ProfileBuilder.Factory.create(identityA).addConfigurationItem("confItem", configA).addConfigurationItem("confItemA", configA)
+                .addConfigurationItem("confItemA1", configA).getProfile();
 
-        Profile prfB = ProfileBuilder.Factory.create(identityB)
-                .addParentProfile(identityA)
-                .addConfigurationItem("confItem", configB)
-                .addConfigurationItem("confItemB", configB)
-                .getProfile();
+        Profile prfB = ProfileBuilder.Factory.create(identityB).addParentProfile(identityA).addConfigurationItem("confItem", configB)
+                .addConfigurationItem("confItemB", configB).getProfile();
 
-        Profile prfC = ProfileBuilder.Factory.create(identityC)
-                .addParentProfile(identityA)
-                .addParentProfile(identityB)
-                .addConfigurationItem("confItem", configC)
-                .addConfigurationItem("confItemC", configC)
-                .addConfigurationItem("confItemA1", configC1)
-                .getProfile();
+        Profile prfC = ProfileBuilder.Factory.create(identityC).addParentProfile(identityA).addParentProfile(identityB).addConfigurationItem("confItem", configC)
+                .addConfigurationItem("confItemC", configC).addConfigurationItem("confItemA1", configC1).getProfile();
 
-        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version)
-                .addProfile(prfA)
-                .addProfile(prfB)
-                .addProfile(prfC)
-                .getProfileVersion();
-
+        ProfileVersion linkedVersion = ProfileVersionBuilder.Factory.create(version).addProfile(prfA).addProfile(prfB).addProfile(prfC).getProfileVersion();
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         ProfileVersion profileVersion = prfManager.addProfileVersion(linkedVersion);
-        Set<String> profileIdentities = profileVersion.getProfileIdentities();
+        Set<ProfileIdentity> profileIdentities = profileVersion.getProfileIdentities();
         Assert.assertEquals(3, profileIdentities.size());
         Assert.assertTrue(profileIdentities.contains(identityA));
         Assert.assertTrue(profileIdentities.contains(identityB));
@@ -135,7 +120,7 @@ public class EffectiveProfileTest {
         // Verify effective A
         LinkedProfile linkedA = prfManager.getLinkedProfile(version, identityA);
         Profile effectiveA = linkedA.getEffectiveProfile();
-        Assert.assertEquals("effective#A", effectiveA.getIdentity());
+        Assert.assertEquals("effective#A", effectiveA.getIdentity().getCanonicalForm());
         Assert.assertTrue("No attributes", effectiveA.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveA.getParents().isEmpty());
         Assert.assertEquals(3, effectiveA.getProfileItems(null).size());
@@ -146,7 +131,7 @@ public class EffectiveProfileTest {
         // Verify effective B
         LinkedProfile linkedB = prfManager.getLinkedProfile(version, identityB);
         Profile effectiveB = linkedB.getEffectiveProfile();
-        Assert.assertEquals("effective#B", effectiveB.getIdentity());
+        Assert.assertEquals("effective#B", effectiveB.getIdentity().getCanonicalForm());
         Assert.assertTrue("No attributes", effectiveB.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveB.getParents().isEmpty());
         Assert.assertEquals(4, effectiveB.getProfileItems(null).size());
@@ -158,7 +143,7 @@ public class EffectiveProfileTest {
         // Verify effective C
         LinkedProfile linkedC = prfManager.getLinkedProfile(version, identityC);
         Profile effectiveC = linkedC.getEffectiveProfile();
-        Assert.assertEquals("effective#C", effectiveC.getIdentity());
+        Assert.assertEquals("effective#C", effectiveC.getIdentity().getCanonicalForm());
         Assert.assertTrue("No attributes", effectiveC.getAttributes().isEmpty());
         Assert.assertTrue("No parents", effectiveC.getParents().isEmpty());
         Assert.assertEquals(4, effectiveC.getProfileItems(null).size());

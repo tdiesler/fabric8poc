@@ -29,6 +29,7 @@ import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.EventDispatcher;
@@ -167,9 +168,9 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         try {
             ProfileRegistry registry = profileRegistry.get();
             ProfileVersion profileVersion = getRequiredProfileVersion(version);
-            Set<String> profileIdentities = profileVersion.getProfileIdentities();
-            Map<String, Profile> linkedProfiles = new HashMap<>();
-            for (String profileId : profileIdentities) {
+            Set<ProfileIdentity> profileIdentities = profileVersion.getProfileIdentities();
+            Map<ProfileIdentity, Profile> linkedProfiles = new HashMap<>();
+            for (ProfileIdentity profileId : profileIdentities) {
                 Profile profile = registry.getProfile(version, profileId);
                 linkedProfiles.put(profileId, profile);
             }
@@ -211,7 +212,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<String> getProfileIdentities(VersionIdentity version) {
+    public Set<ProfileIdentity> getProfileIdentities(VersionIdentity version) {
         assertValid();
         return getRequiredProfileVersion(version).getProfileIdentities();
     }
@@ -223,33 +224,33 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getProfile(VersionIdentity version, String profileId) {
+    public Profile getProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.getProfile(version, profileId);
     }
 
     @Override
-    public Profile getEffectiveProfile(VersionIdentity version, String profileId) {
+    public Profile getEffectiveProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         return ProfileUtils.getEffectiveProfile(getLinkedProfile(version, profileId));
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(VersionIdentity version, String profileId) {
+    public LinkedProfile getLinkedProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
-        return getLinkedProfileInternal(version, profileId, new HashMap<String, LinkedProfile>());
+        return getLinkedProfileInternal(version, profileId, new HashMap<ProfileIdentity, LinkedProfile>());
     }
 
-    private LinkedProfile getLinkedProfileInternal(VersionIdentity version, String profileId, Map<String, LinkedProfile> linkedProfiles) {
+    private LinkedProfile getLinkedProfileInternal(VersionIdentity version, ProfileIdentity profileId, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
         Profile profile = getRequiredProfile(version, profileId);
-        Map<String, LinkedProfile> linkedParents = getLinkedParents(profile, linkedProfiles);
+        Map<ProfileIdentity, LinkedProfile> linkedParents = getLinkedParents(profile, linkedProfiles);
         return new ImmutableProfile(profile.getVersion(), profile.getIdentity(), profile.getAttributes(), profile.getParents(), profile.getProfileItems(null), linkedParents);
     }
 
-    private Map<String, LinkedProfile> getLinkedParents(Profile profile, Map<String, LinkedProfile> linkedProfiles) {
-        Map<String, LinkedProfile> linkedParents = new HashMap<>();
-        for (String parentId : profile.getParents()) {
+    private Map<ProfileIdentity, LinkedProfile> getLinkedParents(Profile profile, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
+        Map<ProfileIdentity, LinkedProfile> linkedParents = new HashMap<>();
+        for (ProfileIdentity parentId : profile.getParents()) {
             LinkedProfile linkedParent = linkedProfiles.get(parentId);
             if (linkedParent == null) {
                 linkedParent = getLinkedProfileInternal(profile.getVersion(), parentId, linkedProfiles);
@@ -261,11 +262,11 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Set<Profile> getProfiles(VersionIdentity version, Set<String> identities) {
+    public Set<Profile> getProfiles(VersionIdentity version, Set<ProfileIdentity> identities) {
         assertValid();
         Set<Profile> result = new HashSet<Profile>();
         ProfileVersion profileVersion = getRequiredProfileVersion(version);
-        for (String profileId : profileVersion.getProfileIdentities()) {
+        for (ProfileIdentity profileId : profileVersion.getProfileIdentities()) {
             if (identities == null || identities.contains(profileId)) {
                 result.add(getRequiredProfile(version, profileId));
             }
@@ -282,7 +283,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile removeProfile(VersionIdentity version, String profileId) {
+    public Profile removeProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         LockHandle writeLock = aquireWriteLock(version);
         try {
@@ -328,7 +329,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     }
 
     @Override
-    public Profile getRequiredProfile(VersionIdentity version, String profileId) {
+    public Profile getRequiredProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         ProfileRegistry registry = profileRegistry.get();
         return registry.getRequiredProfile(version, profileId);

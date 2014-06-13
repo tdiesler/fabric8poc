@@ -33,6 +33,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -101,7 +102,7 @@ public abstract class ConfigurationItemsTestBase {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String identity = event.getSource().getIdentity();
+                String identity = event.getSource().getIdentity().getCanonicalForm();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(identity)) {
                     latchA.get().countDown();
                 }
@@ -113,8 +114,8 @@ public abstract class ConfigurationItemsTestBase {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0-default".equals(identity)) {
                     latchB.get().countDown();
                 }
             }
@@ -188,11 +189,11 @@ public abstract class ConfigurationItemsTestBase {
         ProvisionEventListener listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0-default".equals(identity)) {
                     latchA.countDown();
                 }
-                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default,foo]".equals(identity)) {
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0-default-foo".equals(identity)) {
                     latchB.countDown();
                 }
             }
@@ -204,7 +205,7 @@ public abstract class ConfigurationItemsTestBase {
         Assert.assertTrue("ProvisionEvent received", latchA.await(500, TimeUnit.MILLISECONDS));
 
         // Add profile foo to the current container
-        cntManager.addProfiles(cntIdentity, Collections.singletonList("foo"), listener);
+        cntManager.addProfiles(cntIdentity, Collections.singletonList(ProfileIdentity.createFrom("foo")), listener);
         Assert.assertTrue("ProvisionEvent received", latchB.await(500, TimeUnit.MILLISECONDS));
 
         // Verify runtime specific configuration
@@ -216,7 +217,7 @@ public abstract class ConfigurationItemsTestBase {
         }
 
         // Restore defaults
-        cntManager.removeProfiles(cntIdentity, Collections.singletonList("foo"), null);
+        cntManager.removeProfiles(cntIdentity, Collections.singletonList(ProfileIdentity.createFrom("foo")), null);
         cntManager.setProfileVersion(cntIdentity, DEFAULT_PROFILE_VERSION, null);
         prfManager.removeProfileVersion(version);
     }

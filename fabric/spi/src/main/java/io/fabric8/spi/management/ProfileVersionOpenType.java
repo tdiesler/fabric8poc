@@ -19,12 +19,12 @@
  */
 package io.fabric8.spi.management;
 
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AttributeSupport;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -70,12 +70,14 @@ public final class ProfileVersionOpenType {
     }
 
     public static CompositeData getCompositeData(ProfileVersion pversion) {
-        String identity = pversion.getIdentity().toString();
-        Set<String> prfset = pversion.getProfileIdentities();
-        String[] profiles = prfset.toArray(new String[prfset.size()]);
+        String identity = pversion.getIdentity().getCanonicalForm();
+        List<String> profiles = new ArrayList<>();
+        for(ProfileIdentity prfid : pversion.getProfileIdentities()) {
+            profiles.add(prfid.getCanonicalForm());
+        }
         List<Object> items = new ArrayList<Object>();
         items.add(identity);
-        items.add(profiles);
+        items.add(profiles.toArray(new String[profiles.size()]));
         Object[] itemValues = items.toArray(new Object[items.size()]);
         try {
             return new CompositeDataSupport(compositeType, getItemNames(), itemValues);
@@ -103,11 +105,13 @@ public final class ProfileVersionOpenType {
     static class CompositeDataProfileVersion extends AttributeSupport implements ProfileVersion {
 
         private final VersionIdentity identity;
-        private final Set<String> profiles;
+        private final Set<ProfileIdentity> profiles = new HashSet<>();
 
         private CompositeDataProfileVersion(CompositeData cdata, ClassLoader classLoader) {
             identity = VersionIdentity.createFrom((String) cdata.get(ProfileVersionOpenType.ITEM_IDENTITY));
-            profiles = new HashSet<>(Arrays.asList((String[])cdata.get(ProfileVersionOpenType.ITEM_PROFILES)));
+            for (String prfid : (String[])cdata.get(ProfileVersionOpenType.ITEM_PROFILES)) {
+                profiles.add(ProfileIdentity.createFrom(prfid));
+            }
             setImmutable(true);
         }
 
@@ -117,7 +121,7 @@ public final class ProfileVersionOpenType {
         }
 
         @Override
-        public Set<String> getProfileIdentities() {
+        public Set<ProfileIdentity> getProfileIdentities() {
             return Collections.unmodifiableSet(profiles);
         }
 

@@ -24,6 +24,7 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileBuilders;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.DefaultConfigurationItemBuilder;
@@ -91,17 +92,17 @@ public final class ProfileBuildersImpl extends AbstractComponent implements Prof
     @Override
     public ProfileBuilder profileBuilder() {
         assertValid();
-        return new DefaultProfileBuilder((String) null);
+        return new DefaultProfileBuilder((ProfileIdentity) null);
     }
 
     @Override
-    public ProfileBuilder profileBuilder(String identity) {
+    public ProfileBuilder profileBuilder(ProfileIdentity identity) {
         assertValid();
         return new DefaultProfileBuilder(identity);
     }
 
     @Override
-    public ProfileBuilder profileBuilderFrom(VersionIdentity version, String identity) {
+    public ProfileBuilder profileBuilderFrom(VersionIdentity version, ProfileIdentity identity) {
         LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, identity);
         return new DefaultProfileBuilder(linkedProfile);
     }

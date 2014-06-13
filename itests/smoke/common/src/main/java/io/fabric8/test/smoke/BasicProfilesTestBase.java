@@ -23,6 +23,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -70,7 +71,7 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals("One version", 1, versions.size());
 
         ProfileVersion defaultVersion = prfManager.getProfileVersion(Constants.DEFAULT_PROFILE_VERSION);
-        Set<String> profileIdentities = defaultVersion.getProfileIdentities();
+        Set<ProfileIdentity> profileIdentities = defaultVersion.getProfileIdentities();
         Assert.assertEquals("One profile", 1, profileIdentities.size());
         Assert.assertEquals(Constants.DEFAULT_PROFILE_IDENTITY, profileIdentities.iterator().next());
 
@@ -90,7 +91,7 @@ public abstract class BasicProfilesTestBase  {
         Assert.assertEquals(1, prfManager.getProfiles(version, null).size());
 
         // Verify profile
-        profileFoo = prfManager.getProfile(version, "foo");
+        profileFoo = prfManager.getProfile(version, ProfileIdentity.createFrom("foo"));
         List<ConfigurationItem> items = profileFoo.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals("One item", 1, items.size());
         ConfigurationItem citem = items.iterator().next();

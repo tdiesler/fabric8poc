@@ -26,6 +26,7 @@ import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.spi.DefaultProfileBuilder;
 
@@ -46,7 +47,7 @@ public final class ProfileUtils {
     }
 
     public static Profile getEffectiveProfile(LinkedProfile profile) {
-        String identity = "effective#" + profile.getIdentity();
+        ProfileIdentity identity = ProfileIdentity.createFrom("effective#" + profile.getIdentity().getCanonicalForm());
         ProfileBuilder prfBuilder = new DefaultProfileBuilder(identity);
         buildEffectiveProfile(prfBuilder, profile);
         return prfBuilder.getProfile();
@@ -55,7 +56,7 @@ public final class ProfileUtils {
     public static void buildEffectiveProfile(ProfileBuilder builder, LinkedProfile profile) {
 
         // Add parent content
-        for (String identity : profile.getParents()) {
+        for (ProfileIdentity identity : profile.getParents()) {
             LinkedProfile parent = profile.getLinkedParent(identity);
             buildEffectiveProfile(builder, parent);
         }

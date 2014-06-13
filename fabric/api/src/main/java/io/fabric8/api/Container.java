@@ -90,5 +90,5 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     /**
      * Get the associated list of profiles
      */
-    List<String> getProfileIdentities();
+    List<ProfileIdentity> getProfileIdentities();
 }

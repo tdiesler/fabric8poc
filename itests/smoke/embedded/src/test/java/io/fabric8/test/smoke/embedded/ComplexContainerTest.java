@@ -141,8 +141,8 @@ public class ComplexContainerTest {
         ProvisionEventListener listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0-default".equals(identity)) {
                     latchA.countDown();
                 }
             }
@@ -186,8 +186,8 @@ public class ComplexContainerTest {
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default,foo]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0-default-foo".equals(identity)) {
                     latchB.countDown();
                 }
             }
@@ -241,8 +241,8 @@ public class ComplexContainerTest {
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#2.0.0-default".equals(identity)) {
                     latchC.countDown();
                 }
             }
@@ -273,8 +273,8 @@ public class ComplexContainerTest {
         listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.0.0-default".equals(identity)) {
                     latchD.countDown();
                 }
             }

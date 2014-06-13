@@ -24,6 +24,7 @@ import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
@@ -163,7 +164,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<String> getProfileIdentities(VersionIdentity version) {
+    public Set<ProfileIdentity> getProfileIdentities(VersionIdentity version) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -174,7 +175,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Set<Profile> getProfiles(VersionIdentity version, Set<String> identities) {
+    public Set<Profile> getProfiles(VersionIdentity version, Set<ProfileIdentity> identities) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -185,7 +186,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile getProfile(VersionIdentity version, String identity) {
+    public Profile getProfile(VersionIdentity version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -196,7 +197,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile getEffectiveProfile(VersionIdentity version, String identity) {
+    public Profile getEffectiveProfile(VersionIdentity version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -207,7 +208,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public LinkedProfile getLinkedProfile(VersionIdentity version, String identity) {
+    public LinkedProfile getLinkedProfile(VersionIdentity version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();
@@ -229,7 +230,7 @@ public final class ProfileManagerImpl extends AbstractComponent implements Profi
     }
 
     @Override
-    public Profile removeProfile(VersionIdentity version, String identity) {
+    public Profile removeProfile(VersionIdentity version, ProfileIdentity identity) {
         Permit<ProfileService> permit = permitManager.get().aquirePermit(ProfileService.PERMIT, false);
         try {
             ProfileService service = permit.getInstance();

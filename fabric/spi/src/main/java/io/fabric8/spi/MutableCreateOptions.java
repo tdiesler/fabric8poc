@@ -23,6 +23,7 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 
 import java.util.List;
@@ -40,7 +41,7 @@ public interface MutableCreateOptions extends CreateOptions {
 
     void setVersion(VersionIdentity version);
 
-    void setProfiles(List<String> profiles);
+    void setProfiles(List<ProfileIdentity> profiles);
 
     <T> void addAttribute(AttributeKey<T> key, T value);
 

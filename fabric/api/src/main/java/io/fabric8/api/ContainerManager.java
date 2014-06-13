@@ -112,12 +112,12 @@ public interface ContainerManager {
     /**
      * Add profiles to the container with the given identity
      */
-    Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException;
+    Container addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Remove profiles from the container with the given identity
      */
-    Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException;
+    Container removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException;
 
     /**
      * Get the effective profile for the container with the given identity

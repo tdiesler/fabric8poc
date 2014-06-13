@@ -34,7 +34,7 @@ public interface ContainerBuilder<B extends ContainerBuilder<B, T>, T extends Cr
 
     B profileVersion(VersionIdentity version);
 
-    B profiles(List<String> profiles);
+    B profiles(List<ProfileIdentity> profiles);
 
     T getCreateOptions();
 }

@@ -34,6 +34,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProvisionEvent;
 import io.fabric8.api.ProvisionEvent.EventType;
@@ -187,14 +188,14 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                     return;
 
                 LOGGER.info("Update profile: {}", profile);
-                String prfid = profile.getIdentity();
+                ProfileIdentity prfid = profile.getIdentity();
 
                 PermitManager permitManager = ServiceLocator.getRequiredService(PermitManager.class);
                 Permit<ContainerService> permit = permitManager.aquirePermit(ContainerService.PERMIT, false);
                 try {
                     ContainerService service = permit.getInstance();
                     for (Container cnt : service.getContainers(null)) {
-                        List<String> profiles = cnt.getProfileIdentities();
+                        List<ProfileIdentity> profiles = cnt.getProfileIdentities();
                         if (profiles.contains(prfid)) {
                             ContainerIdentity cntid = cnt.getIdentity();
                             LockHandle writeLock = service.aquireContainerLock(cntid);
@@ -342,7 +343,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
         // Provision the container profiles
         VersionIdentity version = container.getProfileVersion();
-        List<String> identities = container.getProfileIdentities();
+        List<ProfileIdentity> identities = container.getProfileIdentities();
         provisionProfilesInternal(container, version, identities, listener);
 
         return container;
@@ -462,11 +463,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container setVersionInternal(Container container, VersionIdentity nextVersion, ProvisionEventListener listener) throws ProvisionException {
 
-        ProfileVersion nextProfileVersion = profileService.get().getRequiredProfileVersion(nextVersion);
         LOGGER.info("Set container version: {} <= {}", container, nextVersion);
 
         // Provision the next profiles
-        List<String> identities = container.getProfileIdentities();
+        List<ProfileIdentity> identities = container.getProfileIdentities();
         provisionProfilesInternal(container, nextVersion, identities, listener);
 
         ContainerRegistry registry = containerRegistry.get();
@@ -474,7 +474,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container addProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
+    public Container addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         LockHandle writeLock = aquireWriteLock(identity);
         try {
@@ -485,12 +485,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container addProfilesInternal(Container container, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
+    private Container addProfilesInternal(Container container, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException {
         LOGGER.info("Add container profiles: {} <= {}", container, profiles);
 
         // Provision the profiles
         VersionIdentity version = container.getProfileVersion();
-        List<String> effective = new ArrayList<>(container.getProfileIdentities());
+        List<ProfileIdentity> effective = new ArrayList<>(container.getProfileIdentities());
         effective.addAll(profiles);
         provisionProfilesInternal(container, version, effective, listener);
 
@@ -500,7 +500,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public Container removeProfiles(ContainerIdentity identity, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
+    public Container removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
         LockHandle writeLock = aquireWriteLock(identity);
         try {
@@ -511,12 +511,12 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private Container removeProfilesInternal(Container container, List<String> profiles, ProvisionEventListener listener) throws ProvisionException {
+    private Container removeProfilesInternal(Container container, List<ProfileIdentity> profiles, ProvisionEventListener listener) throws ProvisionException {
         LOGGER.info("Remove container profiles: {} => {}", container, profiles);
 
         // Unprovision the profiles
         VersionIdentity version = container.getProfileVersion();
-        List<String> effective = new ArrayList<>(container.getProfileIdentities());
+        List<ProfileIdentity> effective = new ArrayList<>(container.getProfileIdentities());
         effective.removeAll(profiles);
         provisionProfilesInternal(container, version, effective, listener);
 
@@ -532,24 +532,23 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         try {
             Container container = getRequiredContainer(identity);
             VersionIdentity version = container.getProfileVersion();
-            List<String> identities = container.getProfileIdentities();
+            List<ProfileIdentity> identities = container.getProfileIdentities();
             return getEffectiveProfileInternal(container, version, identities);
         } finally {
             readLock.unlock();
         }
     }
 
-    private Profile getEffectiveProfileInternal(Container container, VersionIdentity version, List<String> identities) {
+    private Profile getEffectiveProfileInternal(Container container, VersionIdentity version, List<ProfileIdentity> profiles) {
         LockHandle readLock = aquireReadLock(container.getIdentity());
         try {
-            StringBuffer effectiveId = new StringBuffer("effective#" + version + "[");
-            for (int i = 0; i < identities.size(); i++) {
-                effectiveId.append((i > 0 ? "," : "") + identities.get(i));
+            StringBuffer effectiveId = new StringBuffer("effective#" + version);
+            for (ProfileIdentity prfid : profiles) {
+                effectiveId.append("-" + prfid.getSymbolicName());
             }
-            effectiveId.append("]");
             ProfileBuilder prfBuilder = new DefaultProfileBuilder(effectiveId.toString());
             prfBuilder.profileVersion(version);
-            for (String profileId : identities) {
+            for (ProfileIdentity profileId : profiles) {
                 LinkedProfile linkedProfile = profileService.get().getLinkedProfile(version, profileId);
                 ProfileUtils.buildEffectiveProfile(prfBuilder, linkedProfile);
             }
@@ -560,18 +559,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public void updateProfile(ContainerIdentity identity, String profile, ProvisionEventListener listener) throws ProvisionException {
+    public void updateProfile(ContainerIdentity identity, ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException {
 
         Container container = getRequiredContainer(identity);
         LOGGER.info("Update container profile: {} <= {}", container, identity);
 
         // Provision the profile
         VersionIdentity version = container.getProfileVersion();
-        List<String> identities = container.getProfileIdentities();
+        List<ProfileIdentity> identities = container.getProfileIdentities();
         provisionProfilesInternal(container, version, identities, listener);
     }
 
-    private void provisionProfilesInternal(Container container, VersionIdentity version, List<String> identities, ProvisionEventListener listener) throws ProvisionException {
+    private void provisionProfilesInternal(Container container, VersionIdentity version, List<ProfileIdentity> identities, ProvisionEventListener listener) throws ProvisionException {
         if (container.getState() == State.STARTED) {
             Profile effective = getEffectiveProfileInternal(container, version, identities);
             provisionEffectiveProfile(container, effective, listener);

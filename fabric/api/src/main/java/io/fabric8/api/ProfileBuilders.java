@@ -38,9 +38,9 @@ public interface ProfileBuilders {
 
     ProfileBuilder profileBuilder();
 
-    ProfileBuilder profileBuilder(String identity);
+    ProfileBuilder profileBuilder(ProfileIdentity identity);
 
-    ProfileBuilder profileBuilderFrom(VersionIdentity version, String identity);
+    ProfileBuilder profileBuilderFrom(VersionIdentity version, ProfileIdentity identity);
 
     ProfileBuilder profileBuilderFrom(LinkedProfile linkedProfile);
 

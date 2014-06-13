@@ -22,6 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.VersionIdentity;
 
@@ -52,7 +53,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private VersionIdentity profileVersion;
     private Set<ServiceEndpoint> endpoints = new HashSet<>();
     private Set<ContainerIdentity> children = new HashSet<>();
-    private List<String> profiles = new ArrayList<>();
+    private List<ProfileIdentity> profiles = new ArrayList<>();
     private ContainerIdentity parent;
 
     private ImmutableContainer(ContainerIdentity identity, RuntimeType runtimeType, Map<AttributeKey<?>, Object> attributes, State state) {
@@ -93,7 +94,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public List<String> getProfileIdentities() {
+    public List<ProfileIdentity> getProfileIdentities() {
         return Collections.unmodifiableList(profiles);
     }
 
@@ -162,7 +163,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
             return this;
         }
 
-        public Builder addProfiles(List<String> profiles) {
+        public Builder addProfiles(List<ProfileIdentity> profiles) {
             container.profiles.addAll(profiles);
             return this;
         }

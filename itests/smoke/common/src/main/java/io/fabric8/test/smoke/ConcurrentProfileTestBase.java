@@ -29,6 +29,7 @@ import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -94,12 +95,12 @@ public abstract class ConcurrentProfileTestBase {
         // Build a profile version with two profiles
         // A <= B
         Profile prfA = ProfileBuilder.Factory.create("prfA")
-                .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(0)))
+                .addConfigurationItem(PID, Collections.singletonMap("keyA", (Object) new Integer(100)))
                 .getProfile();
 
         Profile prfB = ProfileBuilder.Factory.create("prfB")
-                .addParentProfile("prfA")
-                .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(0)))
+                .addParentProfile(prfA.getIdentity())
+                .addConfigurationItem(PID, Collections.singletonMap("keyB", (Object) new Integer(100)))
                 .getProfile();
 
         ProfileVersion profileVersion = ProfileVersionBuilder.Factory.create(version)
@@ -112,14 +113,14 @@ public abstract class ConcurrentProfileTestBase {
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         prfManager.addProfileVersion(profileVersion);
 
-        Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
+        Profile effectiveB = prfManager.getEffectiveProfile(version, prfB.getIdentity());
         List<ConfigurationItem> items = effectiveB.getProfileItems(ConfigurationItem.class);
         Assert.assertEquals(1, items.size());
         ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
         Map<String, Object> config = item.getDefaultAttributes();
         Assert.assertEquals(2, config.size());
-        Assert.assertEquals(0, config.get("keyA"));
-        Assert.assertEquals(0, config.get("keyB"));
+        Assert.assertEquals(100, config.get("keyA"));
+        Assert.assertEquals(100, config.get("keyB"));
 
         // Create a container
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -130,8 +131,8 @@ public abstract class ConcurrentProfileTestBase {
         ProvisionEventListener listener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0[default,prfB]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == EventType.PROVISIONED && "effective#1.2.0-default-prfB".equals(identity)) {
                     latchA.countDown();
                 }
             }
@@ -139,7 +140,7 @@ public abstract class ConcurrentProfileTestBase {
 
         // Add profile B to the container
         cntManager.setProfileVersion(cntId, version, null);
-        cntManager.addProfiles(cntId, Collections.singletonList("prfB"), null);
+        cntManager.addProfiles(cntId, Collections.singletonList(prfB.getIdentity()), null);
 
         // Start the container
         cntManager.startContainer(cntId, listener);
@@ -170,10 +171,11 @@ public abstract class ConcurrentProfileTestBase {
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     // Add the profile
-                    cntManager.addProfiles(cntId, Collections.singletonList("prfB"), null);
+                    ProfileIdentity prfBid = ProfileIdentity.createFrom("prfB");
+                    cntManager.addProfiles(cntId, Collections.singletonList(prfBid), null);
 
                     // Verify that the effective profile is consistent
-                    Profile effectiveB = prfManager.getEffectiveProfile(version, "prfB");
+                    Profile effectiveB = prfManager.getEffectiveProfile(version, prfBid);
                     ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
                     Map<String, Object> config = item.getDefaultAttributes();
 
@@ -196,7 +198,7 @@ public abstract class ConcurrentProfileTestBase {
                     Thread.sleep(10);
 
                     // Remove the profile
-                    cntManager.removeProfiles(cntId, Collections.singletonList("prfB"), null);
+                    cntManager.removeProfiles(cntId, Collections.singletonList(prfBid), null);
                     Thread.sleep(10);
 
                 } catch (Exception ex) {
@@ -216,8 +218,10 @@ public abstract class ConcurrentProfileTestBase {
             ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    LinkedProfile linkedB = prfManager.getLinkedProfile(version, "prfB");
-                    LinkedProfile linkedA = linkedB.getLinkedParent("prfA");
+                    ProfileIdentity prfAid = ProfileIdentity.createFrom("prfA");
+                    ProfileIdentity prfBid = ProfileIdentity.createFrom("prfB");
+                    LinkedProfile linkedB = prfManager.getLinkedProfile(version, prfBid);
+                    LinkedProfile linkedA = linkedB.getLinkedParent(prfAid);
 
                     ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(linkedA);
                     ConfigurationItem prfItem = linkedA.getProfileItem(PID, ConfigurationItem.class);

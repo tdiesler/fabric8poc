@@ -25,7 +25,6 @@ import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.runtime.ServiceLocator;
 
-
 /**
  * A profile builder.
  *
@@ -34,7 +33,7 @@ import org.jboss.gravia.runtime.ServiceLocator;
  */
 public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
-    ProfileBuilder identity(String identity);
+    ProfileBuilder identity(ProfileIdentity identity);
 
     ProfileBuilder profileVersion(VersionIdentity version);
 
@@ -52,9 +51,9 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
     ProfileBuilder addRequirementItem(Requirement requirement);
 
-    ProfileBuilder addParentProfile(String identity);
+    ProfileBuilder addParentProfile(ProfileIdentity identity);
 
-    ProfileBuilder removeParentProfile(String identity);
+    ProfileBuilder removeParentProfile(ProfileIdentity identity);
 
     Profile getProfile();
 
@@ -67,10 +66,15 @@ public interface ProfileBuilder extends AttributableBuilder<ProfileBuilder> {
 
         public static ProfileBuilder create(String identity) {
             ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
+            return factory.profileBuilder(ProfileIdentity.createFrom(identity));
+        }
+
+        public static ProfileBuilder create(ProfileIdentity identity) {
+            ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
             return factory.profileBuilder(identity);
         }
 
-        public static ProfileBuilder createFrom(VersionIdentity version, String identity) {
+        public static ProfileBuilder createFrom(VersionIdentity version, ProfileIdentity identity) {
             ProfileBuilders factory = ServiceLocator.getRequiredService(ProfileBuilders.class);
             return factory.profileBuilderFrom(version, identity);
         }

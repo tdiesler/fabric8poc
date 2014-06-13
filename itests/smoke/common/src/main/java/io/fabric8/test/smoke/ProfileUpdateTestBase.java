@@ -32,6 +32,7 @@ import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
 import io.fabric8.api.ProfileEvent;
 import io.fabric8.api.ProfileEventListener;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -78,7 +79,7 @@ public abstract class ProfileUpdateTestBase  {
     public void testProfileUpdate() throws Exception {
 
         final VersionIdentity version12 = VersionIdentity.createFrom("1.2");
-        final String identityA = "foo";
+        final ProfileIdentity identityA = ProfileIdentity.createFrom("foo");
 
         // Build a profile version
         Profile prfA = ProfileBuilder.Factory.create(identityA)
@@ -118,7 +119,7 @@ public abstract class ProfileUpdateTestBase  {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String prfid = event.getSource().getIdentity();
+                ProfileIdentity prfid = event.getSource().getIdentity();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && identityA.equals(prfid)) {
                     latchA.countDown();
                 }
@@ -130,7 +131,7 @@ public abstract class ProfileUpdateTestBase  {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
+                ProfileIdentity identity = event.getProfile().getIdentity();
                 if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "default".equals(identity)) {
                     latchB.countDown();
                 }
@@ -179,7 +180,7 @@ public abstract class ProfileUpdateTestBase  {
         ProfileEventListener profileListener = new ProfileEventListener() {
             @Override
             public void processEvent(ProfileEvent event) {
-                String identity = event.getSource().getIdentity();
+                String identity = event.getSource().getIdentity().getCanonicalForm();
                 if (event.getType() == ProfileEvent.EventType.UPDATED && "default".equals(identity)) {
                     latchA.get().countDown();
                 }
@@ -191,8 +192,8 @@ public abstract class ProfileUpdateTestBase  {
         ProvisionEventListener provisionListener = new ProvisionEventListener() {
             @Override
             public void processEvent(ProvisionEvent event) {
-                String identity = event.getProfile().getIdentity();
-                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "effective#1.0.0[default]".equals(identity)) {
+                String identity = event.getProfile().getIdentity().getCanonicalForm();
+                if (event.getType() == ProvisionEvent.EventType.PROVISIONED && "effective#1.0.0-default".equals(identity)) {
                     latchB.get().countDown();
                 }
             }

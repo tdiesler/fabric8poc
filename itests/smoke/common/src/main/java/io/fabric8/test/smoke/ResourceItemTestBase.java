@@ -26,6 +26,7 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ResourceItem;
@@ -143,22 +144,23 @@ public abstract class ResourceItemTestBase {
         Resource resourceA = builderA.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addResourceItem(resourceA)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(1, prfFoo.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = prfFoo.getProfileItem(identityA);
         Assert.assertEquals("profile://1.0.0/foo/resitemA?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemA").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -171,8 +173,8 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleA)));
         Assert.assertEquals("ACTIVE" + moduleA, "ACTIVE", server.getAttribute(getObjectName(moduleA), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     /**
@@ -195,27 +197,28 @@ public abstract class ResourceItemTestBase {
         Resource resourceB1 = builderB1.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceB)
                 .addResourceItem(resourceB1)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemB = profile.getProfileItem(identityB);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(2, prfFoo.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemB = prfFoo.getProfileItem(identityB);
         Assert.assertEquals("profile://1.0.0/foo/resitemB?version=0.0.0", getItemURL(itemB, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemB").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemB, 0).openStream());
-        ResourceItem itemB1 = profile.getProfileItem(identityB1);
+        ResourceItem itemB1 = prfFoo.getProfileItem(identityB1);
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemB1").openStream());
         Assert.assertEquals("profile://1.0.0/foo/resitemB1?version=0.0.0", getItemURL(itemB1, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", getItemURL(itemB1, 0).openStream());
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -231,8 +234,8 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleB1)));
         Assert.assertEquals("ACTIVE" + moduleB, "ACTIVE", server.getAttribute(getObjectName(moduleB1), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     /**
@@ -255,22 +258,23 @@ public abstract class ResourceItemTestBase {
         Resource resourceA = builderA.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addResourceItem(resourceA)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(1, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(1, prfFoo.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = prfFoo.getProfileItem(identityA);
         Assert.assertEquals("profile://1.0.0/foo/resitem.camel.core?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitem.camel.core").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -278,8 +282,8 @@ public abstract class ResourceItemTestBase {
         Assert.assertNotNull("Module not null", moduleA);
         Assert.assertEquals(State.ACTIVE, moduleA.getState());
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     /**
@@ -308,27 +312,28 @@ public abstract class ResourceItemTestBase {
         Resource resourceC = builderC.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceA)
                 .addResourceItem(resourceC)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(2, profile.getProfileItems(ResourceItem.class).size());
-        ResourceItem itemA = profile.getProfileItem(identityA);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(2, prfFoo.getProfileItems(ResourceItem.class).size());
+        ResourceItem itemA = prfFoo.getProfileItem(identityA);
         Assert.assertEquals("profile://1.0.0/foo/camel.core.resitem?version=0.0.0", getItemURL(itemA, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/camel.core.resitem").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemA, 0).openStream());
-        ResourceItem itemC = profile.getProfileItem(identityC);
+        ResourceItem itemC = prfFoo.getProfileItem(identityC);
         Assert.assertEquals("profile://1.0.0/foo/resitemC?version=0.0.0", getItemURL(itemC, 0).toExternalForm());
         Assert.assertNotNull("URL stream not null", new URL("profile://1.0.0/foo/resitemC").openStream());
         Assert.assertNotNull("URL stream not null", getItemURL(itemC, 0).openStream());
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Make a call to the HttpService endpoint that goes through a Camel route
         if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
@@ -337,8 +342,8 @@ public abstract class ResourceItemTestBase {
             Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
         }
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     /**
@@ -372,7 +377,8 @@ public abstract class ResourceItemTestBase {
         Resource resourceG = builderG.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile profile = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addSharedResourceItem(resourceF)
                 .addResourceItem(resourceG)
@@ -394,7 +400,7 @@ public abstract class ResourceItemTestBase {
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Verify that the module got installed
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -407,8 +413,8 @@ public abstract class ResourceItemTestBase {
         Assert.assertTrue("MBean registered", server.isRegistered(getObjectName(moduleG)));
         Assert.assertEquals("ACTIVE" + moduleG, "ACTIVE", server.getAttribute(getObjectName(moduleG), "ModuleState"));
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     private URL getItemURL(ResourceItem item, int index) {

@@ -22,6 +22,7 @@ import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.LockHandle;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
@@ -34,6 +35,14 @@ import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -42,18 +51,9 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.jboss.gravia.resource.Version;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerRegistration.class)
@@ -129,7 +129,7 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
             VersionIdentity bootVersion = bootConfiguration.get().getVersion();
 
             // Get boot profiles
-            List<String> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());
+            List<ProfileIdentity> profiles = new ArrayList<>(bootConfiguration.get().getProfiles());
 
             CreateOptions options = new AbstractCreateOptions() {
                 {

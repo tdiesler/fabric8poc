@@ -23,6 +23,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
@@ -191,15 +192,15 @@ public final class MBeansProvider extends AbstractComponent {
         @Override
         public Set<String> getProfileIds(String version) {
             Set<String> result = new HashSet<String>();
-            for (String prfid : profileManager.getProfileIdentities(VersionIdentity.createFrom(version))) {
-                result.add(prfid.toString());
+            for (ProfileIdentity prfid : profileManager.getProfileIdentities(VersionIdentity.createFrom(version))) {
+                result.add(prfid.getCanonicalForm());
             }
             return Collections.unmodifiableSet(result);
         }
 
         @Override
         public CompositeData getProfile(String version, String identity) {
-            Profile profile = profileManager.getProfile(VersionIdentity.createFrom(version), identity);
+            Profile profile = profileManager.getProfile(VersionIdentity.createFrom(version), ProfileIdentity.createFrom(identity));
             return profile != null ? ProfileOpenType.getCompositeData(profile) : null;
         }
     }

@@ -20,6 +20,7 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
@@ -44,7 +45,7 @@ public interface ProfileService extends ProfileManager {
 
     ProfileVersion getRequiredProfileVersion(VersionIdentity version);
 
-    Profile getRequiredProfile(VersionIdentity version, String identity);
+    Profile getRequiredProfile(VersionIdentity version, ProfileIdentity identity);
 
     /**
      * Get an url connection to content in the profile registry

@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.RequirementItem;
@@ -120,21 +121,22 @@ public abstract class RequirementItemTestBase {
         Resource resourceA = builderA.getResource();
 
         // Build a profile
-        Profile profile = ProfileBuilder.Factory.create("foo")
+        ProfileIdentity idFoo = ProfileIdentity.createFrom("foo");
+        Profile prfFoo = ProfileBuilder.Factory.create(idFoo)
                 .profileVersion(DEFAULT_PROFILE_VERSION)
                 .addRequirementItem(requirement)
                 .addResourceItem(resourceA)
                 .getProfile();
 
         // Add the profile and verify the item URL
-        profile = prfManager.addProfile(DEFAULT_PROFILE_VERSION, profile);
-        Assert.assertEquals(1, profile.getProfileItems(RequirementItem.class).size());
-        RequirementItem itemA = profile.getProfileItem(featureId.getSymbolicName(), RequirementItem.class);
+        prfFoo = prfManager.addProfile(DEFAULT_PROFILE_VERSION, prfFoo);
+        Assert.assertEquals(1, prfFoo.getProfileItems(RequirementItem.class).size());
+        RequirementItem itemA = prfFoo.getProfileItem(featureId.getSymbolicName(), RequirementItem.class);
         Assert.assertNotNull("Requirement not null", itemA.getRequirement());
 
         // Add the profile to the current coontainer
         Container cnt = cntManager.getCurrentContainer();
-        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
+        cntManager.addProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
 
         // Make a call to the HttpService endpoint that goes through a Camel route
         if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
@@ -143,8 +145,8 @@ public abstract class RequirementItemTestBase {
             Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
         }
 
-        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList("foo"), null);
-        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, "foo");
+        cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
+        prfManager.removeProfile(DEFAULT_PROFILE_VERSION, idFoo);
     }
 
     private String performCall(String context, String path) throws Exception {

@@ -23,6 +23,7 @@ import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.OptionsProvider;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.VersionIdentity;
@@ -45,11 +46,13 @@ import org.jboss.gravia.utils.ResourceUtils;
 
 public final class DefaultProfileBuilder extends AbstractAttributableBuilder<ProfileBuilder> implements ProfileBuilder {
 
-    static final char[] ILLEGAL_IDENTITY_CHARS = new char[] { '\\', ':', ' ', '\t', '&', '?' };
-
     private final MutableProfile mutableProfile;
 
-    public DefaultProfileBuilder(String identity) {
+    public DefaultProfileBuilder(String canonical) {
+        mutableProfile = new MutableProfile(ProfileIdentity.createFrom(canonical));
+    }
+
+    public DefaultProfileBuilder(ProfileIdentity identity) {
         mutableProfile = new MutableProfile(identity);
     }
 
@@ -58,7 +61,7 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder identity(String identity) {
+    public ProfileBuilder identity(ProfileIdentity identity) {
         mutableProfile.setIdentity(identity);
         return this;
     }
@@ -134,13 +137,13 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
     }
 
     @Override
-    public ProfileBuilder addParentProfile(String identity) {
+    public ProfileBuilder addParentProfile(ProfileIdentity identity) {
         mutableProfile.addParentProfile(identity);
         return this;
     }
 
     @Override
-    public ProfileBuilder removeParentProfile(String identity) {
+    public ProfileBuilder removeParentProfile(ProfileIdentity identity) {
         mutableProfile.removeParentProfile(identity);
         return this;
     }
@@ -153,11 +156,8 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     private void validate() {
         mutableProfile.addAttributes(getAttributes());
-        String identity = mutableProfile.getIdentity();
+        ProfileIdentity identity = mutableProfile.getIdentity();
         IllegalStateAssertion.assertNotNull(identity, "Identity cannot be null");
-        for (char ch : ILLEGAL_IDENTITY_CHARS) {
-            IllegalStateAssertion.assertEquals(-1, identity.indexOf(ch), "Invalid character '" + ch + "' in identity: " + identity);
-        }
         for (ProfileItem item : mutableProfile.getProfileItems(null)) {
             AbstractProfileItem absitem = (AbstractProfileItem) item;
             absitem.validate();
@@ -166,12 +166,12 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
 
     private static class MutableProfile extends AttributeSupport implements Profile {
 
-        private final List<String> parentProfiles = new ArrayList<>();
+        private final List<ProfileIdentity> parentProfiles = new ArrayList<>();
         private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
-        private String identity;
+        private ProfileIdentity identity;
         private VersionIdentity version;
 
-        private MutableProfile(String identity) {
+        private MutableProfile(ProfileIdentity identity) {
             this.identity = identity;
         }
 
@@ -190,11 +190,11 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public String getIdentity() {
+        public ProfileIdentity getIdentity() {
             return identity;
         }
 
-        private void setIdentity(String identity) {
+        private void setIdentity(ProfileIdentity identity) {
             this.identity = identity;
         }
 
@@ -208,15 +208,15 @@ public final class DefaultProfileBuilder extends AbstractAttributableBuilder<Pro
         }
 
         @Override
-        public List<String> getParents() {
+        public List<ProfileIdentity> getParents() {
             return Collections.unmodifiableList(parentProfiles);
         }
 
-        private void addParentProfile(String identity) {
+        private void addParentProfile(ProfileIdentity identity) {
             parentProfiles.add(identity);
         }
 
-        private void removeParentProfile(String identity) {
+        private void removeParentProfile(ProfileIdentity identity) {
             parentProfiles.remove(identity);
         }
 

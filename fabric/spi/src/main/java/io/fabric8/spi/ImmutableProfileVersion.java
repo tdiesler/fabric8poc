@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 
 import java.util.Collections;
@@ -42,10 +43,10 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 public final class ImmutableProfileVersion implements LinkedProfileVersion {
 
     private final VersionIdentity identity;
-    private final Set<String> profileIdentities = new HashSet<String>();
-    private Map<String, Profile> linkedProfiles;
+    private final Set<ProfileIdentity> profileIdentities = new HashSet<>();
+    private Map<ProfileIdentity, Profile> linkedProfiles;
 
-    public ImmutableProfileVersion(VersionIdentity version, Set<String> profileIdentities, Map<String, Profile> linkedProfiles) {
+    public ImmutableProfileVersion(VersionIdentity version, Set<ProfileIdentity> profileIdentities, Map<ProfileIdentity, Profile> linkedProfiles) {
         this.identity = version;
         this.profileIdentities.addAll(profileIdentities);
         if (linkedProfiles != null) {
@@ -60,18 +61,18 @@ public final class ImmutableProfileVersion implements LinkedProfileVersion {
     }
 
     @Override
-    public Set<String> getProfileIdentities() {
+    public Set<ProfileIdentity> getProfileIdentities() {
         return Collections.unmodifiableSet(profileIdentities);
     }
 
     @Override
-    public Profile getLinkedProfile(String identity) {
+    public Profile getLinkedProfile(ProfileIdentity identity) {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return linkedProfiles.get(identity);
     }
 
     @Override
-    public Map<String, Profile> getLinkedProfiles() {
+    public Map<ProfileIdentity, Profile> getLinkedProfiles() {
         IllegalStateAssertion.assertNotNull(linkedProfiles, "Linked profiles not available");
         return Collections.unmodifiableMap(linkedProfiles);
     }

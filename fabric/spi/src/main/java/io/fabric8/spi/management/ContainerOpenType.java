@@ -21,6 +21,7 @@ package io.fabric8.spi.management;
 
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AttributeSupport;
@@ -159,7 +160,7 @@ public final class ContainerOpenType {
         }
 
         @Override
-        public List<String> getProfileIdentities() {
+        public List<ProfileIdentity> getProfileIdentities() {
             throw new UnsupportedOperationException();
         }
 

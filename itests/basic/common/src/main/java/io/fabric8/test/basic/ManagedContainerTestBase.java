@@ -41,7 +41,6 @@ import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -63,7 +62,6 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
-    @Ignore
     public void testManagedKaraf() throws Exception {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -90,7 +88,6 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
-    @Ignore
     public void testManagedTomcat() throws Exception {
 
         // Build the {@link CreateOptions}

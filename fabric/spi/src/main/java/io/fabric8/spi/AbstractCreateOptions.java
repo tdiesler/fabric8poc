@@ -22,6 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
 
@@ -39,7 +40,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity identity;
     private VersionIdentity version = ProfileVersion.DEFAULT_PROFILE_VERSION;
-    private List<String> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
+    private List<ProfileIdentity> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
 
     @Override
     public ContainerIdentity getIdentity() {
@@ -52,7 +53,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public List<String> getProfiles() {
+    public List<ProfileIdentity> getProfiles() {
         return profiles;
     }
 
@@ -94,7 +95,7 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     }
 
     @Override
-    public void setProfiles(List<String> profiles) {
+    public void setProfiles(List<ProfileIdentity> profiles) {
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
         this.profiles = new ArrayList<>(profiles);
     }

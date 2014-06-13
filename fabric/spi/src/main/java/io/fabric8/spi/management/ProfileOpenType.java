@@ -20,6 +20,7 @@
 package io.fabric8.spi.management;
 
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.VersionIdentity;
@@ -70,9 +71,9 @@ public final class ProfileOpenType {
     }
 
     public static CompositeData getCompositeData(Profile profile) {
-        String identity = profile.getIdentity();
+        ProfileIdentity identity = profile.getIdentity();
         List<Object> items = new ArrayList<Object>();
-        items.add(identity);
+        items.add(identity.getCanonicalForm());
         items.add(AttributesOpenType.getCompositeData(profile.getAttributes()));
         Object[] itemValues = items.toArray(new Object[items.size()]);
         try {
@@ -101,10 +102,10 @@ public final class ProfileOpenType {
 
     static class CompositeDataProfile extends AttributeSupport implements Profile {
 
-        private final String identity;
+        private final ProfileIdentity identity;
 
         private CompositeDataProfile(CompositeData cdata, ClassLoader classLoader) {
-            identity = (String) cdata.get(ProfileOpenType.ITEM_IDENTITY);
+            identity = ProfileIdentity.createFrom((String) cdata.get(ProfileOpenType.ITEM_IDENTITY));
             for (CompositeData attData : (CompositeData[]) cdata.get(ProfileOpenType.ITEM_ATTRIBUTES)) {
                 AttributesOpenType.addAttribute(this, attData, classLoader);
             }
@@ -112,7 +113,7 @@ public final class ProfileOpenType {
         }
 
         @Override
-        public String getIdentity() {
+        public ProfileIdentity getIdentity() {
             return identity;
         }
 
@@ -122,7 +123,7 @@ public final class ProfileOpenType {
         }
 
         @Override
-        public List<String> getParents() {
+        public List<ProfileIdentity> getParents() {
             throw new UnsupportedOperationException();
         }
 

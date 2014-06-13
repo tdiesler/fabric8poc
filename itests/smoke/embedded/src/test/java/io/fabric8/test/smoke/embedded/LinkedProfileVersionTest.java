@@ -23,6 +23,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -49,9 +50,9 @@ import org.junit.Test;
 public class LinkedProfileVersionTest {
 
     VersionIdentity version = VersionIdentity.createFrom("2.0");
-    String identityA = "A";
-    String identityB = "B";
-    String identityC = "C";
+    ProfileIdentity identityA = ProfileIdentity.createFrom("A");
+    ProfileIdentity identityB = ProfileIdentity.createFrom("B");
+    ProfileIdentity identityC = ProfileIdentity.createFrom("C");
 
     Map<String, Object>  configA = new HashMap<>();
     Map<String, Object>  configB = new HashMap<>();
@@ -109,7 +110,7 @@ public class LinkedProfileVersionTest {
                 .addProfile(prfC)
                 .getProfileVersion();
 
-        Set<String> profileIdentities = linkedVersion.getProfileIdentities();
+        Set<ProfileIdentity> profileIdentities = linkedVersion.getProfileIdentities();
         Assert.assertEquals(3, profileIdentities.size());
         Assert.assertTrue(profileIdentities.contains(identityA));
         Assert.assertTrue(profileIdentities.contains(identityB));

@@ -27,6 +27,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItemBuilder;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.VersionIdentity;
@@ -116,8 +117,8 @@ public abstract class AbstractProfileXMLReader implements ProfileReader {
     }
 
     private Profile readProfileElement(XMLStreamReader reader) throws XMLStreamException {
-        String name = reader.getAttributeValue(null, Attribute.NAME.toString());
-        ProfileBuilder builder = new DefaultProfileBuilder(name).profileVersion(getProfileVersion());
+        ProfileIdentity identity = ProfileIdentity.createFrom(reader.getAttributeValue(null, Attribute.NAME.toString()));
+        ProfileBuilder builder = new DefaultProfileBuilder(identity).profileVersion(getProfileVersion());
         while (reader.hasNext() && reader.nextTag() == START_ELEMENT) {
             Element element = Element.forName(reader.getLocalName());
             switch (element) {
@@ -129,7 +130,7 @@ public abstract class AbstractProfileXMLReader implements ProfileReader {
                 builder.addProfileItem(confItem);
                 break;
             case PARENT:
-                String parentId = reader.getAttributeValue(null, Attribute.ID.toString());
+                ProfileIdentity parentId = ProfileIdentity.createFrom(reader.getAttributeValue(null, Attribute.ID.toString()));
                 builder.addParentProfile(parentId);
                 assertEndElement(reader, Element.PARENT.getLocalName());
                 break;

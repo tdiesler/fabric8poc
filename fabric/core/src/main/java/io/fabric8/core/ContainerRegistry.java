@@ -25,6 +25,7 @@ import io.fabric8.api.Container.State;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.FabricException;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
@@ -33,7 +34,6 @@ import io.fabric8.spi.AbstractServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
-import io.fabric8.spi.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,7 +83,7 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<String> profiles, Set<ServiceEndpoint> endpoints) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<ProfileIdentity> profiles, Set<ServiceEndpoint> endpoints) {
         IllegalStateAssertion.assertTrue(getContainer(identity) == null, "Container already exists: " + identity);
         Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED)
                 .addParent(parentId)
@@ -157,17 +157,17 @@ public final class ContainerRegistry extends AbstractComponent {
         return getRequiredContainer(identity);
     }
 
-    Container addProfiles(ContainerIdentity identity, List<String> profiles) {
+    Container addProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles) {
         ContainerLockManager.assertWriteLock(identity);
-        List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
+        List<ProfileIdentity> allProfiles = new ArrayList<>(getProfileIdentities(identity));
         allProfiles.addAll(profiles);
         setProfilesInternal(identity, allProfiles);
         return getRequiredContainer(identity);
     }
 
-    Container removeProfiles(ContainerIdentity identity, List<String> profiles) {
+    Container removeProfiles(ContainerIdentity identity, List<ProfileIdentity> profiles) {
         ContainerLockManager.assertWriteLock(identity);
-        List<String> allProfiles = new ArrayList<>(getProfileIdentities(identity));
+        List<ProfileIdentity> allProfiles = new ArrayList<>(getProfileIdentities(identity));
         allProfiles.removeAll(profiles);
         setProfilesInternal(identity, allProfiles);
         return getRequiredContainer(identity);
@@ -244,7 +244,7 @@ public final class ContainerRegistry extends AbstractComponent {
                 ContainerIdentity parentIdentity = getParentInternal(identity);
                 Map<AttributeKey<?>, Object> attributes = getAttributesInternal(ZkPath.CONTAINER_ATTRIBUTES.getPath(id));
                 RuntimeType type = getRuntimeTypeInternal(identity);
-                List<String> profiles = getProfileIdentities(identity);
+                List<ProfileIdentity> profiles = getProfileIdentities(identity);
                 VersionIdentity version = getVersionInternal(identity);
                 State state = getStateInternal(identity);
                 Set<ContainerIdentity> children = getChildIdentitiesInternal(identity);
@@ -457,11 +457,11 @@ public final class ContainerRegistry extends AbstractComponent {
      * @param identity  The identity of the {@link Container}.
      * @return          A List of Profile Identities.
      */
-    private List<String> getProfileIdentities(ContainerIdentity identity) {
-        final List<String> profiles = new ArrayList<>();
+    private List<ProfileIdentity> getProfileIdentities(ContainerIdentity identity) {
+        final List<ProfileIdentity> profiles = new ArrayList<>();
         try {
-            for (String profile : new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_PROFILES.getPath(identity.getSymbolicName()))).split(" +")) {
-                profiles.add(profile);
+            for (String prfid : new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_PROFILES.getPath(identity.getSymbolicName()))).split(" +")) {
+                profiles.add(ProfileIdentity.createFrom(prfid));
             }
         } catch (Exception e) {
             throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+" profile identities.", e);
@@ -474,9 +474,13 @@ public final class ContainerRegistry extends AbstractComponent {
      * @param identity          The target {@link io.fabric8.api.ContainerIdentity}.
      * @param profiles    The parent {@link io.fabric8.api.ContainerIdentity}.
      */
-    private void setProfilesInternal(ContainerIdentity identity, List<String> profiles) {
+    private void setProfilesInternal(ContainerIdentity identity, List<ProfileIdentity> profiles) {
         String id = identity.getSymbolicName();
-        String data = StringUtils.join(profiles, " ");
+        StringBuffer dataBuffer = new StringBuffer();
+        for (ProfileIdentity prfid : profiles) {
+            dataBuffer.append(prfid.getCanonicalForm() + " ");
+        }
+        String data = dataBuffer.toString().trim();
 
         try {
             String containerProfilesPath = ZkPath.CONTAINER_CONFIG_PROFILES.getPath(id);

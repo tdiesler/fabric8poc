@@ -24,6 +24,7 @@ import io.fabric8.api.Configuration;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfileVersion;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.RequirementItem;
 import io.fabric8.api.ResourceItem;
@@ -79,8 +80,8 @@ public abstract class AbstractProfileXMLWriter implements ProfileWriter {
             writer.writeStartElement(Element.PROFILES.getLocalName());
             writer.writeDefaultNamespace(ProfilesNamespace100.PROFILES_NAMESPACE);
             writer.writeAttribute(Attribute.VERSION.getLocalName(), linkedVersion.getIdentity().toString());
-            Set<String> processed = new HashSet<>();
-            for (String profileId : linkedVersion.getProfileIdentities()) {
+            Set<ProfileIdentity> processed = new HashSet<>();
+            for (ProfileIdentity profileId : linkedVersion.getProfileIdentities()) {
                 Profile profile = linkedVersion.getLinkedProfile(profileId);
                 writeProfile(linkedVersion, profile, processed);
 
@@ -90,19 +91,19 @@ public abstract class AbstractProfileXMLWriter implements ProfileWriter {
         }
     }
 
-    private void writeProfile(LinkedProfileVersion linkedVersion, Profile profile, Set<String> processed) throws IOException {
+    private void writeProfile(LinkedProfileVersion linkedVersion, Profile profile, Set<ProfileIdentity> processed) throws IOException {
         IllegalArgumentAssertion.assertNotNull(linkedVersion, "linkedVersion");
         IllegalArgumentAssertion.assertNotNull(profile, "profile");
         IllegalArgumentAssertion.assertNotNull(processed, "processed");
-        String identity = profile.getIdentity();
+        ProfileIdentity identity = profile.getIdentity();
         if (!processed.contains(identity)) {
-            for (String parentId : profile.getParents()) {
+            for (ProfileIdentity parentId : profile.getParents()) {
                 Profile parentProfile = linkedVersion.getLinkedProfile(parentId);
                 writeProfile(linkedVersion, parentProfile, processed);
             }
             try {
                 writer.writeStartElement(Element.PROFILE.getLocalName());
-                writer.writeAttribute(Attribute.NAME.getLocalName(), profile.getIdentity());
+                writer.writeAttribute(Attribute.NAME.getLocalName(), profile.getIdentity().getSymbolicName());
                 writeProfileAttributes(profile.getAttributes());
                 writeProfileParents(profile.getParents());
                 writeProfileItems(profile, profile.getProfileItems(null));
@@ -134,10 +135,10 @@ public abstract class AbstractProfileXMLWriter implements ProfileWriter {
         }
     }
 
-    private void writeProfileParents(List<String> parents) throws XMLStreamException {
-        for (String parentId : parents) {
+    private void writeProfileParents(List<ProfileIdentity> parents) throws XMLStreamException {
+        for (ProfileIdentity parentId : parents) {
             writer.writeStartElement(Element.PARENT.getLocalName());
-            writer.writeAttribute(Attribute.ID.getLocalName(), parentId);
+            writer.writeAttribute(Attribute.ID.getLocalName(), parentId.getSymbolicName());
             writer.writeEndElement();
         }
     }

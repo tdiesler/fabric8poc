@@ -33,7 +33,7 @@ public interface ProfileVersionBuilder extends Builder<ProfileVersionBuilder> {
 
     ProfileVersionBuilder addProfile(Profile profile);
 
-    ProfileVersionBuilder removeProfile(String identity);
+    ProfileVersionBuilder removeProfile(ProfileIdentity identity);
 
     LinkedProfileVersion getProfileVersion();
 

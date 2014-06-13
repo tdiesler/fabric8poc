@@ -15,15 +15,15 @@
 
 package io.fabric8.spi.internal;
 
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.Configurer;
 import io.fabric8.spi.scr.AbstractComponent;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,8 +42,8 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
     Configurer configurer;
 
     private final Map<String, Object> configuration = new HashMap<>();
+    private final Set<ProfileIdentity> profiles = new HashSet<>();
     private VersionIdentity version;
-    private Set<String> profiles;
 
     @Activate
     void activate(Map<String, Object> source) throws Exception {
@@ -51,11 +51,9 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
         IllegalStateAssertion.assertTrue(configuration.containsKey(VERSION), VERSION + " is required");
         IllegalStateAssertion.assertTrue(configuration.containsKey(PROFILE), PROFILE + " is required");
         version = VersionIdentity.createFrom(String.valueOf(configuration.get(VERSION)));
-        profiles = Collections.unmodifiableSet(
-                new LinkedHashSet<>(
-                        Arrays.asList(String.valueOf(configuration.get(PROFILE)).split(" +"))
-                )
-        );
+        for (String prfid : String.valueOf(configuration.get(PROFILE)).split(" +")) {
+            profiles.add(ProfileIdentity.createFrom(prfid));
+        }
         activateComponent();
     }
 
@@ -69,8 +67,8 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
     }
 
     @Override
-    public Set<String> getProfiles() {
-        return profiles;
+    public Set<ProfileIdentity> getProfiles() {
+        return Collections.unmodifiableSet(profiles);
     }
 
     @Override

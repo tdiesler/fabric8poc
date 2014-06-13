@@ -23,6 +23,7 @@ import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
@@ -48,9 +49,9 @@ import org.junit.Test;
 public class LinkedProfileTest {
 
     VersionIdentity version = VersionIdentity.createFrom("2.0");
-    String identityA = "A";
-    String identityB = "B";
-    String identityC = "C";
+    ProfileIdentity identityA = ProfileIdentity.createFrom("A");
+    ProfileIdentity identityB = ProfileIdentity.createFrom("B");
+    ProfileIdentity identityC = ProfileIdentity.createFrom("C");
 
     Map<String, Object>  configA = new HashMap<>();
     Map<String, Object>  configB = new HashMap<>();
@@ -141,7 +142,7 @@ public class LinkedProfileTest {
         Assert.assertEquals(configC, linkedC.getProfileItem("confItem", ConfigurationItem.class).getDefaultAttributes());
         Assert.assertEquals(configC, linkedC.getProfileItem("confItemC", ConfigurationItem.class).getDefaultAttributes());
 
-        Map<String, LinkedProfile> linkedParents = linkedC.getLinkedParents();
+        Map<ProfileIdentity, LinkedProfile> linkedParents = linkedC.getLinkedParents();
         Assert.assertEquals(2, linkedParents.size());
         Assert.assertSame(linkedParents.get(identityA), linkedParents.get(identityB).getLinkedParents().get(identityA));
 

@@ -22,6 +22,7 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.LinkedProfile;
 import io.fabric8.api.Profile;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ResourceItem;
 import io.fabric8.api.VersionIdentity;
@@ -48,12 +49,12 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 public final class ImmutableProfile extends AttributeSupport implements LinkedProfile {
 
     private final VersionIdentity version;
-    private final String identity;
-    private final List<String> parentIdentities = new ArrayList<>();
+    private final ProfileIdentity identity;
+    private final List<ProfileIdentity> parentIdentities = new ArrayList<>();
     private final Map<String, ProfileItem> profileItems = new LinkedHashMap<>();
-    private Map<String, LinkedProfile> parentProfiles;
+    private Map<ProfileIdentity, LinkedProfile> parentProfiles;
 
-    public ImmutableProfile(VersionIdentity version, String identity, Map<AttributeKey<?>, Object> attributes, List<String> parents, List<ProfileItem> items, Map<String, LinkedProfile> linkedProfiles) {
+    public ImmutableProfile(VersionIdentity version, ProfileIdentity identity, Map<AttributeKey<?>, Object> attributes, List<ProfileIdentity> parents, List<ProfileItem> items, Map<ProfileIdentity, LinkedProfile> linkedProfiles) {
         super(attributes, true);
         this.identity = identity;
         this.version = version;
@@ -68,7 +69,7 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public String getIdentity() {
+    public ProfileIdentity getIdentity() {
         return identity;
     }
 
@@ -78,18 +79,18 @@ public final class ImmutableProfile extends AttributeSupport implements LinkedPr
     }
 
     @Override
-    public List<String> getParents() {
+    public List<ProfileIdentity> getParents() {
         return Collections.unmodifiableList(parentIdentities);
     }
 
     @Override
-    public LinkedProfile getLinkedParent(String identity) {
+    public LinkedProfile getLinkedParent(ProfileIdentity identity) {
         IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return parentProfiles.get(identity);
     }
 
     @Override
-    public Map<String, LinkedProfile> getLinkedParents() {
+    public Map<ProfileIdentity, LinkedProfile> getLinkedParents() {
         IllegalStateAssertion.assertNotNull(parentProfiles, "Linked parents not available");
         return Collections.unmodifiableMap(parentProfiles);
     }

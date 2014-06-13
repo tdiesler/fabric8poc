@@ -36,7 +36,7 @@ public interface Constants {
     /**
      * The default profile name
      */
-    String DEFAULT_PROFILE_IDENTITY = "default";
+    ProfileIdentity DEFAULT_PROFILE_IDENTITY = ProfileIdentity.createFrom("default");
 
     /**
      * The management domain

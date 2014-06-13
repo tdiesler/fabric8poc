@@ -23,6 +23,7 @@ import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ContainerBuilder;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.OptionsProvider;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 
 import java.util.List;
@@ -52,7 +53,7 @@ public abstract class AbstractContainerBuilder<B extends ContainerBuilder<B, T>,
 
     @Override
     @SuppressWarnings("unchecked")
-    public B profiles(List<String> profiles) {
+    public B profiles(List<ProfileIdentity> profiles) {
         options.setProfiles(profiles);
         return (B) this;
     }

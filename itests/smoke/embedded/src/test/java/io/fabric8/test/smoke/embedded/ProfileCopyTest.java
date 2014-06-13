@@ -22,6 +22,7 @@ package io.fabric8.test.smoke.embedded;
 import io.fabric8.api.Constants;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileBuilder;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
@@ -57,7 +58,7 @@ public class ProfileCopyTest {
     public void testProfileCopy() throws Exception {
 
         VersionIdentity version = Constants.DEFAULT_PROFILE_VERSION;
-        String identity = Constants.DEFAULT_PROFILE_IDENTITY;
+        ProfileIdentity identity = Constants.DEFAULT_PROFILE_IDENTITY;
 
         ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
         Profile profileA = prfManager.getDefaultProfile();

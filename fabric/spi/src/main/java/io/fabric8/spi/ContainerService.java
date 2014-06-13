@@ -21,6 +21,7 @@ package io.fabric8.spi;
 
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.spi.permit.PermitKey;
 
@@ -54,5 +55,5 @@ public interface ContainerService extends ContainerManager {
      */
     URLConnection getContainerURLConnection(URL url) throws IOException;
 
-    void updateProfile(ContainerIdentity identity, String profile, ProvisionEventListener listener) throws ProvisionException;
+    void updateProfile(ContainerIdentity identity, ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException;
 }

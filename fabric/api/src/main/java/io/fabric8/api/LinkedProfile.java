@@ -33,12 +33,12 @@ public interface LinkedProfile extends Profile {
     /**
      * Get the linked parent profile.
      */
-    LinkedProfile getLinkedParent(String identity);
+    LinkedProfile getLinkedParent(ProfileIdentity identity);
 
     /**
      * Get the linked parent profiles
      */
-    Map<String, LinkedProfile> getLinkedParents();
+    Map<ProfileIdentity, LinkedProfile> getLinkedParents();
 
     /**
      * Get the effective profile

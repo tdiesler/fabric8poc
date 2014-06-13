@@ -15,6 +15,7 @@
 
 package io.fabric8.spi;
 
+import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.VersionIdentity;
 
 import java.util.Map;
@@ -33,7 +34,7 @@ public interface BootConfiguration {
 
     VersionIdentity getVersion();
 
-    Set<String> getProfiles();
+    Set<ProfileIdentity> getProfiles();
 
     Map<String, Object> getConfiguration();
 }
