@@ -19,6 +19,7 @@
  */
 package io.fabric8.spi;
 
+import io.fabric8.api.LockHandle;
 import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileManager;
@@ -42,6 +43,10 @@ public interface ProfileService extends ProfileManager {
      * The {@link PermitKey} that protects this service.
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
+
+    LockHandle aquireWriteLock(VersionIdentity version);
+
+    LockHandle aquireReadLock(VersionIdentity version);
 
     ProfileVersion getRequiredProfileVersion(VersionIdentity version);
 

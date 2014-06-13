@@ -71,6 +71,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -253,11 +254,59 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private LockHandle aquireWriteLock(ContainerIdentity identity) {
-        return containerLocks.get().aquireWriteLock(identity);
+        final AtomicReference<LockHandle> verLock = new AtomicReference<>();
+        final LockHandle cntLock = containerLocks.get().aquireWriteLock(identity);
+        try {
+            Container cnt = containerRegistry.get().getContainer(identity);
+            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
+            if (version != null) {
+                verLock.set(profileService.get().aquireWriteLock(version));
+            }
+        } catch (RuntimeException rte) {
+            safeUnlock(cntLock, verLock);
+            throw rte;
+        } catch (Error err) {
+            safeUnlock(cntLock, verLock);
+            throw err;
+        }
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                safeUnlock(cntLock, verLock);
+            }
+        };
     }
 
     private LockHandle aquireReadLock(ContainerIdentity identity) {
-        return containerLocks.get().aquireReadLock(identity);
+        final AtomicReference<LockHandle> verLock = new AtomicReference<>();
+        final LockHandle cntLock = containerLocks.get().aquireReadLock(identity);
+        try {
+            Container cnt = containerRegistry.get().getContainer(identity);
+            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
+            if (version != null) {
+                verLock.set(profileService.get().aquireReadLock(version));
+            }
+        } catch (RuntimeException rte) {
+            safeUnlock(cntLock, verLock);
+            throw rte;
+        } catch (Error err) {
+            safeUnlock(cntLock, verLock);
+            throw err;
+        }
+        return new LockHandle() {
+            @Override
+            public void unlock() {
+                safeUnlock(cntLock, verLock);
+            }
+        };
+    }
+
+    private void safeUnlock(LockHandle cntLock, AtomicReference<LockHandle> lockRef) {
+        LockHandle verLock = lockRef.get();
+        if (verLock != null) {
+            verLock.unlock();
+        }
+        cntLock.unlock();
     }
 
     @Override
@@ -579,7 +628,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private void provisionEffectiveProfile(Container container, Profile effective, ProvisionEventListener listener) throws ProvisionException {
 
-        ContainerIdentity identity = container.getIdentity();
         LOGGER.info("Provision profile: {} <= {}", container, effective.getIdentity());
 
         ProvisionEvent event = new ProvisionEvent(container, EventType.PROVISIONING, effective);
@@ -638,7 +686,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         // Get list of resources for removal
-        ContainerRegistry registry = containerRegistry.get();
         CurrentContainerService resourceHolder = currentContainerService.get();
         List<ResourceIdentity> removalPending = new ArrayList<>();
         Map<ResourceIdentity, ResourceHandle> currentResources = resourceHolder.getResourceHandles();

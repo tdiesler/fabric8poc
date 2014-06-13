@@ -118,11 +118,13 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
         return aquireWriteLock(version);
     }
 
-    private LockHandle aquireWriteLock(VersionIdentity version) {
+    @Override
+    public LockHandle aquireWriteLock(VersionIdentity version) {
         return profileRegistry.get().aquireWriteLock(version);
     }
 
-    private LockHandle aquireReadLock(VersionIdentity version) {
+    @Override
+    public LockHandle aquireReadLock(VersionIdentity version) {
         return profileRegistry.get().aquireReadLock(version);
     }
 

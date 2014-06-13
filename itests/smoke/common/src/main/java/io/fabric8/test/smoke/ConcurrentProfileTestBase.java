@@ -171,19 +171,21 @@ public abstract class ConcurrentProfileTestBase {
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
                     // Add the profile
-                    ProfileIdentity prfBid = ProfileIdentity.createFrom("prfB");
-                    cntManager.addProfiles(cntId, Collections.singletonList(prfBid), null);
+                    ProfileIdentity prfId = ProfileIdentity.createFrom("prfB");
+                    debug("Begin addProfiles: " + prfId);
+                    cntManager.addProfiles(cntId, Collections.singletonList(prfId), null);
+                    debug("End addProfiles: " + prfId);
 
                     // Verify that the effective profile is consistent
-                    Profile effectiveB = prfManager.getEffectiveProfile(version, prfBid);
-                    ConfigurationItem item = effectiveB.getProfileItem(PID, ConfigurationItem.class);
-                    Map<String, Object> config = item.getDefaultAttributes();
+                    Profile effectiveProfile = prfManager.getEffectiveProfile(version, prfId);
+                    ConfigurationItem effectiveItem = effectiveProfile.getProfileItem(PID, ConfigurationItem.class);
+                    Map<String, Object> effectiveConfig = effectiveItem.getDefaultAttributes();
 
-                    Integer valA = (Integer) config.get("keyA");
-                    Integer valB = (Integer) config.get("keyB");
+                    Integer valA = (Integer) effectiveConfig.get("keyA");
+                    Integer valB = (Integer) effectiveConfig.get("keyB");
                     Assert.assertNotNull("keyA value expected", valA);
                     Assert.assertNotNull("keyB value expected", valB);
-                    Assert.assertEquals("config values not equal: " + config, valA, valB);
+                    Assert.assertEquals("config values not equal: " + effectiveConfig, valA, valB);
 
                     // Verify that the ConfigurationAdmin data is consistent
                     Configuration configuration = configAdmin.getConfiguration(PID, null);
@@ -198,7 +200,9 @@ public abstract class ConcurrentProfileTestBase {
                     Thread.sleep(10);
 
                     // Remove the profile
-                    cntManager.removeProfiles(cntId, Collections.singletonList(prfBid), null);
+                    debug("Begin removeProfiles: " + prfId);
+                    cntManager.removeProfiles(cntId, Collections.singletonList(prfId), null);
+                    debug("End removeProfiles: " + prfId);
                     Thread.sleep(10);
 
                 } catch (Exception ex) {
@@ -218,31 +222,35 @@ public abstract class ConcurrentProfileTestBase {
             ProfileManager prfManager = ProfileManagerLocator.getProfileManager();
             for (int i = 0; lastException == null && i < 25; i++) {
                 try {
-                    ProfileIdentity prfAid = ProfileIdentity.createFrom("prfA");
-                    ProfileIdentity prfBid = ProfileIdentity.createFrom("prfB");
-                    LinkedProfile linkedB = prfManager.getLinkedProfile(version, prfBid);
-                    LinkedProfile linkedA = linkedB.getLinkedParent(prfAid);
+                    ProfileIdentity prfIdA = ProfileIdentity.createFrom("prfA");
+                    ProfileIdentity prfIdB = ProfileIdentity.createFrom("prfB");
+                    LinkedProfile linkedB = prfManager.getLinkedProfile(version, prfIdB);
+                    LinkedProfile linkedA = linkedB.getLinkedParent(prfIdA);
 
-                    ProfileBuilder prfBuilder = ProfileBuilder.Factory.createFrom(linkedA);
-                    ConfigurationItem prfItem = linkedA.getProfileItem(PID, ConfigurationItem.class);
-                    Map<String, Object> config = new HashMap<>(prfItem.getDefaultAttributes());
-                    config.put("keyA", new Integer(i + 1));
+                    ProfileBuilder prfBuilderA = ProfileBuilder.Factory.createFrom(linkedA);
+                    ConfigurationItem prfItemA = linkedA.getProfileItem(PID, ConfigurationItem.class);
+                    Map<String, Object> configA = new HashMap<>(prfItemA.getDefaultAttributes());
+                    configA.put("keyA", new Integer(i + 1));
 
-                    Profile prfA = prfBuilder.addConfigurationItem(PID, config).getProfile();
+                    Profile prfA = prfBuilderA.addConfigurationItem(PID, configA).getProfile();
 
-                    prfBuilder = ProfileBuilder.Factory.createFrom(linkedB);
-                    prfItem = linkedB.getProfileItem(PID, ConfigurationItem.class);
-                    config = new HashMap<>(prfItem.getDefaultAttributes());
-                    config.put("keyB", new Integer(i + 1));
+                    ProfileBuilder prfBuilderB = ProfileBuilder.Factory.createFrom(linkedB);
+                    ConfigurationItem prfItemB = linkedB.getProfileItem(PID, ConfigurationItem.class);
+                    Map<String, Object> configB = new HashMap<>(prfItemB.getDefaultAttributes());
+                    configB.put("keyB", new Integer(i + 1));
 
-                    Profile prfB = prfBuilder.addConfigurationItem(PID, config).getProfile();
+                    Profile prfB = prfBuilderB.addConfigurationItem(PID, configB).getProfile();
 
                     LockHandle lock = prfManager.aquireProfileVersionLock(version);
                     try {
+                        debug("Begin updateProfile: " + prfA);
                         prfManager.updateProfile(prfA, null);
+                        debug("End updateProfile: " + prfA);
                         Thread.sleep(10);
 
+                        debug("Begin updateProfile: " + prfB);
                         prfManager.updateProfile(prfB, null);
+                        debug("Begin updateProfile: " + prfB);
                         Thread.sleep(10);
                     } finally {
                         lock.unlock();
@@ -254,5 +262,9 @@ public abstract class ConcurrentProfileTestBase {
             }
             return true;
         }
+    }
+
+    private void debug(String msg) {
+        //System.out.println(msg);
     }
 }
