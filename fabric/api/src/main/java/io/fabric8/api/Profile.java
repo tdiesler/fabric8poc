@@ -37,8 +37,6 @@ import org.jboss.gravia.resource.ResourceIdentity;
  */
 public interface Profile extends Attributable, Identifiable<ProfileIdentity> {
 
-    ProfileIdentity DEFAULT_PROFILE_IDENTITY = ProfileIdentity.createFrom("default");
-
     /**
      * Get the associated profile version
      */

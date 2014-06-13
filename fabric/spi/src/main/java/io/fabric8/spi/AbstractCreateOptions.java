@@ -20,14 +20,13 @@
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.Constants;
 import io.fabric8.api.ContainerIdentity;
-import io.fabric8.api.Profile;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.VersionIdentity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +37,13 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 public abstract class AbstractCreateOptions implements MutableCreateOptions {
 
     private final AttributeSupport attributes = new AttributeSupport();
-    private ContainerIdentity identity;
+    private final List<ProfileIdentity> profiles = new ArrayList<>();
     private VersionIdentity version = ProfileVersion.DEFAULT_PROFILE_VERSION;
-    private List<ProfileIdentity> profiles = new ArrayList<>(Arrays.asList(Profile.DEFAULT_PROFILE_IDENTITY));
+    private ContainerIdentity identity;
+
+    protected AbstractCreateOptions() {
+        profiles.add(Constants.DEFAULT_PROFILE_IDENTITY);
+    }
 
     @Override
     public ContainerIdentity getIdentity() {
@@ -97,7 +100,8 @@ public abstract class AbstractCreateOptions implements MutableCreateOptions {
     @Override
     public void setProfiles(List<ProfileIdentity> profiles) {
         IllegalArgumentAssertion.assertNotNull(profiles, "profiles");
-        this.profiles = new ArrayList<>(profiles);
+        this.profiles.clear();
+        this.profiles.addAll(profiles);
     }
 
     @Override
