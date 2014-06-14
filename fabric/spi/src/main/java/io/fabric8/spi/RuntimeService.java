@@ -27,9 +27,9 @@ public interface RuntimeService {
 
     String DEFAULT_ENV_PREFIX = "FABRIC8_";
 
-    String PROPERTY_AGENT_JMX_SERVER_URL = "fabric8.agent.jmx.server.url";
-    String PROPERTY_AGENT_JMX_USERNAME = "fabric8.agent.jmx.username";
-    String PROPERTY_AGENT_JMX_PASSWORD = "fabric8.agent.jmx.password";
+    String PROPERTY_JOLOKIA_AGENT_URL = "fabric8.jolokia.agent.url";
+    String PROPERTY_JOLOKIA_AGENT_USERNAME = "fabric8.jolokia.agent.username";
+    String PROPERTY_JOLOKIA_AGENT_PASSWORD = "fabric8.jolokia.agent.password";
 
     /**
      * Get the identity for the current container

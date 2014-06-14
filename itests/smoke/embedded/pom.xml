@@ -55,6 +55,11 @@
         
         <!-- Provided Dependencies -->
         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.bundle</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.gravia</groupId>
             <artifactId>gravia-runtime-embedded</artifactId>
             <scope>provided</scope>
@@ -134,6 +139,11 @@
                                     <groupId>io.fabric8.poc</groupId>
                                     <artifactId>fabric8-container-wildfly-managed</artifactId>
                                     <version>${project.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>org.apache.felix.http.bundle</artifactId>
+                                    <version>${project.apache.http}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.jboss.gravia</groupId>

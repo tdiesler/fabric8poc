@@ -43,7 +43,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractJMXServiceEndpoint extends SimpleServiceEndpoint implements JMXServiceEndpoint {
+public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint implements JMXServiceEndpoint {
 
     public AbstractJMXServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
         super(identity, attributes);

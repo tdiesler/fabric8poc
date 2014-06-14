@@ -20,10 +20,14 @@
 
 package io.fabric8.container.karaf;
 
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_PASSWORD;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_URL;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_USERNAME;
 import io.fabric8.spi.AgentRegistration;
+import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
@@ -63,13 +67,13 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         IllegalStateAssertion.assertTrue(confDir.isDirectory(), "Karaf conf does not exist: " + confDir);
 
         String comment = "Modified by " + getClass().getName();
-        configurePaxWeb(process, confDir, comment);
+        configureHttpService(process, confDir, comment);
         configureKarafManagement(process, confDir, comment);
     }
 
-    protected void configurePaxWeb(MutableManagedProcess process, File confDir, String comment) throws IOException {
-        // etc/org.ops4j.pax.web.cfg
-        File paxwebFile = new File(confDir, "org.ops4j.pax.web.cfg");
+    protected void configureHttpService(MutableManagedProcess process, File confDir, String comment) throws IOException {
+        // etc/org.apache.felix.http.cfg
+        File paxwebFile = new File(confDir, "org.apache.felix.http.cfg");
         if (paxwebFile.exists()) {
             Properties props = new Properties();
             props.load(new FileReader(paxwebFile));
@@ -134,10 +138,10 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dkaraf.instances=" + karafHome + "/instances");
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
-        cmd.add("-Dfabric8.agent.jmx.server.url=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
         // [TODO] Remove JMX credentials from logged system properties
-        cmd.add("-Dfabric8.agent.jmx.username=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_USERNAME));
-        cmd.add("-Dfabric8.agent.jmx.password=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_PASSWORD));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_USERNAME + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_PASSWORD + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD));
 
         // Java properties
         cmd.add("-Djava.io.tmpdir=" + new File(karafHome, "data/tmp"));

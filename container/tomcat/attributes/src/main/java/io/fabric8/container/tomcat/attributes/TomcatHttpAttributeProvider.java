@@ -18,6 +18,7 @@ package io.fabric8.container.tomcat.attributes;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.HttpAttributeProvider;
+import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -26,13 +27,8 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 
 import org.apache.catalina.Server;
 import org.apache.catalina.connector.Connector;
@@ -60,22 +56,25 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
     private static final int DEFAULT_HTTP_REMOTE_PORT = 8080;
     private static final int DEFAULT_HTTPS_REMOTE_PORT = 8443;
 
-    private static final String HTTP_URL_FORMAT = "%s://${container:%s/fabric8.ip}:%d";
+    private static final String HTTP_URL_FORMAT = "http://%s:%d";
+    private static final String HTTPS_URL_FORMAT = "https://%s:%d";
 
     @Reference(referenceInterface = MBeanServer.class)
     private final ValidatingReference<MBeanServer> mbeanServer = new ValidatingReference<MBeanServer>();
+    @Reference(referenceInterface = NetworkAttributeProvider.class)
+    private final ValidatingReference<NetworkAttributeProvider> networkProvider = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     private final Set<Connector> httpConnectors = new LinkedHashSet<Connector>();
     private final Set<Connector> httpsConnectors = new LinkedHashSet<Connector>();
+    private String ip;
     private String httpUrl;
     private String httpsUrl;
-    private String runtimeId;
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getRuntimeIdentity();
+        ip = networkProvider.get().getIp();
         activateInternal();
         updateAttributes();
         activateComponent();
@@ -96,7 +95,7 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
         return httpUrl;
     }
 
-    private void activateInternal() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
+    private void activateInternal() throws Exception {
         Server server = getServer();
         org.apache.catalina.Service[] services = server.findServices();
         for (org.apache.catalina.Service service : services) {
@@ -116,14 +115,14 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
             boolean httpsEnabled = isHttpsEnabled();
             int httpPort = httpsEnabled && !httpEnabled ? getHttpsPort() : getHttpPort();
             int httpsPort = httpsEnabled ? getHttpsPort() : 0;
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl("http", runtimeId, httpPort));
-            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl("https", runtimeId, httpsPort));
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, getHttpUrl(ip, httpPort));
+            putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl(ip, httpsPort));
         } catch (Exception e) {
             LOGGER.warn("Failed to get http attributes.", e);
         }
     }
 
-    private Server getServer() throws MalformedObjectNameException, AttributeNotFoundException, MBeanException, ReflectionException, InstanceNotFoundException {
+    private Server getServer() throws Exception {
         ObjectName name = new ObjectName("Catalina", "type", "Server");
         return (Server) mbeanServer.get().getAttribute(name, "managedResource");
     }
@@ -152,12 +151,12 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
         return port;
     }
 
-    private String getHttpUrl(String protocol, String name, int port) {
-        return httpUrl = String.format(HTTP_URL_FORMAT, "http", name, port);
+    private String getHttpUrl(String host, int port) {
+        return httpUrl = String.format(HTTP_URL_FORMAT, host, port);
     }
 
-    private String getHttpsUrl(String protocol, String name, int port) {
-        return httpsUrl = String.format(HTTP_URL_FORMAT, "https", name, port);
+    private String getHttpsUrl(String host, int port) {
+        return httpsUrl = String.format(HTTPS_URL_FORMAT, host, port);
     }
 
     void bindMbeanServer(MBeanServer service) {
@@ -165,6 +164,13 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
     }
     void unbindMbeanServer(MBeanServer service) {
         this.mbeanServer.unbind(service);
+    }
+
+    void bindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.bind(service);
+    }
+    void unbindNetworkProvider(NetworkAttributeProvider service) {
+        networkProvider.unbind(service);
     }
 
     void bindRuntimeService(RuntimeService service) {

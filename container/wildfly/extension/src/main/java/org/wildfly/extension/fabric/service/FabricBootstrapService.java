@@ -21,25 +21,18 @@
 package org.wildfly.extension.fabric.service;
 
 import io.fabric8.spi.BootstrapComplete;
-import io.fabric8.spi.RuntimeService;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.gravia.Constants;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.repository.Repository;
 import org.jboss.gravia.resolver.Resolver;
@@ -47,7 +40,6 @@ import org.jboss.gravia.resource.Attachable;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
-import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceReference;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.runtime.ServiceTracker;
@@ -55,6 +47,7 @@ import org.jboss.gravia.runtime.spi.AbstractModule;
 import org.jboss.gravia.runtime.spi.ClassLoaderEntriesProvider;
 import org.jboss.gravia.runtime.spi.ManifestHeadersProvider;
 import org.jboss.gravia.runtime.spi.ModuleEntriesProvider;
+import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.modules.ModuleClassLoader;
 import org.jboss.msc.service.AbstractService;
 import org.jboss.msc.service.ServiceBuilder;
@@ -65,9 +58,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.jolokia.osgi.JolokiaActivator;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wildfly.extension.fabric.FabricConstants;
@@ -104,10 +94,8 @@ public class FabricBootstrapService extends AbstractService<Void> {
     public void start(StartContext startContext) throws StartException {
         LOGGER.info("Activating Fabric Subsystem");
 
-        // Initialize ConfigurationAdmin content
         Runtime runtime = injectedRuntime.getValue();
         ModuleContext syscontext = runtime.getModuleContext();
-        initConfigurationAdmin(runtime);
 
         // Install and start this as a {@link Module}
         ModuleClassLoader classLoader = (ModuleClassLoader) getClass().getClassLoader();
@@ -129,37 +117,12 @@ public class FabricBootstrapService extends AbstractService<Void> {
             throw new StartException(ex);
         }
 
-        // Install and start the Jolokia module
-        try {
-            classLoader = (ModuleClassLoader) JolokiaActivator.class.getClassLoader();
-            Dictionary<String, String> headers = getManifestHeaders(classLoader, "jolokia-osgi");
-            headers.put(Constants.GRAVIA_ENABLED, Boolean.TRUE.toString());
-            runtime.installModule(classLoader, headers).start();
-        } catch (RuntimeException rte) {
-            throw rte;
-        } catch (Exception ex) {
-            throw new StartException(ex);
-        }
-
         // Open service trackers for {@link Resolver}, {@link Repository}, {@link Provisioner}
         trackers = new HashSet<ServiceTracker<?, ?>>();
         trackers.add(resolverTracker(syscontext, startContext.getChildTarget()));
         trackers.add(repositoryTracker(syscontext, startContext.getChildTarget()));
         trackers.add(provisionerTracker(syscontext, startContext.getChildTarget()));
-
-        // Wait for the {@link BootstrapComplete} to come up
-        ServiceLocator.awaitService(BootstrapComplete.class, 10, TimeUnit.SECONDS);
-
-        // FuseFabric banner message
-        Properties brandingProperties = new Properties();
-        String resname = "/META-INF/branding.properties";
-        try {
-            URL brandingURL = getClass().getResource(resname);
-            brandingProperties.load(brandingURL.openStream());
-        } catch (IOException e) {
-            throw new StartException("Cannot read branding properties from: " + resname);
-        }
-        System.out.println(brandingProperties.getProperty("welcome"));
+        trackers.add(completeTracker(syscontext, startContext.getChildTarget()));
     }
 
     private Dictionary<String, String> getManifestHeaders(ModuleClassLoader classLoader, String jarNamePart) throws IOException {
@@ -172,6 +135,7 @@ public class FabricBootstrapService extends AbstractService<Void> {
                 break;
             }
         }
+        IllegalStateAssertion.assertNotNull(manifestURL, "Cannot obtain manifest URL for: " + jarNamePart);
         Manifest manifest = new Manifest(manifestURL.openStream());
         Dictionary<String, String> headers = new ManifestHeadersProvider(manifest).getHeaders();
         return headers;
@@ -190,42 +154,6 @@ public class FabricBootstrapService extends AbstractService<Void> {
         // Uninstall the bootstrap module
         if (module != null) {
             module.uninstall();
-        }
-    }
-
-    /*
-    private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
-        for (ContainerCreateHandler handler : handlers) {
-            String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
-            registrations.add(context.registerService(classes, handler, null));
-        }
-    }
-    */
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void initConfigurationAdmin(Runtime runtime) {
-        ModuleContext syscontext = runtime.getModuleContext();
-        ConfigurationAdmin configAdmin = syscontext.getService(syscontext.getServiceReference(ConfigurationAdmin.class));
-        File confDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_CONF_DIR));
-        FilenameFilter filter = new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".cfg");
-            }
-        };
-        for (String name : confDir.list(filter)) {
-            String pid = name.substring(0, name.length() - 4);
-            try {
-                FileInputStream fis = new FileInputStream(new File(confDir, name));
-                Properties props = new Properties();
-                props.load(fis);
-                fis.close();
-
-                Configuration config = configAdmin.getConfiguration(pid, null);
-                config.update((Hashtable) props);
-            } catch (IOException ex) {
-                throw new IllegalStateException(ex);
-            }
         }
     }
 
@@ -289,6 +217,30 @@ public class FabricBootstrapService extends AbstractService<Void> {
             public void remove(ServiceReference<Provisioner> reference) {
                 controller.setMode(Mode.REMOVE);
                 super.remove(reference);
+            }
+        };
+        tracker.open();
+        return tracker;
+    }
+
+
+    private ServiceTracker<?, ?> completeTracker(final ModuleContext syscontext, final ServiceTarget serviceTarget) {
+        ServiceTracker<?, ?> tracker = new ServiceTracker<BootstrapComplete, BootstrapComplete>(syscontext, BootstrapComplete.class, null) {
+
+            @Override
+            public BootstrapComplete addingService(ServiceReference<BootstrapComplete> reference) {
+                BootstrapComplete service = super.addingService(reference);
+                // FuseFabric banner message
+                Properties brandingProperties = new Properties();
+                String resname = "/META-INF/branding.properties";
+                try {
+                    URL brandingURL = getClass().getResource(resname);
+                    brandingProperties.load(brandingURL.openStream());
+                } catch (IOException e) {
+                    throw new IllegalStateException("Cannot read branding properties from: " + resname);
+                }
+                System.out.println(brandingProperties.getProperty("welcome"));
+                return service;
             }
         };
         tracker.open();

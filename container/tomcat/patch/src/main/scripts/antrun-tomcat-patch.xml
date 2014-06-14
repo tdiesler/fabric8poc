@@ -58,31 +58,31 @@
   	<!-- Filter fabric resources -->
     <copy todir="${tomcat.patch.dir}" overwrite="true">
         <fileset dir="${etc.dir}/tomcat" />
-    		<filterset>
+    	<filterset>
 	        <filter token="project.version" value="${project.version}" />
       	</filterset>
     </copy>
 
-	<!-- Copy to conf -->
-	<copy todir="${tomcat.patch.dir}" overwrite="true">
-        <fileset dir="${etc.dir}/tomcat"/>
-	</copy>
-
-      <copy file="${tomcat.source.dir}/conf/catalina.properties" todir="${tomcat.patch.dir}/conf" overwrite="true"/>
-      <echo file="${tomcat.patch.dir}/conf/catalina.properties" append="true">
-          runtime.id=tomcat
-          runtime.home=${catalina.home}
-          runtime.conf=${catalina.home}/conf
-          runtime.data=${catalina.home}/work
-          zookeeper.sasl.client=false
-      </echo>
-  	
   	<!-- Copy gravia patch -->
     <copy todir="${tomcat.patch.dir}" overwrite="true">
         <fileset dir="${output.dir}/gravia-tomcat-patch">
        		<exclude name="webapps/**"/>
         </fileset>
     </copy>
+  	
+	<!-- Copy to conf -->
+	<copy todir="${tomcat.patch.dir}" overwrite="true">
+        <fileset dir="${etc.dir}/tomcat"/>
+	</copy>
+
+  	<copy file="${tomcat.source.dir}/conf/catalina.properties" todir="${tomcat.patch.dir}/conf" overwrite="true"/>
+  	<echo file="${tomcat.patch.dir}/conf/catalina.properties" append="true">
+      runtime.id=tomcat
+      runtime.home=${catalina.home}
+      runtime.conf=${catalina.home}/conf
+      runtime.data=${catalina.home}/work
+      zookeeper.sasl.client=false
+  	</echo>
   	
   	<!-- Copy to libs -->
     <copy todir="${tomcat.patch.dir}/lib" overwrite="true">
@@ -95,11 +95,12 @@
         	<include name="fabric8-container-wildfly-connector-*"/>
             <include name="fabric8-container-wildfly-managed-*"/>
             <include name="fabric8-domain-agent-*"/>
+            <include name="fabric8-jolokia-*"/>
         </fileset>
     </copy>
-    <copy tofile="${tomcat.patch.dir}/webapps/fabric.war" overwrite="true">
-        <fileset file="${deploy.artifacts.lib}/fabric8-container-tomcat-webapp-${project.version}.war" />
-    </copy>
+  	
+    <copy file="${deploy.artifacts.lib}/fabric8-container-tomcat-webapp-${project.version}.war"
+  		tofile="${tomcat.patch.dir}/webapps/fabric8.war" overwrite="true"/>
 
   	<!-- Zip the tomcat patch -->
   	<tar destfile="${output.dir}/${project.artifactId}-${project.version}.tar.gz" basedir="${tomcat.patch.dir}" compression="gzip"/>

@@ -42,7 +42,6 @@
         <module name="org.jboss.msc"/>
         <module name="org.jboss.shrinkwrap.core"/>
         <module name="org.jboss.staxmapper"/>
-        <module name="org.jolokia.osgi"/>
         <module name="org.osgi.core"/>
         <module name="org.osgi.enterprise"/>
         <module name="org.slf4j"/>

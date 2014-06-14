@@ -45,7 +45,9 @@
     
     <dependencies>
         <module name="javax.api"/>
+        <module name="javax.servlet.api"/>
         <module name="io.fabric8.api"/>
+        <module name="io.fabric8.jolokia"/>
         <module name="org.apache.commons.compress"/>
         <module name="org.jboss.gravia"/>
         <module name="org.jboss.modules"/>

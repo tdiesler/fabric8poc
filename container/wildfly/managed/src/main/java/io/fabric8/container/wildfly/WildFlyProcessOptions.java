@@ -115,6 +115,7 @@ public class WildFlyProcessOptions extends AbstractProcessOptions {
             }
             String projectVersion = properties.getProperty("project.version");
             String wildflyVersion = properties.getProperty("wildfly.version");
+            // [WFLY-3513] Cannot untar wildfly-dist-8.1.0.Final
             addMavenCoordinates(MavenCoordinates.create("org.wildfly", "wildfly-dist", wildflyVersion, "zip", null));
             addMavenCoordinates(MavenCoordinates.create("io.fabric8.poc", "fabric8-container-wildfly-patch", projectVersion, "tar.gz", null));
         }

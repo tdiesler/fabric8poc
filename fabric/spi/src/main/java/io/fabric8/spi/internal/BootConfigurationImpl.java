@@ -75,11 +75,4 @@ public class BootConfigurationImpl extends AbstractComponent implements BootConf
     public Map<String, Object> getConfiguration() {
         return Collections.unmodifiableMap(configuration);
     }
-
-    void bindConfigurer(Configurer configurer){
-        this.configurer=configurer;
-    }
-    void unbindConfigurer(Configurer configurer) {
-        this.configurer=null;
-    }
 }

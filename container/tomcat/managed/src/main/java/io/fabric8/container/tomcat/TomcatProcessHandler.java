@@ -21,9 +21,12 @@ package io.fabric8.container.tomcat;
 
 
 
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_PASSWORD;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_AGENT_JMX_USERNAME;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_PASSWORD;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_URL;
+import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_USERNAME;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
@@ -107,10 +110,10 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dtomcat.ajp.port=" + ajpPort);
         cmd.add("-Dtomcat.http.port=" + httpPort);
         cmd.add("-Dtomcat.https.port=" + httpsPort);
-        cmd.add("-Dfabric8.agent.jmx.server.url=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_SERVER_URL));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
         // [TODO] Remove JMX credentials from logged system properties
-        cmd.add("-Dfabric8.agent.jmx.username=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_USERNAME));
-        cmd.add("-Dfabric8.agent.jmx.password=" + process.getAttribute(ATTRIBUTE_KEY_AGENT_JMX_PASSWORD));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_USERNAME + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME));
+        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_PASSWORD + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD));
 
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));

@@ -24,6 +24,7 @@ import io.fabric8.api.FabricException;
 import io.fabric8.spi.AbstractJMXAttributeProvider;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.AttributeSupport;
+import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.JmxAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
@@ -87,6 +88,8 @@ import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ManifestUtils;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 /**
  * Utility for embedded runtime tests
@@ -146,14 +149,22 @@ public class EmbeddedUtils {
                 Hashtable<String, Object> props = new Hashtable<>();
                 props.put("type", ContainerAttributes.TYPE);
                 props.put("classifier", "jmx");
-                syscontext.registerService(new String[]{AttributeProvider.class.getCanonicalName(), JmxAttributeProvider.class.getCanonicalName()}, new EmbeddedJmxAttributeProvider(jmxServerUrl), props);
+                String[] services = new String[]{AttributeProvider.class.getName(), JmxAttributeProvider.class.getName()};
+                syscontext.registerService(services, new EmbeddedJmxAttributeProvider(jmxServerUrl), props);
 
+                // Register the NetworkAttributeProvider
                 props = new Hashtable<>();
                 props.put("type", ContainerAttributes.TYPE);
                 props.put("classifier", "network");
-                // Register the NetworkAttributeProvider
-                syscontext.registerService(new String[]{AttributeProvider.class.getCanonicalName(), NetworkAttributeProvider.class.getCanonicalName()}, new EmbeddedNetworkAttributeProvider(), props);
+                services = new String[]{AttributeProvider.class.getName(), NetworkAttributeProvider.class.getName()};
+                syscontext.registerService(services, new EmbeddedNetworkAttributeProvider(), props);
 
+                // Register the HttpAttributeProvider
+                props = new Hashtable<>();
+                props.put("type", ContainerAttributes.TYPE);
+                props.put("classifier", "http");
+                services = new String[]{AttributeProvider.class.getName(), HttpAttributeProvider.class.getName()};
+                syscontext.registerService(services, new EmbeddedHttpAttributeProvider(), props);
 
                 // Add initial runtime resources
                 String resname = "environment.xml";
@@ -368,6 +379,41 @@ public class EmbeddedUtils {
                 return HostUtils.getLocalHostName();
             } catch (UnknownHostException e) {
                 throw FabricException.launderThrowable(e);
+            }
+        }
+    }
+
+    static final class EmbeddedHttpAttributeProvider extends AttributeSupport implements HttpAttributeProvider {
+
+        private int httpPort;
+        private String httpUrl;
+
+        EmbeddedHttpAttributeProvider() {
+            initAttributes();
+            addAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_PORT, httpPort);
+            addAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL, httpUrl);
+        }
+
+        @Override
+        public String getHttpUrl() {
+            return httpUrl;
+        }
+
+        @Override
+        public String getHttpsUrl() {
+            throw new UnsupportedOperationException();
+        }
+
+        private void initAttributes() {
+            NetworkAttributeProvider networkProvider = ServiceLocator.getRequiredService(NetworkAttributeProvider.class);
+            ConfigurationAdmin configAdmin = ServiceLocator.getRequiredService(ConfigurationAdmin.class);
+            try {
+                Configuration configuration = configAdmin.getConfiguration("org.apache.felix.http", null);
+                Dictionary<String, Object> props = configuration.getProperties();
+                httpPort = Integer.parseInt((String) props.get(HttpAttributeProvider.HTTP_BINDING_PORT));
+                httpUrl = "http://" + networkProvider.getLocalIp() + ":" + httpPort;
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
             }
         }
     }

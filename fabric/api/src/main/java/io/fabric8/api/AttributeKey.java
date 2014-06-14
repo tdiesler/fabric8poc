@@ -19,6 +19,8 @@
  */
 package io.fabric8.api;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -202,27 +204,39 @@ public final class AttributeKey<T> implements Identity {
         return toString;
     }
 
-    private static final ValueFactory<String> STRING_VALUE_FACTORY = new AbstractValueFactory<String>(String.class) {
+    private static final ValueFactory<Boolean> BOOLEAN_VALUE_FACTORY = new AbstractValueFactory<Boolean>(Boolean.class) {
         @Override
-        public String createFrom(Object source) {
+        public Boolean createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
-            return source.toString();
+            return Boolean.parseBoolean(source.toString());
         }
     };
 
-    private static final ValueFactory<Short> SHORT_VALUE_FACTORY = new AbstractValueFactory<Short>(Short.class) {
+    private static final ValueFactory<Double> DOUBLE_VALUE_FACTORY = new AbstractValueFactory<Double>(Double.class) {
         @Override
-        public Short createFrom(Object source) {
+        public Double createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
             if (source instanceof Number) {
-                return ((Number) source).shortValue();
+                return ((Number) source).doubleValue();
             } else {
-                return Short.parseShort(source.toString());
+                return Double.parseDouble(source.toString());
             }
         }
     };
 
-    private static final ValueFactory<Integer> INT_VALUE_FACTORY = new AbstractValueFactory<Integer>(Integer.class) {
+    private static final ValueFactory<Float> FLOAT_VALUE_FACTORY = new AbstractValueFactory<Float>(Float.class) {
+        @Override
+        public Float createFrom(Object source) {
+            IllegalArgumentAssertion.assertNotNull(source, "source");
+            if (source instanceof Number) {
+                return ((Number) source).floatValue();
+            } else {
+                return Float.parseFloat(source.toString());
+            }
+        }
+    };
+
+    private static final ValueFactory<Integer> INTEGER_VALUE_FACTORY = new AbstractValueFactory<Integer>(Integer.class) {
         @Override
         public Integer createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
@@ -246,35 +260,35 @@ public final class AttributeKey<T> implements Identity {
         }
     };
 
-    private static final ValueFactory<Float> FLOAT_VALUE_FACTORY = new AbstractValueFactory<Float>(Float.class) {
+    private static final ValueFactory<Short> SHORT_VALUE_FACTORY = new AbstractValueFactory<Short>(Short.class) {
         @Override
-        public Float createFrom(Object source) {
+        public Short createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
             if (source instanceof Number) {
-                return ((Number) source).floatValue();
+                return ((Number) source).shortValue();
             } else {
-                return Float.parseFloat(source.toString());
+                return Short.parseShort(source.toString());
             }
         }
     };
 
-    private static final ValueFactory<Double> DOUBLE_VALUE_FACTORY = new AbstractValueFactory<Double>(Double.class) {
+    private static final ValueFactory<String> STRING_VALUE_FACTORY = new AbstractValueFactory<String>(String.class) {
         @Override
-        public Double createFrom(Object source) {
+        public String createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
-            if (source instanceof Number) {
-                return ((Number) source).doubleValue();
-            } else {
-                return Double.parseDouble(source.toString());
-            }
+            return source.toString();
         }
     };
 
-    private static final ValueFactory<Boolean> BOOLEAN_VALUE_FACTORY = new AbstractValueFactory<Boolean>(Boolean.class) {
+    private static final ValueFactory<URL> URL_VALUE_FACTORY = new AbstractValueFactory<URL>(URL.class) {
         @Override
-        public Boolean createFrom(Object source) {
+        public URL createFrom(Object source) {
             IllegalArgumentAssertion.assertNotNull(source, "source");
-            return Boolean.parseBoolean(source.toString());
+            try {
+                return new URL((String) source);
+            } catch (MalformedURLException ex) {
+                throw new IllegalArgumentException("Malformed URL: " + source);
+            }
         }
     };
 
@@ -293,23 +307,24 @@ public final class AttributeKey<T> implements Identity {
 
     private static final Map<Class<?>, ValueFactory<?>> SUPPORTED_VALUE_FACTORIES = new HashMap<>();
     static {
-        SUPPORTED_VALUE_FACTORIES.put(String.class, STRING_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Short.class, SHORT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Integer.class, INT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Long.class, LONG_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Boolean.class, BOOLEAN_VALUE_FACTORY);
         SUPPORTED_VALUE_FACTORIES.put(Double.class, DOUBLE_VALUE_FACTORY);
         SUPPORTED_VALUE_FACTORIES.put(Float.class, FLOAT_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(Boolean.class, BOOLEAN_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Integer.class, INTEGER_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Long.class, LONG_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(Short.class, SHORT_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(String.class, STRING_VALUE_FACTORY);
+        SUPPORTED_VALUE_FACTORIES.put(URL.class, URL_VALUE_FACTORY);
     }
     private static final Map<String, Class<?>> SUPPORTED_TYPE_NAMES = new HashMap<>();
     static {
-        SUPPORTED_TYPE_NAMES.put("string", String.class);
-        SUPPORTED_TYPE_NAMES.put("short", Short.class);
+        SUPPORTED_TYPE_NAMES.put("boolean", Boolean.class);
+        SUPPORTED_TYPE_NAMES.put("double", Double.class);
+        SUPPORTED_TYPE_NAMES.put("float", Float.class);
         SUPPORTED_TYPE_NAMES.put("int", Integer.class);
         SUPPORTED_TYPE_NAMES.put("integer", Integer.class);
         SUPPORTED_TYPE_NAMES.put("long", Long.class);
-        SUPPORTED_TYPE_NAMES.put("double", Double.class);
-        SUPPORTED_TYPE_NAMES.put("float", Float.class);
-        SUPPORTED_TYPE_NAMES.put("boolean", Boolean.class);
+        SUPPORTED_TYPE_NAMES.put("short", Short.class);
+        SUPPORTED_TYPE_NAMES.put("string", String.class);
     }
 }

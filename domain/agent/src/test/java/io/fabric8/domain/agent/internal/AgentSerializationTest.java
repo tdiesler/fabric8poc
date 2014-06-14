@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.URL;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class AgentSerializationTest {
     @Test
     public void testAgentRegistration() throws Exception {
         AgentIdentity agentId = AgentIdentity.create("agentId");
-        AgentRegistration agentReg = new AgentRegistration(agentId, InetAddress.getLocalHost(), "jmxServerUrl", "jmxUsername", "jmxPassword");
+        AgentRegistration agentReg = new AgentRegistration(agentId, InetAddress.getLocalHost(), new URL("http://jmxServerUrl"), "jmxUsername", "jmxPassword");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new ObjectOutputStream(baos).writeObject(agentReg);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
@@ -78,7 +79,7 @@ public class AgentSerializationTest {
     public void testAgentTopology() throws Exception {
         MutableAgentTopology mutableTopology = new MutableAgentTopology();
         AgentIdentity agentId = AgentIdentity.create("foo");
-        AgentRegistration agentReg = new AgentRegistration(agentId, InetAddress.getLocalHost(), "jmxServerUrl", "jmxUsername", "jmxPassword");
+        AgentRegistration agentReg = new AgentRegistration(agentId, InetAddress.getLocalHost(), new URL("http://jmxServerUrl"), "jmxUsername", "jmxPassword");
         mutableTopology.addAgent(agentReg);
         ProcessIdentity procId = ProcessIdentity.create("procId");
         mutableTopology.addProcess(procId, agentId);

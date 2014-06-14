@@ -29,7 +29,6 @@ import io.fabric8.test.smoke.sub.a1.ModuleStateA;
 import io.fabric8.test.smoke.sub.b.ModuleActivatorB;
 import io.fabric8.test.smoke.sub.b1.ModuleStateB;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -89,10 +88,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.AnnotatedProxyListener;
-import org.jboss.test.gravia.itests.support.AnnotatedProxyServlet;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
@@ -322,9 +318,8 @@ public class ProvisionerTest {
             ResourceHandle handleC = provisioner.installResource(resourceC);
             try {
                 // Make a call to the HttpService endpoint that goes through a Camel route
-                String reqspec = "/service?test=Kermit";
-                String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_C;
-                Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+                String reqspec = "/fabric8/service?test=Kermit";
+                Assert.assertEquals("Hello Kermit", performCall(reqspec));
             } finally {
                 handleC.uninstall();
             }
@@ -374,9 +369,8 @@ public class ProvisionerTest {
             Assert.assertTrue("At least one resource", handles.size() > 0);
 
             // Make a call to the HttpService endpoint that goes through a Camel route
-            String reqspec = "/service?test=Kermit";
-            String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_D;
-            Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+            String reqspec = "/fabric8/service?test=Kermit";
+            Assert.assertEquals("Hello Kermit", performCall(reqspec));
 
             // Verify module available
             Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -435,9 +429,8 @@ public class ProvisionerTest {
             List<ResourceHandle> handles = new ArrayList<ResourceHandle>(result);
             try {
                 // Make a call to the HttpService endpoint that goes through a Camel route
-                String reqspec = "/service?test=Kermit";
-                String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_E;
-                Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+                String reqspec = "/fabric8/service?test=Kermit";
+                Assert.assertEquals("Hello Kermit", performCall(reqspec));
 
                 // Verify module available
                 Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -522,12 +515,12 @@ public class ProvisionerTest {
         }
     }
 
-    private String performCall(String context, String path) throws Exception {
-        return performCall(context, path, null, 2, TimeUnit.SECONDS);
+    private String performCall(String path) throws Exception {
+        return performCall(path, null, 2, TimeUnit.SECONDS);
     }
 
-    private String performCall(String context, String path, Map<String, String> headers, long timeout, TimeUnit unit) throws Exception {
-        return HttpRequest.get("http://localhost:8080" + context + path, headers, timeout, unit);
+    private String performCall(String path, Map<String, String> headers, long timeout, TimeUnit unit) throws Exception {
+        return HttpRequest.get("http://localhost:8080" + path, headers, timeout, unit);
     }
 
     private ObjectName getObjectName(Module module) throws MalformedObjectNameException {
@@ -615,7 +608,6 @@ public class ProvisionerTest {
     @Deployment(name = RESOURCE_C, managed = false, testable = false)
     public static Archive<?> getResourceC() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_C + ".war");
-        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(CamelTransformHttpActivator.class, BundleActivatorBridge.class);
         archive.setManifest(new Asset() {
@@ -640,15 +632,12 @@ public class ProvisionerTest {
                 }
             }
         });
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
-        archive.addAsLibraries(libs);
         return archive;
     }
 
     @Deployment(name = RESOURCE_D, managed = false, testable = false)
     public static Archive<?> getResourceD() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_D + ".war");
-        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(CamelTransformHttpActivator.class, BundleActivatorBridge.class);
         archive.setManifest(new Asset() {
@@ -673,15 +662,12 @@ public class ProvisionerTest {
                 }
             }
         });
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
-        archive.addAsLibraries(libs);
         return archive;
     }
 
     @Deployment(name = RESOURCE_E, managed = false, testable = false)
     public static Archive<?> getResourceE() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_E + ".war");
-        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(CamelTransformHttpActivator.class, BundleActivatorBridge.class);
         archive.setManifest(new Asset() {
@@ -705,8 +691,6 @@ public class ProvisionerTest {
                 }
             }
         });
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
-        archive.addAsLibraries(libs);
         return archive;
     }
 

@@ -44,7 +44,6 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
 
-    //private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://${container:%s/fabric8.ip}/:%d/jmxrmi";
     private static final String JMX_URL_FORMAT = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
 
     @Reference(referenceInterface = RuntimeService.class)

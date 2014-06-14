@@ -32,15 +32,23 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-spi</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-client-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-osgi</artifactId> <!-- define aggregate last -->
         </dependency>
         
         <!-- Provided Dependencies -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.configadmin</artifactId>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-spi</artifactId>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -50,22 +58,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.metatype</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-repository</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-resource</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -105,7 +98,11 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Import-Package>!org.jboss.gravia.runtime.embedded*,*</Import-Package>
+                        <ExportPackage>io.fabric8.domain.agent;version=${project.version}</ExportPackage>
+                        <Import-Package>
+                            !org.jboss.gravia.runtime.embedded*,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

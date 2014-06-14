@@ -31,7 +31,7 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.core.zookeeper.ZkPath;
 import io.fabric8.spi.ServiceEndpointFacotryLocator;
-import io.fabric8.spi.SimpleServiceEndpoint;
+import io.fabric8.spi.AbstractServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -630,7 +630,7 @@ public final class ContainerRegistry extends AbstractComponent {
         String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id,endpointId.getSymbolicName());
         try {
             Map<AttributeKey<?>, Object> endpointAttributes = getAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"));
-            return  new SimpleServiceEndpoint(endpointId, endpointAttributes);
+            return  new AbstractServiceEndpoint(endpointId, endpointAttributes);
         } catch (Exception e) {
             throw new FabricException("Failed to read endpoint from:" + endpointPath);
         }

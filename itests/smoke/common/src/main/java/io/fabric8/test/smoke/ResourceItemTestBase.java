@@ -37,7 +37,6 @@ import io.fabric8.test.smoke.sub.a1.ModuleStateA;
 import io.fabric8.test.smoke.sub.b.ModuleActivatorB;
 import io.fabric8.test.smoke.sub.b1.ModuleStateB;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
@@ -82,10 +81,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.AnnotatedProxyListener;
-import org.jboss.test.gravia.itests.support.AnnotatedProxyServlet;
 import org.jboss.test.gravia.itests.support.ArchiveBuilder;
 import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
@@ -337,9 +333,8 @@ public abstract class ResourceItemTestBase {
 
         // Make a call to the HttpService endpoint that goes through a Camel route
         if (RuntimeType.OTHER != RuntimeType.getRuntimeType()) {
-            String reqspec = "/service?test=Kermit";
-            String context = RuntimeType.getRuntimeType() == RuntimeType.KARAF ? "" : "/" + RESOURCE_C;
-            Assert.assertEquals("Hello Kermit", performCall(context, reqspec));
+            String reqspec = "/fabric8/service?test=Kermit";
+            Assert.assertEquals("Hello Kermit", performCall(reqspec));
         }
 
         cntManager.removeProfiles(cnt.getIdentity(), Collections.singletonList(idFoo), null);
@@ -427,12 +422,12 @@ public abstract class ResourceItemTestBase {
         return new ObjectName("test:name=" + identity.getSymbolicName() + ",version=" + identity.getVersion());
     }
 
-    private String performCall(String context, String path) throws Exception {
-        return performCall(context, path, null, 2, TimeUnit.SECONDS);
+    private String performCall(String path) throws Exception {
+        return performCall(path, null, 2, TimeUnit.SECONDS);
     }
 
-    private String performCall(String context, String path, Map<String, String> headers, long timeout, TimeUnit unit) throws Exception {
-        return HttpRequest.get("http://localhost:8080" + context + path, headers, timeout, unit);
+    private String performCall(String path, Map<String, String> headers, long timeout, TimeUnit unit) throws Exception {
+        return HttpRequest.get("http://localhost:8080" + path, headers, timeout, unit);
     }
 
     @Deployment(name = RESOURCE_A, managed = false, testable = false)
@@ -515,7 +510,6 @@ public abstract class ResourceItemTestBase {
     @Deployment(name = RESOURCE_C, managed = false, testable = false)
     public static Archive<?> getResourceC() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_C + ".war");
-        archive.addClasses(AnnotatedProxyServlet.class, AnnotatedProxyListener.class);
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
         archive.addClasses(CamelTransformHttpActivator.class, BundleActivatorBridge.class);
         archive.setManifest(new Asset() {
@@ -540,8 +534,6 @@ public abstract class ResourceItemTestBase {
                 }
             }
         });
-        File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.felix:org.apache.felix.http.proxy").withoutTransitivity().asFile();
-        archive.addAsLibraries(libs);
         return archive;
     }
 

@@ -35,11 +35,12 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>attributes</module>
         <module>connector</module>
         <module>extension</module>
         <module>managed</module>
         <module>patch</module>
-        <module>attributes</module>
+        <module>webapp</module>
     </modules>
 
 </project>

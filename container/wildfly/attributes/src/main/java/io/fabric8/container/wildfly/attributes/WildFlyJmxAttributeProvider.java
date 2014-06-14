@@ -44,7 +44,6 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
     private static final String JMX_REMOTE_PORT = "jboss.management.http.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 9990;
 
-    //private static final String JMX_URL_FORMAT = "service:jmx:http-remoting-jmx://${container:%s/fabric8.ip}:%d";
     private static final String JMX_URL_FORMAT = "service:jmx:http-remoting-jmx://%s:%d";
 
     @Reference(referenceInterface = NetworkAttributeProvider.class)

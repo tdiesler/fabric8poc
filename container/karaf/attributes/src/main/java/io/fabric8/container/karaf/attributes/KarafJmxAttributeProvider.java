@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 // mvn:org.apache.karaf.management/org.apache.karaf.management.server/2.3.3
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JmxAttributeProvider.class,  ConfigurationListener.class})
+@Service({ AttributeProvider.class, JmxAttributeProvider.class, ConfigurationListener.class })
 @Properties({
         @Property(name = "type", value = ContainerAttributes.TYPE),
         @Property(name = "classifier", value = "jmx")
@@ -101,6 +101,9 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     }
 
     @Override
+    // [TODO] Revisit configurationEvent on JmxAttributeProvider
+    // This is an asynchronous callback. How is data integrity preserved?
+    // Should this depend the the lifecycle of dependent components?
     public void configurationEvent(ConfigurationEvent event) {
         String pid = event.getPid();
         if (pid.equals(MANAGEMENT_PID) && event.getType() == ConfigurationEvent.CM_UPDATED) {
@@ -123,10 +126,11 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
         return jmxPassword;
     }
 
-    // Reads configuration and updates attributes
+    // [TODO] processConfiguration does not see config values
+    // configuration pid belongs to another bundle
     private void processConfiguration() {
         try {
-            Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID);
+            Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID, null);
             configurer.configure(configuration.getProperties(), this);
             updateAttributes();
         } catch (IOException e) {
@@ -157,12 +161,4 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
-
-    void bindConfigurer(Configurer configurer) {
-        this.configurer = configurer;
-    }
-    void unbindConfigurer(Configurer configurer) {
-        this.configurer = null;
-    }
-
 }

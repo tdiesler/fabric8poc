@@ -105,17 +105,21 @@
         	<include name="fabric8-git-*"/>
         </fileset>
     </copy>
+    <copy todir="${wildfly.patch.dir}/modules/io/fabric8/jolokia/main" overwrite="true">
+        <fileset dir="${deploy.artifacts.lib}">
+        	<include name="fabric8-jolokia-*"/>
+        </fileset>
+    </copy>
     <copy todir="${wildfly.patch.dir}/modules/org/wildfly/extension/fabric/main" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
         	<include name="fabric8-container-wildfly-extension-*"/>
         </fileset>
     </copy>
-    <copy todir="${wildfly.patch.dir}/modules/org/jolokia/osgi/main" overwrite="true">
-        <fileset dir="${deploy.artifacts.lib}">
-        	<include name="jolokia-osgi-*"/>
-        	<include name="json-simple-*"/>
-        </fileset>
-    </copy>
+	
+  	<!-- Copy the webapp -->
+  	<delete file="${wildfly.patch.dir}/standalone/deployments/gravia.war"/>
+    <copy file="${deploy.artifacts.lib}/fabric8-container-wildfly-webapp-${project.version}.war" 
+    	tofile="${wildfly.patch.dir}/standalone/deployments/fabric8.war" overwrite="true"/>
 	
   	<!-- Zip the wildfly patch -->
   	<tar destfile="${output.dir}/${project.artifactId}-${project.version}.tar.gz" basedir="${wildfly.patch.dir}" compression="gzip"/>

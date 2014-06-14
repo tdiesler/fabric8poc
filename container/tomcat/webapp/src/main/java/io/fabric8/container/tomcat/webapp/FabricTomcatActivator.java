@@ -21,7 +21,6 @@ package io.fabric8.container.tomcat.webapp;
 
 import io.fabric8.spi.BootstrapComplete;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -30,8 +29,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.jboss.gravia.Constants;
-import org.jboss.gravia.container.common.ActivationSupport;
 import org.jboss.gravia.container.tomcat.support.TomcatResourceInstaller;
 import org.jboss.gravia.container.tomcat.support.TomcatRuntimeFactory;
 import org.jboss.gravia.provision.ResourceInstaller;
@@ -46,6 +43,8 @@ import org.jboss.gravia.runtime.ServiceListener;
 import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
 /**
  * Activates the {@link Runtime} as part of the web app lifecycle.
@@ -62,10 +61,6 @@ public class FabricTomcatActivator implements ServletContextListener {
         PropertiesProvider propsProvider = new FabricPropertiesProvider(servletContext);
         Runtime runtime = RuntimeLocator.createRuntime(new TomcatRuntimeFactory(servletContext), propsProvider);
         runtime.init();
-
-        // Initialize ConfigurationAdmin content
-        Object configsDir = propsProvider.getProperty(Constants.PROPERTY_CONFIGURATIONS_DIR);
-        ActivationSupport.initConfigurationAdmin(new File((String) configsDir));
 
         // Start listening on the {@link BootstrapComplete}
         final ModuleContext syscontext = runtime.getModuleContext();
@@ -85,15 +80,6 @@ public class FabricTomcatActivator implements ServletContextListener {
         // Register the {@link RuntimeEnvironment}, {@link ResourceInstaller} services
         registerServices(servletContext, runtime);
 
-        // Register {@link ContainerCreateHandler} for Karaf, Tomcat, Wildfly
-        /*
-        Set<ContainerCreateHandler> handlers = new HashSet<ContainerCreateHandler>();
-        handlers.add(new KarafContainerCreateHandler());
-        handlers.add(new TomcatContainerCreateHandler());
-        handlers.add(new WildFlyContainerCreateHandler());
-        registerContainerCreateHandlers(syscontext, handlers);
-        */
-
         // Install and start this webapp as a module
         WebAppContextListener webappInstaller = new WebAppContextListener();
         Module module = webappInstaller.installWebappModule(servletContext);
@@ -103,11 +89,15 @@ public class FabricTomcatActivator implements ServletContextListener {
         } catch (ModuleException ex) {
             throw new IllegalStateException(ex);
         }
+
+        // HttpService integration
+        Module sysmodule = runtime.getModuleContext().getModule();
+        BundleContext bundleContext = sysmodule.adapt(Bundle.class).getBundleContext();
+        servletContext.setAttribute(BundleContext.class.getName(), bundleContext);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        // Unregister system services
         for (ServiceRegistration<?> sreg : registrations) {
             sreg.unregister();
         }
@@ -121,17 +111,7 @@ public class FabricTomcatActivator implements ServletContextListener {
         registrations.add(syscontext.registerService(ResourceInstaller.class, installer, null));
     }
 
-    /*
-    private void registerContainerCreateHandlers(ModuleContext context, Set<ContainerCreateHandler> handlers) {
-        for (ContainerCreateHandler handler : handlers) {
-            String[] classes = new String[] { handler.getClass().getName(), ContainerCreateHandler.class.getName() };
-            registrations.add(context.registerService(classes, handler, null));
-        }
-    }
-    */
-
     static class BoostrapLatch extends CountDownLatch {
-
         BoostrapLatch(int count) {
             super(count);
         }

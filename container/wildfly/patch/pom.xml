@@ -62,6 +62,12 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-container-wildfly-attributes</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-container-wildfly-connector</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -80,9 +86,10 @@
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
-            <artifactId>fabric8-container-wildfly-attributes</artifactId>
+            <artifactId>fabric8-container-wildfly-webapp</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
+            <type>war</type>
         </dependency>
         <dependency>
             <groupId>io.fabric8.poc</groupId>
@@ -93,6 +100,12 @@
         <dependency>
             <groupId>io.fabric8.poc</groupId>
             <artifactId>fabric8-git</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8.poc</groupId>
+            <artifactId>fabric8-jolokia</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

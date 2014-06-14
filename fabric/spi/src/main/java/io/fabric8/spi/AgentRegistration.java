@@ -1,12 +1,8 @@
 package io.fabric8.spi;
 
-import io.fabric8.spi.utils.ManagementUtils;
-
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.remote.JMXConnector;
+import java.net.URL;
 
 /**
  * An agent registration
@@ -20,16 +16,16 @@ public final class AgentRegistration implements Serializable {
 
     private final AgentIdentity identity;
     private final InetAddress targetHost;
-    private final String jmxServerUrl;
-    private final String jmxUsername;
-    private final String jmxPassword;
+    private final URL jolokiaAgentUrl;
+    private final String jolokiaUsername;
+    private final String jolokiaPassword;
 
-    public AgentRegistration(AgentIdentity identity, InetAddress targetHost, String jmxServerUrl, String jmxUsername, String jmxPassword) {
+    public AgentRegistration(AgentIdentity identity, InetAddress targetHost, URL jolokiaAgentUrl, String jolokiaUsername, String jmxPassword) {
         this.identity = identity;
         this.targetHost = targetHost;
-        this.jmxServerUrl = jmxServerUrl;
-        this.jmxUsername = jmxUsername;
-        this.jmxPassword = jmxPassword;
+        this.jolokiaAgentUrl = jolokiaAgentUrl;
+        this.jolokiaUsername = jolokiaUsername;
+        this.jolokiaPassword = jmxPassword;
     }
 
     public AgentIdentity getIdentity() {
@@ -40,20 +36,16 @@ public final class AgentRegistration implements Serializable {
         return targetHost;
     }
 
-    public String getJmxServerUrl() {
-        return jmxServerUrl;
+    public URL getJolokiaAgentUrl() {
+        return jolokiaAgentUrl;
     }
 
-    public String getJmxUsername() {
-        return jmxUsername;
+    public String getJolokiaUsername() {
+        return jolokiaUsername;
     }
 
-    public String getJmxPassword() {
-        return jmxPassword;
-    }
-
-    public JMXConnector getJMXConnector(long timeout, TimeUnit unit) {
-        return ManagementUtils.getJMXConnector(jmxServerUrl, jmxUsername, jmxPassword, timeout, unit);
+    public String getJolokiaPassword() {
+        return jolokiaPassword;
     }
 
     @Override
@@ -69,6 +61,6 @@ public final class AgentRegistration implements Serializable {
     }
 
     public String toString() {
-        return "AgentRegistration[id=" + identity + ",host=" + targetHost + ",jmx=" + jmxServerUrl + "]";
+        return "AgentRegistration[id=" + identity + ",host=" + targetHost + ",jmx=" + jolokiaAgentUrl + "]";
     }
 }

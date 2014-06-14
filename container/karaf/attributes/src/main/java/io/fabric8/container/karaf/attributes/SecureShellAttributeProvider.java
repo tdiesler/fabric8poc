@@ -83,11 +83,4 @@ public class SecureShellAttributeProvider extends AbstractAttributeProvider {
     private String getSshUrl(String name, int port) {
         return String.format(SSH_URL_FORMAT, name, port);
     }
-
-    void bindConfigurer(Configurer configurer) {
-        this.configurer = configurer;
-    }
-    void unbindConfigurer(Configurer configurer) {
-        this.configurer = null;
-    }
 }

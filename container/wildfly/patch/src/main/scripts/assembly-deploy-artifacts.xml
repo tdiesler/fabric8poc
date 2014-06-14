@@ -44,13 +44,14 @@
                 <include>*:fabric8-core:jar</include>
                 <include>*:fabric8-container-karaf-managed:jar</include>
                 <include>*:fabric8-container-tomcat-managed:jar</include>
+                <include>*:fabric8-container-wildfly-attributes:jar</include>
                 <include>*:fabric8-container-wildfly-extension:jar</include>
                 <include>*:fabric8-container-wildfly-managed:jar</include>
-                <include>*:fabric8-container-wildfly-attributes:jar</include>
+                <include>*:fabric8-container-wildfly-webapp:war</include>
                 <include>*:fabric8-domain-agent:jar</include>
                 <include>*:fabric8-git:jar</include>
+                <include>*:fabric8-jolokia:jar</include>
                 <include>*:guava:jar</include>
-                <include>*:jolokia-osgi:jar</include>
                 <include>*:json-simple:jar</include>
                 <include>*:zookeeper:jar</include>
             </includes>

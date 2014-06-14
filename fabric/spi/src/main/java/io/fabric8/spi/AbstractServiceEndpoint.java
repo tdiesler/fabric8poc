@@ -31,11 +31,11 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class SimpleServiceEndpoint extends AttributeSupport implements ServiceEndpoint {
+public class AbstractServiceEndpoint extends AttributeSupport implements ServiceEndpoint {
 
     private final ServiceEndpointIdentity identity;
 
-    public SimpleServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
+    public AbstractServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
         super(attributes, true);
         this.identity = identity;
     }

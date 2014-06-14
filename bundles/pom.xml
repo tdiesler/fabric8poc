@@ -32,6 +32,7 @@
     <name>Fabric8 :: Bundles</name>
 
     <modules>
+        <module>jolokia</module>
         <module>zookeeper</module>
     </modules>
 

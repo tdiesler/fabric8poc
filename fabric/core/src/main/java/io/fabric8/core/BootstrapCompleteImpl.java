@@ -26,6 +26,7 @@ import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractComponent;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -45,8 +46,6 @@ import org.jboss.gravia.provision.Provisioner;
 public final class BootstrapCompleteImpl extends AbstractComponent implements BootstrapComplete {
 
     @Reference
-    private RuntimeService runtimeService;
-    @Reference
     private BootConfiguration bootConfiguration;
     @Reference
     private BootstrapService bootstrapService;
@@ -60,10 +59,11 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     private ProfileManager profileManager;
     @Reference
     private Provisioner provisioner;
+    @Reference
+    private RuntimeService runtimeService;
 
     @Activate
     void activate() throws Exception {
-        activateInternal();
         activateComponent();
     }
 
@@ -71,72 +71,4 @@ public final class BootstrapCompleteImpl extends AbstractComponent implements Bo
     void deactivate() {
         deactivateComponent();
     }
-
-    private void activateInternal() {
-    }
-
-    void bindRuntimeService(RuntimeService runtimeService) {
-        this.runtimeService = runtimeService;
-    }
-
-    void unbindRuntimeService(RuntimeService runtimeService) {
-        this.runtimeService = null;
-    }
-
-    void bindBootConfiguration(BootConfiguration bootConfiguration) {
-        this.bootConfiguration = bootConfiguration;
-    }
-
-    void unbindBootConfiguration(BootConfiguration bootConfiguration) {
-        this.bootConfiguration = null;
-    }
-
-    void bindBootstrapService(BootstrapService bootstrapService) {
-        this.bootstrapService = bootstrapService;
-    }
-
-    void unbindBootstrapService(BootstrapService bootstrapService) {
-        this.bootstrapService = null;
-    }
-
-    void bindContainerManager(ContainerManager containerManager) {
-        this.containerManager = containerManager;
-    }
-
-    void unbindContainerManager(ContainerManager containerManager) {
-        this.containerManager = null;
-    }
-
-    void bindContainerService(ContainerService containerService) {
-        this.containerService = containerService;
-    }
-
-    void unbindContainerService(ContainerService containerService) {
-        this.containerService = null;
-    }
-
-    void bindMBeansProvider(MBeansProvider mBeansProvider) {
-        this.mBeansProvider = mBeansProvider;
-    }
-
-    void unbindMBeansProvider(MBeansProvider mBeansProvider) {
-        this.mBeansProvider = null;
-    }
-
-    void bindProfileManager(ProfileManager profileManager) {
-        this.profileManager = profileManager;
-    }
-
-    void unbindProfileManager(ProfileManager profileManager) {
-        this.profileManager = null;
-    }
-
-    void bindProvisioner(Provisioner provisioner) {
-        this.provisioner = provisioner;
-    }
-
-    void unbindProvisioner(Provisioner provisioner) {
-        this.provisioner = null;
-    }
-
 }

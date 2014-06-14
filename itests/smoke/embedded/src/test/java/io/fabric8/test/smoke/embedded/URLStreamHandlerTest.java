@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
  * @since 16-May-2014
  */
 @RunWith(Arquillian.class)
-public class URLStreamHandlerTestCase extends URLStreamHandlerTestBase {
+public class URLStreamHandlerTest extends URLStreamHandlerTestBase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -47,6 +47,4 @@ public class URLStreamHandlerTestCase extends URLStreamHandlerTestBase {
     public static void afterClass() throws Exception {
         EmbeddedTestSupport.afterClass();
     }
-
-
 }

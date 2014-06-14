@@ -28,6 +28,16 @@ package io.fabric8.spi;
  */
 public interface HttpAttributeProvider extends AttributeProvider {
 
+    /**
+     * Configuration property for the Http port
+     */
+    public static final String HTTP_BINDING_PORT = "org.osgi.service.http.port";
+
+    /**
+     * Configuration property for the Http port
+     */
+    public static final String HTTPS_BINDING_PORT = "org.osgi.service.http.port.secure";
+
     String getHttpsUrl();
 
     String getHttpUrl();

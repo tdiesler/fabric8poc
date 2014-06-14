@@ -15,11 +15,10 @@
   -->
 
 
-<module xmlns="urn:jboss:module:1.1" name="org.jolokia.osgi">
+<module xmlns="urn:jboss:module:1.1" name="io.fabric8.jolokia">
 
     <resources>
-        <resource-root path="jolokia-osgi-${version.jolokia}.jar"/>
-        <resource-root path="json-simple-${version.json.simple}.jar"/>
+        <resource-root path="fabric8-jolokia-${project.version}.jar"/>
     </resources>
 
     <dependencies>
