@@ -1,9 +1,6 @@
 /*
- * #%L
- * Fabric8 :: SPI
- * %%
- * Copyright (C) 2014 Red Hat
- * %%
+ * Copyright (C) 2010 - 2014 JBoss by Red Hat
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,38 +11,37 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
  */
 package io.fabric8.spi;
 
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointFactory;
 import io.fabric8.api.ServiceEndpointIdentity;
 
 import java.util.Map;
 
 /**
- * An abstract service endpoint
+ * A JMX service endpoint
  *
  * @author thomas.diesler@jboss.com
- * @since 06-Jun-2014
+ * @since 16-Apr-2014
  */
-public class AbstractServiceEndpoint<T extends ServiceEndpoint> extends AttributeSupport implements ServiceEndpoint {
+public final class JMXServiceEndpointFactory implements ServiceEndpointFactory<JMXServiceEndpoint> {
 
-    private final ServiceEndpointIdentity<T> identity;
-
-    public AbstractServiceEndpoint(ServiceEndpointIdentity<T> identity, Map<AttributeKey<?>, Object> attributes) {
-        super(attributes, true);
-        this.identity = identity;
+    @Override
+    public boolean isSupported(ServiceEndpoint endpoint) {
+        return endpoint.hasAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
     }
 
     @Override
-    public ServiceEndpointIdentity<T> getIdentity() {
-        return identity;
+    public JMXServiceEndpoint create(ServiceEndpoint endpoint) {
+        return create(endpoint.getIdentity(), endpoint.getAttributes());
     }
 
-    public String toString() {
-        return getClass().getSimpleName() + getAttributes();
+    @Override
+    public JMXServiceEndpoint create(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
+        return new ContainerJmxEndpoint(identity, attributes);
     }
 }

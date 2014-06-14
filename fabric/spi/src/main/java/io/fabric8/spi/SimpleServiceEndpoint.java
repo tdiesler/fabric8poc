@@ -1,15 +1,15 @@
 /*
  * #%L
- * Fabric8 :: API
+ * Fabric8 :: SPI
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,38 +17,36 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.spi;
 
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
+import io.fabric8.api.AttributeKey;
+import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 
-
+import java.util.Map;
 
 /**
- * A service endpoint identity
+ * An abstract service endpoint
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 06-Jun-2014
  */
-public final class ServiceEndpointIdentity extends AbstractIdentity {
+public class SimpleServiceEndpoint extends AttributeSupport implements ServiceEndpoint {
 
-    private final String canonicalForm;
+    private final ServiceEndpointIdentity identity;
 
-    public static  ServiceEndpointIdentity create(String symbolicName) {
-        return new ServiceEndpointIdentity(symbolicName);
-    }
-
-    private ServiceEndpointIdentity(String symbolicName) {
-        super(symbolicName);
-        this.canonicalForm = "[name=" + getSymbolicName() + "]";
+    public SimpleServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
+        super(attributes, true);
+        this.identity = identity;
     }
 
     @Override
-    public String getCanonicalForm() {
-        return canonicalForm;
+    public ServiceEndpointIdentity getIdentity() {
+        return identity;
     }
 
-    @Override
     public String toString() {
-        return "ServiceEndpoint" + canonicalForm;
+        return getClass().getSimpleName() + getAttributes();
     }
+
 }

@@ -21,7 +21,6 @@ package io.fabric8.spi;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL;
 import io.fabric8.api.AttributeKey;
-import io.fabric8.api.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.spi.utils.ManagementUtils;
 
@@ -44,13 +43,13 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint<JMXServiceEndpoint> implements JMXServiceEndpoint {
+public class AbstractJMXServiceEndpoint extends SimpleServiceEndpoint implements JMXServiceEndpoint {
 
-    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity<JMXServiceEndpoint> identity, Map<AttributeKey<?>, Object> attributes) {
+    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
         super(identity, attributes);
     }
 
-    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity<JMXServiceEndpoint> identity, String jmxServerUrl) {
+    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity identity, String jmxServerUrl) {
         super(identity, getJmxServerAttributes(jmxServerUrl));
     }
 

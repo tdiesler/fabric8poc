@@ -13,27 +13,13 @@
  * See the License for the specific language governing permissions and
  */
 
-package io.fabric8.spi;
-
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ServiceEndpointIdentity;
+package io.fabric8.api;
 
 import java.util.Map;
 
-/**
- * An abstract JMX service endpoint
- *
- * @author thomas.diesler@jboss.com
- * @since 06-Jun-2014
- */
-public class ContainerJmxEndpoint extends AbstractJMXServiceEndpoint {
+public interface ServiceEndpointFactory<T extends ServiceEndpoint> {
 
-    public ContainerJmxEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
-        super(identity, attributes);
-    }
-
-    public ContainerJmxEndpoint(ServiceEndpointIdentity identity, String jmxServerUrl) {
-        super(identity, jmxServerUrl);
-    }
-
+    boolean isSupported(ServiceEndpoint endpoint);
+    T create(ServiceEndpoint endpoint);
+    T create(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes);
 }

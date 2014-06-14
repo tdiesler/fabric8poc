@@ -51,6 +51,7 @@ import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
+import io.fabric8.spi.ServiceEndpointFacotryLocator;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
@@ -766,7 +767,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId) {
+    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId, Class<T> type) {
         LockHandle readLock = aquireReadLock(identity);
         try {
             ContainerRegistry registry = containerRegistry.get();

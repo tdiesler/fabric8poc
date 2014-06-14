@@ -134,7 +134,7 @@ public interface ContainerManager {
      * Get the service endpoint for the given identity
      * @return null if the endpoint does not exist
      */
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity<T> endpointId);
+    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId, Class<T> type);
 
     /**
      * Get failures from the container with the given identity

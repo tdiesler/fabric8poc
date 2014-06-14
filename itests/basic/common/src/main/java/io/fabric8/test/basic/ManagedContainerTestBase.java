@@ -149,11 +149,11 @@ public abstract class ManagedContainerTestBase  {
         // Assert that there is one {@link JMXServiceEndpoint}
         /*
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Assert.assertEquals(1, cnt.getEndpoints(JMXServiceEndpoint.class).size());
-        Assert.assertEquals(1, cnt.getEndpoints(null).size());
+        Assert.assertEquals(1, cnt.getServiceEndpoints(JMXServiceEndpoint.class).size());
+        Assert.assertEquals(1, cnt.getServiceEndpoints(null).size());
 
         // Get the JMX connector through the endpoint
-        ServiceEndpointIdentity<?> endpointId = cnt.getEndpoints(null).iterator().next();
+        ServiceEndpointIdentity<?> endpointId = cnt.getServiceEndpoints(null).iterator().next();
         JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(cnt.getIdentity(), JMXServiceEndpoint.class);
         Assert.assertNotNull("JMXServiceEndpoint not null", jmxEndpoint);
         Assert.assertSame(jmxEndpoint, cntManager.getServiceEndpoint(cnt.getIdentity(), endpointId));

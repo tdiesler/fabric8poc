@@ -109,14 +109,8 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     }
 
     @Override
-    public Set<ServiceEndpoint> getEndpoints(Class type) {
-        Set<ServiceEndpoint> result = new HashSet<>();
-        for (ServiceEndpoint endpoint : endpoints) {
-            if (type == null || type.isAssignableFrom(endpoint.getIdentity().getType())) {
-                result.add(endpoint);
-            }
-        }
-        return Collections.unmodifiableSet(result);
+    public Set<ServiceEndpoint> getServiceEndpoints() {
+        return Collections.unmodifiableSet(endpoints);
     }
 
     @Override
