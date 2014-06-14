@@ -89,9 +89,8 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.apache.karaf</groupId>
-                                    <artifactId>apache-karaf</artifactId>
+                                    <artifactId>apache-karaf-minimal</artifactId>
                                     <version>${version.apache.karaf}</version>
-                                    <classifier>minimal</classifier>
                                     <type>tar.gz</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
@@ -103,7 +102,6 @@
             <plugin>
                 <groupId>org.apache.karaf.tooling</groupId>
                 <artifactId>features-maven-plugin</artifactId>
-                <version>${version.apache.karaf}</version>
                 <executions>
                     <execution>
                         <id>add-features-to-repo</id>
