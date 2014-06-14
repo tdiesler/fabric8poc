@@ -108,7 +108,7 @@ import org.slf4j.LoggerFactory;
  * The internal {@link ContainerService}
  *
  * It is the owner of all {@link Container} instances.
- * Internally it maintains mutable versions these instances. All mutating operations must go through this service.
+ * All mutating operations must go through this service.
  * The public API returns shallow immutable {@link Container} instances, mutable {@link Container} instances must not leak outside this service.
  *
  * This service is protected by a permit.
@@ -119,7 +119,6 @@ import org.slf4j.LoggerFactory;
  *
  * Read access to {@link Container} can happen concurrently.
  * Each {@link Container} instance is associated with a {@link ReentrantReadWriteLock}
- * The mutable {@link Container} must synchronize concurrent read operations, write operations are synchronized by the lock on {@link Container}
  *
  * A client may explicitly acquire a write lock for a {@link Container}.
  * Obtaining a write lock for a {@link Container} also obtains a write lock on the associated {@link ProfileVersion}.
@@ -257,11 +256,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         final AtomicReference<LockHandle> verLock = new AtomicReference<>();
         final LockHandle cntLock = containerLocks.get().aquireWriteLock(identity);
         try {
-            Container cnt = containerRegistry.get().getContainer(identity);
-            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
-            if (version != null) {
-                verLock.set(profileService.get().aquireWriteLock(version));
-            }
+            verLock.set(profileService.get().aquireReadLock());
         } catch (RuntimeException rte) {
             safeUnlock(cntLock, verLock);
             throw rte;
@@ -281,11 +276,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         final AtomicReference<LockHandle> verLock = new AtomicReference<>();
         final LockHandle cntLock = containerLocks.get().aquireReadLock(identity);
         try {
-            Container cnt = containerRegistry.get().getContainer(identity);
-            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
-            if (version != null) {
-                verLock.set(profileService.get().aquireReadLock(version));
-            }
+            verLock.set(profileService.get().aquireReadLock());
         } catch (RuntimeException rte) {
             safeUnlock(cntLock, verLock);
             throw rte;

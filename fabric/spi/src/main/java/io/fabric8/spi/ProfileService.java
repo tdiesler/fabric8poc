@@ -44,9 +44,9 @@ public interface ProfileService extends ProfileManager {
      */
     PermitKey<ProfileService> PERMIT = new PermitKey<ProfileService>(ProfileService.class);
 
-    LockHandle aquireWriteLock(VersionIdentity version);
+    LockHandle aquireWriteLock();
 
-    LockHandle aquireReadLock(VersionIdentity version);
+    LockHandle aquireReadLock();
 
     ProfileVersion getRequiredProfileVersion(VersionIdentity version);
 
