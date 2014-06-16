@@ -112,17 +112,17 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     @Override
     public LockHandle aquireProfileVersionLock(VersionIdentity version) {
         assertValid();
-        return aquireWriteLock();
+        return aquireWriteLock(version);
     }
 
     @Override
-    public LockHandle aquireWriteLock() {
-        return profileRegistry.get().aquireWriteLock();
+    public LockHandle aquireWriteLock(VersionIdentity version) {
+        return profileRegistry.get().aquireWriteLock(version);
     }
 
     @Override
-    public LockHandle aquireReadLock() {
-        return profileRegistry.get().aquireReadLock();
+    public LockHandle aquireReadLock(VersionIdentity version) {
+        return profileRegistry.get().aquireReadLock(version);
     }
 
     @Override
@@ -165,7 +165,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public LinkedProfileVersion getLinkedProfileVersion(VersionIdentity version) {
         assertValid();
         // Lock for composite operation
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             ProfileRegistry registry = profileRegistry.get();
             ProfileVersion profileVersion = getRequiredProfileVersion(version);
@@ -192,7 +192,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public ProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
         // Lock for composite operation
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ContainerRegistry cntRegistry = containerRegistry.get();
             ContainerLockManager lockManager = containerLocks.get();
@@ -242,7 +242,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public LinkedProfile getLinkedProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         // Lock for composite operation
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             return getLinkedProfileInternal(version, profileId, new HashMap<ProfileIdentity, LinkedProfile>());
         } finally {
@@ -275,7 +275,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public Set<Profile> getProfiles(VersionIdentity version, Set<ProfileIdentity> identities) {
         assertValid();
         // Lock for composite operation
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             Set<Profile> result = new HashSet<Profile>();
             ProfileVersion profileVersion = getRequiredProfileVersion(version);
@@ -302,7 +302,7 @@ public final class ProfileServiceImpl extends AbstractProtectedComponent<Profile
     public Profile removeProfile(VersionIdentity version, ProfileIdentity profileId) {
         assertValid();
         // Lock for composite operation
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             ContainerRegistry cntRegistry = containerRegistry.get();
             ContainerLockManager lockManager = containerLocks.get();

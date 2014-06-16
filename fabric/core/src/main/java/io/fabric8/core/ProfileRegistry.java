@@ -148,7 +148,8 @@ public final class ProfileRegistry extends AbstractComponent {
     private void dactivateInternal() {
     }
 
-    LockHandle aquireWriteLock() {
+    // [TODO] Consider support for locking individual profile versions
+    LockHandle aquireWriteLock(VersionIdentity version) {
         final WriteLock writeLock = readWriteLock.writeLock();
         boolean success;
         try {
@@ -156,7 +157,7 @@ public final class ProfileRegistry extends AbstractComponent {
         } catch (InterruptedException ex) {
             success = false;
         }
-        IllegalStateAssertion.assertTrue(success, "Cannot obtain profile write lock in time");
+        IllegalStateAssertion.assertTrue(success, "Cannot obtain profile write lock in time for: " + version);
         return new LockHandle() {
             @Override
             public void unlock() {
@@ -165,7 +166,8 @@ public final class ProfileRegistry extends AbstractComponent {
         };
     }
 
-    LockHandle aquireReadLock() {
+    // [TODO] Consider support for locking individual profile versions
+    LockHandle aquireReadLock(VersionIdentity version) {
         final ReadLock readLock = readWriteLock.readLock();
         boolean success;
         try {
@@ -195,7 +197,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     LinkedProfileVersion getProfileVersion(VersionIdentity version) {
         assertValid();
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             return getProfileVersionInternal(version);
         } finally {
@@ -216,7 +218,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     LinkedProfileVersion addProfileVersion(LinkedProfileVersion profileVersion) {
         assertValid();
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(profileVersion.getIdentity());
         try {
             return addProfileVersionInternal(profileVersion);
         } finally {
@@ -234,7 +236,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     LinkedProfileVersion removeProfileVersion(VersionIdentity version) {
         assertValid();
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             LinkedProfileVersion profileVersion = getRequiredProfileVersion(version);
             String message = String.format("Remove profile version: {}", version);
@@ -261,7 +263,7 @@ public final class ProfileRegistry extends AbstractComponent {
      */
     Profile getProfile(VersionIdentity version, ProfileIdentity identity) {
         assertValid();
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             Profile result = null;
             LinkedProfileVersion linkedVersion = getRequiredProfileVersion(version);
@@ -288,7 +290,7 @@ public final class ProfileRegistry extends AbstractComponent {
         ProfileIdentity identity = profile.getIdentity();
         VersionIdentity pversion = profile.getVersion();
         IllegalStateAssertion.assertTrue(pversion == null || version.equals(pversion), "Unexpected profile version: " + profile);
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             String message = String.format("Add profile to version: %s <= %s", version, profile);
             LOGGER.info(message);
@@ -304,7 +306,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     Profile updateProfile(VersionIdentity version, Profile profile) {
         assertValid();
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             String message = String.format("Update profile: %s", profile);
             LOGGER.info(message);
@@ -322,7 +324,7 @@ public final class ProfileRegistry extends AbstractComponent {
 
     Profile removeProfile(VersionIdentity version, ProfileIdentity identity) {
         assertValid();
-        LockHandle writeLock = aquireWriteLock();
+        LockHandle writeLock = aquireWriteLock(version);
         try {
             String message = String.format("Remove profile from version: %s => %s", version, identity);
             Profile profile = getRequiredProfile(version, identity);
@@ -345,7 +347,7 @@ public final class ProfileRegistry extends AbstractComponent {
         String item = path.substring(path.lastIndexOf('/') + 1);
         VersionIdentity version = VersionIdentity.createFrom(verstr);
         ProfileIdentity profile = ProfileIdentity.createFrom(prfstr);
-        LockHandle readLock = aquireReadLock();
+        LockHandle readLock = aquireReadLock(version);
         try {
             Path profilePath = getRequiredProfilePath(version, profile);
             Path itemPath = profilePath.resolve(item);

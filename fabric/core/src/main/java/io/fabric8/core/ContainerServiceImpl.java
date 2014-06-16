@@ -257,7 +257,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         final AtomicReference<LockHandle> verLock = new AtomicReference<>();
         final LockHandle cntLock = containerLocks.get().aquireWriteLock(identity);
         try {
-            verLock.set(profileService.get().aquireReadLock());
+            Container cnt = containerRegistry.get().getContainer(identity);
+            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
+            if (version != null) {
+                verLock.set(profileService.get().aquireWriteLock(version));
+            }
         } catch (RuntimeException rte) {
             safeUnlock(cntLock, verLock);
             throw rte;
@@ -277,7 +281,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         final AtomicReference<LockHandle> verLock = new AtomicReference<>();
         final LockHandle cntLock = containerLocks.get().aquireReadLock(identity);
         try {
-            verLock.set(profileService.get().aquireReadLock());
+            Container cnt = containerRegistry.get().getContainer(identity);
+            VersionIdentity version = cnt != null ? cnt.getProfileVersion() : null;
+            if (version != null) {
+                verLock.set(profileService.get().aquireReadLock(version));
+            }
         } catch (RuntimeException rte) {
             safeUnlock(cntLock, verLock);
             throw rte;
