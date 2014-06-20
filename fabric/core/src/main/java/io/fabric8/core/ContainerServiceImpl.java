@@ -51,7 +51,6 @@ import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.ServiceEndpointFacotryLocator;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
@@ -195,18 +194,17 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 Permit<ContainerService> permit = permitManager.aquirePermit(ContainerService.PERMIT, false);
                 try {
                     ContainerService service = permit.getInstance();
-                    for (Container cnt : service.getContainers(null)) {
-                        List<ProfileIdentity> profiles = cnt.getProfileIdentities();
-                        if (profiles.contains(prfid)) {
-                            ContainerIdentity cntid = cnt.getIdentity();
-                            LockHandle writeLock = service.aquireContainerLock(cntid);
-                            try {
-                                service.updateProfile(cntid, prfid, null);
-                            } catch (ProvisionException ex) {
-                                LOGGER.error("Cannot update container profile: " + profile, ex);
-                            } finally {
-                                writeLock.unlock();
-                            }
+                    Container cnt = service.getCurrentContainer();
+                    List<ProfileIdentity> profiles = cnt.getProfileIdentities();
+                    if (profiles.contains(prfid)) {
+                        ContainerIdentity cntid = cnt.getIdentity();
+                        LockHandle writeLock = service.aquireContainerLock(cntid);
+                        try {
+                            service.updateProfile(prfid, null);
+                        } catch (ProvisionException ex) {
+                            LOGGER.error("Cannot update container profile: " + profile, ex);
+                        } finally {
+                            writeLock.unlock();
                         }
                     }
                 } finally {
@@ -608,10 +606,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     @Override
-    public void updateProfile(ContainerIdentity identity, ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException {
+    public void updateProfile(ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException {
 
-        Container container = getRequiredContainer(identity);
-        LOGGER.info("Update container profile: {} <= {}", container, identity);
+        Container container = getCurrentContainer();
+        LOGGER.info("Update container profile: {} <= {}", container, profile);
 
         // Provision the profile
         VersionIdentity version = container.getProfileVersion();

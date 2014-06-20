@@ -19,7 +19,6 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ProvisionEventListener;
@@ -55,5 +54,10 @@ public interface ContainerService extends ContainerManager {
      */
     URLConnection getContainerURLConnection(URL url) throws IOException;
 
-    void updateProfile(ContainerIdentity identity, ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException;
+    /**
+     * Update a profile in the current container
+     *
+     * [TODO] Review how updateProfile works with multiple changes in a ProfileVersion
+     */
+    void updateProfile(ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException;
 }
