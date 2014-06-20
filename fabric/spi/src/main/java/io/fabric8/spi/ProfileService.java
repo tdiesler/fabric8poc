@@ -62,7 +62,7 @@ public interface ProfileService extends ProfileManager {
      * Both, the version and cntindex parameters are optional.
      * If they are missing it will use the higest version and the first content respectively.
      *
-     * [TODO] consider content selection based on runtime type
+     * [TODO] #38 Consider content selection based on runtime type
      */
     URLConnection getProfileURLConnection(URL url) throws IOException;
 }

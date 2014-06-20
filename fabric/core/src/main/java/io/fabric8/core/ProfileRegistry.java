@@ -148,7 +148,7 @@ public final class ProfileRegistry extends AbstractComponent {
     private void dactivateInternal() {
     }
 
-    // [TODO] Consider support for locking individual profile versions
+    // [TODO] #39 Consider support for locking individual profile versions
     LockHandle aquireWriteLock(VersionIdentity version) {
         final WriteLock writeLock = readWriteLock.writeLock();
         boolean success;
@@ -166,7 +166,7 @@ public final class ProfileRegistry extends AbstractComponent {
         };
     }
 
-    // [TODO] Consider support for locking individual profile versions
+    // [TODO] #39 Consider support for locking individual profile versions
     LockHandle aquireReadLock(VersionIdentity version) {
         final ReadLock readLock = readWriteLock.readLock();
         boolean success;

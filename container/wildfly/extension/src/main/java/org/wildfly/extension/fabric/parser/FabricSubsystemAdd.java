@@ -58,7 +58,7 @@ final class FabricSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
         final FabricSubsystemBootstrap bootstrap = new FabricSubsystemBootstrap();
 
-        // [TODO] Remove workaround for WFLY-3511
+        // [TODO] #41 Invalid class load of embedded interface despite defined dependency
         // https://issues.jboss.org/browse/WFLY-3511
         try {
             ModuleClassLoader classLoader = (ModuleClassLoader) getClass().getClassLoader();

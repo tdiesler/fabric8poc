@@ -42,7 +42,7 @@ import org.jboss.gravia.resource.ResourceIdentity;
 /**
  * CompositeData support for a {@link Profile}.
  *
- * [TODO] Complete ProfileOpenType
+ * [TODO] #35 Complete JMX functionality on ProfileManagement
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014

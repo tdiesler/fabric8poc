@@ -93,14 +93,11 @@ public interface ContainerManager {
 
     /**
      * Join fabric for the container with the given identity
-     * [TODO] How does join relate to states?
-     * [TODO] Do we need a listener for join?
      */
     Container joinFabric(ContainerIdentity identity, JoinOptions options);
 
     /**
      * Leave fabric for the container with the given identity
-     * [TODO] Do we need a listener for leave?
      */
     Container leaveFabric(ContainerIdentity identity);
 

@@ -57,7 +57,7 @@ public interface ContainerService extends ContainerManager {
     /**
      * Update a profile in the current container
      *
-     * [TODO] Review how updateProfile works with multiple changes in a ProfileVersion
+     * [TODO] #42 Review how updateProfile works with multiple changes in a ProfileVersion
      */
     void updateProfile(ProfileIdentity profile, ProvisionEventListener listener) throws ProvisionException;
 }

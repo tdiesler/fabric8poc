@@ -70,7 +70,7 @@ public final class HttpEndpointService {
                 HttpService service = super.addingService(sref);
                 try {
                     service.registerServlet("/agent", new AgentServlet(agent.get()), null, null);
-                    // [TODO] compute actual endpoint url
+                    // [TODO] #37 Compute actual endpoint url for HttpEndpointService
                     LOGGER.info("Agent HttpEndpoint registered: http://localhost:8080/agent");
                 } catch (Exception ex) {
                     LOGGER.error("Cannot register agent servlet", ex);

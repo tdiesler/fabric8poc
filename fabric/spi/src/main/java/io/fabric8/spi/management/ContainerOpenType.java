@@ -44,7 +44,7 @@ import org.jboss.gravia.runtime.RuntimeType;
 /**
  * CompositeData support for a {@link Container}.
  *
- * [TODO] Complete ContainerOpenType
+ * [TODO] #34 Complete JMX functionality on ContainerManagement
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014

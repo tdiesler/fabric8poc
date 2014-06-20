@@ -49,6 +49,5 @@ public abstract class ResourceReferenceTestBase {
     @Test
     @Ignore
     public void testResourceReference() throws Exception {
-        // [TODO] testResourceReference
     }
 }

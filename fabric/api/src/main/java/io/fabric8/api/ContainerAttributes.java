@@ -77,19 +77,19 @@ public class ContainerAttributes  {
 
     /**
      * The attribute key for the Http URL
-     * [TODO] Use typed URL attribute
+     * [TODO] #50 Use typed URL attribute
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTP_URL = AttributeKey.create("fabric8.http.url", String.class);
 
     /**
      * The attribute key for the Http URL
-     * [TODO] Use typed URL attribute
+     * [TODO] #50 Use typed URL attribute
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTPS_URL = AttributeKey.create("fabric8.https.url", String.class);
 
     /**
      * The attribute key for JMX server URL
-     * [TODO] Use typed URL attribute
+     * [TODO] #50 Use typed URL attribute
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("fabric8.jmx.server.url", String.class);
 
@@ -110,7 +110,7 @@ public class ContainerAttributes  {
 
     /**
      * The attribute key for SSH server URL
-     * [TODO] Use typed URL attribute
+     * [TODO] #50 Use typed URL attribute
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_SSH_SERVER_URL = AttributeKey.create("fabric8.ssh.server.url", String.class);
 

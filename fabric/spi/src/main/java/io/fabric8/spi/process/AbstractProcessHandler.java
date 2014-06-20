@@ -201,7 +201,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         assertNotDestroyed(state);
 
         // Setup a call back notification for Agent deregistration
-        /* [TODO] make sure that destroying the java process performs an orderly shutdown
+        /* [TODO] #40 Make sure that destroying the java process performs an orderly shutdown
         final CountDownLatch latch = new CountDownLatch(1);
         try {
             mbeanServer.addNotificationListener(Agent.OBJECT_NAME, new NotificationListener() {

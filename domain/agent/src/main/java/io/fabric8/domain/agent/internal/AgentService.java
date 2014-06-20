@@ -268,7 +268,7 @@ public final class AgentService extends AbstractComponent implements Agent {
             ProcessRegistration preg = getRequiredProcessRegistration(processId);
             LOGGER.info("Stop process: {}", preg);
 
-            // [TODO] remove hack that cleans up topology for stopped process
+            // [TODO] #44 Remove hack that cleans up topology for stopped process
             AgentIdentity agentId = AgentIdentity.create(processId.getName());
             agentTopology.removeAgent(agentId);
 

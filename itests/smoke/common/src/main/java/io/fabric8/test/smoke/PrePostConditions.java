@@ -109,7 +109,7 @@ public final class PrePostConditions {
         Set<Module> current = getCurrentRuntimeModules();
         current.removeAll(modulesAssociation.get());
 
-        // [TODO] Runtime types that do not support uninstall of shared modules
+        // [TODO] #48 WildFly does not support uninstall of shared modules
         if (RuntimeType.WILDFLY == RuntimeType.getRuntimeType()) {
             Iterator<Module> itmod = current.iterator();
             while (itmod.hasNext()) {

@@ -111,7 +111,7 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         cmd.add("-Djboss.http.port=" + httpPort);
         cmd.add("-Djboss.https.port=" + httpsPort);
         cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
-        // [TODO] Remove JMX credentials from logged system properties
+        // [TODO] #45 Remove JMX credentials from logged system properties
         cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_USERNAME + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME));
         cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_PASSWORD + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD));
 

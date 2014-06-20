@@ -101,7 +101,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     }
 
     @Override
-    // [TODO] Revisit configurationEvent on JmxAttributeProvider
+    // [TODO] #47 Revisit configurationEvent on JmxAttributeProvider
     // This is an asynchronous callback. How is data integrity preserved?
     // Should this depend the the lifecycle of dependent components?
     public void configurationEvent(ConfigurationEvent event) {
@@ -126,8 +126,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
         return jmxPassword;
     }
 
-    // [TODO] processConfiguration does not see config values
-    // configuration pid belongs to another bundle
+    // Configuration pid belongs to another bundle
     private void processConfiguration() {
         try {
             Configuration configuration = configAdmin.get().getConfiguration(MANAGEMENT_PID, null);

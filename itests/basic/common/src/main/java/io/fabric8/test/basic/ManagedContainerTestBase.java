@@ -121,7 +121,7 @@ public abstract class ManagedContainerTestBase  {
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         File dataDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR));
 
-        // [TODO] The default port of the running server is available, why?
+        // [TODO] #49 Default port of the running WildFly server is available, why?
         CreateOptions options = WildFlyContainerBuilder.create()
                 .identity("ManagedWildFly")
                 .outputToConsole(true)

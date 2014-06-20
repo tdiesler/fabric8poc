@@ -125,8 +125,7 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
         networkProvider.unbind(service);
     }
 
-    // [TODO] processConfiguration does not see config values
-    // configuration pid belongs to another bundle
+    // Configuration pid belongs to another bundle
     private void processConfiguration() {
         try {
             Configuration configuration = configAdmin.get().getConfiguration(APACHE_FELIX_HTTP_PID);

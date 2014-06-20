@@ -41,7 +41,7 @@ import javax.management.openmbean.SimpleType;
 /**
  * CompositeData support for a {@link ProfileVersion}.
  *
- * [TODO] Complete ProfileVersionOpenType
+ * [TODO] #36 Complete JMX functionality on ProfileVersionManagement
  *
  * @author thomas.diesler@jboss.com
  * @since 18-Apr-2014

@@ -72,7 +72,6 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
 
     /**
      * Get the set of provided management domains
-     * [TODO] Should management domains go to {@link JMXServiceEndpoint}?
      */
     Set<String> getManagementDomains();
 
