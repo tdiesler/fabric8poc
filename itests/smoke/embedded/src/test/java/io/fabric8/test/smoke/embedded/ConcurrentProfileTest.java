@@ -19,11 +19,10 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.ConcurrentProfileTestBase;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.jboss.arquillian.junit.Arquillian;
+import org.junit.runner.RunWith;
 
 /**
  * See {@link ConcurrentProfileTestBase}
@@ -31,15 +30,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 29-Apr-2014
  */
+@RunWith(Arquillian.class)
 public class ConcurrentProfileTest extends ConcurrentProfileTestBase {
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 }

@@ -17,17 +17,19 @@ package io.fabric8.spi;
 
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointFactory;
+
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 import java.util.ServiceLoader;
 
 public final class ServiceEndpointFacotryLocator {
 
+    @SuppressWarnings("unchecked")
     public static <T extends ServiceEndpoint> ServiceEndpointFactory<T> getFactory(Class<T> type) {
         IllegalArgumentAssertion.assertNotNull(type, "type");
-        for (ServiceEndpointFactory factory : ServiceLoader.load(ServiceEndpointFactory.class, type.getClassLoader())) {
+        for (ServiceEndpointFactory<T> factory : ServiceLoader.load(ServiceEndpointFactory.class, type.getClassLoader())) {
             try {
-                Class targetType = factory.getClass().getMethod("create", ServiceEndpoint.class).getReturnType();
+                Class<?> targetType = factory.getClass().getMethod("create", ServiceEndpoint.class).getReturnType();
                 if (type.isAssignableFrom(targetType)) {
                     return factory;
                 }

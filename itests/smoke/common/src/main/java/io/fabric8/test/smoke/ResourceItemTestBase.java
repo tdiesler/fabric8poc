@@ -54,8 +54,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.RouteDefinition;
-import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
+import org.jboss.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.gravia.itests.support.ArchiveBuilder;
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.Capability;
 import org.jboss.gravia.resource.ContentCapability;
@@ -81,9 +83,6 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -430,7 +429,6 @@ public abstract class ResourceItemTestBase {
         return HttpRequest.get("http://localhost:8080" + path, headers, timeout, unit);
     }
 
-    @Deployment(name = RESOURCE_A, managed = false, testable = false)
     public static Archive<?> getResourceA() {
         final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_A);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
@@ -459,7 +457,6 @@ public abstract class ResourceItemTestBase {
         return archive.getArchive();
     }
 
-    @Deployment(name = RESOURCE_B, managed = false, testable = false)
     public static Archive<?> getResourceB() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, RESOURCE_B + ".jar");
         archive.addClasses(ModuleStateA.class);
@@ -477,7 +474,6 @@ public abstract class ResourceItemTestBase {
         return archive;
     }
 
-    @Deployment(name = RESOURCE_B1, managed = false, testable = false)
     public static Archive<?> getResourceB1() {
         final ArchiveBuilder archive = new ArchiveBuilder(RESOURCE_B1);
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class, WebAppContextListener.class);
@@ -507,7 +503,6 @@ public abstract class ResourceItemTestBase {
         return archive.getArchive();
     }
 
-    @Deployment(name = RESOURCE_C, managed = false, testable = false)
     public static Archive<?> getResourceC() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_C + ".war");
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
@@ -538,7 +533,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Shared Tomcat jar
-    @Deployment(name = CONTENT_F1, managed = false, testable = false)
     public static Archive<?> getContentF1() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, CONTENT_F1 + ".jar");
         archive.addClasses(ModuleStateB.class);
@@ -554,7 +548,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Shared Wildfly jar
-    @Deployment(name = CONTENT_F2, managed = false, testable = false)
     public static Archive<?> getContentF2() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, CONTENT_F2 + ".jar");
         archive.addClasses(ModuleStateB.class);
@@ -571,7 +564,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Karaf jar
-    @Deployment(name = CONTENT_F3, managed = false, testable = false)
     public static Archive<?> getContentF3() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, CONTENT_F3 + ".jar");
         archive.addClasses(ModuleStateB.class);
@@ -590,7 +582,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Unshared Tomcat deployment
-    @Deployment(name = CONTENT_G1, managed = false, testable = false)
     public static Archive<?> getContentG1() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, CONTENT_G1 + ".war");
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);
@@ -608,7 +599,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Unshared Wildfly deployment
-    @Deployment(name = CONTENT_G2, managed = false, testable = false)
     public static Archive<?> getContentG2() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, CONTENT_G2 + ".jar");
         archive.addClasses(ModuleActivatorB.class);
@@ -626,7 +616,6 @@ public abstract class ResourceItemTestBase {
     }
 
     // Karaf deployment
-    @Deployment(name = CONTENT_G3, managed = false, testable = false)
     public static Archive<?> getContentG3() {
         JavaArchive archive = ShrinkWrap.create(JavaArchive.class, CONTENT_G3 + ".jar");
         archive.addClasses(BundleActivatorBridge.class, ModuleActivatorB.class);

@@ -19,15 +19,14 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.ResourceItemTestBase;
 
 import java.io.InputStream;
 
+import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
 /**
  * Test profile items functionality.
@@ -35,17 +34,8 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class ResourceItemTest extends ResourceItemTestBase {
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @Override
     protected InputStream getDeployment(String name) {

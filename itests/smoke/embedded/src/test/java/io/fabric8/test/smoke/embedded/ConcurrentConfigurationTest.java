@@ -27,7 +27,6 @@ import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
 
 import java.util.Dictionary;
@@ -38,14 +37,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.gravia.provision.ProvisionException;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -61,17 +60,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class ConcurrentConfigurationTest {
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private volatile Exception lastException;

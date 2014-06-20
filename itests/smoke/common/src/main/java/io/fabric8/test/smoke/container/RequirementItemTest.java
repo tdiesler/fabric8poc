@@ -34,7 +34,10 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.osgi.StartLevelAware;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.gravia.arquillian.container.ContainerSetup;
-import org.jboss.gravia.arquillian.container.ContainerSetupTask;
+import org.jboss.gravia.arquillian.container.managed.ManagedSetupTask;
+import org.jboss.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.gravia.itests.support.ArchiveBuilder;
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
@@ -44,9 +47,6 @@ import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
-import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.runner.RunWith;
 
 /**
@@ -59,19 +59,19 @@ import org.junit.runner.RunWith;
 @ContainerSetup(RequirementItemTest.Setup.class)
 public class RequirementItemTest extends RequirementItemTestBase {
 
-    public static class Setup extends ContainerSetupTask {
+    public static class Setup extends ManagedSetupTask {
 
         Set<ResourceIdentity> identities;
 
         @Override
-        protected void setUp(Context context) throws Exception {
+        protected void beforeDeploy(ManagedContext context) throws Exception {
             String resname = "META-INF/repository-content/camel.core.feature.xml";
             URL resurl = getClass().getClassLoader().getResource(resname);
             identities = addRepositoryContent(context, resurl);
         }
 
         @Override
-        protected void tearDown(Context context) throws Exception {
+        protected void beforeStop(ManagedContext context) throws Exception {
             removeRepositoryContent(context, identities);
         }
     }
@@ -111,5 +111,10 @@ public class RequirementItemTest extends RequirementItemTestBase {
     @Override
     protected InputStream getDeployment(String name) {
         return deployer.getDeployment(name);
+    }
+
+    @Deployment(name = RESOURCE_A, managed = false, testable = false)
+    public static Archive<?> getResourceA() {
+        return RequirementItemTestBase.getResourceA();
     }
 }

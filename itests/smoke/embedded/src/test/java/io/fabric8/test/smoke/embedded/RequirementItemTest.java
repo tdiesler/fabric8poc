@@ -19,19 +19,20 @@
  */
 package io.fabric8.test.smoke.embedded;
 
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
-import io.fabric8.test.embedded.support.EmbeddedUtils;
 import io.fabric8.test.smoke.RequirementItemTestBase;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Set;
 
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.gravia.arquillian.container.embedded.EmbeddedUtils;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
 /**
  * Test profile items functionality.
@@ -39,14 +40,13 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class RequirementItemTest extends RequirementItemTestBase {
 
     private static Set<ResourceIdentity> repositoryIdentities;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-
         // Add repository content
         String resname = "META-INF/repository-content/camel.core.feature.xml";
         URL resurl = RequirementItemTest.class.getClassLoader().getResource(resname);
@@ -56,7 +56,6 @@ public class RequirementItemTest extends RequirementItemTestBase {
     @AfterClass
     public static void afterClass() throws Exception {
         EmbeddedUtils.removeRepositoryContent(repositoryIdentities);
-        EmbeddedTestSupport.afterClass();
     }
 
     @Override

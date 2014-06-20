@@ -24,10 +24,10 @@ import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
-import io.fabric8.api.ServiceEndpointIdentity;
-import io.fabric8.spi.JMXServiceEndpoint;
 import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.management.ContainerManagement;
+import io.fabric8.spi.JMXServiceEndpoint;
 import io.fabric8.spi.RuntimeService;
 
 import java.util.Set;

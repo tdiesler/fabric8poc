@@ -103,7 +103,7 @@ public final class DefaultConfigurationItemBuilder implements ConfigurationItemB
             IllegalStateAssertion.assertFalse(configurations.isEmpty(), "No configurations associated");
             for (Configuration config : configurations.values()) {
                 Map<String, Object> attributes = config.getAttributes();
-                IllegalStateAssertion.assertFalse(attributes.isEmpty(), "No attributes define in: " + config);
+                IllegalStateAssertion.assertFalse(attributes.isEmpty(), "No attributes defined in: " + config);
             }
         }
 

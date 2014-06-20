@@ -36,7 +36,10 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.osgi.StartLevelAware;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.gravia.arquillian.container.ContainerSetup;
-import org.jboss.gravia.arquillian.container.ContainerSetupTask;
+import org.jboss.gravia.arquillian.container.managed.ManagedSetupTask;
+import org.jboss.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.gravia.itests.support.ArchiveBuilder;
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
@@ -46,9 +49,6 @@ import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
-import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.runner.RunWith;
 
 /**
@@ -61,19 +61,19 @@ import org.junit.runner.RunWith;
 @ContainerSetup(ResourceItemTest.Setup.class)
 public class ResourceItemTest extends ResourceItemTestBase {
 
-    public static class Setup extends ContainerSetupTask {
+    public static class Setup extends ManagedSetupTask {
 
         Set<ResourceIdentity> identities;
 
         @Override
-        protected void setUp(Context context) throws Exception {
+        protected void beforeDeploy(ManagedContext context) throws Exception {
             String resname = "META-INF/repository-content/camel.core.feature.xml";
             URL resurl = getClass().getClassLoader().getResource(resname);
             identities = addRepositoryContent(context, resurl);
         }
 
         @Override
-        protected void tearDown(Context context) throws Exception {
+        protected void beforeStop(ManagedContext context) throws Exception {
             removeRepositoryContent(context, identities);
         }
     }
@@ -113,5 +113,55 @@ public class ResourceItemTest extends ResourceItemTestBase {
     @Override
     protected InputStream getDeployment(String name) {
         return deployer.getDeployment(name);
+    }
+
+    @Deployment(name = RESOURCE_A, managed = false, testable = false)
+    public static Archive<?> getResourceA() {
+        return ResourceItemTestBase.getResourceA();
+    }
+
+    @Deployment(name = RESOURCE_B, managed = false, testable = false)
+    public static Archive<?> getResourceB() {
+        return ResourceItemTestBase.getResourceB();
+    }
+
+    @Deployment(name = RESOURCE_B1, managed = false, testable = false)
+    public static Archive<?> getResourceB1() {
+        return ResourceItemTestBase.getResourceB1();
+    }
+
+    @Deployment(name = RESOURCE_C, managed = false, testable = false)
+    public static Archive<?> getResourceC() {
+        return ResourceItemTestBase.getResourceC();
+    }
+
+    @Deployment(name = CONTENT_F1, managed = false, testable = false)
+    public static Archive<?> getContentF1() {
+        return ResourceItemTestBase.getContentF1();
+    }
+
+    @Deployment(name = CONTENT_F2, managed = false, testable = false)
+    public static Archive<?> getContentF2() {
+        return ResourceItemTestBase.getContentF2();
+    }
+
+    @Deployment(name = CONTENT_F3, managed = false, testable = false)
+    public static Archive<?> getContentF3() {
+        return ResourceItemTestBase.getContentF3();
+    }
+
+    @Deployment(name = CONTENT_G1, managed = false, testable = false)
+    public static Archive<?> getContentG1() {
+        return ResourceItemTestBase.getContentG1();
+    }
+
+    @Deployment(name = CONTENT_G2, managed = false, testable = false)
+    public static Archive<?> getContentG2() {
+        return ResourceItemTestBase.getContentG2();
+    }
+
+    @Deployment(name = CONTENT_G3, managed = false, testable = false)
+    public static Archive<?> getContentG3() {
+        return ResourceItemTestBase.getContentG3();
     }
 }

@@ -29,17 +29,16 @@ import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.ProfileVersion;
 import io.fabric8.api.ProfileVersionBuilder;
 import io.fabric8.api.VersionIdentity;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.AfterClass;
+import org.jboss.arquillian.junit.Arquillian;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test {@link LinkedProfileVersion} functionality.
@@ -47,6 +46,7 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class LinkedProfileVersionTest {
 
     VersionIdentity version = VersionIdentity.createFrom("2.0");
@@ -57,16 +57,6 @@ public class LinkedProfileVersionTest {
     Map<String, Object>  configA = new HashMap<>();
     Map<String, Object>  configB = new HashMap<>();
     Map<String, Object>  configC = new HashMap<>();
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @Before
     public void setUp() {

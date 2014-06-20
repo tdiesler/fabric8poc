@@ -30,18 +30,16 @@ import io.fabric8.api.VersionIdentity;
 import io.fabric8.api.management.ProfileManagement;
 import io.fabric8.spi.management.ProfileOpenType;
 import io.fabric8.spi.utils.ManagementUtils;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
 import javax.management.openmbean.CompositeData;
 
-import org.junit.AfterClass;
+import org.jboss.arquillian.junit.Arquillian;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
+import org.junit.runner.RunWith;
 
 /**
  * Test the {@link ProfileVersion}.
@@ -49,20 +47,11 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 05-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class ProfileOpenTypeTest {
 
     static AttributeKey<String> AKEY = AttributeKey.create("AKey");
     static AttributeKey<String> BKEY = AttributeKey.create("BKey");
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @Test
     public void testComposisteData() throws Exception {
@@ -97,7 +86,6 @@ public class ProfileOpenTypeTest {
 
         prfManager.removeProfile(defaultVersion, prfC.getIdentity());
     }
-
 
     static class CompositeDataOptionsProvider implements OptionsProvider<ProfileBuilder> {
 

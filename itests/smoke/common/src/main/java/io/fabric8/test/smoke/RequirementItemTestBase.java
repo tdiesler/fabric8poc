@@ -44,8 +44,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.RouteDefinition;
-import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.gravia.Constants;
+import org.jboss.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.gravia.itests.support.ArchiveBuilder;
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.resource.ContentNamespace;
@@ -66,9 +68,6 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -152,7 +151,6 @@ public abstract class RequirementItemTestBase {
         return HttpRequest.get("http://localhost:8080" + path, headers, timeout, unit);
     }
 
-    @Deployment(name = RESOURCE_A, managed = false, testable = false)
     public static Archive<?> getResourceA() {
         final WebArchive archive = ShrinkWrap.create(WebArchive.class, RESOURCE_A + ".war");
         archive.addClasses(AnnotatedContextListener.class, WebAppContextListener.class);

@@ -28,12 +28,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.runtime.Module;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;

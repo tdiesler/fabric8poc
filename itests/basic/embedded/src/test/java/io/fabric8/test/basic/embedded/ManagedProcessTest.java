@@ -22,10 +22,9 @@ package io.fabric8.test.basic.embedded;
 
 import io.fabric8.spi.process.ManagedProcess;
 import io.fabric8.test.basic.ManagedContainerTestBase;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.jboss.arquillian.junit.Arquillian;
+import org.junit.runner.RunWith;
 
 /**
  * Test basic {@link ManagedProcess} functionality
@@ -33,15 +32,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 26-Feb-2014
  */
+@RunWith(Arquillian.class)
 public class ManagedProcessTest extends ManagedContainerTestBase {
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 }

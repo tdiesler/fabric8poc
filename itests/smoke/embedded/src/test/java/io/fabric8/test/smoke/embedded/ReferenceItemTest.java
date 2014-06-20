@@ -20,11 +20,10 @@
 package io.fabric8.test.smoke.embedded;
 
 import io.fabric8.api.ResourceItem;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.ReferenceItemTestBase;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.jboss.arquillian.junit.Arquillian;
+import org.junit.runner.RunWith;
 
 /**
  * Test reference {@link ResourceItem} functionality
@@ -32,15 +31,7 @@ import org.junit.BeforeClass;
  * @author thomas.diesler@jboss.com
  * @since 22-May-2014
  */
+@RunWith(Arquillian.class)
 public class ReferenceItemTest extends ReferenceItemTestBase {
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 }

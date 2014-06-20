@@ -70,8 +70,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-runtime-embedded</artifactId>
+            <artifactId>gravia-arquillian-container-embedded</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

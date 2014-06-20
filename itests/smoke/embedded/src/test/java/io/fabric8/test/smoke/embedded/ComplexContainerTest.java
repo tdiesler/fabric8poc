@@ -38,19 +38,18 @@ import io.fabric8.api.ProvisionEvent.EventType;
 import io.fabric8.api.ProvisionEventListener;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.test.embedded.support.EmbeddedContainerBuilder;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 import io.fabric8.test.smoke.PrePostConditions;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test container/profile functionality.
@@ -58,17 +57,8 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
+@RunWith(Arquillian.class)
 public class ComplexContainerTest {
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @Before
     public void preConditions() {

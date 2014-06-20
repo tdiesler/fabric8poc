@@ -27,14 +27,13 @@ import io.fabric8.api.ProfileItem;
 import io.fabric8.api.ProfileManager;
 import io.fabric8.api.ProfileManagerLocator;
 import io.fabric8.api.VersionIdentity;
-import io.fabric8.test.embedded.support.EmbeddedTestSupport;
 
 import java.util.List;
 
-import org.junit.AfterClass;
+import org.jboss.arquillian.junit.Arquillian;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test the {@link Profile} copy.
@@ -42,17 +41,8 @@ import org.junit.Test;
  * @author thomas.diesler@jboss.com
  * @since 23-Apr-2014
  */
+@RunWith(Arquillian.class)
 public class ProfileCopyTest {
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        EmbeddedTestSupport.beforeClass();
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        EmbeddedTestSupport.afterClass();
-    }
 
     @Test
     public void testProfileCopy() throws Exception {

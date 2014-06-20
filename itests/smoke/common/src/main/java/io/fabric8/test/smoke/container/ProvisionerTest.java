@@ -54,7 +54,10 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.gravia.Constants;
 import org.jboss.gravia.arquillian.container.ContainerSetup;
-import org.jboss.gravia.arquillian.container.ContainerSetupTask;
+import org.jboss.gravia.arquillian.container.managed.ManagedSetupTask;
+import org.jboss.gravia.itests.support.AnnotatedContextListener;
+import org.jboss.gravia.itests.support.ArchiveBuilder;
+import org.jboss.gravia.itests.support.HttpRequest;
 import org.jboss.gravia.provision.Provisioner;
 import org.jboss.gravia.provision.ResourceHandle;
 import org.jboss.gravia.provision.spi.RuntimeEnvironment;
@@ -88,9 +91,6 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.test.gravia.itests.support.AnnotatedContextListener;
-import org.jboss.test.gravia.itests.support.ArchiveBuilder;
-import org.jboss.test.gravia.itests.support.HttpRequest;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -124,19 +124,19 @@ public class ProvisionerTest {
     static final String CONTENT_G2 = "contentG2";
     static final String CONTENT_G3 = "contentG3";
 
-    public static class Setup extends ContainerSetupTask {
+    public static class Setup extends ManagedSetupTask {
 
         Set<ResourceIdentity> identities;
 
         @Override
-        protected void setUp(Context context) throws Exception {
+        protected void beforeDeploy(ManagedContext context) throws Exception {
             String resname = "META-INF/repository-content/camel.core.feature.xml";
             URL resurl = getClass().getClassLoader().getResource(resname);
             identities = addRepositoryContent(context, resurl);
         }
 
         @Override
-        protected void tearDown(Context context) throws Exception {
+        protected void beforeStop(ManagedContext context) throws Exception {
             removeRepositoryContent(context, identities);
         }
     }

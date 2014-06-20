@@ -90,6 +90,11 @@
             <artifactId>arquillian-testenricher-osgi</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-arquillian-container-managed</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     
     <build>
