@@ -26,7 +26,7 @@ import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.HttpAttributeProvider;
-import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeIdentity;
 import io.fabric8.spi.RuntimeService;
@@ -88,8 +88,8 @@ public final class AgentService extends AbstractComponent implements Agent {
     private final ValidatingReference<ConfigurationAdmin> configAdmin = new ValidatingReference<>();
     @Reference(referenceInterface = HttpAttributeProvider.class)
     private final ValidatingReference<HttpAttributeProvider> httpProvider = new ValidatingReference<>();
-    @Reference(referenceInterface = JmxAttributeProvider.class)
-    private final ValidatingReference<JmxAttributeProvider> jmxProvider = new ValidatingReference<>();
+    @Reference(referenceInterface = JMXAttributeProvider.class)
+    private final ValidatingReference<JMXAttributeProvider> jmxProvider = new ValidatingReference<>();
     @Reference(referenceInterface = JolokiaService.class)
     private final ValidatingReference<JolokiaService> jolokiaService = new ValidatingReference<>();
     @Reference(referenceInterface = MBeanServer.class)
@@ -133,7 +133,7 @@ public final class AgentService extends AbstractComponent implements Agent {
 
         // Register this Agent
         InetAddress targetHost = InetAddress.getByName(networkProvider.get().getIp());
-        URL jolokiaAgentUrl = new URL(httpProvider.get().getHttpUrl() + "/jolokia");
+        String jolokiaAgentUrl = httpProvider.get().getHttpUrl() + "/jolokia";
         String jolokiaUsername = null;
         String jolokiaPassword = null;
         localAgent = new AgentRegistration(agentId, targetHost, jolokiaAgentUrl, jolokiaUsername, jolokiaPassword);
@@ -159,7 +159,7 @@ public final class AgentService extends AbstractComponent implements Agent {
         for (AgentRegistration agentReg : agentTopology.getAgentRegistrations().values()) {
             if (!agentReg.equals(localAgent)) {
                 try {
-                    J4pClient client = new J4pClient(agentReg.getJolokiaAgentUrl().toExternalForm());
+                    J4pClient client = new J4pClient(agentReg.getJolokiaAgentUrl());
                     J4pExecRequest req = new J4pExecRequest(Agent.OBJECT_NAME, "unregisterAgent", localAgent.getIdentity());
                     client.execute(req);
                 } catch (Exception ex) {
@@ -330,6 +330,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindConfigAdmin(ConfigurationAdmin service) {
         configAdmin.bind(service);
     }
+
     void unbindConfigAdmin(ConfigurationAdmin service) {
         configAdmin.unbind(service);
     }
@@ -337,20 +338,23 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindHttpProvider(HttpAttributeProvider service) {
         httpProvider.bind(service);
     }
+
     void unbindHttpProvider(HttpAttributeProvider service) {
         httpProvider.unbind(service);
     }
 
-    void bindJmxProvider(JmxAttributeProvider service) {
+    void bindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.bind(service);
     }
-    void unbindJmxProvider(JmxAttributeProvider service) {
+
+    void unbindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.unbind(service);
     }
 
     void bindJolokiaService(JolokiaService service) {
         jolokiaService.bind(service);
     }
+
     void unbindJolokiaService(JolokiaService service) {
         jolokiaService.unbind(service);
     }
@@ -358,6 +362,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindMbeanServer(MBeanServer service) {
         mbeanServer.bind(service);
     }
+
     void unbindMbeanServer(MBeanServer service) {
         mbeanServer.unbind(service);
     }
@@ -365,6 +370,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -372,6 +378,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindProcessHandlerFactory(ProcessHandlerFactory service) {
         processHandlerFactories.add(service);
     }
+
     void unbindProcessHandlerFactory(ProcessHandlerFactory service) {
         processHandlerFactories.remove(service);
     }
@@ -379,6 +386,7 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

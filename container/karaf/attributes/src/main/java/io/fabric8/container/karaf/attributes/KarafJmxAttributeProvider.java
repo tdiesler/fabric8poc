@@ -18,7 +18,7 @@ package io.fabric8.container.karaf.attributes;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.Configurer;
-import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
@@ -45,12 +45,12 @@ import org.slf4j.LoggerFactory;
 // mvn:org.apache.karaf.management/org.apache.karaf.management.server/2.3.3
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JmxAttributeProvider.class, ConfigurationListener.class })
+@Service({ AttributeProvider.class, JMXAttributeProvider.class, ConfigurationListener.class })
 @Properties({
         @Property(name = "type", value = ContainerAttributes.TYPE),
         @Property(name = "classifier", value = "jmx")
 })
-public class KarafJmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener, JmxAttributeProvider {
+public class KarafJmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener, JMXAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KarafJmxAttributeProvider.class);
     static final String MANAGEMENT_PID = "org.apache.karaf.management";

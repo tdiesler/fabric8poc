@@ -23,11 +23,12 @@ import io.fabric8.api.CreateOptions;
 import io.fabric8.api.LockHandle;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
-import io.fabric8.spi.AbstractJMXServiceEndpoint;
+import io.fabric8.spi.AbstractURLServiceEndpoint;
 import io.fabric8.spi.AttributeProvider;
+import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.RuntimeService;
@@ -51,26 +52,19 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.RuntimeType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerRegistration.class)
 public class ContainerRegistrationImpl extends AbstractComponent implements ContainerRegistration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerRegistrationImpl.class);
-
-    @Reference(referenceInterface = AttributeProvider.class, target = "(&(type="+ContainerAttributes.TYPE+")(classifier=network))",
-            bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
+    @Reference(referenceInterface = AttributeProvider.class, target = "(&(type=" + ContainerAttributes.TYPE + ")(classifier=network))", bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
     private AttributeProvider networkAttributeProvider;
 
-    @Reference(referenceInterface = AttributeProvider.class, target = "(&(type="+ContainerAttributes.TYPE+")(classifier=jmx))",
-            bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
+    @Reference(referenceInterface = AttributeProvider.class, target = "(&(type=" + ContainerAttributes.TYPE + ")(classifier=jmx))", bind = "bindAttributeProvider", unbind = "unbindAttributeProvider")
     private AttributeProvider jmxAttributeProvider;
 
-    @Reference(referenceInterface = AttributeProvider.class,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC,
-            bind = "bindAttributeProvider", unbind = "unbindAttributeProvider", target = "(type=" + ContainerAttributes.TYPE + ")")
+    @Reference(referenceInterface = AttributeProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, bind = "bindAttributeProvider", unbind = "unbindAttributeProvider", target = "(type="
+            + ContainerAttributes.TYPE + ")")
     private final List<AttributeProvider> attributeProviders = new CopyOnWriteArrayList<>();
 
     @Reference(referenceInterface = BootConfiguration.class)
@@ -85,10 +79,8 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    private final Map<AttributeKey<?>, Object> attributes = new HashMap<>();
+    private final AttributeSupport attributes = new AttributeSupport();
     private ContainerIdentity currentIdentity;
-
-
 
     @Activate
     void activate() {
@@ -104,7 +96,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     private void activateInternal() {
         // Create the current container
         currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
-
         LockHandle writeLock = aquireWriteLock(currentIdentity);
         try {
             registerContainer(currentIdentity);
@@ -118,8 +109,11 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         ContainerRegistry registry = containerRegistry.get();
         //Create Initial Endpoints
         Set<ServiceEndpoint> endpoints = new LinkedHashSet<>();
-        if (attributes.containsKey(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)) {
-            endpoints.add(new AbstractJMXServiceEndpoint(ServiceEndpointIdentity.create("jmx"), (String) attributes.get(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL)));
+        String jmxServerURL = attributes.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
+        if (jmxServerURL != null) {
+            Map<AttributeKey<?>, Object> atts = new HashMap<>(attributes.getAttributes());
+            atts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, jmxServerURL);
+            endpoints.add(new AbstractURLServiceEndpoint(ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY, atts));
         }
 
         Container container = registry.getContainer(currentIdentity);
@@ -132,7 +126,7 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
 
             CreateOptions options = new AbstractCreateOptions() {
                 {
-                    addAttributes(attributes);
+                    addAttributes(attributes.getAttributes());
                 }
 
                 @Override
@@ -147,24 +141,21 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         registry.setServiceEndpoints(currentIdentity, endpoints);
     }
 
+    @SuppressWarnings("unchecked")
     private void addAttributes(AttributeProvider provider) {
         for (Map.Entry<AttributeKey<?>, Object> entry : provider.getAttributes().entrySet()) {
-            attributes.put(entry.getKey(), entry.getValue());
+            attributes.addAttribute((AttributeKey<Object>) entry.getKey(), entry.getValue());
         }
     }
 
     private void removeAttributes(AttributeProvider provider) {
         for (Map.Entry<AttributeKey<?>, Object> entry : provider.getAttributes().entrySet()) {
-            attributes.remove(entry.getKey());
+            attributes.removeAttribute(entry.getKey());
         }
     }
 
     private LockHandle aquireWriteLock(ContainerIdentity identity) {
         return containerLocks.get().aquireWriteLock(identity);
-    }
-
-    private LockHandle aquireReadLock(ContainerIdentity identity) {
-        return containerLocks.get().aquireReadLock(identity);
     }
 
     void bindAttributeProvider(AttributeProvider provider) {
@@ -177,17 +168,18 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
         removeAttributes(provider);
     }
 
-
-    void bindRuntimeService(RuntimeService service) {
-        runtimeService.bind(service);
+    void bindBootConfiguration(BootConfiguration service) {
+        bootConfiguration.bind(service);
     }
-    void unbindRuntimeService(RuntimeService service) {
-        runtimeService.unbind(service);
+
+    void unbindBootConfiguration(BootConfiguration service) {
+        bootConfiguration.unbind(service);
     }
 
     void bindContainerLocks(ContainerLockManager service) {
         containerLocks.bind(service);
     }
+
     void unbindContainerLocks(ContainerLockManager service) {
         containerLocks.unbind(service);
     }
@@ -195,15 +187,16 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
+
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
 
-
-    void bindBootConfiguration(BootConfiguration service) {
-        bootConfiguration.bind(service);
+    void bindRuntimeService(RuntimeService service) {
+        runtimeService.bind(service);
     }
-    void unbindBootConfiguration(BootConfiguration service) {
-        bootConfiguration.unbind(service);
+
+    void unbindRuntimeService(RuntimeService service) {
+        runtimeService.unbind(service);
     }
 }

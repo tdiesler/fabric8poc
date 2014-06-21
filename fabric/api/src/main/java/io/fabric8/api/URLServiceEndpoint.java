@@ -1,6 +1,6 @@
 /*
  * #%L
- * Fabric8 :: Core
+ * Fabric8 :: API
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
@@ -17,20 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.spi;
+package io.fabric8.api;
 
 
 /**
- * A provider for the JMX server URL
+ * A URL service endpoint
  *
  * @author thomas.diesler@jboss.com
- * @since 06-Jun-2014
+ * @since 20-Jun-2014
  */
-public interface JmxAttributeProvider extends AttributeProvider {
+public interface URLServiceEndpoint extends ServiceEndpoint {
 
-    String getJmxServerUrl();
+    /**
+     * The attribute key for the service URL
+     */
+    AttributeKey<String> ATTRIBUTE_KEY_SERVICE_URL = AttributeKey.create("fabric8.service.url", String.class);
 
-    String getJmxUsername();
-
-    String getJmxPassword();
+    String getServiceURL();
 }

@@ -258,22 +258,11 @@ public final class ContainerManagerImpl extends AbstractComponent implements Con
     }
 
     @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+    public ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId) {
         Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
         try {
             ContainerService service = permit.getInstance();
-            return service.getServiceEndpoint(identity, type);
-        } finally {
-            permit.release();
-        }
-    }
-
-    @Override
-    public <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId, Class<T> type) {
-        Permit<ContainerService> permit = permitManager.get().aquirePermit(ContainerService.PERMIT, false);
-        try {
-            ContainerService service = permit.getInstance();
-            return service.getServiceEndpoint(identity, endpointId, type);
+            return service.getServiceEndpoint(identity, endpointId);
         } finally {
             permit.release();
         }

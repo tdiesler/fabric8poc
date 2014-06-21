@@ -76,7 +76,7 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     Set<String> getManagementDomains();
 
     /**
-     * Get the set of available service endpoints for the given type
+     * Get the set of available service endpoints
      */
     Set<ServiceEndpoint> getServiceEndpoints();
 

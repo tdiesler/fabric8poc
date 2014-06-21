@@ -19,6 +19,7 @@
  */
 package io.fabric8.test.smoke;
 
+import static io.fabric8.api.ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
@@ -52,8 +53,8 @@ import org.junit.Test;
  */
 public abstract class CurrentContainerTestBase {
 
-    static String[] karafJmx = new String[] {"karaf", "karaf"};
-    static String[] otherJmx = new String[] {null, null};
+    static String[] karafJmx = new String[] { "karaf", "karaf" };
+    static String[] otherJmx = new String[] { null, null };
 
     @Before
     public void preConditions() {
@@ -84,7 +85,8 @@ public abstract class CurrentContainerTestBase {
         Assert.assertNotNull("JMX server URL not null", jmxServerUrl);
 
         String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
-        JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(currentId, JMXServiceEndpoint.class);
+        ServiceEndpoint sep = cntManager.getServiceEndpoint(currentId, JMX_SERVICE_ENDPOINT_IDENTITY);
+        JMXServiceEndpoint jmxEndpoint = sep.adapt(JMXServiceEndpoint.class);
         JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {
             // Access containers through JMX

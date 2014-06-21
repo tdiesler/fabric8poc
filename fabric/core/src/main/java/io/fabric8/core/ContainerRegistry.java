@@ -28,10 +28,11 @@ import io.fabric8.api.FabricException;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.core.zookeeper.ZkPath;
-import io.fabric8.spi.ServiceEndpointFacotryLocator;
 import io.fabric8.spi.AbstractServiceEndpoint;
+import io.fabric8.spi.AbstractURLServiceEndpoint;
 import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
@@ -58,7 +59,6 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * A registry of stateful {@link Container} instances
  *
@@ -84,14 +84,11 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<ProfileIdentity> profiles, Set<ServiceEndpoint> endpoints) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<ProfileIdentity> profiles,
+            Set<ServiceEndpoint> endpoints) {
         IllegalStateAssertion.assertTrue(getContainer(identity) == null, "Container already exists: " + identity);
-        Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED)
-                .addParent(parentId)
-                .addProfiles(profiles)
-                .addProfileVersion(version)
-                .addServiceEndpoints(endpoints)
-                .build();
+        Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED).addParent(parentId)
+                .addProfiles(profiles).addProfileVersion(version).addServiceEndpoints(endpoints).build();
 
         storeInternal(cnt);
         return cnt;
@@ -174,21 +171,9 @@ public final class ContainerRegistry extends AbstractComponent {
         return getRequiredContainer(identity);
     }
 
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type) {
+    ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId) {
         ContainerLockManager.assertReadLock(identity);
-        Set<ServiceEndpoint> allEndpoints = getServiceEndpointsInternal(identity);
-
-        for (ServiceEndpoint ep : allEndpoints) {
-            if (ServiceEndpointFacotryLocator.isSupported(ep, type)) {
-                return ServiceEndpointFacotryLocator.convert(ep, type);
-            }
-        }
-        throw new FabricException("Container:" + identity.getSymbolicName()+ " does not have endpoints of type:" + type);
-    }
-
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId) {
-        ContainerLockManager.assertWriteLock(identity);
-       return (T) getServiceEndpointInternal(identity, endpointId);
+        return getServiceEndpointInternal(identity, endpointId);
     }
 
     Container addServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
@@ -197,7 +182,6 @@ public final class ContainerRegistry extends AbstractComponent {
         addServiceEndpointInternal(identity, endpoint);
         return getRequiredContainer(identity);
     }
-
 
     Container removeServiceEndpoint(ContainerIdentity identity, ServiceEndpoint endpoint) {
         ContainerLockManager.assertWriteLock(identity);
@@ -227,9 +211,9 @@ public final class ContainerRegistry extends AbstractComponent {
             setRuntimeTypeInternal(identity, container.getRuntimeType());
             setProfilesInternal(identity, container.getProfileIdentities());
             setVersionInternal(identity, container.getProfileVersion());
-            setAttributesIntenral(ZkPath.CONTAINER_ATTRIBUTES.getPath(id), container.getAttributes());
+            setAttributesInternal(ZkPath.CONTAINER_ATTRIBUTES.getPath(id), container.getAttributes());
             setStateInternal(identity, container.getState());
-            setServiceEndpointsInternal(identity, container.<ServiceEndpoint>getServiceEndpoints());
+            setServiceEndpointsInternal(identity, container.getServiceEndpoints());
         } catch (Exception e) {
             throw FabricException.launderThrowable(e);
         }
@@ -251,13 +235,8 @@ public final class ContainerRegistry extends AbstractComponent {
                 Set<ContainerIdentity> children = getChildIdentitiesInternal(identity);
                 Set<ServiceEndpoint> endpoints = getServiceEndpointsInternal(identity);
 
-                result = new ImmutableContainer.Builder(identity, type, attributes, state)
-                        .addProfiles(profiles)
-                        .addProfileVersion(version)
-                        .addParent(parentIdentity)
-                        .addChildren(children)
-                        .addServiceEndpoints(endpoints)
-                        .build();
+                result = new ImmutableContainer.Builder(identity, type, attributes, state).addProfiles(profiles).addProfileVersion(version).addParent(parentIdentity)
+                        .addChildren(children).addServiceEndpoints(endpoints).build();
             }
         } catch (Exception ex) {
             throw FabricException.launderThrowable(ex);
@@ -330,7 +309,6 @@ public final class ContainerRegistry extends AbstractComponent {
             throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " state.", e);
         }
     }
-
 
     /**
      * Reads the {@link io.fabric8.api.ContainerIdentity} of the parent of the {@link Container} with the specified {@link io.fabric8.api.ContainerIdentity}.
@@ -427,7 +405,7 @@ public final class ContainerRegistry extends AbstractComponent {
             String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_TYPE.getPath(id)));
             return RuntimeType.valueOf(data);
         } catch (Exception e) {
-            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+" runtime type.", e);
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " runtime type.", e);
         }
     }
 
@@ -452,7 +430,6 @@ public final class ContainerRegistry extends AbstractComponent {
         }
     }
 
-
     /**
      * Reads the identities of the {@link io.fabric8.api.Profile} items associated with the specified {@link io.fabric8.api.ContainerIdentity}.
      * @param identity  The identity of the {@link Container}.
@@ -465,7 +442,7 @@ public final class ContainerRegistry extends AbstractComponent {
                 profiles.add(ProfileIdentity.createFrom(prfid));
             }
         } catch (Exception e) {
-            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+" profile identities.", e);
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " profile identities.", e);
         }
         return Collections.unmodifiableList(profiles);
     }
@@ -504,8 +481,8 @@ public final class ContainerRegistry extends AbstractComponent {
         try {
             String data = new String(curator.get().getData().forPath(ZkPath.CONTAINER_CONFIG_VERSION.getPath(identity.getSymbolicName())));
             return VersionIdentity.createFrom(data);
-        }catch (Exception e) {
-            throw new FabricException("Failed to read container's:"+identity.getSymbolicName()+ " version.", e);
+        } catch (Exception e) {
+            throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " version.", e);
         }
     }
 
@@ -541,31 +518,30 @@ public final class ContainerRegistry extends AbstractComponent {
                 String attributeValuePath = ZKPaths.makePath(attributeKeyPath, "value");
                 String keyData = new String(curator.get().getData().forPath(attributeKeyPath));
                 String valueData = new String(curator.get().getData().forPath(attributeValuePath));
-                AttributeKey key = AttributeKey.createFrom(keyData);
+                AttributeKey<?> key = AttributeKey.createFrom(keyData);
                 Object value = key.getFactory().createFrom(valueData);
                 attributes.put(key, value);
             }
             return attributes;
         } catch (Exception e) {
-            throw new FabricException("Failed to read attributes from:" + basePath +".", e);
+            throw new FabricException("Failed to read attributes from:" + basePath + ".", e);
         }
     }
 
     /**
-     /**
-     * Reads the attributes stored under the specified path.
-     * @param basePath      The path that contains the attributes
-     * @param attributes    A {@link Map} of {@link io.fabric8.api.AttributeKey} -> Value.
-     */
-    private void setAttributesIntenral(String basePath, Map<AttributeKey<?>, Object> attributes) {
+    * Reads the attributes stored under the specified path.
+    * @param basePath      The path that contains the attributes
+    * @param attributes    A {@link Map} of {@link io.fabric8.api.AttributeKey} -> Value.
+    */
+    private void setAttributesInternal(String basePath, Map<AttributeKey<?>, Object> attributes) {
         try {
             if (curator.get().checkExists().forPath(basePath) != null) {
                 curator.get().delete().deletingChildrenIfNeeded().forPath(basePath);
             }
             curator.get().create().creatingParentsIfNeeded().forPath(basePath);
 
-            for(Map.Entry<AttributeKey<?>, Object> entry : attributes.entrySet()) {
-                AttributeKey key = entry.getKey();
+            for (Map.Entry<AttributeKey<?>, Object> entry : attributes.entrySet()) {
+                AttributeKey<?> key = entry.getKey();
                 Object value = entry.getValue();
                 String attributeKeyPath = ZKPaths.makePath(basePath, key.getName());
                 String attributeValuePath = ZKPaths.makePath(attributeKeyPath, "value");
@@ -595,7 +571,7 @@ public final class ContainerRegistry extends AbstractComponent {
                 ServiceEndpointIdentity endpointId = endpoint.getIdentity();
                 String endpointPath = ZKPaths.makePath(containerEndpointsPath, endpointId.getSymbolicName());
                 curator.get().create().creatingParentsIfNeeded().forPath(endpointPath);
-                setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
+                setAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
 
             }
         } catch (Exception e) {
@@ -618,7 +594,7 @@ public final class ContainerRegistry extends AbstractComponent {
                 endpoints.add(getServiceEndpointInternal(identity, ServiceEndpointIdentity.create(name)));
             }
         } catch (KeeperException.NoNodeException e) {
-          return Collections.emptySet();
+            return Collections.emptySet();
         } catch (Exception e) {
             throw new FabricException("Failed to read container's:" + identity.getSymbolicName() + " endpoints.", e);
         }
@@ -627,10 +603,14 @@ public final class ContainerRegistry extends AbstractComponent {
 
     private ServiceEndpoint getServiceEndpointInternal(ContainerIdentity identity, ServiceEndpointIdentity endpointId) {
         String id = identity.getSymbolicName();
-        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id,endpointId.getSymbolicName());
+        String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(id, endpointId.getSymbolicName());
         try {
-            Map<AttributeKey<?>, Object> endpointAttributes = getAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"));
-            return  new AbstractServiceEndpoint(endpointId, endpointAttributes);
+            Map<AttributeKey<?>, Object> attributes = getAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"));
+            if (attributes.containsKey(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL)) {
+                return new AbstractURLServiceEndpoint(endpointId, attributes);
+            } else {
+                return new AbstractServiceEndpoint(endpointId, attributes);
+            }
         } catch (Exception e) {
             throw new FabricException("Failed to read endpoint from:" + endpointPath);
         }
@@ -651,9 +631,7 @@ public final class ContainerRegistry extends AbstractComponent {
             curator.get().create().creatingParentsIfNeeded().forPath(endpointPath);
 
             curator.get().create().creatingParentsIfNeeded().forPath(endpointPath);
-            setAttributesIntenral(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
-
-
+            setAttributesInternal(ZKPaths.makePath(endpointPath, "attributes"), endpoint.getAttributes());
         } catch (Exception e) {
             throw new FabricException("Failed to write container's:" + identity.getSymbolicName() + " endpoints.", e);
         }
@@ -661,9 +639,11 @@ public final class ContainerRegistry extends AbstractComponent {
 
     /**
      * Removes the association of a {@link io.fabric8.api.ContainerIdentity} with a {@link io.fabric8.api.ServiceEndpoint}.
+     * [TODO] #51 Add support for removeServiceEndpoint
      * @param identity  The identity of the container.
      * @param endpoint  The service endpoint.
      */
+    @SuppressWarnings("unused")
     private void removeServiceEndpointInternal(ContainerIdentity identity, ServiceEndpoint endpoint) {
         ServiceEndpointIdentity endpointId = endpoint.getIdentity();
         String endpointPath = ZkPath.CONTAINER_ENDPOINT.getPath(identity.getSymbolicName(), endpointId.getSymbolicName());
@@ -686,7 +666,6 @@ public final class ContainerRegistry extends AbstractComponent {
         }
         return builder.toString();
     }
-
 
     void bindCurator(CuratorFramework service) {
         curator.bind(service);

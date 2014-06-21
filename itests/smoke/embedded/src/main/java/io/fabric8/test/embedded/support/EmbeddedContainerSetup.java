@@ -31,7 +31,7 @@ import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.AttributeSupport;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.HttpAttributeProvider;
-import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.utils.FileUtils;
 import io.fabric8.spi.utils.HostUtils;
@@ -39,6 +39,7 @@ import io.fabric8.spi.utils.HostUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -64,6 +65,7 @@ import org.jboss.gravia.arquillian.container.embedded.EmbeddedUtils;
 import org.jboss.gravia.provision.spi.RuntimeEnvironment;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
+import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.utils.IOUtils;
 import org.osgi.service.cm.Configuration;
@@ -98,12 +100,11 @@ public class EmbeddedContainerSetup implements EmbeddedRuntimeSetup {
         FileUtils.deleteRecursively(homePath);
 
         // Install and start additional modules
-        EmbeddedUtils support = suiteStore.get(EmbeddedUtils.class);
-        Runtime runtime = support.getEmbeddedRuntime();
+        Runtime runtime = RuntimeLocator.getRequiredRuntime();
         ModuleContext syscontext = runtime.getModuleContext();
         for (URL url : getInitialModuleLocations()) {
             ClassLoader classLoader = EmbeddedUtils.class.getClassLoader();
-            support.installAndStartModule(classLoader, url);
+            EmbeddedUtils.installAndStartModule(classLoader, url);
         }
 
         // Create the JMXConnectorServer
@@ -137,7 +138,7 @@ public class EmbeddedContainerSetup implements EmbeddedRuntimeSetup {
         Hashtable<String, Object> props = new Hashtable<>();
         props.put("type", ContainerAttributes.TYPE);
         props.put("classifier", "jmx");
-        String[] services = new String[]{AttributeProvider.class.getName(), JmxAttributeProvider.class.getName()};
+        String[] services = new String[]{AttributeProvider.class.getName(), JMXAttributeProvider.class.getName()};
         syscontext.registerService(services, new EmbeddedJmxAttributeProvider(jmxServerUrl), props);
 
         // Register the NetworkAttributeProvider

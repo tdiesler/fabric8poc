@@ -22,36 +22,38 @@ package io.fabric8.spi;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.URLServiceEndpoint;
 
 import java.util.Map;
 
 /**
- * An abstract service endpoint
+ * An URL service endpoint
  *
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractServiceEndpoint extends AttributeSupport implements ServiceEndpoint {
+public class AbstractURLServiceEndpoint extends AbstractServiceEndpoint implements URLServiceEndpoint {
 
-    private final ServiceEndpointIdentity identity;
-
-    public AbstractServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
-        super(attributes, true);
-        this.identity = identity;
+    public AbstractURLServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
+        super(identity, attributes);
     }
 
     @Override
-    public ServiceEndpointIdentity getIdentity() {
-        return identity;
-    }
-
-    @Override
+    @SuppressWarnings("unchecked")
     public <T extends ServiceEndpoint> T adapt(Class<T> type) {
-        return null;
+        T result = super.adapt(type);
+        if (result == null) {
+            if (type.isAssignableFrom(JMXServiceEndpoint.class)) {
+                result = (T) new AbstractJMXServiceEndpoint(this);
+            } else if (type.isAssignableFrom(URLServiceEndpoint.class)) {
+                result = (T) this;
+            }
+        }
+        return result;
     }
 
-    public String toString() {
-        return getClass().getSimpleName() + getAttributes();
+    @Override
+    public String getServiceURL() {
+        return getRequiredAttribute(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL);
     }
-
 }

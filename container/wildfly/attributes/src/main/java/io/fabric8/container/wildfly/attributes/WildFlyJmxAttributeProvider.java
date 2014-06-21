@@ -18,7 +18,7 @@ package io.fabric8.container.wildfly.attributes;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
-import io.fabric8.spi.JmxAttributeProvider;
+import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.scr.AbstractAttributeProvider;
@@ -34,12 +34,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JmxAttributeProvider.class})
+@Service({ AttributeProvider.class, JMXAttributeProvider.class})
 @Properties({
         @Property(name = "type", value = ContainerAttributes.TYPE),
         @Property(name = "classifier", value = "jmx")
 })
-public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JmxAttributeProvider {
+public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JMXAttributeProvider {
 
     private static final String JMX_REMOTE_PORT = "jboss.management.http.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 9990;

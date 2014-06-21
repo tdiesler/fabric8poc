@@ -19,14 +19,11 @@
  */
 package io.fabric8.spi;
 
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL;
-import io.fabric8.api.AttributeKey;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.spi.utils.ManagementUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -34,8 +31,6 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXServiceURL;
-
-import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
  * An abstract JMX service endpoint
@@ -45,25 +40,23 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  */
 public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint implements JMXServiceEndpoint {
 
-    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes) {
-        super(identity, attributes);
+    private final URLServiceEndpoint delegate;
+
+    public AbstractJMXServiceEndpoint(URLServiceEndpoint delegate) {
+        super(delegate.getIdentity(), delegate.getAttributes());
+        this.delegate = delegate;
     }
 
-    public AbstractJMXServiceEndpoint(ServiceEndpointIdentity identity, String jmxServerUrl) {
-        super(identity, getJmxServerAttributes(jmxServerUrl));
-    }
-
-    private static Map<AttributeKey<?>, Object> getJmxServerAttributes(String jmxServerUrl) {
-        IllegalArgumentAssertion.assertNotNull(jmxServerUrl, "jmxServerUrl");
-        return Collections.<AttributeKey<?>, Object> singletonMap(ATTRIBUTE_KEY_JMX_SERVER_URL, jmxServerUrl);
+    public String getServiceURL() {
+        return delegate.getServiceURL();
     }
 
     @Override
-    public JMXServiceURL getServiceURL() {
+    public JMXServiceURL getJMXServiceURL() {
         JMXServiceURL serviceURL;
         try {
-            String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
-            serviceURL = new JMXServiceURL(jmxServiceURL);
+            String urlspec = getRequiredAttribute(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL);
+            serviceURL = new JMXServiceURL(urlspec);
         } catch (MalformedURLException ex) {
             throw new IllegalStateException(ex);
         }
@@ -72,13 +65,13 @@ public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint implemen
 
     @Override
     public Map<String, Object> getDefaultEnvironment() {
-        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        String jmxServiceURL = getRequiredAttribute(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL);
         return ManagementUtils.getDefaultEnvironment(jmxServiceURL);
     }
 
     @Override
     public JMXConnector getJMXConnector(Map<String, Object> env, String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        String jmxServiceURL = getRequiredAttribute(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL);
         if (jmxUsername != null && jmxPassword != null) {
             String[] credentials = new String[] { jmxUsername, jmxPassword };
             env.put(JMXConnector.CREDENTIALS, credentials);
@@ -88,7 +81,7 @@ public class AbstractJMXServiceEndpoint extends AbstractServiceEndpoint implemen
 
     @Override
     public JMXConnector getJMXConnector(String jmxUsername, String jmxPassword, long timeout, TimeUnit unit) {
-        String jmxServiceURL = getRequiredAttribute(ATTRIBUTE_KEY_JMX_SERVER_URL);
+        String jmxServiceURL = getRequiredAttribute(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL);
         return ManagementUtils.getJMXConnector(jmxServiceURL, jmxUsername, jmxPassword, timeout, unit);
     }
 

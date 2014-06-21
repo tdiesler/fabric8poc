@@ -20,6 +20,8 @@ import java.util.Map;
 public interface ServiceEndpointFactory<T extends ServiceEndpoint> {
 
     boolean isSupported(ServiceEndpoint endpoint);
+
     T create(ServiceEndpoint endpoint);
+
     T create(ServiceEndpointIdentity identity, Map<AttributeKey<?>, Object> attributes);
 }

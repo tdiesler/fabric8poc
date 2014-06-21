@@ -19,7 +19,7 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.URLServiceEndpoint;
 
 import java.io.IOException;
 import java.util.Map;
@@ -36,9 +36,9 @@ import javax.management.remote.JMXServiceURL;
  * @author thomas.diesler@jboss.com
  * @since 16-Apr-2014
  */
-public interface JMXServiceEndpoint extends ServiceEndpoint {
+public interface JMXServiceEndpoint extends URLServiceEndpoint {
 
-    JMXServiceURL getServiceURL();
+    JMXServiceURL getJMXServiceURL();
 
     Map<String, Object> getDefaultEnvironment();
 

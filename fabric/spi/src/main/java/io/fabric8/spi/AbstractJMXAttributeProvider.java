@@ -29,7 +29,7 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 06-Jun-2014
  */
-public class AbstractJMXAttributeProvider extends AttributeSupport implements JmxAttributeProvider {
+public class AbstractJMXAttributeProvider extends AttributeSupport implements JMXAttributeProvider {
 
     private final String jmxServerUrl;
     private final String jmxUsername;

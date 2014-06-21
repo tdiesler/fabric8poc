@@ -15,7 +15,6 @@
 
 package io.fabric8.api;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,11 +23,20 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ContainerAttributes  {
+public final class ContainerAttributes  {
+
+    // Hide ctor
+    private ContainerAttributes() {
+    }
 
     public static final String TYPE = "container.attributes";
     private static final String CONTAINER_ATTRIBUTE_FORMAT = "${container:%s/%s}";
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{container:([a-zA-Z0-9\\.\\-]+)/([a-zA-Z0-9\\.\\-]+)}");
+
+    /**
+     * JMX {@link ServiceEndpoint} identity
+     */
+    public static ServiceEndpointIdentity JMX_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jmx");
 
     /**
      * The attribute key for the Advertised IP Address
@@ -63,7 +71,7 @@ public class ContainerAttributes  {
     /**
      * The attribute key for the Alias (an alternative address that is manually specified)
      */
-    public static final  AttributeKey<String> ATTRIBUTE_ALIAS = AttributeKey.create("fabric8.alias", String.class);
+    public static final  AttributeKey<String> ATTRIBUTE_KEY_ALIAS = AttributeKey.create("fabric8.alias", String.class);
 
     /**
      * The attribute key for the Http port
@@ -77,26 +85,23 @@ public class ContainerAttributes  {
 
     /**
      * The attribute key for the Http URL
-     * [TODO] #50 Use typed URL attribute
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTP_URL = AttributeKey.create("fabric8.http.url", String.class);
 
     /**
      * The attribute key for the Http URL
-     * [TODO] #50 Use typed URL attribute
      */
     public static final  AttributeKey<String> ATTRIBUTE_KEY_HTTPS_URL = AttributeKey.create("fabric8.https.url", String.class);
 
     /**
      * The attribute key for JMX server URL
-     * [TODO] #50 Use typed URL attribute
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_JMX_SERVER_URL = AttributeKey.create("fabric8.jmx.server.url", String.class);
 
     /**
      * The attribute key for Jolokia Agent URL that created the remote process
      */
-    public static final AttributeKey<URL> ATTRIBUTE_KEY_JOLOKIA_AGENT_URL = AttributeKey.create("fabric8.jolokia.agent.url", URL.class);
+    public static final AttributeKey<String> ATTRIBUTE_KEY_JOLOKIA_AGENT_URL = AttributeKey.create("fabric8.jolokia.agent.url", String.class);
 
     /**
      * The attribute key for Jolokia Agent username
@@ -110,7 +115,6 @@ public class ContainerAttributes  {
 
     /**
      * The attribute key for SSH server URL
-     * [TODO] #50 Use typed URL attribute
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_SSH_SERVER_URL = AttributeKey.create("fabric8.ssh.server.url", String.class);
 

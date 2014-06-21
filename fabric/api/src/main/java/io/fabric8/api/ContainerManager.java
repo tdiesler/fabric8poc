@@ -122,16 +122,10 @@ public interface ContainerManager {
     Profile getEffectiveProfile(ContainerIdentity identity);
 
     /**
-     * Get the a service endpoint for the given type
-     * @return null if the endpoint does not exist or is not unique
-     */
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, Class<T> type);
-
-    /**
      * Get the service endpoint for the given identity
      * @return null if the endpoint does not exist
      */
-    <T extends ServiceEndpoint> T getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId, Class<T> type);
+    ServiceEndpoint getServiceEndpoint(ContainerIdentity identity, ServiceEndpointIdentity endpointId);
 
     /**
      * Get failures from the container with the given identity

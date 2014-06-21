@@ -2,7 +2,6 @@ package io.fabric8.spi;
 
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.net.URL;
 
 /**
  * An agent registration
@@ -16,11 +15,11 @@ public final class AgentRegistration implements Serializable {
 
     private final AgentIdentity identity;
     private final InetAddress targetHost;
-    private final URL jolokiaAgentUrl;
+    private final String jolokiaAgentUrl;
     private final String jolokiaUsername;
     private final String jolokiaPassword;
 
-    public AgentRegistration(AgentIdentity identity, InetAddress targetHost, URL jolokiaAgentUrl, String jolokiaUsername, String jmxPassword) {
+    public AgentRegistration(AgentIdentity identity, InetAddress targetHost, String jolokiaAgentUrl, String jolokiaUsername, String jmxPassword) {
         this.identity = identity;
         this.targetHost = targetHost;
         this.jolokiaAgentUrl = jolokiaAgentUrl;
@@ -36,7 +35,7 @@ public final class AgentRegistration implements Serializable {
         return targetHost;
     }
 
-    public URL getJolokiaAgentUrl() {
+    public String getJolokiaAgentUrl() {
         return jolokiaAgentUrl;
     }
 
@@ -54,8 +53,10 @@ public final class AgentRegistration implements Serializable {
     }
 
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (!(obj instanceof AgentRegistration)) return false;
+        if (obj == this)
+            return true;
+        if (!(obj instanceof AgentRegistration))
+            return false;
         AgentRegistration other = (AgentRegistration) obj;
         return identity.equals(other.identity);
     }

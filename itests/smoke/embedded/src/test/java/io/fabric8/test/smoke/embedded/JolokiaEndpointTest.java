@@ -1,6 +1,6 @@
 /*
  * #%L
- * Fabric8 :: API
+ * Fabric8 :: Testsuite :: Smoke :: Common
  * %%
  * Copyright (C) 2014 Red Hat
  * %%
@@ -17,19 +17,20 @@
  * limitations under the License.
  * #L%
  */
-package io.fabric8.api;
+package io.fabric8.test.smoke.embedded;
+
+import io.fabric8.test.smoke.JolokiaEndpointTestBase;
+
+import org.jboss.arquillian.junit.Arquillian;
+import org.junit.runner.RunWith;
 
 /**
- * The abstraction of a service endpoint
+ * Test the Jolokia endpoint
  *
  * @author thomas.diesler@jboss.com
- * @since 14-Mar-2014
+ * @since 20-Jun-2014
  */
-public interface ServiceEndpoint extends Attributable, Identifiable<ServiceEndpointIdentity> {
+@RunWith(Arquillian.class)
+public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
 
-    /**
-     * Adapt this service endpoint to another type
-     * @return null if it cannot be adapted
-     */
-    <T extends ServiceEndpoint> T adapt(Class<T> type);
 }
