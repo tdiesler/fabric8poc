@@ -110,7 +110,7 @@
                                     <groupId>org.wildfly</groupId>
                                     <artifactId>wildfly-dist</artifactId>
                                     <version>${version.jboss.wildfly}</version>
-                                    <type>tar.gz</type>
+                                    <type>zip</type>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
