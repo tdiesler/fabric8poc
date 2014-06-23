@@ -101,7 +101,7 @@ public abstract class HttpServiceTestBase {
 
     private void assertNotAvailable(String reqspec) throws Exception {
         try {
-            performCall(reqspec, null, 500, TimeUnit.MILLISECONDS);
+            performCall(reqspec, null, 1, TimeUnit.SECONDS);
             Assert.fail("IOException expected");
         } catch (IOException ex) {
             // expected
