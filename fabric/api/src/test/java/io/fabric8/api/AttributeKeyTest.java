@@ -15,10 +15,6 @@
 
 package io.fabric8.api;
 
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -246,28 +242,5 @@ public class AttributeKeyTest {
         Assert.assertEquals(true, value);
         Assert.assertEquals("Key[name=my.key,type=java.lang.Boolean]", key.toString());
         Assert.assertEquals("my.key,type=java.lang.Boolean", key.getCanonicalForm());
-    }
-
-
-    @Test
-    public void testCreateURLAttribute() throws MalformedURLException {
-        AttributeKey<URL> key = AttributeKey.create("my.key", new URLValueFactory());
-        Assert.assertNotNull(key);
-        Assert.assertEquals("my.key", key.getName());
-        Assert.assertEquals(URL.class, key.getType());
-        URL value = key.getFactory().createFrom("http://foo");
-        Assert.assertEquals(new URL("http://foo"), value);
-        String factoryName = URLValueFactory.class.getName();
-        Assert.assertEquals("Key[name=my.key,type=java.net.URL,factory=" + factoryName + "]", key.toString());
-        Assert.assertEquals("my.key,type=java.net.URL,factory=" + factoryName, key.getCanonicalForm());
-
-        key = AttributeKey.createFrom("my.key,factory=" + factoryName);
-        Assert.assertNotNull(key);
-        Assert.assertEquals("my.key", key.getName());
-        Assert.assertEquals(URL.class, key.getType());
-        value = key.getFactory().createFrom("http://foo");
-        Assert.assertEquals(new URL("http://foo"), value);
-        Assert.assertEquals("Key[name=my.key,type=java.net.URL,factory=" + factoryName + "]", key.toString());
-        Assert.assertEquals("my.key,type=java.net.URL,factory=" + factoryName, key.getCanonicalForm());
     }
 }

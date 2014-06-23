@@ -19,8 +19,6 @@
  */
 package io.fabric8.api;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -280,18 +278,6 @@ public final class AttributeKey<T> implements Identity {
         }
     };
 
-    private static final ValueFactory<URL> URL_VALUE_FACTORY = new AbstractValueFactory<URL>(URL.class) {
-        @Override
-        public URL createFrom(Object source) {
-            IllegalArgumentAssertion.assertNotNull(source, "source");
-            try {
-                return new URL((String) source);
-            } catch (MalformedURLException ex) {
-                throw new IllegalArgumentException("Malformed URL: " + source);
-            }
-        }
-    };
-
     private static abstract class AbstractValueFactory<T> implements ValueFactory<T> {
         private final Class<T> type;
 
@@ -314,7 +300,6 @@ public final class AttributeKey<T> implements Identity {
         SUPPORTED_VALUE_FACTORIES.put(Long.class, LONG_VALUE_FACTORY);
         SUPPORTED_VALUE_FACTORIES.put(Short.class, SHORT_VALUE_FACTORY);
         SUPPORTED_VALUE_FACTORIES.put(String.class, STRING_VALUE_FACTORY);
-        SUPPORTED_VALUE_FACTORIES.put(URL.class, URL_VALUE_FACTORY);
     }
     private static final Map<String, Class<?>> SUPPORTED_TYPE_NAMES = new HashMap<>();
     static {

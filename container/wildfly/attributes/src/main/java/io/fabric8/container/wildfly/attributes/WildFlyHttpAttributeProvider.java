@@ -15,7 +15,6 @@
 
 package io.fabric8.container.wildfly.attributes;
 
-
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.HttpAttributeProvider;
@@ -28,18 +27,12 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "http")
-})
-public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider  {
+@Service({ AttributeProvider.class, HttpAttributeProvider.class })
+public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     private static final String HTTP_PORT = "jboss.management.http.port";
     private static final String HTTPS_PORT = "jboss.management.https.port";
@@ -91,17 +84,18 @@ public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider impl
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTPS_URL, getHttpsUrl(ip, httpsPort));
     }
 
-    private String getHttpUrl(String host, int port)  {
+    private String getHttpUrl(String host, int port) {
         return httpUrl = String.format(HTTP_URL_FORMAT, host, port);
     }
 
-    private String getHttpsUrl(String host, int port)  {
+    private String getHttpsUrl(String host, int port) {
         return httpsUrl = String.format(HTTPS_URL_FORMAT, host, port);
     }
 
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -109,6 +103,7 @@ public class WildFlyHttpAttributeProvider extends AbstractAttributeProvider impl
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

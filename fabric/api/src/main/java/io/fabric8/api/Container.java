@@ -81,6 +81,11 @@ public interface Container extends Attributable, Identifiable<ContainerIdentity>
     Set<ServiceEndpoint> getServiceEndpoints();
 
     /**
+     * Get the service endpoint for the given identity
+     */
+    ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity identity);
+
+    /**
      * Get the profile version
      */
     VersionIdentity getProfileVersion();

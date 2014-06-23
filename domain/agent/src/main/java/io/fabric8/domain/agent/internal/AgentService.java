@@ -330,7 +330,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindConfigAdmin(ConfigurationAdmin service) {
         configAdmin.bind(service);
     }
-
     void unbindConfigAdmin(ConfigurationAdmin service) {
         configAdmin.unbind(service);
     }
@@ -338,7 +337,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindHttpProvider(HttpAttributeProvider service) {
         httpProvider.bind(service);
     }
-
     void unbindHttpProvider(HttpAttributeProvider service) {
         httpProvider.unbind(service);
     }
@@ -346,7 +344,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.bind(service);
     }
-
     void unbindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.unbind(service);
     }
@@ -354,7 +351,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindJolokiaService(JolokiaService service) {
         jolokiaService.bind(service);
     }
-
     void unbindJolokiaService(JolokiaService service) {
         jolokiaService.unbind(service);
     }
@@ -362,7 +358,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindMbeanServer(MBeanServer service) {
         mbeanServer.bind(service);
     }
-
     void unbindMbeanServer(MBeanServer service) {
         mbeanServer.unbind(service);
     }
@@ -370,7 +365,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
-
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -378,7 +372,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindProcessHandlerFactory(ProcessHandlerFactory service) {
         processHandlerFactories.add(service);
     }
-
     void unbindProcessHandlerFactory(ProcessHandlerFactory service) {
         processHandlerFactories.remove(service);
     }
@@ -386,7 +379,6 @@ public final class AgentService extends AbstractComponent implements Agent {
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

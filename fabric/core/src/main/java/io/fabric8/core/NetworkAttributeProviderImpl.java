@@ -29,32 +29,21 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({AttributeProvider.class, NetworkAttributeProvider.class})
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "network")
-})
+@Service({ AttributeProvider.class, NetworkAttributeProvider.class })
 public class NetworkAttributeProviderImpl extends AbstractAttributeProvider implements NetworkAttributeProvider {
-
-    private static final String ATTRIBUTE_POINTER_FORMAT = "${container:%s/%s}";
 
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    private String runtimeId;
-    private String ip;
     private String localIp;
     private String localHostName;
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getRuntimeIdentity();;
         updateAttributes();
         activateComponent();
     }
@@ -82,13 +71,10 @@ public class NetworkAttributeProviderImpl extends AbstractAttributeProvider impl
     private void updateAttributes() throws UnknownHostException {
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_BIND_ADDRESS, "0.0.0.0");
         putAttribute(ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER, ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP.getName());
-        putAttribute(ContainerAttributes.ATTRIBUTE_KEY_IP, getIp(runtimeId, ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER.getName()));
+        // [TODO] #52 Provide attribute value for key fabric8.ip
+        //putAttribute(ContainerAttributes.ATTRIBUTE_KEY_IP, getIp(runtimeId, ContainerAttributes.ATTRIBUTE_ADDRESS_RESOLVER.getName()));
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_LOCAL_IP, localIp = HostUtils.getLocalIp());
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_HOSTNAME, localHostName = HostUtils.getLocalHostName());
-    }
-
-    private String getIp(String name, String resolver) {
-        return ip = String.format(ATTRIBUTE_POINTER_FORMAT, name, resolver);
     }
 
     void bindRuntimeService(RuntimeService service) {

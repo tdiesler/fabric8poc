@@ -15,7 +15,6 @@
 
 package io.fabric8.container.wildfly.attributes;
 
-
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.JMXAttributeProvider;
@@ -28,17 +27,11 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JMXAttributeProvider.class})
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "jmx")
-})
+@Service({ AttributeProvider.class, JMXAttributeProvider.class })
 public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider implements JMXAttributeProvider {
 
     private static final String JMX_REMOTE_PORT = "jboss.management.http.port";
@@ -60,7 +53,8 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
 
     @Activate
     void activate() throws Exception {
-        runtimeId = runtimeService.get().getRuntimeIdentity();;
+        runtimeId = runtimeService.get().getRuntimeIdentity();
+        ;
         jmxRemotePort = Integer.parseInt(runtimeService.get().getProperty(JMX_REMOTE_PORT, "" + DEFAULT_JMX_REMOTE_PORT));
         ip = networkProvider.get().getIp();
         updateAttributes();
@@ -91,13 +85,14 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
         putAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL, getJmxUrl(runtimeId, ip, jmxRemotePort));
     }
 
-    private String getJmxUrl(String runtimeId, String ip, int port)  {
+    private String getJmxUrl(String runtimeId, String ip, int port) {
         return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
     }
 
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -105,8 +100,8 @@ public class WildFlyJmxAttributeProvider extends AbstractAttributeProvider imple
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }
 }
-

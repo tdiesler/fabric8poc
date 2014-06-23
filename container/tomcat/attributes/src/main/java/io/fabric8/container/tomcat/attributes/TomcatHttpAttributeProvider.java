@@ -36,19 +36,13 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "http")
-})
+@Service({ AttributeProvider.class, HttpAttributeProvider.class })
 public class TomcatHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TomcatHttpAttributeProvider.class);
@@ -162,6 +156,7 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
     void bindMbeanServer(MBeanServer service) {
         this.mbeanServer.bind(service);
     }
+
     void unbindMbeanServer(MBeanServer service) {
         this.mbeanServer.unbind(service);
     }
@@ -169,6 +164,7 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -176,6 +172,7 @@ public class TomcatHttpAttributeProvider extends AbstractAttributeProvider imple
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

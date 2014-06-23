@@ -29,14 +29,23 @@ public final class ContainerAttributes  {
     private ContainerAttributes() {
     }
 
-    public static final String TYPE = "container.attributes";
     private static final String CONTAINER_ATTRIBUTE_FORMAT = "${container:%s/%s}";
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{container:([a-zA-Z0-9\\.\\-]+)/([a-zA-Z0-9\\.\\-]+)}");
 
     /**
      * JMX {@link ServiceEndpoint} identity
      */
+    public static ServiceEndpointIdentity HTTP_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("http");
+
+    /**
+     * JMX {@link ServiceEndpoint} identity
+     */
     public static ServiceEndpointIdentity JMX_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jmx");
+
+    /**
+     * Jolokia {@link ServiceEndpoint} identity
+     */
+    public static ServiceEndpointIdentity JOLOKIA_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jolokia");
 
     /**
      * The attribute key for the Advertised IP Address

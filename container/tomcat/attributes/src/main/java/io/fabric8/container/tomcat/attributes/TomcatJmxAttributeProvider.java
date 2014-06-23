@@ -15,7 +15,6 @@
 
 package io.fabric8.container.tomcat.attributes;
 
-
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.spi.AttributeProvider;
 import io.fabric8.spi.JMXAttributeProvider;
@@ -28,18 +27,12 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({ AttributeProvider.class, JMXAttributeProvider.class})
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "jmx")
-})
-public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implements JMXAttributeProvider  {
+@Service({ AttributeProvider.class, JMXAttributeProvider.class })
+public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implements JMXAttributeProvider {
 
     private static final String JMX_REMOTE_PORT = "com.sun.management.jmxremote.port";
     private static final int DEFAULT_JMX_REMOTE_PORT = 1099;
@@ -85,13 +78,14 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
         return jmxPassword;
     }
 
-    private String getJmxUrl(String ip, int port)  {
+    private String getJmxUrl(String ip, int port) {
         return jmxServerUrl = String.format(JMX_URL_FORMAT, ip, port);
     }
 
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
@@ -99,6 +93,7 @@ public class TomcatJmxAttributeProvider extends AbstractAttributeProvider implem
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

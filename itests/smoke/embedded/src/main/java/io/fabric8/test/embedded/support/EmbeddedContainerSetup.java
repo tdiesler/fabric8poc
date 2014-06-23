@@ -39,7 +39,6 @@ import io.fabric8.spi.utils.HostUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -48,7 +47,6 @@ import java.nio.file.Paths;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -80,9 +78,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public class EmbeddedContainerSetup implements EmbeddedRuntimeSetup {
 
-    private static String[] moduleNames = new String[] {
-        "fabric8-api", "fabric8-spi", "fabric8-core", "fabric8-domain-agent",
-        "fabric8-container-karaf-managed", "fabric8-container-tomcat-managed", "fabric8-container-wildfly-managed" };
+    private static String[] moduleNames = new String[] { "fabric8-api", "fabric8-spi", "fabric8-core", "fabric8-domain-agent", "fabric8-container-karaf-managed",
+            "fabric8-container-tomcat-managed", "fabric8-container-wildfly-managed" };
 
     @Override
     public void setupEmbeddedRuntime(ObjectStore suiteStore) throws Exception {
@@ -135,25 +132,16 @@ public class EmbeddedContainerSetup implements EmbeddedRuntimeSetup {
         }
 
         // Register the JMXAttributeProvider
-        Hashtable<String, Object> props = new Hashtable<>();
-        props.put("type", ContainerAttributes.TYPE);
-        props.put("classifier", "jmx");
-        String[] services = new String[]{AttributeProvider.class.getName(), JMXAttributeProvider.class.getName()};
-        syscontext.registerService(services, new EmbeddedJmxAttributeProvider(jmxServerUrl), props);
+        String[] services = new String[] { AttributeProvider.class.getName(), JMXAttributeProvider.class.getName() };
+        syscontext.registerService(services, new EmbeddedJmxAttributeProvider(jmxServerUrl), null);
 
         // Register the NetworkAttributeProvider
-        props = new Hashtable<>();
-        props.put("type", ContainerAttributes.TYPE);
-        props.put("classifier", "network");
-        services = new String[]{AttributeProvider.class.getName(), NetworkAttributeProvider.class.getName()};
-        syscontext.registerService(services, new EmbeddedNetworkAttributeProvider(), props);
+        services = new String[] { AttributeProvider.class.getName(), NetworkAttributeProvider.class.getName() };
+        syscontext.registerService(services, new EmbeddedNetworkAttributeProvider(), null);
 
         // Register the HttpAttributeProvider
-        props = new Hashtable<>();
-        props.put("type", ContainerAttributes.TYPE);
-        props.put("classifier", "http");
-        services = new String[]{AttributeProvider.class.getName(), HttpAttributeProvider.class.getName()};
-        syscontext.registerService(services, new EmbeddedHttpAttributeProvider(), props);
+        services = new String[] { AttributeProvider.class.getName(), HttpAttributeProvider.class.getName() };
+        syscontext.registerService(services, new EmbeddedHttpAttributeProvider(), null);
 
         // Wait for the {@link BootstrapComplete} service
         ServiceLocator.awaitService(BootstrapComplete.class, 20, TimeUnit.SECONDS);

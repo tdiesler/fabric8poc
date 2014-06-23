@@ -30,7 +30,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -46,10 +45,6 @@ import org.slf4j.LoggerFactory;
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service({ AttributeProvider.class, JMXAttributeProvider.class, ConfigurationListener.class })
-@Properties({
-        @Property(name = "type", value = ContainerAttributes.TYPE),
-        @Property(name = "classifier", value = "jmx")
-})
 public class KarafJmxAttributeProvider extends AbstractAttributeProvider implements ConfigurationListener, JMXAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KarafJmxAttributeProvider.class);
@@ -150,6 +145,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     void bindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.bind(service);
     }
+
     void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
     }
@@ -157,6 +153,7 @@ public class KarafJmxAttributeProvider extends AbstractAttributeProvider impleme
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }

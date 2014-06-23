@@ -84,11 +84,14 @@ public final class ContainerRegistry extends AbstractComponent {
         deactivateComponent();
     }
 
-    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<ProfileIdentity> profiles,
-            Set<ServiceEndpoint> endpoints) {
+    Container createContainer(ContainerIdentity parentId, ContainerIdentity identity, CreateOptions options, VersionIdentity version, List<ProfileIdentity> profiles, Set<ServiceEndpoint> endpoints) {
         IllegalStateAssertion.assertTrue(getContainer(identity) == null, "Container already exists: " + identity);
-        Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED).addParent(parentId)
-                .addProfiles(profiles).addProfileVersion(version).addServiceEndpoints(endpoints).build();
+        Container cnt = new ImmutableContainer.Builder(identity, options.getRuntimeType(), options.getAttributes(), State.CREATED)
+                .addParent(parentId)
+                .addProfiles(profiles)
+                .addProfileVersion(version)
+                .addServiceEndpoints(endpoints)
+                .build();
 
         storeInternal(cnt);
         return cnt;

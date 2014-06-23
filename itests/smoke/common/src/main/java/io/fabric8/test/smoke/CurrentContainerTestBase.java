@@ -19,14 +19,13 @@
  */
 package io.fabric8.test.smoke;
 
-import static io.fabric8.api.ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.ServiceEndpoint;
-import io.fabric8.api.ServiceEndpointIdentity;
+import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.api.management.ContainerManagement;
 import io.fabric8.spi.JMXServiceEndpoint;
 import io.fabric8.spi.RuntimeService;
@@ -78,15 +77,27 @@ public abstract class CurrentContainerTestBase {
         Assert.assertEquals(currentId, cnt.getIdentity());
 
         Set<ServiceEndpoint> endpoints = cnt.getServiceEndpoints();
-        Assert.assertEquals(1, endpoints.size());
-        Assert.assertEquals(ServiceEndpointIdentity.create("jmx"), endpoints.iterator().next().getIdentity());
+        Assert.assertEquals(3, endpoints.size());
 
-        String jmxServerUrl = cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL);
-        Assert.assertNotNull("JMX server URL not null", jmxServerUrl);
+        // Verify JMX ServiceEndpoint
+        ServiceEndpoint sep = cnt.getServiceEndpoint(ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY);
+        JMXServiceEndpoint jmxEndpoint = sep.adapt(JMXServiceEndpoint.class);
+        Assert.assertNotNull("JMX service endpoint not null", jmxEndpoint);
+        Assert.assertEquals(jmxEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL));
+
+        // Verify Http ServiceEndpoint
+        sep = cnt.getServiceEndpoint(ContainerAttributes.HTTP_SERVICE_ENDPOINT_IDENTITY);
+        URLServiceEndpoint httpEndpoint = sep.adapt(URLServiceEndpoint.class);
+        Assert.assertNotNull("Http service endpoint not null", httpEndpoint);
+        Assert.assertEquals(httpEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL));
+
+        // Verify Jolokia ServiceEndpoint
+        sep = cnt.getServiceEndpoint(ContainerAttributes.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
+        URLServiceEndpoint jolokiaEndpoint = sep.adapt(URLServiceEndpoint.class);
+        Assert.assertNotNull("Jolokia service endpoint not null", jolokiaEndpoint);
+        Assert.assertEquals(jolokiaEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
 
         String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
-        ServiceEndpoint sep = cntManager.getServiceEndpoint(currentId, JMX_SERVICE_ENDPOINT_IDENTITY);
-        JMXServiceEndpoint jmxEndpoint = sep.adapt(JMXServiceEndpoint.class);
         JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {
             // Access containers through JMX

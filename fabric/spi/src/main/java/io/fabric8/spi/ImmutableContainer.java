@@ -24,11 +24,13 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.ProfileIdentity;
 import io.fabric8.api.ServiceEndpoint;
+import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,7 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
     private final State state;
 
     private VersionIdentity profileVersion;
-    private Set<ServiceEndpoint> endpoints = new HashSet<>();
+    private Map<ServiceEndpointIdentity, ServiceEndpoint> endpoints = new HashMap<>();
     private Set<ContainerIdentity> children = new HashSet<>();
     private List<ProfileIdentity> profiles = new ArrayList<>();
     private ContainerIdentity parent;
@@ -110,12 +112,19 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
 
     @Override
     public Set<ServiceEndpoint> getServiceEndpoints() {
-        return Collections.unmodifiableSet(endpoints);
+        Set<ServiceEndpoint> values = new HashSet<>(endpoints.values());
+        return Collections.unmodifiableSet(values);
+    }
+
+    @Override
+    public ServiceEndpoint getServiceEndpoint(ServiceEndpointIdentity identity) {
+        return endpoints.get(identity);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof ImmutableContainer)) return false;
+        if (!(obj instanceof ImmutableContainer))
+            return false;
         ImmutableContainer other = (ImmutableContainer) obj;
         return other.identity.equals(identity);
     }
@@ -143,7 +152,9 @@ public final class ImmutableContainer extends AttributeSupport implements Contai
         }
 
         public Builder addServiceEndpoints(Set<ServiceEndpoint> endpoints) {
-            container.endpoints.addAll(endpoints);
+            for (ServiceEndpoint ep : endpoints) {
+                container.endpoints.put(ep.getIdentity(), ep);
+            }
             return this;
         }
 

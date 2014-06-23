@@ -31,7 +31,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -44,11 +43,7 @@ import org.slf4j.LoggerFactory;
 // mvn:io.fabric8.poc/fabric8-container-karaf-attributes/2.0.0-SNAPSHOT because it belongs to bundle mvn:org.apache.felix/org.apache.felix.http.bundle/2.2.1
 
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service({AttributeProvider.class, HttpAttributeProvider.class})
-@Properties({
-                @Property(name = "type", value = ContainerAttributes.TYPE),
-                @Property(name = "classifier", value = "http")
-})
+@Service({ AttributeProvider.class, HttpAttributeProvider.class })
 public class KarafHttpAttributeProvider extends AbstractAttributeProvider implements HttpAttributeProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KarafHttpAttributeProvider.class);
@@ -114,6 +109,7 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
     void bindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.bind(service);
     }
+
     void unbindConfigAdmin(ConfigurationAdmin service) {
         this.configAdmin.unbind(service);
     }
@@ -121,6 +117,7 @@ public class KarafHttpAttributeProvider extends AbstractAttributeProvider implem
     void bindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.bind(service);
     }
+
     void unbindNetworkProvider(NetworkAttributeProvider service) {
         networkProvider.unbind(service);
     }
