@@ -22,6 +22,7 @@ import static io.fabric8.api.ContainerAttributes.HTTP_SERVICE_ENDPOINT_IDENTITY;
 import static io.fabric8.api.ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY;
 import static io.fabric8.api.ContainerAttributes.JOLOKIA_SERVICE_ENDPOINT_IDENTITY;
 import io.fabric8.api.AttributeKey;
+import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
 import io.fabric8.api.CreateOptions;
 import io.fabric8.api.LockHandle;
@@ -73,6 +74,8 @@ public class ContainerRegistration extends AbstractComponent {
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
+    private Container currentContainer;
+
     @Activate
     void activate() {
         activateInternal();
@@ -89,14 +92,18 @@ public class ContainerRegistration extends AbstractComponent {
         ContainerIdentity currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
         LockHandle writeLock = aquireWriteLock(currentIdentity);
         try {
-            registerContainer(currentIdentity);
+            currentContainer = registerContainer(currentIdentity);
         } finally {
             writeLock.unlock();
         }
 
     }
 
-    private void registerContainer(ContainerIdentity identity) {
+    Container getCurrentContainer() {
+        return currentContainer;
+    }
+
+    private Container registerContainer(ContainerIdentity identity) {
         ContainerRegistry registry = containerRegistry.get();
 
         final Map<AttributeKey<?>, Object> httpAttributes = httpProvider.get().getAttributes();
@@ -113,7 +120,7 @@ public class ContainerRegistration extends AbstractComponent {
         endpoints.add(new AbstractURLServiceEndpoint(HTTP_SERVICE_ENDPOINT_IDENTITY, httpAtts));
 
         // Jolokia endpoint
-        httpAtts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, jolokiaEndpointURL = httpEndpointURL + "/jolokia");
+        httpAtts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, jolokiaEndpointURL = httpEndpointURL + "/fabric8/jolokia");
         endpoints.add(new AbstractURLServiceEndpoint(JOLOKIA_SERVICE_ENDPOINT_IDENTITY, httpAtts));
 
         // JMX endpoint
@@ -141,7 +148,7 @@ public class ContainerRegistration extends AbstractComponent {
             }
         };
 
-        registry.createContainer(null, identity, options, bootVersion, profiles, endpoints);
+        return registry.createContainer(null, identity, options, bootVersion, profiles, endpoints);
     }
 
     private LockHandle aquireWriteLock(ContainerIdentity identity) {

@@ -133,7 +133,7 @@ public final class AgentService extends AbstractComponent implements Agent {
 
         // Register this Agent
         InetAddress targetHost = InetAddress.getByName(networkProvider.get().getIp());
-        String jolokiaAgentUrl = httpProvider.get().getHttpUrl() + "/jolokia";
+        String jolokiaAgentUrl = httpProvider.get().getHttpUrl() + "/fabric8/jolokia";
         String jolokiaUsername = null;
         String jolokiaPassword = null;
         localAgent = new AgentRegistration(agentId, targetHost, jolokiaAgentUrl, jolokiaUsername, jolokiaPassword);

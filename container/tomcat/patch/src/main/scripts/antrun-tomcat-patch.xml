@@ -88,6 +88,7 @@
     <copy todir="${tomcat.patch.dir}/lib" overwrite="true">
         <fileset dir="${deploy.artifacts.lib}">
         	<include name="commons-compress-*"/>
+        	<include name="commons-logging-*"/>
         	<include name="fabric8-api-*"/>
         	<include name="fabric8-spi-*"/>
         	<include name="fabric8-container-karaf-managed-*"/>

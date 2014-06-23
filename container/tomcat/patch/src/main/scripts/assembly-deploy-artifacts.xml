@@ -36,6 +36,7 @@
             <useStrictFiltering>true</useStrictFiltering>
             <includes>
                 <include>*:commons-compress:jar</include>
+                <include>*:commons-logging:jar</include>
                 <include>*:fabric8-api:jar</include>
                 <include>*:fabric8-spi:jar</include>
                 <include>*:fabric8-container-karaf-managed:jar</include>

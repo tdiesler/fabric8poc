@@ -21,10 +21,13 @@ package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
 import io.fabric8.spi.BootstrapComplete;
+import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.smoke.JolokiaEndpointTestBase;
 import io.fabric8.test.smoke.PrePostConditions;
 
 import java.io.InputStream;
+
+import javax.management.MBeanServer;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -35,9 +38,12 @@ import org.jboss.gravia.resource.ManifestBuilder;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
+import org.jboss.gravia.utils.ObjectNameFactory;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
+import org.jolokia.client.J4pClient;
+import org.jolokia.client.request.J4pResponse;
 import org.junit.runner.RunWith;
 
 /**
@@ -64,12 +70,14 @@ public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
+                    builder.addImportPackages(ObjectNameFactory.class, ManagementUtils.class, MBeanServer.class);
+                    builder.addImportPackages(J4pClient.class, J4pResponse.class);
                     builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {
                     ManifestBuilder builder = new ManifestBuilder();
                     builder.addIdentityCapability(archive.getName(), "1.0.0");
-                    builder.addManifestHeader("Dependencies", "io.fabric8.api,io.fabric8.spi,org.jboss.gravia");
+                    builder.addManifestHeader("Dependencies", "io.fabric8.api,io.fabric8.spi,io.fabric8.jolokia,org.jboss.gravia");
                     return builder.openStream();
                 }
             }
