@@ -15,37 +15,12 @@
 
 package io.fabric8.api;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class ContainerAttributes  {
 
     // Hide ctor
     private ContainerAttributes() {
     }
-
-    private static final String CONTAINER_ATTRIBUTE_FORMAT = "${container:%s/%s}";
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{container:([a-zA-Z0-9\\.\\-]+)/([a-zA-Z0-9\\.\\-]+)}");
-
-    /**
-     * JMX {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity HTTP_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("http");
-
-    /**
-     * JMX {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity JMX_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jmx");
-
-    /**
-     * Jolokia {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity JOLOKIA_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jolokia");
 
     /**
      * The attribute key for the Advertised IP Address
@@ -126,39 +101,4 @@ public final class ContainerAttributes  {
      * The attribute key for SSH server URL
      */
     public static final AttributeKey<String> ATTRIBUTE_KEY_SSH_SERVER_URL = AttributeKey.create("fabric8.ssh.server.url", String.class);
-
-    public static final  Map<AttributeKey<?>, Object> substituteContainerAttributes(Map<AttributeKey<?>, Object> attributes, Set<AttributeKey<?>> visited) {
-        Map<AttributeKey<?>, Object> result = new HashMap<>();
-        for ( Map.Entry<AttributeKey<?>, Object> entry : attributes.entrySet()) {
-            AttributeKey<?> key = entry.getKey();
-            String value = String.valueOf(entry.getValue());
-            String substitutedValue = substituteContainerAttribute(value, attributes, new HashSet<AttributeKey<?>>());
-            result.put(key, key.getFactory().createFrom(substitutedValue));
-
-        }
-        return result;
-    }
-
-    private static final String substituteContainerAttribute(String str, Map<AttributeKey<?>, Object> attributes, Set<AttributeKey<?>> visited) {
-        String result = str;
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(str);
-        CopyOnWriteArraySet<AttributeKey<?>> copyOfVisited = new CopyOnWriteArraySet<>(visited);
-        while (matcher.find()) {
-            String containerName = matcher.group(1);
-            String attributeName = matcher.group(2);
-            String replacement = "";
-            String toReplace = String.format(CONTAINER_ATTRIBUTE_FORMAT, containerName, attributeName);
-            AttributeKey<Object> attributeKey = AttributeKey.create(attributeName, Object.class);
-            if (attributes.containsKey(attributeKey) && !visited.contains(attributeKey)) {
-                replacement = String.valueOf(attributes.get(attributeKey));
-                replacement = replacement != null ? replacement : "";
-                if (PLACEHOLDER_PATTERN.matcher(replacement).matches()) {
-                    copyOfVisited.add(attributeKey);
-                    replacement = substituteContainerAttribute(replacement, attributes, copyOfVisited);
-                }
-            }
-            result = result.replaceAll(toReplace, Matcher.quoteReplacement(replacement));
-        }
-        return result;
-    }
 }

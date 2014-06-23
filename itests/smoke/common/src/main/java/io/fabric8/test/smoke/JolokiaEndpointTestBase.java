@@ -19,7 +19,6 @@
  */
 package io.fabric8.test.smoke;
 
-import static io.fabric8.api.ContainerAttributes.JOLOKIA_SERVICE_ENDPOINT_IDENTITY;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
@@ -65,7 +64,7 @@ public abstract class JolokiaEndpointTestBase  {
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
         Container cnt = cntManager.getCurrentContainer();
 
-        ServiceEndpoint sep = cnt.getServiceEndpoint(JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
+        ServiceEndpoint sep = cnt.getServiceEndpoint(URLServiceEndpoint.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
         URLServiceEndpoint urlsep = sep.adapt(URLServiceEndpoint.class);
         String serviceURL = urlsep.getServiceURL();
         Assert.assertNotNull("Jolokia URL not null", serviceURL);

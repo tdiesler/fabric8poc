@@ -80,19 +80,19 @@ public abstract class CurrentContainerTestBase {
         Assert.assertEquals(3, endpoints.size());
 
         // Verify JMX ServiceEndpoint
-        ServiceEndpoint sep = cnt.getServiceEndpoint(ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY);
+        ServiceEndpoint sep = cnt.getServiceEndpoint(URLServiceEndpoint.JMX_SERVICE_ENDPOINT_IDENTITY);
         JMXServiceEndpoint jmxEndpoint = sep.adapt(JMXServiceEndpoint.class);
         Assert.assertNotNull("JMX service endpoint not null", jmxEndpoint);
         Assert.assertEquals(jmxEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL));
 
         // Verify Http ServiceEndpoint
-        sep = cnt.getServiceEndpoint(ContainerAttributes.HTTP_SERVICE_ENDPOINT_IDENTITY);
+        sep = cnt.getServiceEndpoint(URLServiceEndpoint.HTTP_SERVICE_ENDPOINT_IDENTITY);
         URLServiceEndpoint httpEndpoint = sep.adapt(URLServiceEndpoint.class);
         Assert.assertNotNull("Http service endpoint not null", httpEndpoint);
         Assert.assertEquals(httpEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL));
 
         // Verify Jolokia ServiceEndpoint
-        sep = cnt.getServiceEndpoint(ContainerAttributes.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
+        sep = cnt.getServiceEndpoint(URLServiceEndpoint.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
         URLServiceEndpoint jolokiaEndpoint = sep.adapt(URLServiceEndpoint.class);
         Assert.assertNotNull("Jolokia service endpoint not null", jolokiaEndpoint);
         Assert.assertEquals(jolokiaEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));

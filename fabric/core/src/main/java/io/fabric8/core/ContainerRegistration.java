@@ -18,9 +18,6 @@ package io.fabric8.core;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
-import static io.fabric8.api.ContainerAttributes.HTTP_SERVICE_ENDPOINT_IDENTITY;
-import static io.fabric8.api.ContainerAttributes.JMX_SERVICE_ENDPOINT_IDENTITY;
-import static io.fabric8.api.ContainerAttributes.JOLOKIA_SERVICE_ENDPOINT_IDENTITY;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
@@ -117,17 +114,17 @@ public class ContainerRegistration extends AbstractComponent {
         String httpEndpointURL = (String) httpAttributes.get(ATTRIBUTE_KEY_HTTP_URL);
         Map<AttributeKey<?>, Object> httpAtts = new HashMap<>(httpAttributes);
         httpAtts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, httpEndpointURL);
-        endpoints.add(new AbstractURLServiceEndpoint(HTTP_SERVICE_ENDPOINT_IDENTITY, httpAtts));
+        endpoints.add(new AbstractURLServiceEndpoint(URLServiceEndpoint.HTTP_SERVICE_ENDPOINT_IDENTITY, httpAtts));
 
         // Jolokia endpoint
         httpAtts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, jolokiaEndpointURL = httpEndpointURL + "/fabric8/jolokia");
-        endpoints.add(new AbstractURLServiceEndpoint(JOLOKIA_SERVICE_ENDPOINT_IDENTITY, httpAtts));
+        endpoints.add(new AbstractURLServiceEndpoint(URLServiceEndpoint.JOLOKIA_SERVICE_ENDPOINT_IDENTITY, httpAtts));
 
         // JMX endpoint
         String jmxEndpointURL = (String) jmxAttributes.get(ATTRIBUTE_KEY_JMX_SERVER_URL);
         Map<AttributeKey<?>, Object> jmxAtts = new HashMap<>(jmxAttributes);
         jmxAtts.put(URLServiceEndpoint.ATTRIBUTE_KEY_SERVICE_URL, jmxEndpointURL);
-        endpoints.add(new AbstractURLServiceEndpoint(JMX_SERVICE_ENDPOINT_IDENTITY, jmxAtts));
+        endpoints.add(new AbstractURLServiceEndpoint(URLServiceEndpoint.JMX_SERVICE_ENDPOINT_IDENTITY, jmxAtts));
 
         // Get boot profile version
         VersionIdentity bootVersion = bootConfiguration.get().getVersion();
