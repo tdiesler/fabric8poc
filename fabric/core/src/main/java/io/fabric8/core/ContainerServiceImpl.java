@@ -45,7 +45,6 @@ import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootConfiguration;
-import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
@@ -216,7 +215,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         ModuleContext syscontext = runtime.getModuleContext();
         registrations.add(syscontext.registerService(ProfileEventListener.class, listener, null));
 
-        // Create the current container
+        // Start and provision the current container
         ContainerRegistry registry = containerRegistry.get();
         Container container = registry.getRequiredContainer(currentIdentity);
 
@@ -230,7 +229,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 }
             };
 
-            // Start the current container
             startContainerInternal(container, provisionListener);
 
             try {
@@ -844,6 +842,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindBootConfiguration(BootConfiguration service) {
         bootConfiguration.bind(service);
     }
+
     void unbindBootConfiguration(BootConfiguration service) {
         bootConfiguration.unbind(service);
     }
@@ -851,6 +850,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRemoteContainer(RemoteContainerService service) {
         this.remoteContainer.bind(service);
     }
+
     void unbindRemoteContainer(RemoteContainerService service) {
         this.remoteContainer.unbind(service);
     }
@@ -858,6 +858,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.bind(service);
     }
+
     void unbindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.unbind(service);
     }
@@ -865,6 +866,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindContainerLocks(ContainerLockManager service) {
         containerLocks.bind(service);
     }
+
     void unbindContainerLocks(ContainerLockManager service) {
         containerLocks.unbind(service);
     }
@@ -872,6 +874,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
+
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -886,6 +889,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindCurrentContainerService(CurrentContainerService service) {
         currentContainerService.bind(service);
     }
+
     void unbindCurrentContainerService(CurrentContainerService service) {
         currentContainerService.unbind(service);
     }
@@ -893,6 +897,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }
+
     void unbindProfileService(ProfileService service) {
         profileService.unbind(service);
     }
@@ -900,6 +905,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProvisioner(Provisioner service) {
         provisioner.bind(service);
     }
+
     void unbindProvisioner(Provisioner service) {
         provisioner.unbind(service);
     }
@@ -907,6 +913,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
+
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

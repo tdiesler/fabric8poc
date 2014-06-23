@@ -32,7 +32,6 @@ import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AbstractURLServiceEndpoint;
 import io.fabric8.spi.BootConfiguration;
-import io.fabric8.spi.ContainerRegistration;
 import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.RuntimeService;
@@ -54,9 +53,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.jboss.gravia.runtime.RuntimeType;
 
+/**
+ * Registers the current container.
+ */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
 @Service(ContainerRegistration.class)
-public class ContainerRegistrationImpl extends AbstractComponent implements ContainerRegistration {
+public class ContainerRegistration extends AbstractComponent {
 
     @Reference(referenceInterface = BootConfiguration.class)
     private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
@@ -149,7 +151,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindBootConfiguration(BootConfiguration service) {
         bootConfiguration.bind(service);
     }
-
     void unbindBootConfiguration(BootConfiguration service) {
         bootConfiguration.unbind(service);
     }
@@ -157,7 +158,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindContainerLocks(ContainerLockManager service) {
         containerLocks.bind(service);
     }
-
     void unbindContainerLocks(ContainerLockManager service) {
         containerLocks.unbind(service);
     }
@@ -165,7 +165,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
-
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -173,7 +172,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindHttpProvider(HttpAttributeProvider service) {
         httpProvider.bind(service);
     }
-
     void unbindHttpProvider(HttpAttributeProvider service) {
         httpProvider.unbind(service);
     }
@@ -181,7 +179,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.bind(service);
     }
-
     void unbindJmxProvider(JMXAttributeProvider service) {
         jmxProvider.unbind(service);
     }
@@ -189,7 +186,6 @@ public class ContainerRegistrationImpl extends AbstractComponent implements Cont
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }
