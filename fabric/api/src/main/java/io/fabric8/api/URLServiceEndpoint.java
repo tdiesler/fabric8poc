@@ -29,21 +29,22 @@ package io.fabric8.api;
 public interface URLServiceEndpoint extends ServiceEndpoint {
 
     /**
+     * Jolokia {@link ServiceEndpoint} identity
+     */
+    ServiceEndpointIdentity JOLOKIA_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jolokia");
+    /**
+     * JMX {@link ServiceEndpoint} identity
+     */
+    ServiceEndpointIdentity JMX_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jmx");
+    /**
+     * JMX {@link ServiceEndpoint} identity
+     */
+    ServiceEndpointIdentity HTTP_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("http");
+
+    /**
      * The attribute key for the service URL
      */
     AttributeKey<String> ATTRIBUTE_KEY_SERVICE_URL = AttributeKey.create("fabric8.service.url", String.class);
-    /**
-     * Jolokia {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity JOLOKIA_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jolokia");
-    /**
-     * JMX {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity JMX_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("jmx");
-    /**
-     * JMX {@link ServiceEndpoint} identity
-     */
-    public static ServiceEndpointIdentity HTTP_SERVICE_ENDPOINT_IDENTITY = ServiceEndpointIdentity.create("http");
 
     String getServiceURL();
 }

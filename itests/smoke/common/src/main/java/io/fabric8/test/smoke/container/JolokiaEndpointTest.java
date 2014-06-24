@@ -24,10 +24,14 @@ import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.smoke.JolokiaEndpointTestBase;
 import io.fabric8.test.smoke.PrePostConditions;
+import io.fabric8.test.smoke.sub.c.Bean;
+import io.fabric8.test.smoke.sub.c.BeanOpenType;
 
 import java.io.InputStream;
 
 import javax.management.MBeanServer;
+import javax.management.openmbean.CompositeData;
+import javax.management.remote.JMXConnector;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -61,6 +65,7 @@ public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
         final ArchiveBuilder archive = new ArchiveBuilder("jolokia-endpoint-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
         archive.addClasses(JolokiaEndpointTestBase.class, PrePostConditions.class);
+        archive.addClasses(Bean.class, BeanOpenType.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -70,7 +75,8 @@ public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
                     builder.addBundleSymbolicName(archive.getName());
                     builder.addBundleVersion("1.0.0");
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
-                    builder.addImportPackages(ObjectNameFactory.class, ManagementUtils.class, MBeanServer.class);
+                    builder.addImportPackages(ObjectNameFactory.class, ManagementUtils.class);
+                    builder.addImportPackages(MBeanServer.class, CompositeData.class, JMXConnector.class);
                     builder.addImportPackages(J4pClient.class, J4pResponse.class);
                     builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();

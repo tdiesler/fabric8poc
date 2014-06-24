@@ -98,10 +98,10 @@ public abstract class CurrentContainerTestBase {
         Assert.assertEquals(jolokiaEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
 
         String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
-        JMXConnector connector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
+        JMXConnector jmxConnector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
         try {
             // Access containers through JMX
-            MBeanServerConnection server = connector.getMBeanServerConnection();
+            MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
             ContainerManagement cntManagement = jmxEndpoint.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
             Assert.assertNotNull("ContainerManagement not null", cntManagement);
             Set<String> containerIds = cntManagement.getContainerIds();
@@ -109,7 +109,7 @@ public abstract class CurrentContainerTestBase {
             ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
             Assert.assertEquals(cnt.getIdentity(), cntId);
         } finally {
-            connector.close();
+            jmxConnector.close();
         }
     }
 }

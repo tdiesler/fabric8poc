@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
@@ -39,7 +40,6 @@ import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
-import org.jboss.gravia.utils.MBeanProxy;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 
@@ -60,7 +60,25 @@ public final class ManagementUtils {
         long end = System.currentTimeMillis() + 10000L;
         while (mbeanProxy == null && System.currentTimeMillis() < end) {
             if (server.isRegistered(oname)) {
-                mbeanProxy = MBeanProxy.get(server, oname, type);
+                mbeanProxy = JMX.newMBeanProxy(server, oname, type);
+            } else {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    break;
+                }
+            }
+        }
+        IllegalStateAssertion.assertNotNull(mbeanProxy, "Cannot obtain MBean proxy for: " + oname);
+        return mbeanProxy;
+    }
+
+    public static <T> T getMXBeanProxy(MBeanServerConnection server, ObjectName oname, Class<T> type) throws IOException {
+        T mbeanProxy = null;
+        long end = System.currentTimeMillis() + 10000L;
+        while (mbeanProxy == null && System.currentTimeMillis() < end) {
+            if (server.isRegistered(oname)) {
+                mbeanProxy = JMX.newMXBeanProxy(server, oname, type);
             } else {
                 try {
                     Thread.sleep(100);

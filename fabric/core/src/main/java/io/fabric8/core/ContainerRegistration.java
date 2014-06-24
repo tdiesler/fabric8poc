@@ -71,7 +71,7 @@ public class ContainerRegistration extends AbstractComponent {
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
-    private Container currentContainer;
+    private ContainerIdentity currentContainerId;
 
     @Activate
     void activate() {
@@ -86,10 +86,10 @@ public class ContainerRegistration extends AbstractComponent {
 
     private void activateInternal() {
         // Create the current container
-        ContainerIdentity currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
-        LockHandle writeLock = aquireWriteLock(currentIdentity);
+        currentContainerId = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
+        LockHandle writeLock = aquireWriteLock(currentContainerId);
         try {
-            currentContainer = registerContainer(currentIdentity);
+            registerContainer(currentContainerId);
         } finally {
             writeLock.unlock();
         }
@@ -97,7 +97,8 @@ public class ContainerRegistration extends AbstractComponent {
     }
 
     Container getCurrentContainer() {
-        return currentContainer;
+        ContainerRegistry registry = containerRegistry.get();
+        return registry.getContainer(currentContainerId);
     }
 
     private Container registerContainer(ContainerIdentity identity) {
