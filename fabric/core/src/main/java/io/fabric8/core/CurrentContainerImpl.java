@@ -17,7 +17,7 @@ package io.fabric8.core;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_HTTP_URL;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JMX_SERVER_URL;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Container;
 import io.fabric8.api.ContainerIdentity;
@@ -30,6 +30,7 @@ import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.AbstractCreateOptions;
 import io.fabric8.spi.AbstractURLServiceEndpoint;
 import io.fabric8.spi.BootConfiguration;
+import io.fabric8.spi.CurrentContainer;
 import io.fabric8.spi.HttpAttributeProvider;
 import io.fabric8.spi.JMXAttributeProvider;
 import io.fabric8.spi.RuntimeService;
@@ -37,7 +38,10 @@ import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,14 +53,16 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.jboss.gravia.provision.ResourceHandle;
+import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * Registers the current container.
  */
 @Component(policy = ConfigurationPolicy.IGNORE, immediate = true)
-@Service(ContainerRegistration.class)
-public class ContainerRegistration extends AbstractComponent {
+@Service(CurrentContainer.class)
+public class CurrentContainerImpl extends AbstractComponent implements CurrentContainer {
 
     @Reference(referenceInterface = BootConfiguration.class)
     private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
@@ -71,6 +77,7 @@ public class ContainerRegistration extends AbstractComponent {
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
+    private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
     private ContainerIdentity currentContainerId;
 
     @Activate
@@ -87,7 +94,7 @@ public class ContainerRegistration extends AbstractComponent {
     private void activateInternal() {
         // Create the current container
         currentContainerId = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
-        LockHandle writeLock = aquireWriteLock(currentContainerId);
+        LockHandle writeLock = containerLocks.get().aquireWriteLock(currentContainerId);
         try {
             registerContainer(currentContainerId);
         } finally {
@@ -96,9 +103,43 @@ public class ContainerRegistration extends AbstractComponent {
 
     }
 
-    Container getCurrentContainer() {
-        ContainerRegistry registry = containerRegistry.get();
-        return registry.getContainer(currentContainerId);
+    @Override
+    public ContainerIdentity getCurrentContainerIdentity() {
+        return currentContainerId;
+    }
+
+    @Override
+    public Container getCurrentContainer() {
+        LockHandle readLock = containerLocks.get().aquireReadLock(currentContainerId);
+        try {
+            ContainerRegistry registry = containerRegistry.get();
+            return registry.getContainer(currentContainerId);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public Map<ResourceIdentity, ResourceHandle> getResourceHandles() {
+        synchronized (resourceHandles) {
+            return Collections.unmodifiableMap(resourceHandles);
+        }
+    }
+
+    @Override
+    public void addResourceHandles(Map<ResourceIdentity, ResourceHandle> handles) {
+        synchronized (resourceHandles) {
+            resourceHandles.putAll(handles);
+        }
+    }
+
+    @Override
+    public void removeResourceHandles(Collection<ResourceIdentity> handles) {
+        synchronized (resourceHandles) {
+            for (ResourceIdentity resourceIdentity : handles) {
+                resourceHandles.remove(resourceIdentity);
+            }
+        }
     }
 
     private Container registerContainer(ContainerIdentity identity) {
@@ -137,7 +178,7 @@ public class ContainerRegistration extends AbstractComponent {
             {
                 addAttributes(httpAttributes);
                 addAttributes(jmxAttributes);
-                addAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL, jolokiaEndpointURL);
+                addAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL, jolokiaEndpointURL);
             }
 
             @Override
@@ -147,10 +188,6 @@ public class ContainerRegistration extends AbstractComponent {
         };
 
         return registry.createContainer(null, identity, options, bootVersion, profiles, endpoints);
-    }
-
-    private LockHandle aquireWriteLock(ContainerIdentity identity) {
-        return containerLocks.get().aquireWriteLock(identity);
     }
 
     void bindBootConfiguration(BootConfiguration service) {

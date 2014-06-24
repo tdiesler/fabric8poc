@@ -20,8 +20,6 @@
 
 package io.fabric8.container.karaf.internal;
 
-import javax.management.MBeanServer;
-
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.container.karaf.KarafProcessHandler;
 import io.fabric8.container.karaf.KarafProcessOptions;
@@ -63,7 +61,7 @@ public final class KarafProcessHandlerService extends AbstractComponent implemen
     }
 
     @Override
-    public ProcessHandler createProcessHandler(MBeanServer mbeanServer, AgentRegistration agentReg) {
-        return new KarafProcessHandler(mbeanServer, agentReg);
+    public ProcessHandler createProcessHandler(AgentRegistration agentReg) {
+        return new KarafProcessHandler(agentReg);
     }
 }

@@ -22,6 +22,12 @@ package io.fabric8.spi;
 import io.fabric8.spi.process.ProcessIdentity;
 
 import java.util.Map;
+import java.util.Set;
+
+import javax.management.MXBean;
+import javax.management.ObjectName;
+
+import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
  * The process/agent topology
@@ -29,13 +35,50 @@ import java.util.Map;
  * @author thomas.diesler@jboss.com
  * @since 07-Jun-2014
  */
+@MXBean
 public interface AgentTopology {
 
-    Map<AgentIdentity, AgentRegistration> getAgentRegistrations();
+    ObjectName OBJECT_NAME = ObjectNameFactory.create("io.fabric8:type=AgentTopology");
 
-    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
+    /**
+     * Get the agent registrations for this agent topology
+     */
+    Set<AgentRegistration> getAgentRegistrations();
 
+    /**
+     * Add an agent registrations to this agent topology
+     * @return The currently registered agents
+     */
+    Set<AgentRegistration> addAgentRegistration(AgentRegistration agentReg);
+
+    /**
+     * Remove an agent registrations from this agent topology
+     * @return The currently registered agents
+     */
+    Set<AgentRegistration> removeAgentRegistration(AgentIdentity agentId);
+
+    /**
+     * Get the agent registration for the given agent id.
+     */
     AgentRegistration getAgentRegistration(AgentIdentity agentId);
 
+    /**
+     * Get the agent registration for the given process id.
+     */
     AgentRegistration getAgentRegistration(ProcessIdentity processId);
+
+    /**
+     * Get the current process mapping for this agent topology
+     */
+    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
+
+    /**
+     * Add a process mapping to this agent topology
+     */
+    void addProcess(ProcessIdentity processId, AgentIdentity agentId);
+
+    /**
+     * Remove a process mapping from this agent topology
+     */
+    void removeProcess(ProcessIdentity processId);
 }

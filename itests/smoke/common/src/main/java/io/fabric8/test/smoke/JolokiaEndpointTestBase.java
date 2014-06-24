@@ -25,6 +25,7 @@ import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.spi.JMXServiceEndpoint;
+import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.smoke.sub.c.Bean;
 import io.fabric8.test.smoke.sub.c.BeanOpenType;
 
@@ -111,6 +112,47 @@ public abstract class JolokiaEndpointTestBase {
                 signature = new String[]{ CompositeData.class.getName() };
                 cdata = (CompositeData) con.invoke(SimpleMXBean.OBJECT_NAME, "echoBean", params, signature);
                 Assert.assertEquals(bean, BeanOpenType.fromCompositeData(cdata));
+            } finally {
+                jmxConnector.close();
+            }
+        } finally {
+            server.unregisterMBean(SimpleMXBean.OBJECT_NAME);
+        }
+    }
+
+    @Test
+    public void testMXBeanProxy() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Container cnt = cntManager.getCurrentContainer();
+
+        ServiceEndpoint sep = cnt.getServiceEndpoint(URLServiceEndpoint.JMX_SERVICE_ENDPOINT_IDENTITY);
+        JMXServiceEndpoint jmxEndpoint = sep.adapt(JMXServiceEndpoint.class);
+        String serviceURL = jmxEndpoint.getServiceURL();
+        Assert.assertNotNull("JMX URL not null", serviceURL);
+
+        // Get the local MBeanServer
+        MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
+        server.registerMBean(new Simple(), SimpleMXBean.OBJECT_NAME);
+        try {
+            String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
+            JMXConnector jmxConnector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);
+            MBeanServerConnection con = jmxConnector.getMBeanServerConnection();
+            try {
+                SimpleMXBean proxy = ManagementUtils.getMXBeanProxy(con, SimpleMXBean.OBJECT_NAME, SimpleMXBean.class);
+
+                // Simple string echo
+                Assert.assertEquals("Hello: Kermit", proxy.echo("Kermit"));
+
+                // Set Bean attribute using CompositeData
+                Bean bean = new Bean("Hello", "Foo");
+                proxy.setBean(bean);
+
+                // Get Bean attribute using CompositeData
+                Assert.assertEquals(bean, proxy.getBean());
+
+                // Simple Bean echo using CompositeData
+                Assert.assertEquals(bean, proxy.echoBean(bean));
             } finally {
                 jmxConnector.close();
             }

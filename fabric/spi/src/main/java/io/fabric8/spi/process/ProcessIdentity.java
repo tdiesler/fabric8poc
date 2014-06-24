@@ -19,7 +19,7 @@
  */
 package io.fabric8.spi.process;
 
-import java.io.Serializable;
+import javax.management.openmbean.CompositeData;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
@@ -29,13 +29,16 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  * @author thomas.diesler@jboss.com
  * @since 14-Mar-2014
  */
-public final class ProcessIdentity implements Serializable {
-
-    private static final long serialVersionUID = 8749532481983621343L;
+public final class ProcessIdentity {
 
     private final String name;
 
     public static ProcessIdentity create(String name) {
+        return new ProcessIdentity(name);
+    }
+
+    public static ProcessIdentity from(CompositeData cdata) {
+        String name = (String) cdata.get("name");
         return new ProcessIdentity(name);
     }
 
@@ -50,6 +53,7 @@ public final class ProcessIdentity implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == this) return true;
         if (!(obj instanceof ProcessIdentity)) return false;
         ProcessIdentity other = (ProcessIdentity) obj;
         return other.name.equals(name);

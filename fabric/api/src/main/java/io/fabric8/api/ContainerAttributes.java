@@ -85,17 +85,7 @@ public final class ContainerAttributes  {
     /**
      * The attribute key for Jolokia Agent URL that created the remote process
      */
-    public static final AttributeKey<String> ATTRIBUTE_KEY_JOLOKIA_AGENT_URL = AttributeKey.create("fabric8.jolokia.agent.url", String.class);
-
-    /**
-     * The attribute key for Jolokia Agent username
-     */
-    public static final AttributeKey<String> ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME = AttributeKey.create("fabric8.jolokia.agent.username", String.class);
-
-    /**
-     * The attribute key for Jolokia Agent password
-     */
-    public static final AttributeKey<String> ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD = AttributeKey.create("fabric8.jolokia.agent.password", String.class);
+    public static final AttributeKey<String> ATTRIBUTE_KEY_REMOTE_AGENT_URL = AttributeKey.create("fabric8.jolokia.agent.url", String.class);
 
     /**
      * The attribute key for SSH server URL

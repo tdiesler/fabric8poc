@@ -19,7 +19,7 @@
  */
 package io.fabric8.spi;
 
-import java.io.Serializable;
+import javax.management.openmbean.CompositeData;
 
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
@@ -29,14 +29,19 @@ import org.jboss.gravia.utils.IllegalArgumentAssertion;
  *
  * @author thomas.diesler@jboss.com
  * @since 07-Jun-2014
+ *
+ * @Immutable
  */
-public final class AgentIdentity implements Serializable {
-
-    private static final long serialVersionUID = -5725118775732949024L;
+public final class AgentIdentity {
 
     private final String name;
 
     public static AgentIdentity create(String name) {
+        return new AgentIdentity(name);
+    }
+
+    public static AgentIdentity from(CompositeData cdata) {
+        String name = (String) cdata.get("name");
         return new AgentIdentity(name);
     }
 

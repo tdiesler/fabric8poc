@@ -20,8 +20,6 @@
 
 package io.fabric8.container.tomcat.internal;
 
-import javax.management.MBeanServer;
-
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.container.tomcat.TomcatProcessHandler;
 import io.fabric8.container.tomcat.TomcatProcessOptions;
@@ -63,7 +61,7 @@ public final class TomcatProcessHandlerService extends AbstractComponent impleme
     }
 
     @Override
-    public ProcessHandler createProcessHandler(MBeanServer mbeanServer, AgentRegistration agentReg) {
-        return new TomcatProcessHandler(mbeanServer, agentReg);
+    public ProcessHandler createProcessHandler(AgentRegistration agentReg) {
+        return new TomcatProcessHandler(agentReg);
     }
 }

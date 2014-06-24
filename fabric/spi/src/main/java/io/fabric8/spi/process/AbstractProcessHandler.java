@@ -22,7 +22,6 @@ package io.fabric8.spi.process;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.process.ProcessOptions;
-import io.fabric8.spi.Agent;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.ManagedProcess.State;
 import io.fabric8.spi.utils.HostUtils;
@@ -32,14 +31,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanServer;
-import javax.management.Notification;
-import javax.management.NotificationListener;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -66,17 +59,14 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
 
     private final MavenDelegateRepository mavenRepository;
     private final AgentRegistration localAgent;
-    private final MBeanServer mbeanServer;
 
     private MutableManagedProcess managedProcess;
     private Process process;
 
-    protected AbstractProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent, PropertiesProvider propsProvider) {
-        IllegalArgumentAssertion.assertNotNull(mbeanServer, "mbeanServer");
+    protected AbstractProcessHandler(AgentRegistration localAgent, PropertiesProvider propsProvider) {
         IllegalArgumentAssertion.assertNotNull(localAgent, "localAgent");
         IllegalArgumentAssertion.assertNotNull(propsProvider, "propsProvider");
         this.mavenRepository = new DefaultMavenDelegateRepository(propsProvider);
-        this.mbeanServer = mbeanServer;
         this.localAgent = localAgent;
     }
 
@@ -139,9 +129,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
 
         managedProcess = new DefaultManagedProcess(identity, options, homeDir.toPath(), State.CREATED);
         managedProcess.addAttribute(ManagedProcess.ATTRIBUTE_KEY_AGENT_REGISTRATION, localAgent);
-        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL, localAgent.getJolokiaAgentUrl());
-        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME, localAgent.getJolokiaUsername());
-        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD, localAgent.getJolokiaPassword());
+        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL, localAgent.getServiceUrl());
         try {
             doConfigure(managedProcess);
         } catch (Exception ex) {

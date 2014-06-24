@@ -20,14 +20,10 @@
 
 package io.fabric8.container.karaf;
 
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_PASSWORD;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_URL;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_USERNAME;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
+import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
+import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import io.fabric8.spi.AgentRegistration;
-import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
@@ -42,8 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import javax.management.MBeanServer;
-
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -55,8 +50,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 public final class KarafProcessHandler extends AbstractProcessHandler {
 
-    public KarafProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
-        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
+    public KarafProcessHandler(AgentRegistration localAgent) {
+        super(localAgent, new RuntimePropertiesProvider());
     }
 
     @Override
@@ -138,10 +133,8 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dkaraf.instances=" + karafHome + "/instances");
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
-        // [TODO] #32 Remove JMX credentials from logged system properties
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_USERNAME + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME));
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_PASSWORD + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD));
+        cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
+        cmd.add("-D" + PROPERTY_REMOTE_AGENT_TYPE + "=" + RuntimeType.getRuntimeType());
 
         // Java properties
         cmd.add("-Djava.io.tmpdir=" + new File(karafHome, "data/tmp"));

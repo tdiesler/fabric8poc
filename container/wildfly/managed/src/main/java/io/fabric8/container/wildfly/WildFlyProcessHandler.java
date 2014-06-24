@@ -20,12 +20,9 @@
 
 package io.fabric8.container.wildfly;
 
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL;
-import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_PASSWORD;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_URL;
-import static io.fabric8.spi.RuntimeService.PROPERTY_JOLOKIA_AGENT_USERNAME;
+import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
+import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
+import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
@@ -39,7 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.MBeanServer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -51,6 +47,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.modules.Module;
@@ -59,7 +56,6 @@ import org.jboss.modules.ModuleLoadException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-
 /**
  * The managed root container
  *
@@ -67,8 +63,8 @@ import org.w3c.dom.Element;
  */
 public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
-    public WildFlyProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
-        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
+    public WildFlyProcessHandler(AgentRegistration localAgent) {
+        super(localAgent, new RuntimePropertiesProvider());
     }
 
     @Override
@@ -110,10 +106,8 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         cmd.add("-Djboss.ajp.port=" + ajpPort);
         cmd.add("-Djboss.http.port=" + httpPort);
         cmd.add("-Djboss.https.port=" + httpsPort);
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
-        // [TODO] #45 Remove JMX credentials from logged system properties
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_USERNAME + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_USERNAME));
-        cmd.add("-D" + PROPERTY_JOLOKIA_AGENT_PASSWORD + "=" + process.getAttribute(ATTRIBUTE_KEY_JOLOKIA_AGENT_PASSWORD));
+        cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
+        cmd.add("-D" + PROPERTY_REMOTE_AGENT_TYPE + "=" + RuntimeType.getRuntimeType());
 
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));

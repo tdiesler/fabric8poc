@@ -46,6 +46,7 @@ import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerService;
+import io.fabric8.spi.CurrentContainer;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
 import io.fabric8.spi.ProfileService;
@@ -142,10 +143,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ContainerLockManager> containerLocks = new ValidatingReference<>();
     @Reference(referenceInterface = ContainerRegistry.class)
     private final ValidatingReference<ContainerRegistry> containerRegistry = new ValidatingReference<>();
-    @Reference(referenceInterface = ContainerRegistration.class)
-    private final ValidatingReference<ContainerRegistration> containerRegistration = new ValidatingReference<>();
-    @Reference(referenceInterface = CurrentContainerService.class)
-    private final ValidatingReference<CurrentContainerService> currentContainerService = new ValidatingReference<>();
+    @Reference(referenceInterface = CurrentContainer.class)
+    private final ValidatingReference<CurrentContainer> currentContainer = new ValidatingReference<>();
     @Reference(referenceInterface = ProfileService.class)
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
@@ -682,7 +681,7 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
 
         // Get list of resources for removal
-        CurrentContainerService resourceHolder = currentContainerService.get();
+        CurrentContainer resourceHolder = currentContainer.get();
         List<ResourceIdentity> removalPending = new ArrayList<>();
         Map<ResourceIdentity, ResourceHandle> currentResources = resourceHolder.getResourceHandles();
         for (ResourceIdentity resid : currentResources.keySet()) {
@@ -879,19 +878,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         containerRegistry.unbind(service);
     }
 
-    void bindContainerRegistration(ContainerRegistration service) {
-        containerRegistration.bind(service);
+    void bindCurrentContainer(CurrentContainer service) {
+        currentContainer.bind(service);
     }
-    void unbindContainerRegistration(ContainerRegistration service) {
-        containerRegistration.unbind(service);
-    }
-
-    void bindCurrentContainerService(CurrentContainerService service) {
-        currentContainerService.bind(service);
-    }
-
-    void unbindCurrentContainerService(CurrentContainerService service) {
-        currentContainerService.unbind(service);
+    void unbindCurrentContainer(CurrentContainer service) {
+        currentContainer.unbind(service);
     }
 
     void bindProfileService(ProfileService service) {

@@ -95,7 +95,7 @@ public abstract class CurrentContainerTestBase {
         sep = cnt.getServiceEndpoint(URLServiceEndpoint.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
         URLServiceEndpoint jolokiaEndpoint = sep.adapt(URLServiceEndpoint.class);
         Assert.assertNotNull("Jolokia service endpoint not null", jolokiaEndpoint);
-        Assert.assertEquals(jolokiaEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_JOLOKIA_AGENT_URL));
+        Assert.assertEquals(jolokiaEndpoint.getServiceURL(), cnt.getAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL));
 
         String[] userpass = RuntimeType.KARAF == RuntimeType.getRuntimeType() ? karafJmx : otherJmx;
         JMXConnector jmxConnector = jmxEndpoint.getJMXConnector(userpass[0], userpass[1], 200, TimeUnit.MILLISECONDS);

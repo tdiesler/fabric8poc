@@ -1,26 +1,20 @@
 package io.fabric8.test.smoke.sub.c;
 
-import java.beans.ConstructorProperties;
-
 import javax.management.openmbean.CompositeData;
 
 
 public class Bean {
 
-    private String name;
-    private String value;
+    private final String name;
+    private final String value;
 
     public static Bean from(CompositeData cdata) {
         return BeanOpenType.fromCompositeData(cdata);
     }
 
-    @ConstructorProperties({"name", "value"})
     public Bean(String name, String value) {
         this.name = name;
         this.value = value;
-    }
-
-    public Bean() {
     }
 
     public String getName() {
@@ -29,15 +23,6 @@ public class Bean {
 
     public String getValue() {
         return value;
-    }
-
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 
     @Override
@@ -57,5 +42,4 @@ public class Bean {
     public String toString() {
         return "Bean[name=" + name + ",value=" + value + "]";
     }
-
 }

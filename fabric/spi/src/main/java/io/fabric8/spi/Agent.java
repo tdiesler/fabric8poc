@@ -26,11 +26,7 @@ import io.fabric8.spi.process.ProcessIdentity;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import javax.management.ObjectName;
-
 import org.jboss.gravia.runtime.LifecycleException;
-import org.jboss.gravia.utils.ObjectNameFactory;
-
 
 /**
  * The agent interface
@@ -39,8 +35,6 @@ import org.jboss.gravia.utils.ObjectNameFactory;
  * @since 29-May-2014
  */
 public interface Agent {
-
-    ObjectName OBJECT_NAME = ObjectNameFactory.create("io.fabric8:type=Agent");
 
     String NOTIFICATION_TYPE_AGENT_REGISTRATION = "AgentRegistration";
 
@@ -59,10 +53,4 @@ public interface Agent {
     Future<ManagedProcess> stopProcess(ProcessIdentity processId) throws LifecycleException;
 
     ManagedProcess destroyProcess(ProcessIdentity processId);
-
-    AgentTopology getAgentTopology();
-
-    AgentTopology registerAgent(AgentRegistration agentReg);
-
-    AgentTopology unregisterAgent(AgentIdentity agentId);
 }
