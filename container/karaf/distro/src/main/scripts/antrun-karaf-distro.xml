@@ -40,7 +40,7 @@
 
   	<!-- Build the karaf distro -->
   	<mkdir dir="${output.dir}/distro"/>
-  	<move file="${output.dir}/apache-karaf-minimal-${version.apache.karaf}" tofile="${fabric8.karaf.home}"/>
+  	<move file="${output.dir}/apache-karaf-${version.apache.karaf}" tofile="${fabric8.karaf.home}"/>
   	<tar destfile="${output.dir}/fabric8-karaf-${project.version}.tar.gz" compression="gzip">
 		<tarfileset dir="${output.dir}/distro" includes="fabric8-karaf-${project.version}/bin/**" filemode="755"/>
 		<tarfileset dir="${output.dir}/distro" excludes="fabric8-karaf-${project.version}/bin/*"/>

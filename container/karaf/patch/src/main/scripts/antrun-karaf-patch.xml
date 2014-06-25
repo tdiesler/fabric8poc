@@ -27,7 +27,7 @@
   <property name="etc.dir" value="${basedir}/target/etc" />
   <property name="resources.dir" value="${basedir}/src/main/resources" />
   <property name="karaf.patch.dir" value="${output.dir}/karaf-patch" />
-  <property name="karaf.source.dir" value="${output.dir}/apache-karaf-minimal-${version.apache.karaf}" />
+  <property name="karaf.source.dir" value="${output.dir}/apache-karaf-${version.apache.karaf}" />
   <property name="deploy.artifacts.dir" value="${output.dir}/deploy-artifacts" />
   <property name="deploy.artifacts.lib" value="${deploy.artifacts.dir}/lib" />
   <property name="deploy.artifacts.resources" value="${deploy.artifacts.dir}/resources" />

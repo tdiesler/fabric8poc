@@ -61,7 +61,7 @@
         <version.apache.felix.scr>1.6.2</version.apache.felix.scr>
         <version.apache.felix.scr.annotations>1.9.8</version.apache.felix.scr.annotations>
         <version.apache.felix.scr.generator>1.8.0</version.apache.felix.scr.generator>
-        <version.apache.karaf>3.0.1</version.apache.karaf>
+        <version.apache.karaf>2.3.3</version.apache.karaf>
         <version.apache.tomcat>7.0.42</version.apache.tomcat>
         <version.apache.zookeeper>3.4.6</version.apache.zookeeper>
         <version.guava>14.0.1</version.guava>

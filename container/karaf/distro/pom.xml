@@ -67,8 +67,9 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.apache.karaf</groupId>
-                                    <artifactId>apache-karaf-minimal</artifactId>
+                                    <artifactId>apache-karaf</artifactId>
                                     <version>${version.apache.karaf}</version>
+                                    <classifier>minimal</classifier>
                                     <type>tar.gz</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
@@ -77,7 +78,7 @@
                                     <artifactId>fabric8-container-karaf-patch</artifactId>
                                     <version>${project.version}</version>
                                     <type>tar.gz</type>
-                                    <outputDirectory>${project.build.directory}/apache-karaf-minimal-${version.apache.karaf}</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/apache-karaf-${version.apache.karaf}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

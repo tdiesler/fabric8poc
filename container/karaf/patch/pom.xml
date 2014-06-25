@@ -89,8 +89,9 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.apache.karaf</groupId>
-                                    <artifactId>apache-karaf-minimal</artifactId>
+                                    <artifactId>apache-karaf</artifactId>
                                     <version>${version.apache.karaf}</version>
+                                    <classifier>minimal</classifier>
                                     <type>tar.gz</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
