@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.runtime.RuntimeType;
 
 
 public class WildFlyProcessOptions extends AbstractProcessOptions {
@@ -47,6 +48,11 @@ public class WildFlyProcessOptions extends AbstractProcessOptions {
     private int ajpPort = DEFAULT_AJP_PORT;
     private int httpPort = DEFAULT_HTTP_PORT;
     private int httpsPort = DEFAULT_HTTPS_PORT;
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return RuntimeType.WILDFLY;
+    }
 
     public String getServerConfig() {
         return serverConfig;

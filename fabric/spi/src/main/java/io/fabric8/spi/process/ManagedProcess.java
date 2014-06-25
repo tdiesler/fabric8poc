@@ -27,6 +27,8 @@ import io.fabric8.spi.AgentRegistration;
 
 import java.nio.file.Path;
 
+import org.jboss.gravia.runtime.RuntimeType;
+
 
 /**
  * The managed root container
@@ -46,6 +48,8 @@ public interface ManagedProcess extends Attributable {
     }
 
     ProcessOptions getCreateOptions();
+
+    RuntimeType getRuntimeType();
 
     ProcessIdentity getIdentity();
 

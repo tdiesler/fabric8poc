@@ -19,6 +19,7 @@
  */
 package io.fabric8.core;
 
+import io.fabric8.api.AttributeKey;
 import io.fabric8.api.Configuration;
 import io.fabric8.api.ConfigurationItem;
 import io.fabric8.api.ConfigurationItem.Filter;
@@ -44,15 +45,20 @@ import io.fabric8.api.ResourceItem;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.ServiceEndpointIdentity;
 import io.fabric8.api.VersionIdentity;
+import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.Agent;
 import io.fabric8.spi.BootConfiguration;
 import io.fabric8.spi.ContainerService;
 import io.fabric8.spi.CurrentContainer;
 import io.fabric8.spi.DefaultProfileBuilder;
 import io.fabric8.spi.EventDispatcher;
+import io.fabric8.spi.ImmutableContainer;
 import io.fabric8.spi.ProfileService;
 import io.fabric8.spi.RuntimeService;
 import io.fabric8.spi.permit.PermitManager;
 import io.fabric8.spi.permit.PermitManager.Permit;
+import io.fabric8.spi.process.ManagedProcess;
+import io.fabric8.spi.process.ProcessIdentity;
 import io.fabric8.spi.scr.AbstractProtectedComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 import io.fabric8.spi.utils.ProfileUtils;
@@ -70,6 +76,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -93,12 +100,14 @@ import org.jboss.gravia.resource.Requirement;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceIdentity;
 import org.jboss.gravia.resource.Version;
+import org.jboss.gravia.runtime.LifecycleException;
 import org.jboss.gravia.runtime.ModuleContext;
 import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.ServiceLocator;
 import org.jboss.gravia.runtime.ServiceRegistration;
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ResourceUtils;
 import org.slf4j.Logger;
@@ -135,6 +144,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerServiceImpl.class);
 
+    @Reference(referenceInterface = Agent.class)
+    private final ValidatingReference<Agent> agent = new ValidatingReference<>();
     @Reference(referenceInterface = BootConfiguration.class)
     private final ValidatingReference<BootConfiguration> bootConfiguration = new ValidatingReference<>();
     @Reference(referenceInterface = ConfigurationManager.class)
@@ -149,8 +160,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     private final ValidatingReference<ProfileService> profileService = new ValidatingReference<>();
     @Reference(referenceInterface = Provisioner.class)
     private final ValidatingReference<Provisioner> provisioner = new ValidatingReference<>();
-    @Reference(referenceInterface = RemoteContainerService.class)
-    private final ValidatingReference<RemoteContainerService> remoteContainer = new ValidatingReference<>();
     @Reference(referenceInterface = RuntimeService.class)
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
@@ -319,9 +328,10 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     private Container createContainerInternal(ContainerIdentity parentId, CreateOptions options) {
 
+        Container container;
+
         // Support for embedded container testing
         if (options.getClass().getName().endsWith("EmbeddedCreateOptions")) {
-            Container container;
             ContainerIdentity identity = options.getIdentity();
             LockHandle readLock = aquireReadLock(identity);
             try {
@@ -341,10 +351,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
             } finally {
                 readLock.unlock();
             }
-            return container;
+        } else {
+            IllegalArgumentAssertion.assertTrue(options instanceof ProcessOptions, "Invalid process options: " + options);
+            ProcessOptions processOptions = (ProcessOptions) options;
+            ManagedProcess process = agent.get().createProcess(processOptions);
+            ContainerIdentity identity = ContainerIdentity.create(process.getIdentity().getName());
+            Map<AttributeKey<?>, Object> attributes = process.getAttributes();
+            return new ImmutableContainer.Builder(identity, options.getRuntimeType(), attributes, State.CREATED).build();
         }
+        return container;
 
-        return remoteContainer.get().createContainer(parentId, options);
     }
 
     @Override
@@ -370,7 +386,39 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 writeLock.unlock();
             }
         } else {
-            return remoteContainer.get().startContainer(identity, listener);
+            // [TODO] #43 Provision event for remote containers
+            ProcessIdentity procId = ProcessIdentity.create(identity.getSymbolicName());
+            Future<ManagedProcess> future = agent.get().startProcess(procId);
+            try {
+                future.get(30, TimeUnit.SECONDS);
+            } catch (Exception ex) {
+                throw new LifecycleException("Cannot get future process value after start for: " + identity, ex);
+            }
+
+            // [TODO] #56 Future<ManagedProcess> should only become available when container is started in ZK
+            Container container = null;
+            State state = State.CREATED;
+            long now = System.currentTimeMillis();
+            long end = now + 10000L;
+            while (state != State.STARTED && now < end) {
+                LockHandle readLock = aquireReadLock(identity);
+                try {
+                    container = getRequiredContainer(identity);
+                } finally {
+                    readLock.unlock();
+                }
+                state = container.getState();
+                if (state != State.STARTED) {
+                    try {
+                        Thread.sleep(200);
+                        now = System.currentTimeMillis();
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+            }
+            IllegalStateAssertion.assertEquals(State.STARTED, container.getState(), "Remote container not started");
+            return container;
         }
     }
 
@@ -407,7 +455,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 writeLock.unlock();
             }
         } else {
-            return remoteContainer.get().stopContainer(identity);
+            // [TODO] #43 Provision event for remote containers
+            ProcessIdentity procId = ProcessIdentity.create(identity.getSymbolicName());
+            Future<ManagedProcess> future = agent.get().stopProcess(procId);
+            ManagedProcess process;
+            try {
+                process = future.get(30, TimeUnit.SECONDS);
+            } catch (Exception ex) {
+                throw new LifecycleException("Cannot get future process value after stop for: " + identity, ex);
+            }
+            State state = State.valueOf(process.getState().toString());
+            Map<AttributeKey<?>, Object> attributes = process.getAttributes();
+            return new ImmutableContainer.Builder(identity, process.getRuntimeType(), attributes, state).build();
         }
     }
 
@@ -430,7 +489,11 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
                 writeLock.unlock();
             }
         } else {
-            return remoteContainer.get().destroyContainer(identity);
+            ProcessIdentity procId = ProcessIdentity.create(identity.getSymbolicName());
+            ManagedProcess process = agent.get().destroyProcess(procId);
+            State state = State.valueOf(process.getState().toString());
+            Map<AttributeKey<?>, Object> attributes = process.getAttributes();
+            return new ImmutableContainer.Builder(identity, process.getRuntimeType(), attributes, state).build();
         }
     }
 
@@ -850,18 +913,18 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         return containerRegistry.get().getRequiredContainer(identity);
     }
 
+    void bindAgent(Agent service) {
+        agent.bind(service);
+    }
+    void unbindAgent(Agent service) {
+        agent.unbind(service);
+    }
+
     void bindBootConfiguration(BootConfiguration service) {
         bootConfiguration.bind(service);
     }
     void unbindBootConfiguration(BootConfiguration service) {
         bootConfiguration.unbind(service);
-    }
-
-    void bindRemoteContainer(RemoteContainerService service) {
-        this.remoteContainer.bind(service);
-    }
-    void unbindRemoteContainer(RemoteContainerService service) {
-        this.remoteContainer.unbind(service);
     }
 
     void bindConfigurationManager(ConfigurationManager service) {

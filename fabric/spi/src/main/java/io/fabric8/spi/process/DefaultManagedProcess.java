@@ -25,6 +25,7 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.nio.file.Path;
 
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
@@ -59,6 +60,11 @@ public class DefaultManagedProcess extends AttributeSupport implements MutableMa
     @Override
     public ProcessOptions getCreateOptions() {
         return options;
+    }
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return options.getRuntimeType();
     }
 
     @Override

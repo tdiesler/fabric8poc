@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.runtime.RuntimeType;
 
 /**
  * Process create options
@@ -36,6 +37,8 @@ import org.jboss.gravia.resource.MavenCoordinates;
 public interface ProcessOptions extends Attributable {
 
     String getIdentityPrefix();
+
+    RuntimeType getRuntimeType();
 
     InetAddress getTargetHost();
 

@@ -25,6 +25,7 @@ import io.fabric8.spi.AttributeSupport;
 
 import java.nio.file.Path;
 
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 
 /**
@@ -59,18 +60,27 @@ public final class ImmutableManagedProcess extends AttributeSupport implements M
         this.state = process.getState();
     }
 
+    @Override
     public ProcessIdentity getIdentity() {
         return identity;
     }
 
+    @Override
     public ProcessOptions getCreateOptions() {
         return options;
     }
 
+    @Override
+    public RuntimeType getRuntimeType() {
+        return options.getRuntimeType();
+    }
+
+    @Override
     public Path getHomePath() {
         return homePath;
     }
 
+    @Override
     public State getState() {
         return state;
     }

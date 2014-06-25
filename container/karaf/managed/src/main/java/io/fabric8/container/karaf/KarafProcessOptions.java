@@ -25,6 +25,7 @@ import io.fabric8.spi.process.AbstractProcessOptions;
 import java.util.Properties;
 
 import org.jboss.gravia.resource.MavenCoordinates;
+import org.jboss.gravia.runtime.RuntimeType;
 
 
 /**
@@ -46,6 +47,11 @@ public class KarafProcessOptions extends AbstractProcessOptions {
     private int rmiRegistryPort = DEFAULT_RMI_REGISTRY_PORT;
     private int httpPort = DEFAULT_HTTP_PORT;
     private int httpsPort = DEFAULT_HTTPS_PORT;
+
+    @Override
+    public RuntimeType getRuntimeType() {
+        return RuntimeType.KARAF;
+    }
 
     public int getRmiServerPort() {
         return rmiServerPort;
