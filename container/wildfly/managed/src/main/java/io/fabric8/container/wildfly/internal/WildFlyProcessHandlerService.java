@@ -20,6 +20,8 @@
 
 package io.fabric8.container.wildfly.internal;
 
+import javax.management.MBeanServer;
+
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.container.wildfly.WildFlyProcessHandler;
 import io.fabric8.container.wildfly.WildFlyProcessOptions;
@@ -61,7 +63,7 @@ public final class WildFlyProcessHandlerService extends AbstractComponent implem
     }
 
     @Override
-    public ProcessHandler createProcessHandler(AgentRegistration agentReg) {
-        return new WildFlyProcessHandler(agentReg);
+    public ProcessHandler createProcessHandler(MBeanServer mbeanServer, AgentRegistration agentReg) {
+        return new WildFlyProcessHandler(mbeanServer, agentReg);
     }
 }

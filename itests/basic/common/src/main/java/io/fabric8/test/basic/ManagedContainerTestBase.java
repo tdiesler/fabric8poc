@@ -41,6 +41,7 @@ import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -79,15 +80,15 @@ public abstract class ManagedContainerTestBase  {
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);
-            Assert.assertEquals(State.STARTED, cnt.getState());
-
             verifyContainer(cnt);
         } finally {
-            cntManager.destroyContainer(cntId);
+            cnt = cntManager.stopContainer(cntId);
+            Assert.assertEquals(State.STOPPED, cnt.getState());
         }
     }
 
     @Test
+    @Ignore
     public void testManagedTomcat() throws Exception {
 
         // Build the {@link CreateOptions}
@@ -106,15 +107,15 @@ public abstract class ManagedContainerTestBase  {
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);
-            Assert.assertEquals(State.STARTED, cnt.getState());
-
             verifyContainer(cnt);
         } finally {
-            cntManager.destroyContainer(cntId);
+            cnt = cntManager.stopContainer(cntId);
+            Assert.assertEquals(State.STOPPED, cnt.getState());
         }
     }
 
     @Test
+    @Ignore
     public void testManagedWildFly() throws Exception {
 
         // Build the {@link CreateOptions}
@@ -136,51 +137,14 @@ public abstract class ManagedContainerTestBase  {
         try {
             // Start the container
             cnt = cntManager.startContainer(cntId, null);
-            Assert.assertEquals(State.STARTED, cnt.getState());
-
             verifyContainer(cnt);
         } finally {
-            cntManager.destroyContainer(cntId);
+            cnt = cntManager.stopContainer(cntId);
+            Assert.assertEquals(State.STOPPED, cnt.getState());
         }
     }
 
     private void verifyContainer(Container cnt) throws IOException {
-
-        // Assert that there is one {@link JMXServiceEndpoint}
-        /*
-        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
-        Assert.assertEquals(1, cnt.getServiceEndpoints(JMXServiceEndpoint.class).size());
-        Assert.assertEquals(1, cnt.getServiceEndpoints(null).size());
-
-        // Get the JMX connector through the endpoint
-        ServiceEndpointIdentity<?> endpointId = cnt.getServiceEndpoints(null).iterator().next();
-        JMXServiceEndpoint jmxEndpoint = cntManager.getServiceEndpoint(cnt.getIdentity(), JMXServiceEndpoint.class);
-        Assert.assertNotNull("JMXServiceEndpoint not null", jmxEndpoint);
-        Assert.assertSame(jmxEndpoint, cntManager.getServiceEndpoint(cnt.getIdentity(), endpointId));
-
-        System.out.println(jmxEndpoint);
-        JMXConnector connector = jmxEndpoint.getJMXConnector(username, password, 20, TimeUnit.SECONDS);
-        try {
-            // Access containers through JMX
-            MBeanServerConnection server = connector.getMBeanServerConnection();
-            ContainerManagement cntManagement = jmxEndpoint.getMBeanProxy(server, ContainerManagement.OBJECT_NAME, ContainerManagement.class);
-            Assert.assertNotNull("ContainerManagement not null", cntManagement);
-            Set<String> containerIds = cntManagement.getContainerIds();
-            Assert.assertEquals("One container", 1, containerIds.size());
-            ContainerIdentity cntId = ContainerIdentity.create(containerIds.iterator().next());
-            Assert.assertEquals(cnt.getIdentity(), cntId);
-
-            // Access profiles through JMX
-            ProfileVersionManagement prvManagement = jmxEndpoint.getMBeanProxy(server, ProfileVersionManagement.OBJECT_NAME, ProfileVersionManagement.class);
-            ProfileManagement prfManagement = jmxEndpoint.getMBeanProxy(server, ProfileManagement.OBJECT_NAME, ProfileManagement.class);
-            Assert.assertNotNull("ProfileManagement not null", prfManagement);
-            Assert.assertEquals(1, prvManagement.getProfileVersionIds().size());
-            Assert.assertEquals("1.0.0", prvManagement.getProfileVersionIds().iterator().next());
-            Assert.assertEquals(1, prfManagement.getProfileIds("1.0").size());
-            Assert.assertEquals("default", prfManagement.getProfileIds("1.0").iterator().next());
-        } finally {
-            connector.close();
-        }
-        */
+        Assert.assertEquals(State.STARTED, cnt.getState());
     }
 }

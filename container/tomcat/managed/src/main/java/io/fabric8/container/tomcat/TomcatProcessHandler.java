@@ -24,6 +24,7 @@ package io.fabric8.container.tomcat;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
+import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
@@ -31,11 +32,15 @@ import io.fabric8.spi.process.MutableManagedProcess;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.management.MBeanServer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -63,21 +68,30 @@ import org.w3c.dom.Element;
  */
 public final class TomcatProcessHandler extends AbstractProcessHandler {
 
-    public TomcatProcessHandler(AgentRegistration localAgent) {
-        super(localAgent, new RuntimePropertiesProvider());
+    private Process javaProcess;
+
+    public TomcatProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
+        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
+    }
+
+    @Override
+    protected Process getJavaProcess() {
+        return javaProcess;
     }
 
     @Override
     protected void doConfigure(MutableManagedProcess process) throws Exception {
 
-        File catalinaHome = process.getHomePath().toFile();
-        IllegalStateAssertion.assertTrue(catalinaHome.isDirectory(), "Catalina home does not exist: " + catalinaHome);
-        File catalinaConf = new File(catalinaHome , "conf");
-        IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Catalina conf does not exist: " + catalinaConf);
-        File graviaConf = new File(catalinaConf , "gravia" + File.separator + "configs");
-        IllegalStateAssertion.assertTrue(catalinaConf.isDirectory(), "Gravia conf does not exist: " + graviaConf);
+        Path catalinaHome = process.getHomePath();
+        Path catalinaConf = catalinaHome.resolve("conf");
+        Path graviaConf = catalinaConf.resolve(Paths.get("gravia", "configs"));
 
-        configureServer(process, catalinaConf);
+        IllegalStateAssertion.assertTrue(catalinaHome.toFile().isDirectory(), "Catalina home does not exist: " + catalinaHome);
+        IllegalStateAssertion.assertTrue(catalinaConf.toFile().isDirectory(), "Catalina conf does not exist: " + catalinaConf);
+        IllegalStateAssertion.assertTrue(catalinaConf.toFile().isDirectory(), "Gravia conf does not exist: " + graviaConf);
+
+        configureServer(process, catalinaConf.toFile());
+        configureZookeeper(process, graviaConf.toFile());
     }
 
     protected void configureServer(MutableManagedProcess process, File confDir) throws Exception {
@@ -85,6 +99,14 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         transformServerXML(process, new File(confDir, "server.xml"));
         // Transform conf/catalina.properties
         transformCatalinaProperties(process, new File(confDir, "catalina.properties"));
+    }
+
+    protected void configureZookeeper(MutableManagedProcess process, File confDir) throws IOException {
+
+        // etc/io.fabric8.zookeeper.server-0000.cfg
+        File managementFile = new File(confDir, "io.fabric8.zookeeper.server-0000.cfg");
+        IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
+        IllegalStateAssertion.assertTrue(managementFile.delete(), "Cannot delete: " + managementFile);
     }
 
     @Override
@@ -132,6 +154,23 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         processBuilder.redirectErrorStream(true);
         processBuilder.directory(new File(catalinaHome, "bin"));
         startProcess(processBuilder, createOptions);
+    }
+
+    @Override
+    protected void doStop(MutableManagedProcess process) throws Exception {
+        destroyProcess();
+    }
+
+    private void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
+        javaProcess = processBuilder.start();
+        new Thread(new ConsoleConsumer(javaProcess, options)).start();
+    }
+
+    private void destroyProcess() throws Exception {
+        if (javaProcess != null) {
+            javaProcess.destroy();
+            javaProcess.waitFor();
+        }
     }
 
     private void transformServerXML(MutableManagedProcess process, File configFile) throws Exception {

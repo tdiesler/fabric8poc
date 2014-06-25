@@ -95,7 +95,7 @@ public final class RemoteContainerService extends AbstractComponent {
         Future<ManagedProcess> future = agent.get().startProcess(getProcessIdentity(identity));
         ManagedProcess process;
         try {
-            process = future.get(10, TimeUnit.SECONDS);
+            process = future.get(30, TimeUnit.SECONDS);
         } catch (Exception ex) {
             throw new LifecycleException("Cannot get future process value after start for: " + identity, ex);
         }
@@ -106,7 +106,7 @@ public final class RemoteContainerService extends AbstractComponent {
         Future<ManagedProcess> future = agent.get().stopProcess(getProcessIdentity(identity));
         ManagedProcess process;
         try {
-            process = future.get(10, TimeUnit.SECONDS);
+            process = future.get(30, TimeUnit.SECONDS);
         } catch (Exception ex) {
             throw new LifecycleException("Cannot get future process value after stop for: " + identity, ex);
         }

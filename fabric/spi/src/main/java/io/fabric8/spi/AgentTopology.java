@@ -40,6 +40,12 @@ public interface AgentTopology {
 
     ObjectName OBJECT_NAME = ObjectNameFactory.create("io.fabric8:type=AgentTopology");
 
+    /** The notification type for agent registration */
+    String NOTIFICATION_TYPE_AGENT_REGISTRATION = "AgentRegistration";
+
+    /** The notification type for agent deregistration */
+    String NOTIFICATION_TYPE_AGENT_DEREGISTRATION = "AgentDeregistration";
+
     /**
      * Get the agent registrations for this agent topology
      */
@@ -65,7 +71,7 @@ public interface AgentTopology {
     /**
      * Get the agent registration for the given process id.
      */
-    AgentRegistration getAgentRegistration(ProcessIdentity processId);
+    AgentRegistration getProcessAgent(ProcessIdentity processId);
 
     /**
      * Get the current process mapping for this agent topology
@@ -75,10 +81,10 @@ public interface AgentTopology {
     /**
      * Add a process mapping to this agent topology
      */
-    void addProcess(ProcessIdentity processId, AgentIdentity agentId);
+    void addProcessMapping(ProcessIdentity processId, AgentIdentity agentId);
 
     /**
      * Remove a process mapping from this agent topology
      */
-    void removeProcess(ProcessIdentity processId);
+    void removeProcessMapping(ProcessIdentity processId);
 }

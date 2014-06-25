@@ -23,6 +23,7 @@ package io.fabric8.container.wildfly;
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
+import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
@@ -30,12 +31,14 @@ import io.fabric8.spi.process.MutableManagedProcess;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
+import javax.management.MBeanServer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -50,9 +53,6 @@ import javax.xml.xpath.XPathFactory;
 import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -63,16 +63,33 @@ import org.w3c.dom.Element;
  */
 public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
-    public WildFlyProcessHandler(AgentRegistration localAgent) {
-        super(localAgent, new RuntimePropertiesProvider());
+    private Process javaProcess;
+
+    public WildFlyProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
+        super(mbeanServer, localAgent, new RuntimePropertiesProvider());
+    }
+
+    @Override
+    protected Process getJavaProcess() {
+        return javaProcess;
     }
 
     @Override
     protected void doConfigure(MutableManagedProcess process) throws Exception {
-        File jbossHome = process.getHomePath().toFile();
-        IllegalStateAssertion.assertTrue(jbossHome.isDirectory(), "Wildfly home does not exist: " + jbossHome);
-        File graviaConf = Paths.get(jbossHome.getPath(), "standalone", "configuration", "gravia", "configs").toFile();
-        IllegalStateAssertion.assertTrue(graviaConf.isDirectory(), "Gravia conf does not exist: " + jbossHome);
+        Path jbossHome = process.getHomePath();
+        Path graviaConf = jbossHome.resolve(Paths.get("standalone", "configuration", "gravia", "configs"));
+
+        IllegalStateAssertion.assertTrue(jbossHome.toFile().isDirectory(), "Wildfly home does not exist: " + jbossHome);
+        IllegalStateAssertion.assertTrue(graviaConf.toFile().isDirectory(), "Gravia conf does not exist: " + jbossHome);
+
+        configureZookeeper(process, graviaConf.toFile());
+    }
+
+    protected void configureZookeeper(MutableManagedProcess process, File confDir) throws IOException {
+        // etc/io.fabric8.zookeeper.server-0000.cfg
+        File managementFile = new File(confDir, "io.fabric8.zookeeper.server-0000.cfg");
+        IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
+        IllegalStateAssertion.assertTrue(managementFile.delete(), "Cannot delete: " + managementFile);
     }
 
     @Override
@@ -126,21 +143,20 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         startProcess(processBuilder, createOptions);
     }
 
-    // Confine the usage of jboss-modules to an additional class
-    // This prevents NoClassDefFoundError: org/jboss/modules/ModuleLoadException
-    static class JmxEnvironmentEnhancer {
-        static void addClassLoader(Map<String, Object> env) {
-            String classLoaderKey = "jmx.remote.protocol.provider.class.loader";
-            if (env.get(classLoaderKey) == null) {
-                ClassLoader classLoader;
-                try {
-                    ModuleIdentifier moduleid = ModuleIdentifier.fromString("org.jboss.remoting-jmx");
-                    classLoader = Module.getBootModuleLoader().loadModule(moduleid).getClassLoader();
-                } catch (ModuleLoadException ex) {
-                    throw new IllegalStateException(ex);
-                }
-                env.put(classLoaderKey, classLoader);
-            }
+    @Override
+    protected void doStop(MutableManagedProcess process) throws Exception {
+        destroyProcess();
+    }
+
+    private void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
+        javaProcess = processBuilder.start();
+        new Thread(new ConsoleConsumer(javaProcess, options)).start();
+    }
+
+    private void destroyProcess() throws Exception {
+        if (javaProcess != null) {
+            javaProcess.destroy();
+            javaProcess.waitFor();
         }
     }
 

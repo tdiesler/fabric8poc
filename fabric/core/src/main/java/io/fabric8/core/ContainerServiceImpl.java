@@ -159,7 +159,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
 
     @Activate
     void activate(Map<String, ?> config) throws ProvisionException {
-        currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
         activateInternal();
         activateComponent(PERMIT, this);
     }
@@ -175,6 +174,8 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     }
 
     private void activateInternal() throws ProvisionException {
+
+        currentIdentity = currentContainer.get().getCurrentContainerIdentity();
 
         // Register a listener for profile update events
         ProfileEventListener listener = new ProfileEventListener() {
@@ -360,16 +361,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     @Override
     public Container startContainer(ContainerIdentity identity, ProvisionEventListener listener) throws ProvisionException {
         assertValid();
-        LockHandle writeLock = aquireWriteLock(identity);
-        try {
-            if (hasContainer(identity)) {
+        if (isLocalContainer(identity)) {
+            LockHandle writeLock = aquireWriteLock(identity);
+            try {
                 Container container = getContainer(identity);
                 return startContainerInternal(container, listener);
-            } else {
-                return remoteContainer.get().startContainer(identity, listener);
+            } finally {
+                writeLock.unlock();
             }
-        } finally {
-            writeLock.unlock();
+        } else {
+            return remoteContainer.get().startContainer(identity, listener);
         }
     }
 
@@ -397,16 +398,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container stopContainer(ContainerIdentity identity) {
         assertValid();
         IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot stop current container");
-        LockHandle writeLock = aquireWriteLock(identity);
-        try {
-            Container container = getContainer(identity);
-            if (container != null) {
+        if (isLocalContainer(identity)) {
+            LockHandle writeLock = aquireWriteLock(identity);
+            try {
+                Container container = getContainer(identity);
                 return stopContainerInternal(container);
-            } else {
-                return remoteContainer.get().stopContainer(identity);
+            } finally {
+                writeLock.unlock();
             }
-        } finally {
-            writeLock.unlock();
+        } else {
+            return remoteContainer.get().stopContainer(identity);
         }
     }
 
@@ -420,16 +421,16 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     public Container destroyContainer(ContainerIdentity identity) {
         assertValid();
         IllegalStateAssertion.assertFalse(currentIdentity.equals(identity), "Cannot destroy current container");
-        LockHandle writeLock = aquireWriteLock(identity);
-        try {
-            Container container = getContainer(identity);
-            if (container != null) {
+        if (isLocalContainer(identity)) {
+            LockHandle writeLock = aquireWriteLock(identity);
+            try {
+                Container container = getContainer(identity);
                 return destroyContainerInternal(container);
-            } else {
-                return remoteContainer.get().destroyContainer(identity);
+            } finally {
+                writeLock.unlock();
             }
-        } finally {
-            writeLock.unlock();
+        } else {
+            return remoteContainer.get().destroyContainer(identity);
         }
     }
 
@@ -830,8 +831,19 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
         }
     }
 
-    private boolean hasContainer(ContainerIdentity identity) {
-        return containerRegistry.get().hasContainer(identity);
+    private boolean isLocalContainer(ContainerIdentity identity) {
+        ContainerRegistry registry = containerRegistry.get();
+        boolean islocal = currentIdentity.equals(identity);
+        if (islocal == false) {
+            LockHandle readLock = aquireReadLock(identity);
+            try {
+                Container cnt = registry.getContainer(identity);
+                islocal = cnt != null && RuntimeType.OTHER == cnt.getRuntimeType();
+            } finally {
+                readLock.unlock();
+            }
+        }
+        return islocal;
     }
 
     private Container getRequiredContainer(ContainerIdentity identity) {
@@ -841,7 +853,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindBootConfiguration(BootConfiguration service) {
         bootConfiguration.bind(service);
     }
-
     void unbindBootConfiguration(BootConfiguration service) {
         bootConfiguration.unbind(service);
     }
@@ -849,7 +860,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRemoteContainer(RemoteContainerService service) {
         this.remoteContainer.bind(service);
     }
-
     void unbindRemoteContainer(RemoteContainerService service) {
         this.remoteContainer.unbind(service);
     }
@@ -857,7 +867,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.bind(service);
     }
-
     void unbindConfigurationManager(ConfigurationManager service) {
         this.configurationManager.unbind(service);
     }
@@ -865,7 +874,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindContainerLocks(ContainerLockManager service) {
         containerLocks.bind(service);
     }
-
     void unbindContainerLocks(ContainerLockManager service) {
         containerLocks.unbind(service);
     }
@@ -873,7 +881,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindContainerRegistry(ContainerRegistry service) {
         containerRegistry.bind(service);
     }
-
     void unbindContainerRegistry(ContainerRegistry service) {
         containerRegistry.unbind(service);
     }
@@ -888,7 +895,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProfileService(ProfileService service) {
         profileService.bind(service);
     }
-
     void unbindProfileService(ProfileService service) {
         profileService.unbind(service);
     }
@@ -896,7 +902,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindProvisioner(Provisioner service) {
         provisioner.bind(service);
     }
-
     void unbindProvisioner(Provisioner service) {
         provisioner.unbind(service);
     }
@@ -904,7 +909,6 @@ public final class ContainerServiceImpl extends AbstractProtectedComponent<Conta
     void bindRuntimeService(RuntimeService service) {
         runtimeService.bind(service);
     }
-
     void unbindRuntimeService(RuntimeService service) {
         runtimeService.unbind(service);
     }

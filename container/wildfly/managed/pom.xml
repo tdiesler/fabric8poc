@@ -48,11 +48,6 @@
         </dependency>
         
         <!-- Provided Dependencies -->
-        <dependency>
-            <groupId>org.jboss.modules</groupId>
-            <artifactId>jboss-modules</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>

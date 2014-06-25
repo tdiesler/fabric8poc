@@ -33,6 +33,7 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
 import io.fabric8.spi.scr.ValidatingReference;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.recipes.locks.InterProcessReadWriteLock;
@@ -41,6 +42,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 
@@ -150,10 +152,11 @@ public final class ContainerLockManager extends AbstractComponent {
                 String path = ZkPath.LOCK_CONTAINER.getPath(identity.getSymbolicName());
                 try {
                     curator.get().create().creatingParentsIfNeeded().forPath(path);
-                } catch (Exception e) {
-                    FabricException.launderThrowable(e);
+                } catch (NodeExistsException ex) {
+                    // ignore
+                } catch (Exception ex) {
+                    throw FabricException.launderThrowable(ex);
                 }
-
                 readWriteLock = new InternalReadWriteLock(new InterProcessReadWriteLock(curator.get(), path));
                 containerLocks.put(identity, readWriteLock);
             }
@@ -194,7 +197,7 @@ public final class ContainerLockManager extends AbstractComponent {
             try {
                 delegate.release();
             } catch (Exception e) {
-                FabricException.launderThrowable(e);
+                throw FabricException.launderThrowable(e);
             }
         }
 
@@ -203,8 +206,7 @@ public final class ContainerLockManager extends AbstractComponent {
             try {
                 return delegate.acquire(time, unit);
             } catch (Exception e) {
-                FabricException.launderThrowable(e);
-                return false;
+                throw FabricException.launderThrowable(e);
             }
         }
     }

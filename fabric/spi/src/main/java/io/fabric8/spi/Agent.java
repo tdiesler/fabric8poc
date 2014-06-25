@@ -36,10 +36,6 @@ import org.jboss.gravia.runtime.LifecycleException;
  */
 public interface Agent {
 
-    String NOTIFICATION_TYPE_AGENT_REGISTRATION = "AgentRegistration";
-
-    String NOTIFICATION_TYPE_AGENT_DEREGISTRATION = "AgentDeregistration";
-
     Set<String> getProcessHandlers();
 
     Set<ProcessIdentity> getProcessIdentities();

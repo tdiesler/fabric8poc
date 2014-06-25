@@ -78,7 +78,7 @@ public class CurrentContainerImpl extends AbstractComponent implements CurrentCo
     private final ValidatingReference<RuntimeService> runtimeService = new ValidatingReference<>();
 
     private final Map<ResourceIdentity, ResourceHandle> resourceHandles = new LinkedHashMap<>();
-    private ContainerIdentity currentContainerId;
+    private ContainerIdentity currentIdentity;
 
     @Activate
     void activate() {
@@ -88,32 +88,42 @@ public class CurrentContainerImpl extends AbstractComponent implements CurrentCo
 
     @Deactivate
     void deactivate() {
+        deactivateInternal();
         deactivateComponent();
     }
 
     private void activateInternal() {
         // Create the current container
-        currentContainerId = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
-        LockHandle writeLock = containerLocks.get().aquireWriteLock(currentContainerId);
+        currentIdentity = ContainerIdentity.createFrom(runtimeService.get().getRuntimeIdentity());
+        LockHandle writeLock = containerLocks.get().aquireWriteLock(currentIdentity);
         try {
-            registerContainer(currentContainerId);
+            createCurrentContainer(currentIdentity);
         } finally {
             writeLock.unlock();
         }
+    }
 
+    private void deactivateInternal() {
+        LockHandle writeLock = containerLocks.get().aquireWriteLock(currentIdentity);
+        try {
+            ContainerRegistry registry = containerRegistry.get();
+            registry.destroyContainer(currentIdentity);
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     @Override
     public ContainerIdentity getCurrentContainerIdentity() {
-        return currentContainerId;
+        return currentIdentity;
     }
 
     @Override
     public Container getCurrentContainer() {
-        LockHandle readLock = containerLocks.get().aquireReadLock(currentContainerId);
+        LockHandle readLock = containerLocks.get().aquireReadLock(currentIdentity);
         try {
             ContainerRegistry registry = containerRegistry.get();
-            return registry.getContainer(currentContainerId);
+            return registry.getContainer(currentIdentity);
         } finally {
             readLock.unlock();
         }
@@ -142,7 +152,7 @@ public class CurrentContainerImpl extends AbstractComponent implements CurrentCo
         }
     }
 
-    private Container registerContainer(ContainerIdentity identity) {
+    private Container createCurrentContainer(ContainerIdentity identity) {
         ContainerRegistry registry = containerRegistry.get();
 
         final Map<AttributeKey<?>, Object> httpAttributes = httpProvider.get().getAttributes();

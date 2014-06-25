@@ -17,18 +17,21 @@ public final class AgentRegistration {
     private final AgentIdentity identity;
     private final String runtimeType;
     private final String targetHost;
-    private final String serviceUrl;
+    private final String jmxEndpoint;
+    private final String jolokiaEndpoint;
 
-    @ConstructorProperties( { "identity", "runtimeType", "targetHost", "serviceUrl" } )
-    public AgentRegistration(AgentIdentity identity, String runtimeType, String targetHost, String serviceUrl) {
+    @ConstructorProperties( { "identity", "runtimeType", "targetHost", "jmxEndpoint", "jolokiaEndpoint" } )
+    public AgentRegistration(AgentIdentity identity, String runtimeType, String targetHost, String jmxEndpoint, String jolokiaEndpoint) {
         IllegalArgumentAssertion.assertNotNull(identity, "identity");
         IllegalArgumentAssertion.assertNotNull(runtimeType, "runtimeType");
         IllegalArgumentAssertion.assertNotNull(targetHost, "targetHost");
-        IllegalArgumentAssertion.assertNotNull(serviceUrl, "serviceUrl");
+        IllegalArgumentAssertion.assertNotNull(jmxEndpoint, "jmxEndpoint");
+        IllegalArgumentAssertion.assertNotNull(jolokiaEndpoint, "jolokiaEndpoint");
         this.identity = identity;
         this.runtimeType = runtimeType;
         this.targetHost = targetHost;
-        this.serviceUrl = serviceUrl;
+        this.jmxEndpoint = jmxEndpoint;
+        this.jolokiaEndpoint = jolokiaEndpoint;
     }
 
     public AgentIdentity getIdentity() {
@@ -43,8 +46,12 @@ public final class AgentRegistration {
         return targetHost;
     }
 
-    public String getServiceUrl() {
-        return serviceUrl;
+    public String getJmxEndpoint() {
+        return jmxEndpoint;
+    }
+
+    public String getJolokiaEndpoint() {
+        return jolokiaEndpoint;
     }
 
     @Override
@@ -60,6 +67,6 @@ public final class AgentRegistration {
     }
 
     public String toString() {
-        return "AgentRegistration[id=" + identity + ",type=" + runtimeType + ",host=" + targetHost + ",jmx=" + serviceUrl + "]";
+        return "AgentRegistration[id=" + identity + ",type=" + runtimeType + ",host=" + targetHost + ",jmx=" + jmxEndpoint + ",jolokia=" + jolokiaEndpoint + "]";
     }
 }

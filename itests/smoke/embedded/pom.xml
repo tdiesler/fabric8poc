@@ -68,11 +68,6 @@
             <artifactId>gravia-runtime-embedded</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         <!-- Runtime Dependencies -->
         <dependency>

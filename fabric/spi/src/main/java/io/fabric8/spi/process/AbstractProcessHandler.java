@@ -23,6 +23,7 @@ package io.fabric8.spi.process;
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
+import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.process.ManagedProcess.State;
 import io.fabric8.spi.utils.HostUtils;
 
@@ -31,8 +32,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.Notification;
+import javax.management.NotificationListener;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -44,6 +52,7 @@ import org.jboss.gravia.resource.MavenCoordinates;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.runtime.LifecycleException;
+import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -57,17 +66,37 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 public abstract class AbstractProcessHandler implements ProcessHandler {
 
+    // [TODO] #54 Fix hard coded JMX credentials
+    public static String[] karafJmx = new String[] { "karaf", "karaf" };
+    public static String[] otherJmx = new String[] { null, null };
+
     private final MavenDelegateRepository mavenRepository;
+    private final MBeanServer mbeanServer;
     private final AgentRegistration localAgent;
 
     private MutableManagedProcess managedProcess;
-    private Process process;
 
-    protected AbstractProcessHandler(AgentRegistration localAgent, PropertiesProvider propsProvider) {
+    protected AbstractProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent, PropertiesProvider propsProvider) {
+        IllegalArgumentAssertion.assertNotNull(mbeanServer, "mbeanServer");
         IllegalArgumentAssertion.assertNotNull(localAgent, "localAgent");
         IllegalArgumentAssertion.assertNotNull(propsProvider, "propsProvider");
         this.mavenRepository = new DefaultMavenDelegateRepository(propsProvider);
+        this.mbeanServer = mbeanServer;
         this.localAgent = localAgent;
+    }
+
+    protected MBeanServer getMBeanServer() {
+        return mbeanServer;
+    }
+
+    protected AgentRegistration getAgentRegistration() {
+        return localAgent;
+    }
+
+    protected abstract Process getJavaProcess();
+
+    protected String[] getJMXCredentials(RuntimeType runtimeType) {
+        return RuntimeType.KARAF == runtimeType ? AbstractProcessHandler.karafJmx : AbstractProcessHandler.otherJmx;
     }
 
     @Override
@@ -128,8 +157,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         }
 
         managedProcess = new DefaultManagedProcess(identity, options, homeDir.toPath(), State.CREATED);
-        managedProcess.addAttribute(ManagedProcess.ATTRIBUTE_KEY_AGENT_REGISTRATION, localAgent);
-        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL, localAgent.getServiceUrl());
+        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL, localAgent.getJmxEndpoint());
         try {
             doConfigure(managedProcess);
         } catch (Exception ex) {
@@ -143,24 +171,24 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         State state = managedProcess.getState();
         assertNotDestroyed(state);
 
-        /* Setup a call back notification for Agent registration
-        final CountDownLatch latch = new CountDownLatch(1);
+        // Setup a call back notification for Agent registration
+        final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>();
         try {
-            mbeanServer.addNotificationListener(Agent.OBJECT_NAME, new NotificationListener() {
+            mbeanServer.addNotificationListener(AgentTopology.OBJECT_NAME, new NotificationListener() {
                 @Override
                 public void handleNotification(Notification notification, Object handback) {
                     String eventType = notification.getType();
-                    if (Agent.NOTIFICATION_TYPE_AGENT_REGISTRATION.equals(eventType)) {
+                    if (AgentTopology.NOTIFICATION_TYPE_AGENT_REGISTRATION.equals(eventType)) {
                         AgentRegistration agentReg = (AgentRegistration) notification.getSource();
                         String agentName = agentReg.getIdentity().getName();
                         String procName = (String) handback;
                         if (agentName.equals(procName)) {
                             try {
-                                mbeanServer.removeNotificationListener(Agent.OBJECT_NAME, this);
+                                mbeanServer.removeNotificationListener(AgentTopology.OBJECT_NAME, this);
                             } catch (Exception ex) {
                                 // ignore
                             }
-                            latch.countDown();
+                            latchRef.get().countDown();
                         }
                     }
                 }
@@ -168,19 +196,20 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         } catch (InstanceNotFoundException ex) {
             throw new IllegalStateException(ex);
         }
-        */
 
         try {
             if (state == State.CREATED || state == State.STOPPED) {
+                latchRef.set(new CountDownLatch(1));
                 doStart(managedProcess);
-                IllegalStateAssertion.assertNotNull(process, "No process created");
                 managedProcess.setState(State.STARTED);
+            } else {
+                latchRef.set(new CountDownLatch(0));
             }
         } catch (Exception ex) {
             throw new LifecycleException("Cannot start container", ex);
         }
 
-        return new ProcessFuture(managedProcess); //, latch);
+        return new ProcessFuture(managedProcess, latchRef.get());
     }
 
     @Override
@@ -188,45 +217,37 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         State state = managedProcess.getState();
         assertNotDestroyed(state);
 
-        // Setup a call back notification for Agent deregistration
-        /* [TODO] #40 Make sure that destroying the java process performs an orderly shutdown
-        final CountDownLatch latch = new CountDownLatch(1);
-        try {
-            mbeanServer.addNotificationListener(Agent.OBJECT_NAME, new NotificationListener() {
-                @Override
-                public void handleNotification(Notification notification, Object handback) {
-                    String eventType = notification.getType();
-                    if (Agent.NOTIFICATION_TYPE_AGENT_REGISTRATION.equals(eventType)) {
-                        AgentIdentity agentId = (AgentIdentity) notification.getSource();
-                        String agentName = agentId.getName();
-                        String procName = (String) handback;
-                        if (agentName.equals(procName)) {
-                            try {
-                                mbeanServer.removeNotificationListener(Agent.OBJECT_NAME, this);
-                            } catch (Exception ex) {
-                                // ignore
-                            }
-                            latch.countDown();
-                        }
+        // Setup a shutdown monitor thread
+        final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>();
+        Thread shutdownMonitor = new Thread("ShutdownMonitor") {
+            @Override
+            public void run() {
+                Process process = getJavaProcess();
+                if (process != null) {
+                    try {
+                        process.waitFor();
+                    } catch (InterruptedException ex) {
+                        // ignore
                     }
                 }
-            }, null, managedProcess.getIdentity().getName());
-        } catch (InstanceNotFoundException ex) {
-            throw new IllegalStateException(ex);
-        }
-        */
+                latchRef.get().countDown();
+            }
+        };
+        shutdownMonitor.start();
 
         try {
             if (state == State.STARTED) {
+                latchRef.set(new CountDownLatch(1));
                 doStop(managedProcess);
                 managedProcess.setState(State.STOPPED);
-                destroyProcess();
+            } else {
+                latchRef.set(new CountDownLatch(0));
             }
         } catch (Exception ex) {
             throw new LifecycleException("Cannot stop container", ex);
         }
 
-        return new ProcessFuture(managedProcess); //, latch);
+        return new ProcessFuture(managedProcess, latchRef.get());
     }
 
     @Override
@@ -264,18 +285,6 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
     }
 
     protected void doDestroy(MutableManagedProcess process) throws Exception {
-    }
-
-    protected void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
-        process = processBuilder.start();
-        new Thread(new ConsoleConsumer(process, options)).start();
-    }
-
-    protected void destroyProcess() throws Exception {
-        if (process != null) {
-            process.destroy();
-            process.waitFor();
-        }
     }
 
     protected final int nextAvailablePort(int portValue) {

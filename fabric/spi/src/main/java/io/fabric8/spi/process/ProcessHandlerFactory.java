@@ -19,6 +19,8 @@
  */
 package io.fabric8.spi.process;
 
+import javax.management.MBeanServer;
+
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
 
@@ -33,5 +35,5 @@ public interface ProcessHandlerFactory {
 
     boolean accept(ProcessOptions options);
 
-    ProcessHandler createProcessHandler(AgentRegistration agentRegistration);
+    ProcessHandler createProcessHandler(MBeanServer mbeanServer, AgentRegistration agentRegistration);
 }

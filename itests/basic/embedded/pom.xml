@@ -22,12 +22,7 @@
 <!--
     Set these VM properties in your IDE debugger
      
-    -Dbasedir=${workspace_loc:fabric8-itests-basic-embedded}
     -Dlog4j.configuration=file://${workspace_loc:fabric8-itests-basic-embedded}/src/test/resources/logging.properties
-    -Druntime.id=embedded
-    -Druntime.home=${workspace_loc:fabric8-itests-basic-embedded}/target/home
-    -Druntime.data=${workspace_loc:fabric8-itests-basic-embedded}/target/home/data
-    -Druntime.conf=${workspace_loc:fabric8-itests-basic-embedded}/target/home/conf
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -54,6 +49,18 @@
             <version>${project.version}</version>
         </dependency>
         
+        <!-- Provided Dependencies -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.bundle</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.gravia</groupId>
+            <artifactId>gravia-runtime-embedded</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
         <!-- Runtime Dependencies -->
         <dependency>
             <groupId>io.fabric8.poc</groupId>
@@ -75,18 +82,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.gravia</groupId>
-            <artifactId>gravia-arquillian-container-embedded</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
