@@ -81,12 +81,12 @@ public interface AgentTopology {
     /**
      * Add a process mapping to this agent topology
      */
-    void addProcessMapping(ProcessMapping processMapping);
+    ProcessMapping[] addProcessMapping(ProcessMapping processMapping);
 
     /**
      * Remove a process mapping from this agent topology
      */
-    void removeProcessMapping(ProcessIdentity processId);
+    ProcessMapping[] removeProcessMapping(ProcessIdentity processId);
 
     public final class ProcessMapping {
 

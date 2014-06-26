@@ -19,6 +19,7 @@
  */
 package io.fabric8.jolokia;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -119,7 +120,8 @@ public final class JolokiaMXBeanProxy {
                     Object item = unmarshalResult(componentType, obj);
                     resultList.add(item);
                 }
-                result = resultList.toArray();
+                Object[] array = (Object[]) Array.newInstance(componentType, resultList.size());
+                result = resultList.toArray(array);
             }
             return result;
         }

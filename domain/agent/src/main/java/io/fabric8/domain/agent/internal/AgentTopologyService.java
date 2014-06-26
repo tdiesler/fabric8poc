@@ -103,13 +103,13 @@ public final class AgentTopologyService extends AbstractComponent implements Age
     }
 
     @Override
-    public void addProcessMapping(ProcessMapping mapping) {
-        mbeanDelegate.addProcessMapping(mapping);
+    public ProcessMapping[] addProcessMapping(ProcessMapping mapping) {
+        return mbeanDelegate.addProcessMapping(mapping);
     }
 
     @Override
-    public void removeProcessMapping(ProcessIdentity processId) {
-        mbeanDelegate.removeProcessMapping(processId);
+    public ProcessMapping[] removeProcessMapping(ProcessIdentity processId) {
+        return mbeanDelegate.removeProcessMapping(processId);
     }
 
     void bindMbeanServer(MBeanServer service) {

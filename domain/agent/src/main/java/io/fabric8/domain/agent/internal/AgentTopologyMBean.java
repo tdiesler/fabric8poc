@@ -26,7 +26,7 @@ import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.process.ProcessIdentity;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -48,8 +48,8 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  */
 final class AgentTopologyMBean extends NotificationBroadcasterSupport implements AgentTopology {
 
-    private final Map<AgentIdentity, AgentRegistration> agentMapping = new HashMap<>();
-    private final Map<ProcessIdentity, ProcessMapping> processMapping = new HashMap<>();
+    private final Map<AgentIdentity, AgentRegistration> agentMapping = new LinkedHashMap<>();
+    private final Map<ProcessIdentity, ProcessMapping> processMapping = new LinkedHashMap<>();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final AtomicLong notificationSequence = new AtomicLong();
 
@@ -161,22 +161,26 @@ final class AgentTopologyMBean extends NotificationBroadcasterSupport implements
     }
 
     @Override
-    public void addProcessMapping(ProcessMapping mapping) {
+    public ProcessMapping[] addProcessMapping(ProcessMapping mapping) {
         IllegalArgumentAssertion.assertNotNull(mapping, "mapping");
         LockHandle writeLock = aquireWriteLock();
         try {
             getRequiredAgentRegistration(mapping.getAgentIdentity());
             processMapping.put(mapping.getProcessIdentity(), mapping);
+            Collection<ProcessMapping> values = processMapping.values();
+            return values.toArray(new ProcessMapping[values.size()]);
         } finally {
             writeLock.unlock();
         }
     }
 
     @Override
-    public void removeProcessMapping(ProcessIdentity processId) {
+    public ProcessMapping[] removeProcessMapping(ProcessIdentity processId) {
         LockHandle writeLock = aquireWriteLock();
         try {
             processMapping.remove(processId);
+            Collection<ProcessMapping> values = processMapping.values();
+            return values.toArray(new ProcessMapping[values.size()]);
         } finally {
             writeLock.unlock();
         }

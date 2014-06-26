@@ -31,17 +31,16 @@ import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.AgentTopology.ProcessMapping;
 import io.fabric8.spi.process.ProcessIdentity;
+import io.fabric8.spi.utils.HostUtils;
 import io.fabric8.spi.utils.OpenTypeGenerator;
-
-import java.util.Arrays;
 
 import javax.management.openmbean.CompositeData;
 
+import org.jboss.gravia.runtime.RuntimeType;
 import org.json.simple.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -113,7 +112,6 @@ public abstract class AgentTopologyTestBase {
     }
 
     @Test
-    @Ignore
     public void testJolokiaProxy() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -124,8 +122,39 @@ public abstract class AgentTopologyTestBase {
         String serviceURL = urlsep.getServiceURL();
         Assert.assertNotNull("Jolokia URL not null", serviceURL);
 
+        // Verify default agent registration
         AgentTopology proxy = JolokiaMXBeanProxy.getMXBeanProxy(serviceURL, AgentTopology.OBJECT_NAME, AgentTopology.class);
         AgentRegistration[] agentRegs = proxy.getAgentRegistrations();
-        System.out.println(Arrays.asList(agentRegs));
+        Assert.assertEquals(1, agentRegs.length);
+        AgentRegistration agentReg = agentRegs[0];
+        Assert.assertEquals(RuntimeType.getRuntimeType().name(), agentReg.getRuntimeType());
+        Assert.assertEquals(HostUtils.getLocalIp(), agentReg.getTargetHost());
+        Assert.assertEquals(serviceURL, agentReg.getJolokiaEndpoint());
+
+        // Verify default process mappings
+        ProcessMapping[] mappings = proxy.getProcessMappings();
+        Assert.assertEquals(0, mappings.length);
+
+        // Add a AgentRegistration
+        AgentIdentity agentId = AgentIdentity.create("agentId");
+        agentReg = new AgentRegistration(agentId, "OTHER", "localhost", "jmx://endpoint", "jolokia://endpoint");
+        agentRegs = proxy.addAgentRegistration(agentReg);
+        Assert.assertEquals(2, agentRegs.length);
+        Assert.assertEquals(agentReg, agentRegs[1]);
+
+        // Add a ProcessMapping
+        ProcessIdentity procId = ProcessIdentity.create("procId");
+        ProcessMapping mapping = new ProcessMapping(procId, agentId);
+        mappings = proxy.addProcessMapping(mapping);
+        Assert.assertEquals(1, mappings.length);
+        Assert.assertEquals(mapping, mappings[0]);
+
+        // Remove a ProcessMapping
+        mappings = proxy.removeProcessMapping(procId);
+        Assert.assertEquals(0, mappings.length);
+
+        // Remove a AgentRegistration
+        agentRegs = proxy.removeAgentRegistration(agentReg.getIdentity());
+        Assert.assertEquals(1, agentRegs.length);
     }
 }
