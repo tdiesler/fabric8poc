@@ -61,6 +61,9 @@ public final class JSONTypeGenerator {
             if (otype == SimpleType.STRING) {
                 String value = (String) cdata.get(key);
                 jsonObject.put(key, value);
+            } else if (otype instanceof CompositeType) {
+                CompositeData value = (CompositeData) cdata.get(key);
+                jsonObject.put(key, toJSONObject(value));
             } else {
                 throw new OpenDataException("Unsupported type '" + otype + " ' for: " + key);
             }
@@ -70,13 +73,23 @@ public final class JSONTypeGenerator {
 
     public static <T extends Object> T fromJSONObject(Class<T> beanClass, JSONObject jsonObject) throws OpenDataException {
         CompositeType ctype = OpenTypeGenerator.getCompositeType(beanClass);
-        String[] names = OpenTypeGenerator.getItemNames(beanClass);
-        List<Object> items = new ArrayList<>();
-        for (String name : names) {
-            Object value = jsonObject.get(name);
-            items.add(value);
-        }
-        CompositeDataSupport cdata = new CompositeDataSupport(ctype, names, items.toArray(new Object[items.size()]));
+        CompositeData cdata = getCompositeData(ctype, jsonObject);
         return OpenTypeGenerator.fromCompositeData(beanClass, cdata);
+    }
+
+    private static CompositeData getCompositeData(CompositeType compositeType, JSONObject jsonObject) throws OpenDataException {
+        List<String> keys = new ArrayList<>(compositeType.keySet());
+        List<Object> items = new ArrayList<>();
+        for (String key : keys) {
+            Object value = jsonObject.get(key);
+            if (value instanceof JSONObject) {
+                CompositeType itemType = (CompositeType) compositeType.getType(key);
+                items.add(getCompositeData(itemType, (JSONObject) value));
+            } else {
+                items.add(value);
+            }
+        }
+        String[] names = keys.toArray(new String[keys.size()]);
+        return new CompositeDataSupport(compositeType, names, items.toArray(new Object[items.size()]));
     }
 }

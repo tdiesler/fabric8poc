@@ -25,11 +25,9 @@ import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.process.ProcessIdentity;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -51,7 +49,7 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
 final class AgentTopologyMBean extends NotificationBroadcasterSupport implements AgentTopology {
 
     private final Map<AgentIdentity, AgentRegistration> agentMapping = new HashMap<>();
-    private final Map<ProcessIdentity, AgentIdentity> processMapping = new HashMap<>();
+    private final Map<ProcessIdentity, ProcessMapping> processMapping = new HashMap<>();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final AtomicLong notificationSequence = new AtomicLong();
 
@@ -90,38 +88,41 @@ final class AgentTopologyMBean extends NotificationBroadcasterSupport implements
     }
 
     @Override
-    public Set<AgentRegistration> getAgentRegistrations() {
+    public AgentRegistration[] getAgentRegistrations() {
         LockHandle readLock = aquireReadLock();
         try {
-            return Collections.unmodifiableSet(new HashSet<>(agentMapping.values()));
+            Collection<AgentRegistration> values = agentMapping.values();
+            return values.toArray(new AgentRegistration[values.size()]);
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public Set<AgentRegistration> addAgentRegistration(AgentRegistration agentReg) {
+    public AgentRegistration[] addAgentRegistration(AgentRegistration agentReg) {
         IllegalArgumentAssertion.assertNotNull(agentReg, "agentReg");
         LockHandle writeLock = aquireWriteLock();
         try {
             agentMapping.put(agentReg.getIdentity(), agentReg);
             long sequence = notificationSequence.incrementAndGet();
             sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_REGISTRATION, agentReg, sequence, "Agent registered: " + agentReg));
-            return Collections.unmodifiableSet(new HashSet<>(agentMapping.values()));
+            Collection<AgentRegistration> values = agentMapping.values();
+            return values.toArray(new AgentRegistration[values.size()]);
         } finally {
             writeLock.unlock();
         }
     }
 
     @Override
-    public Set<AgentRegistration> removeAgentRegistration(AgentIdentity agentId) {
+    public AgentRegistration[] removeAgentRegistration(AgentIdentity agentId) {
         IllegalArgumentAssertion.assertNotNull(agentId, "agentId");
         LockHandle writeLock = aquireWriteLock();
         try {
             agentMapping.remove(agentId);
             long sequence = notificationSequence.incrementAndGet();
             sendNotification(new Notification(NOTIFICATION_TYPE_AGENT_DEREGISTRATION, agentId, sequence, "Agent deregistered: " + agentId));
-            return Collections.unmodifiableSet(new HashSet<>(agentMapping.values()));
+            Collection<AgentRegistration> values = agentMapping.values();
+            return values.toArray(new AgentRegistration[values.size()]);
         } finally {
             writeLock.unlock();
         }
@@ -141,31 +142,31 @@ final class AgentTopologyMBean extends NotificationBroadcasterSupport implements
     public AgentRegistration getProcessAgent(ProcessIdentity processId) {
         LockHandle readLock = aquireReadLock();
         try {
-            AgentIdentity agentId = processMapping.get(processId);
-            return agentId != null ? agentMapping.get(agentId) : null;
+            ProcessMapping mapping = processMapping.get(processId);
+            return mapping != null ? agentMapping.get(mapping.getAgentIdentity()) : null;
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public Map<ProcessIdentity, AgentIdentity> getProcessMapping() {
+    public ProcessMapping[] getProcessMappings() {
         LockHandle readLock = aquireReadLock();
         try {
-            return Collections.unmodifiableMap(new HashMap<>(processMapping));
+            Collection<ProcessMapping> values = processMapping.values();
+            return values.toArray(new ProcessMapping[values.size()]);
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public void addProcessMapping(ProcessIdentity processId, AgentIdentity agentId) {
-        IllegalArgumentAssertion.assertNotNull(processId, "processId");
-        IllegalArgumentAssertion.assertNotNull(agentId, "agentId");
+    public void addProcessMapping(ProcessMapping mapping) {
+        IllegalArgumentAssertion.assertNotNull(mapping, "mapping");
         LockHandle writeLock = aquireWriteLock();
         try {
-            getRequiredAgentRegistration(agentId);
-            processMapping.put(processId, agentId);
+            getRequiredAgentRegistration(mapping.getAgentIdentity());
+            processMapping.put(mapping.getProcessIdentity(), mapping);
         } finally {
             writeLock.unlock();
         }

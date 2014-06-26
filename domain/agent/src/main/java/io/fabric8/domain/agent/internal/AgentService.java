@@ -30,6 +30,7 @@ import io.fabric8.spi.Agent;
 import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
+import io.fabric8.spi.AgentTopology.ProcessMapping;
 import io.fabric8.spi.CurrentContainer;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeIdentity;
@@ -47,7 +48,6 @@ import io.fabric8.spi.utils.ManagementUtils;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -175,8 +175,8 @@ public final class AgentService extends AbstractComponent implements Agent {
                 for (AgentRegistration areg : proxy.addAgentRegistration(agentReg)) {
                     localTopology.addAgentRegistration(areg);
                 }
-                for (Entry<ProcessIdentity, AgentIdentity> entry : proxy.getProcessMapping().entrySet()) {
-                    localTopology.addProcessMapping(entry.getKey(), entry.getValue());
+                for (ProcessMapping mapping : proxy.getProcessMappings()) {
+                    localTopology.addProcessMapping(mapping);
                 }
             } finally {
                 jmxConnector.close();
@@ -216,7 +216,7 @@ public final class AgentService extends AbstractComponent implements Agent {
             ProcessIdentity processId = getProcessIdentity(options);
             ManagedProcess process = handler.create(options, processId);
             localProcesses.put(processId, new ProcessRegistration(handler, process));
-            agentTopology.get().addProcessMapping(processId, localAgent.getIdentity());
+            agentTopology.get().addProcessMapping(new ProcessMapping(processId, localAgent.getIdentity()));
             return new ImmutableManagedProcess(process);
         } else {
             throw new UnsupportedOperationException();

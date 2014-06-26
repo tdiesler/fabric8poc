@@ -26,9 +26,6 @@ import io.fabric8.spi.process.ProcessIdentity;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
 
-import java.util.Map;
-import java.util.Set;
-
 import javax.management.JMException;
 import javax.management.MBeanServer;
 
@@ -76,17 +73,17 @@ public final class AgentTopologyService extends AbstractComponent implements Age
     }
 
     @Override
-    public Set<AgentRegistration> getAgentRegistrations() {
+    public AgentRegistration[] getAgentRegistrations() {
         return mbeanDelegate.getAgentRegistrations();
     }
 
     @Override
-    public Set<AgentRegistration> addAgentRegistration(AgentRegistration agentReg) {
+    public AgentRegistration[] addAgentRegistration(AgentRegistration agentReg) {
         return mbeanDelegate.addAgentRegistration(agentReg);
     }
 
     @Override
-    public Set<AgentRegistration> removeAgentRegistration(AgentIdentity agentId) {
+    public AgentRegistration[] removeAgentRegistration(AgentIdentity agentId) {
         return mbeanDelegate.removeAgentRegistration(agentId);
     }
 
@@ -101,13 +98,13 @@ public final class AgentTopologyService extends AbstractComponent implements Age
     }
 
     @Override
-    public Map<ProcessIdentity, AgentIdentity> getProcessMapping() {
-        return mbeanDelegate.getProcessMapping();
+    public ProcessMapping[] getProcessMappings() {
+        return mbeanDelegate.getProcessMappings();
     }
 
     @Override
-    public void addProcessMapping(ProcessIdentity processId, AgentIdentity agentId) {
-        mbeanDelegate.addProcessMapping(processId, agentId);
+    public void addProcessMapping(ProcessMapping mapping) {
+        mbeanDelegate.addProcessMapping(mapping);
     }
 
     @Override

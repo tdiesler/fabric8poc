@@ -33,6 +33,7 @@ import org.jolokia.client.J4pClient;
 import org.jolokia.client.request.J4pExecRequest;
 import org.jolokia.client.request.J4pReadRequest;
 import org.jolokia.client.request.J4pWriteRequest;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -111,6 +112,14 @@ public final class JolokiaMXBeanProxy {
         private Object unmarshalResult(Class<?> returnType, Object result) throws OpenDataException {
             if (result instanceof JSONObject) {
                 result = JSONTypeGenerator.fromJSONObject(returnType, (JSONObject) result);
+            } else if (result instanceof JSONArray) {
+                List<Object> resultList = new ArrayList<>();
+                Class<?> componentType = returnType.getComponentType();
+                for (Object obj : ((JSONArray)result).toArray()) {
+                    Object item = unmarshalResult(componentType, obj);
+                    resultList.add(item);
+                }
+                result = resultList.toArray();
             }
             return result;
         }

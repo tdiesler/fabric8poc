@@ -19,14 +19,14 @@
  */
 package io.fabric8.spi;
 
-import io.fabric8.spi.process.ProcessIdentity;
+import java.beans.ConstructorProperties;
 
-import java.util.Map;
-import java.util.Set;
+import io.fabric8.spi.process.ProcessIdentity;
 
 import javax.management.MXBean;
 import javax.management.ObjectName;
 
+import org.jboss.gravia.utils.IllegalArgumentAssertion;
 import org.jboss.gravia.utils.ObjectNameFactory;
 
 /**
@@ -49,24 +49,24 @@ public interface AgentTopology {
     /**
      * Get the agent registrations for this agent topology
      */
-    Set<AgentRegistration> getAgentRegistrations();
+    AgentRegistration[] getAgentRegistrations();
 
     /**
      * Add an agent registrations to this agent topology
      * @return The currently registered agents
      */
-    Set<AgentRegistration> addAgentRegistration(AgentRegistration agentReg);
+    AgentRegistration[] addAgentRegistration(AgentRegistration agentReg);
 
     /**
      * Remove an agent registrations from this agent topology
      * @return The currently registered agents
      */
-    Set<AgentRegistration> removeAgentRegistration(AgentIdentity agentId);
+    AgentRegistration[] removeAgentRegistration(AgentIdentity agentIdentity);
 
     /**
      * Get the agent registration for the given agent id.
      */
-    AgentRegistration getAgentRegistration(AgentIdentity agentId);
+    AgentRegistration getAgentRegistration(AgentIdentity agentIdentity);
 
     /**
      * Get the agent registration for the given process id.
@@ -76,15 +76,55 @@ public interface AgentTopology {
     /**
      * Get the current process mapping for this agent topology
      */
-    Map<ProcessIdentity, AgentIdentity> getProcessMapping();
+    ProcessMapping[] getProcessMappings();
 
     /**
      * Add a process mapping to this agent topology
      */
-    void addProcessMapping(ProcessIdentity processId, AgentIdentity agentId);
+    void addProcessMapping(ProcessMapping processMapping);
 
     /**
      * Remove a process mapping from this agent topology
      */
     void removeProcessMapping(ProcessIdentity processId);
+
+    public final class ProcessMapping {
+
+        private final ProcessIdentity processIdentity;
+        private final AgentIdentity agentIdentity;
+
+        @ConstructorProperties( { "processIdentity", "agentIdentity" })
+        public ProcessMapping(ProcessIdentity processIdentity, AgentIdentity agentIdentity) {
+            IllegalArgumentAssertion.assertNotNull(processIdentity, "processIdentity");
+            IllegalArgumentAssertion.assertNotNull(agentIdentity, "agentIdentity");
+            this.processIdentity = processIdentity;
+            this.agentIdentity = agentIdentity;
+        }
+
+        public ProcessIdentity getProcessIdentity() {
+           return processIdentity;
+        }
+
+        public AgentIdentity getAgentIdentity() {
+            return agentIdentity;
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (!(obj instanceof ProcessMapping)) return false;
+            ProcessMapping other = (ProcessMapping) obj;
+            return processIdentity.equals(other.processIdentity) && agentIdentity.equals(other.agentIdentity);
+        }
+
+        @Override
+        public String toString() {
+            return "ProcessMapping[procId=" + processIdentity + ",agentId=" + agentIdentity + "]";
+        }
+    }
 }

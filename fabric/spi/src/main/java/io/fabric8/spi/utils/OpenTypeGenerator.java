@@ -26,6 +26,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.openmbean.ArrayType;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
@@ -76,7 +77,7 @@ public final class OpenTypeGenerator {
         }
         if (method != null && Modifier.isStatic(method.getModifiers()) && method.getReturnType() == beanClass) {
             try {
-                return (T) method.invoke(beanClass, new Object[]{ cdata });
+                return (T) method.invoke(beanClass, new Object[] { cdata });
             } catch (Exception ex) {
                 OpenDataException ode = new OpenDataException("Cannot invoke from method: " + method);
                 ode.initCause(ex);
@@ -88,10 +89,17 @@ public final class OpenTypeGenerator {
         for (Constructor<?> ctor : beanClass.getDeclaredConstructors()) {
             ConstructorProperties props = ctor.getAnnotation(ConstructorProperties.class);
             if (props != null) {
+                Class<?>[] paramTypes = ctor.getParameterTypes();
+                String[] paramNames = props.value();
                 List<Object> params = new ArrayList<>();
-                for (String name : props.value()) {
-                    Object value = cdata.get(name);
-                    params.add(value);
+                for (int i = 0; i < paramNames.length; i++) {
+                    Object value = cdata.get(paramNames[i]);
+                    if (value instanceof CompositeData) {
+                        Class<?> paramType = paramTypes[i];
+                        params.add(fromCompositeData(paramType, (CompositeData) value));
+                    } else {
+                        params.add(value);
+                    }
                 }
                 try {
                     return (T) ctor.newInstance(params.toArray(new Object[params.size()]));
@@ -111,7 +119,7 @@ public final class OpenTypeGenerator {
         for (Method method : getGetters(beanClass)) {
             String methodName = method.getName();
             String name = methodName.substring(3);
-            names.add(name.toLowerCase());
+            names.add(name.substring(0, 1).toLowerCase() + name.substring(1));
         }
         return names.toArray(new String[names.size()]);
     }
@@ -120,26 +128,46 @@ public final class OpenTypeGenerator {
         List<OpenType<?>> types = new ArrayList<>();
         for (Method method : getGetters(beanClass)) {
             Class<?> returnType = method.getReturnType();
-            if (returnType == String.class) {
-                types.add(SimpleType.STRING);
-            } else {
-                throw new OpenDataException("Unsupported return type for: " + method);
-            }
+            types.add(getOpenType(returnType));
         }
         return types.toArray(new OpenType<?>[types.size()]);
+    }
+
+    public static OpenType<?> getOpenType(Class<?> javaType) throws OpenDataException {
+        if (javaType == String.class) {
+            return SimpleType.STRING;
+        } else if (javaType.isArray()) {
+            Class<?> compType = javaType.getComponentType();
+            return new ArrayType<>(1, getOpenType(compType));
+        } else if (!javaType.getName().startsWith("java.")) {
+            return getCompositeType(javaType);
+        } else {
+            throw new OpenDataException("Unsupported java type for: " + javaType);
+        }
     }
 
     public static Object[] getItemValues(Object bean) throws OpenDataException {
         Class<?> beanClass = bean.getClass();
         List<Object> items = new ArrayList<>();
         for (Method method : getGetters(beanClass)) {
+            Object value;
             try {
-                Object value = method.invoke(bean, (Object[]) null);
-                items.add(value);
+                value = method.invoke(bean, (Object[]) null);
             } catch (Exception ex) {
                 OpenDataException ode = new OpenDataException("Cannot obtain vaue from: " + method);
                 ode.initCause(ex);
                 throw ode;
+            }
+            Class<?> valueType = value.getClass();
+            OpenType<?> openType = getOpenType(valueType);
+            if (openType == SimpleType.STRING) {
+                items.add(value);
+            } else if (openType instanceof ArrayType) {
+                items.add(value);
+            } else if (openType instanceof CompositeType) {
+                items.add(toCompositeData(value));
+            } else {
+                throw new OpenDataException("Unsupported open type for: " + openType);
             }
         }
         return items.toArray(new Object[items.size()]);
