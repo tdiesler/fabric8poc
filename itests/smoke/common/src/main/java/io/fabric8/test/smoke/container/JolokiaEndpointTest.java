@@ -20,12 +20,12 @@
 package io.fabric8.test.smoke.container;
 
 import io.fabric8.api.Container;
+import io.fabric8.jolokia.JSONTypeGenerator;
 import io.fabric8.spi.BootstrapComplete;
 import io.fabric8.spi.utils.ManagementUtils;
 import io.fabric8.test.smoke.JolokiaEndpointTestBase;
 import io.fabric8.test.smoke.PrePostConditions;
 import io.fabric8.test.smoke.sub.c.Bean;
-import io.fabric8.test.smoke.sub.c.BeanOpenType;
 
 import java.io.InputStream;
 
@@ -48,6 +48,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jolokia.client.J4pClient;
 import org.jolokia.client.request.J4pResponse;
+import org.json.simple.JSONObject;
 import org.junit.runner.RunWith;
 
 /**
@@ -65,7 +66,7 @@ public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
         final ArchiveBuilder archive = new ArchiveBuilder("jolokia-endpoint-test");
         archive.addClasses(RuntimeType.TOMCAT, AnnotatedContextListener.class);
         archive.addClasses(JolokiaEndpointTestBase.class, PrePostConditions.class);
-        archive.addClasses(Bean.class, BeanOpenType.class);
+        archive.addClasses(Bean.class);
         archive.setManifest(new Asset() {
             @Override
             public InputStream openStream() {
@@ -77,7 +78,7 @@ public class JolokiaEndpointTest extends JolokiaEndpointTestBase {
                     builder.addImportPackages(RuntimeLocator.class, Resource.class, Container.class);
                     builder.addImportPackages(ObjectNameFactory.class, ManagementUtils.class);
                     builder.addImportPackages(MBeanServer.class, CompositeData.class, JMXConnector.class);
-                    builder.addImportPackages(J4pClient.class, J4pResponse.class);
+                    builder.addImportPackages(J4pClient.class, J4pResponse.class, JSONObject.class, JSONTypeGenerator.class);
                     builder.addImportPackages(BootstrapComplete.class);
                     return builder.openStream();
                 } else {

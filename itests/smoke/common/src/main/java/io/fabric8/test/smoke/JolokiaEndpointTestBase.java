@@ -24,10 +24,12 @@ import io.fabric8.api.ContainerManager;
 import io.fabric8.api.ContainerManagerLocator;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.URLServiceEndpoint;
+import io.fabric8.jolokia.JSONTypeGenerator;
+import io.fabric8.jolokia.JolokiaMXBeanProxy;
 import io.fabric8.spi.JMXServiceEndpoint;
 import io.fabric8.spi.utils.ManagementUtils;
+import io.fabric8.spi.utils.OpenTypeGenerator;
 import io.fabric8.test.smoke.sub.c.Bean;
-import io.fabric8.test.smoke.sub.c.BeanOpenType;
 
 import java.util.concurrent.TimeUnit;
 
@@ -46,10 +48,10 @@ import org.jolokia.client.request.J4pExecRequest;
 import org.jolokia.client.request.J4pReadRequest;
 import org.jolokia.client.request.J4pResponse;
 import org.jolokia.client.request.J4pWriteRequest;
+import org.json.simple.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -100,18 +102,18 @@ public abstract class JolokiaEndpointTestBase {
 
                 // Set Bean attribute using CompositeData
                 Bean bean = new Bean("Hello", "Foo");
-                CompositeData cdata = BeanOpenType.toCompositeData(bean);
+                CompositeData cdata = OpenTypeGenerator.toCompositeData(bean);
                 con.setAttribute(SimpleMXBean.OBJECT_NAME, new Attribute("Bean", cdata));
 
                 // Get Bean attribute using CompositeData
                 cdata = (CompositeData) con.getAttribute(SimpleMXBean.OBJECT_NAME, "Bean");
-                Assert.assertEquals(bean, BeanOpenType.fromCompositeData(cdata));
+                Assert.assertEquals(bean, OpenTypeGenerator.fromCompositeData(Bean.class, cdata));
 
                 // Simple Bean echo using CompositeData
                 params = new Object[]{ cdata };
                 signature = new String[]{ CompositeData.class.getName() };
                 cdata = (CompositeData) con.invoke(SimpleMXBean.OBJECT_NAME, "echoBean", params, signature);
-                Assert.assertEquals(bean, BeanOpenType.fromCompositeData(cdata));
+                Assert.assertEquals(bean, OpenTypeGenerator.fromCompositeData(Bean.class, cdata));
             } finally {
                 jmxConnector.close();
             }
@@ -162,7 +164,6 @@ public abstract class JolokiaEndpointTestBase {
     }
 
     @Test
-    @Ignore
     public void testJolokiaEndpoint() throws Exception {
 
         ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
@@ -183,17 +184,57 @@ public abstract class JolokiaEndpointTestBase {
             J4pResponse<?> res = client.execute(execReq);
             Assert.assertEquals("Hello: Kermit", res.getValue());
 
-            // Set Bean attribute using CompositeData
+            // Set Bean attribute using JSONObject
             Bean bean = new Bean("Hello", "Foo");
-            CompositeData cdata = BeanOpenType.toCompositeData(bean);
-            J4pWriteRequest writeReq = new J4pWriteRequest(SimpleMXBean.OBJECT_NAME, "Bean", cdata);
+            JSONObject jsonObject = JSONTypeGenerator.toJSONObject(bean);
+            J4pWriteRequest writeReq = new J4pWriteRequest(SimpleMXBean.OBJECT_NAME, "Bean", jsonObject);
             writeReq.setPreferredHttpMethod("POST");
-            res = client.execute(writeReq);
+            client.execute(writeReq);
 
-            // Get Bean attribute using CompositeData
+            // Get Bean attribute using JSONObject
             J4pReadRequest readReq = new J4pReadRequest(SimpleMXBean.OBJECT_NAME, "Bean");
-            res = client.execute(readReq);
-            Object value = res.getValue();
+            jsonObject = client.execute(readReq).getValue();
+            Assert.assertEquals(bean, JSONTypeGenerator.fromJSONObject(Bean.class, jsonObject));
+
+            // Simple Bean echo using JSONObject
+            execReq = new J4pExecRequest(SimpleMXBean.OBJECT_NAME, "echoBean", jsonObject);
+            execReq.setPreferredHttpMethod("POST");
+            jsonObject = client.execute(execReq).getValue();
+            Assert.assertEquals(bean, JSONTypeGenerator.fromJSONObject(Bean.class, jsonObject));
+        } finally {
+            server.unregisterMBean(SimpleMXBean.OBJECT_NAME);
+        }
+    }
+
+    @Test
+    public void testJolokiaProxy() throws Exception {
+
+        ContainerManager cntManager = ContainerManagerLocator.getContainerManager();
+        Container cnt = cntManager.getCurrentContainer();
+
+        ServiceEndpoint sep = cnt.getServiceEndpoint(URLServiceEndpoint.JOLOKIA_SERVICE_ENDPOINT_IDENTITY);
+        URLServiceEndpoint urlsep = sep.adapt(URLServiceEndpoint.class);
+        String serviceURL = urlsep.getServiceURL();
+        Assert.assertNotNull("Jolokia URL not null", serviceURL);
+
+        // Get the local MBeanServer
+        MBeanServer server = ServiceLocator.getRequiredService(MBeanServer.class);
+        server.registerMBean(new Simple(), SimpleMXBean.OBJECT_NAME);
+        try {
+            SimpleMXBean proxy = JolokiaMXBeanProxy.getMXBeanProxy(serviceURL, SimpleMXBean.OBJECT_NAME, SimpleMXBean.class);
+
+            // Simple string echo
+            Assert.assertEquals("Hello: Kermit", proxy.echo("Kermit"));
+
+            // Set Bean attribute using JSONObject
+            Bean bean = new Bean("Hello", "Foo");
+            proxy.setBean(bean);
+
+            // Get Bean attribute using JSONObject
+            Assert.assertEquals(bean, proxy.getBean());
+
+            // Simple Bean echo using JSONObject
+            Assert.assertEquals(bean, proxy.echoBean(bean));
         } finally {
             server.unregisterMBean(SimpleMXBean.OBJECT_NAME);
         }
