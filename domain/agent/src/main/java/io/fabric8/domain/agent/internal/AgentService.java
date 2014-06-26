@@ -26,6 +26,7 @@ import io.fabric8.api.Container;
 import io.fabric8.api.ServiceEndpoint;
 import io.fabric8.api.URLServiceEndpoint;
 import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.jolokia.JolokiaMXBeanProxy;
 import io.fabric8.spi.Agent;
 import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
@@ -35,7 +36,6 @@ import io.fabric8.spi.CurrentContainer;
 import io.fabric8.spi.NetworkAttributeProvider;
 import io.fabric8.spi.RuntimeIdentity;
 import io.fabric8.spi.RuntimeService;
-import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.ImmutableManagedProcess;
 import io.fabric8.spi.process.ManagedProcess;
 import io.fabric8.spi.process.ProcessHandler;
@@ -43,7 +43,6 @@ import io.fabric8.spi.process.ProcessHandlerFactory;
 import io.fabric8.spi.process.ProcessIdentity;
 import io.fabric8.spi.scr.AbstractComponent;
 import io.fabric8.spi.scr.ValidatingReference;
-import io.fabric8.spi.utils.ManagementUtils;
 
 import java.net.InetAddress;
 import java.util.HashSet;
@@ -55,10 +54,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.management.JMException;
 import javax.management.MBeanServer;
-import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -138,23 +134,15 @@ public final class AgentService extends AbstractComponent implements Agent {
         registerAgentWithCluster(localAgent);
     }
 
-    private void deactivateInternal() throws JMException {
+    private void deactivateInternal() {
 
         // Unregister this agent from the cluster
         for (AgentRegistration agentReg : agentTopology.get().getAgentRegistrations()) {
             if (!agentReg.equals(localAgent)) {
                 try {
-                    String remoteAgentUrl = agentReg.getJmxEndpoint();
-                    String remoteRuntimeType = agentReg.getRuntimeType();
-                    String[] userpass = getJMXCredentials(RuntimeType.valueOf(remoteRuntimeType));
-                    JMXConnector jmxConnector = ManagementUtils.getJMXConnector(remoteAgentUrl, userpass[0], userpass[1], 100, TimeUnit.MILLISECONDS);
-                    try {
-                        MBeanServerConnection con = jmxConnector.getMBeanServerConnection();
-                        AgentTopology proxy = ManagementUtils.getMXBeanProxy(con, AgentTopology.OBJECT_NAME, AgentTopology.class);
-                        proxy.removeAgentRegistration(localAgent.getIdentity());
-                    } finally {
-                        jmxConnector.close();
-                    }
+                    String remoteAgentUrl = agentReg.getJolokiaEndpoint();
+                    AgentTopology proxy = JolokiaMXBeanProxy.getMXBeanProxy(remoteAgentUrl, AgentTopology.OBJECT_NAME, AgentTopology.class);
+                    proxy.removeAgentRegistration(localAgent.getIdentity());
                 } catch (Exception ex) {
                     LOGGER.warn("Cannot unregister agent '" + localAgent + "' from: " + agentReg, ex);
                 }
@@ -162,30 +150,18 @@ public final class AgentService extends AbstractComponent implements Agent {
         }
     }
 
-    private void registerAgentWithCluster(AgentRegistration agentReg) throws Exception {
+    private void registerAgentWithCluster(AgentRegistration agentReg) {
         String remoteAgentUrl = runtimeService.get().getProperty(RuntimeService.PROPERTY_REMOTE_AGENT_URL);
-        String remoteRuntimeType = runtimeService.get().getProperty(RuntimeService.PROPERTY_REMOTE_AGENT_TYPE);
-        if (remoteAgentUrl != null && remoteRuntimeType != null) {
-            String[] userpass = getJMXCredentials(RuntimeType.valueOf(remoteRuntimeType));
-            JMXConnector jmxConnector = ManagementUtils.getJMXConnector(remoteAgentUrl, userpass[0], userpass[1], 100, TimeUnit.MILLISECONDS);
-            try {
-                AgentTopology localTopology = agentTopology.get();
-                MBeanServerConnection con = jmxConnector.getMBeanServerConnection();
-                AgentTopology proxy = ManagementUtils.getMXBeanProxy(con, AgentTopology.OBJECT_NAME, AgentTopology.class);
-                for (AgentRegistration areg : proxy.addAgentRegistration(agentReg)) {
-                    localTopology.addAgentRegistration(areg);
-                }
-                for (ProcessMapping mapping : proxy.getProcessMappings()) {
-                    localTopology.addProcessMapping(mapping);
-                }
-            } finally {
-                jmxConnector.close();
+        if (remoteAgentUrl != null) {
+            AgentTopology localTopology = agentTopology.get();
+            AgentTopology proxy = JolokiaMXBeanProxy.getMXBeanProxy(remoteAgentUrl, AgentTopology.OBJECT_NAME, AgentTopology.class);
+            for (AgentRegistration areg : proxy.addAgentRegistration(agentReg)) {
+                localTopology.addAgentRegistration(areg);
+            }
+            for (ProcessMapping mapping : proxy.getProcessMappings()) {
+                localTopology.addProcessMapping(mapping);
             }
         }
-    }
-
-    private String[] getJMXCredentials(RuntimeType runtimeType) {
-        return RuntimeType.KARAF == runtimeType ? AbstractProcessHandler.karafJmx : AbstractProcessHandler.otherJmx;
     }
 
     @Override

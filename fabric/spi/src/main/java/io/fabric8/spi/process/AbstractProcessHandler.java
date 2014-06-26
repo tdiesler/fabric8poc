@@ -52,7 +52,6 @@ import org.jboss.gravia.resource.MavenCoordinates;
 import org.jboss.gravia.resource.Resource;
 import org.jboss.gravia.resource.ResourceContent;
 import org.jboss.gravia.runtime.LifecycleException;
-import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalArgumentAssertion;
@@ -65,10 +64,6 @@ import org.jboss.gravia.utils.IllegalStateAssertion;
  * @since 26-Feb-2014
  */
 public abstract class AbstractProcessHandler implements ProcessHandler {
-
-    // [TODO] #54 Fix hard coded JMX credentials
-    public static String[] karafJmx = new String[] { "karaf", "karaf" };
-    public static String[] otherJmx = new String[] { null, null };
 
     private final MavenDelegateRepository mavenRepository;
     private final MBeanServer mbeanServer;
@@ -94,10 +89,6 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
     }
 
     protected abstract Process getJavaProcess();
-
-    protected String[] getJMXCredentials(RuntimeType runtimeType) {
-        return RuntimeType.KARAF == runtimeType ? AbstractProcessHandler.karafJmx : AbstractProcessHandler.otherJmx;
-    }
 
     @Override
     public final ManagedProcess create(ProcessOptions options, ProcessIdentity identity) {
@@ -157,7 +148,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         }
 
         managedProcess = new DefaultManagedProcess(identity, options, homeDir.toPath(), State.CREATED);
-        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL, localAgent.getJmxEndpoint());
+        managedProcess.addAttribute(ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL, localAgent.getJolokiaEndpoint());
         try {
             doConfigure(managedProcess);
         } catch (Exception ex) {

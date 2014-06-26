@@ -46,6 +46,10 @@
             <artifactId>fabric8-domain-agent</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-client-java</artifactId>
+        </dependency>
         
         <!-- Provided Dependencies -->
         <dependency>

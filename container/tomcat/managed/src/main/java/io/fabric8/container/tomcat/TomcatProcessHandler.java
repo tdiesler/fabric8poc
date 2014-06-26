@@ -1,4 +1,5 @@
 package io.fabric8.container.tomcat;
+
 /*
  * #%L
  * Fabric8 :: Container :: Tomcat :: Managed
@@ -19,10 +20,7 @@ package io.fabric8.container.tomcat;
  * #L%
  */
 
-
-
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
-import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
@@ -52,14 +50,12 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 
 /**
  * The managed root container
@@ -130,7 +126,6 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dtomcat.http.port=" + httpPort);
         cmd.add("-Dtomcat.https.port=" + httpsPort);
         cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
-        cmd.add("-D" + PROPERTY_REMOTE_AGENT_TYPE + "=" + RuntimeType.getRuntimeType());
 
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));

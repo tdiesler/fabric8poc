@@ -28,7 +28,6 @@ public interface RuntimeService {
     String DEFAULT_ENV_PREFIX = "FABRIC8_";
 
     String PROPERTY_REMOTE_AGENT_URL = "fabric8.remote.agent.url";
-    String PROPERTY_REMOTE_AGENT_TYPE = "fabric8.remote.agent.type";
 
     /**
      * Get the identity for the current container

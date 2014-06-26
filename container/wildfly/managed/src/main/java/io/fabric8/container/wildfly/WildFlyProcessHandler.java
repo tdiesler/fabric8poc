@@ -21,7 +21,6 @@
 package io.fabric8.container.wildfly;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
-import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
@@ -50,7 +49,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.w3c.dom.Document;
@@ -124,7 +122,6 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
         cmd.add("-Djboss.http.port=" + httpPort);
         cmd.add("-Djboss.https.port=" + httpsPort);
         cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
-        cmd.add("-D" + PROPERTY_REMOTE_AGENT_TYPE + "=" + RuntimeType.getRuntimeType());
 
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));

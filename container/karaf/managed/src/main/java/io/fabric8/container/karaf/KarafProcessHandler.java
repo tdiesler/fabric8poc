@@ -21,7 +21,6 @@
 package io.fabric8.container.karaf;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
-import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_TYPE;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
 import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.domain.agent.AgentLogger;
@@ -47,7 +46,6 @@ import java.util.Properties;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.jboss.gravia.runtime.RuntimeType;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IllegalStateAssertion;
 import org.jboss.gravia.utils.ObjectNameFactory;
@@ -176,7 +174,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dkaraf.startLocalConsole=false");
         cmd.add("-Dkaraf.startRemoteShell=false");
         cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
-        cmd.add("-D" + PROPERTY_REMOTE_AGENT_TYPE + "=" + RuntimeType.getRuntimeType());
 
         // Java properties
         cmd.add("-Djava.io.tmpdir=" + karafData.resolve("tmp"));
