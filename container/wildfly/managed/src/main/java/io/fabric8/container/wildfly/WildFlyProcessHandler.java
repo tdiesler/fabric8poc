@@ -134,6 +134,7 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
     @Override
     protected void doStop(MutableManagedProcess process) throws Exception {
+        destroyProcess(false);
     }
 
     private void transformStandaloneXML(MutableManagedProcess process, File configFile) throws Exception {

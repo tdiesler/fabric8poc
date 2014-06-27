@@ -41,7 +41,6 @@ import org.jboss.gravia.runtime.RuntimeLocator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -63,8 +62,8 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
-    @Ignore
     public void testManagedKaraf() throws Exception {
+
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
         File dataDir = new File((String) runtime.getProperty(RuntimeService.RUNTIME_DATA_DIR));
@@ -116,7 +115,6 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
-    @Ignore
     public void testManagedWildFly() throws Exception {
 
         // Build the {@link CreateOptions}

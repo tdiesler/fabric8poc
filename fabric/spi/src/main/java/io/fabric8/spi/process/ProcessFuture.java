@@ -10,11 +10,6 @@ public final class ProcessFuture implements Future<ManagedProcess> {
     private final MutableManagedProcess process;
     private final CountDownLatch latch;
 
-    public ProcessFuture(MutableManagedProcess process) {
-        this.process = process;
-        this.latch = new CountDownLatch(0);
-    }
-
     public ProcessFuture(MutableManagedProcess process, CountDownLatch latch) {
         this.process = process;
         this.latch = latch;
@@ -42,18 +37,23 @@ public final class ProcessFuture implements Future<ManagedProcess> {
         } catch (InterruptedException ex) {
             throw new IllegalStateException(ex);
         }
-        return new ImmutableManagedProcess(process);
+        return returnManagedProcess();
     }
 
     @Override
     public ManagedProcess get(long timeout, TimeUnit unit) throws TimeoutException {
         try {
-            if (latch.await(timeout, unit))
-                return new ImmutableManagedProcess(process);
-            else
+            if (latch.await(timeout, unit)) {
+                return returnManagedProcess();
+            } else {
                 throw new TimeoutException();
+            }
         } catch (InterruptedException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    private ManagedProcess returnManagedProcess() {
+        return new ImmutableManagedProcess(process);
     }
 }

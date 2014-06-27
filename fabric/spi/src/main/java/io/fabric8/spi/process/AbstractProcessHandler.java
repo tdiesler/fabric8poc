@@ -22,6 +22,7 @@ package io.fabric8.spi.process;
 
 import io.fabric8.api.ContainerAttributes;
 import io.fabric8.api.process.ProcessOptions;
+import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.AgentTopology;
 import io.fabric8.spi.process.ManagedProcess.State;
@@ -211,8 +212,33 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         State state = managedProcess.getState();
         assertNotDestroyed(state);
 
-        // Setup a shutdown monitor thread
+        // Setup a call back notification for Agent registration
         final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>();
+        try {
+            mbeanServer.addNotificationListener(AgentTopology.OBJECT_NAME, new NotificationListener() {
+                @Override
+                public void handleNotification(Notification notification, Object handback) {
+                    String eventType = notification.getType();
+                    if (AgentTopology.NOTIFICATION_TYPE_AGENT_DEREGISTRATION.equals(eventType)) {
+                        AgentIdentity agentId = (AgentIdentity) notification.getSource();
+                        String agentName = agentId.getName();
+                        String procName = (String) handback;
+                        if (agentName.equals(procName)) {
+                            try {
+                                mbeanServer.removeNotificationListener(AgentTopology.OBJECT_NAME, this);
+                            } catch (Exception ex) {
+                                // ignore
+                            }
+                            latchRef.get().countDown();
+                        }
+                    }
+                }
+            }, null, managedProcess.getIdentity().getName());
+        } catch (InstanceNotFoundException ex) {
+            throw new IllegalStateException(ex);
+        }
+
+        // Setup a shutdown monitor thread
         Thread shutdownMonitor = new Thread("ShutdownMonitor") {
             @Override
             public void run() {
@@ -231,7 +257,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
 
         try {
             if (state == State.STARTED) {
-                latchRef.set(new CountDownLatch(1));
+                latchRef.set(new CountDownLatch(2));
                 doStop(managedProcess);
                 managedProcess.setState(State.STOPPED);
             } else {
@@ -239,11 +265,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
             }
         } catch (Exception ex) {
             throw new LifecycleException("Cannot stop container", ex);
-        } finally {
-            // Always destroy the java process
-            destroyProcess(false);
         }
-
         return new ProcessFuture(managedProcess, latchRef.get());
     }
 
