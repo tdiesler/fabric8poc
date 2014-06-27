@@ -1,5 +1,3 @@
-package io.fabric8.container.tomcat;
-
 /*
  * #%L
  * Fabric8 :: Container :: Tomcat :: Managed
@@ -19,6 +17,7 @@ package io.fabric8.container.tomcat;
  * limitations under the License.
  * #L%
  */
+package io.fabric8.container.tomcat;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
@@ -31,12 +30,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
 import javax.xml.parsers.DocumentBuilder;
@@ -53,6 +57,8 @@ import javax.xml.xpath.XPathFactory;
 import org.jboss.gravia.runtime.spi.RuntimePropertiesProvider;
 import org.jboss.gravia.utils.IOUtils;
 import org.jboss.gravia.utils.IllegalStateAssertion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -64,15 +70,18 @@ import org.w3c.dom.Element;
  */
 public final class TomcatProcessHandler extends AbstractProcessHandler {
 
-    private Process javaProcess;
+    static final Logger LOGGER = LoggerFactory.getLogger(TomcatProcessHandler.class);
+
+    private final AtomicInteger nextShutdownPort = new AtomicInteger(8005);
+
+    private int jmxPort;
+    private int ajpPort;
+    private int httpPort;
+    private int httpsPort;
+    private int shutdownPort;
 
     public TomcatProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
         super(mbeanServer, localAgent, new RuntimePropertiesProvider());
-    }
-
-    @Override
-    protected Process getJavaProcess() {
-        return javaProcess;
     }
 
     @Override
@@ -86,33 +95,35 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         IllegalStateAssertion.assertTrue(catalinaConf.toFile().isDirectory(), "Catalina conf does not exist: " + catalinaConf);
         IllegalStateAssertion.assertTrue(catalinaConf.toFile().isDirectory(), "Gravia conf does not exist: " + graviaConf);
 
-        configureServer(process, catalinaConf.toFile());
-        configureZookeeper(process, graviaConf.toFile());
+        TomcatProcessOptions createOptions = (TomcatProcessOptions) process.getCreateOptions();
+        jmxPort = nextAvailablePort(createOptions.getJmxPort());
+        ajpPort = nextAvailablePort(createOptions.getAjpPort());
+        httpPort = nextAvailablePort(createOptions.getHttpPort());
+        httpsPort = nextAvailablePort(createOptions.getHttpsPort());
+        shutdownPort = nextAvailablePort(nextShutdownPort.incrementAndGet()); // 8005 is available even when called from Tomcat
+
+        configureServer(process, catalinaConf);
+        configureZookeeper(process, graviaConf);
     }
 
-    protected void configureServer(MutableManagedProcess process, File confDir) throws Exception {
+    protected void configureServer(MutableManagedProcess process, Path confPath) throws Exception {
+
         // Transform conf/server.xml
-        transformServerXML(process, new File(confDir, "server.xml"));
+        transformServerXML(process, confPath.resolve("server.xml").toFile());
         // Transform conf/catalina.properties
-        transformCatalinaProperties(process, new File(confDir, "catalina.properties"));
+        transformCatalinaProperties(process, confPath.resolve("catalina.properties").toFile());
     }
 
-    protected void configureZookeeper(MutableManagedProcess process, File confDir) throws IOException {
+    protected void configureZookeeper(MutableManagedProcess process, Path confPath) throws IOException {
 
         // etc/io.fabric8.zookeeper.server-0000.cfg
-        File managementFile = new File(confDir, "io.fabric8.zookeeper.server-0000.cfg");
+        File managementFile = confPath.resolve("io.fabric8.zookeeper.server-0000.cfg").toFile();
         IllegalStateAssertion.assertTrue(managementFile.exists(), "File does not exist: " + managementFile);
         IllegalStateAssertion.assertTrue(managementFile.delete(), "Cannot delete: " + managementFile);
     }
 
     @Override
     protected void doStart(MutableManagedProcess process) throws Exception {
-
-        TomcatProcessOptions createOptions = (TomcatProcessOptions) process.getCreateOptions();
-        int jmxPort = nextAvailablePort(createOptions.getJmxPort());
-        int ajpPort = nextAvailablePort(createOptions.getAjpPort());
-        int httpPort = nextAvailablePort(createOptions.getHttpPort());
-        int httpsPort = nextAvailablePort(createOptions.getHttpsPort());
 
         // Construct a command to execute
         List<String> cmd = new ArrayList<String>();
@@ -122,11 +133,9 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         cmd.add("-Dcom.sun.management.jmxremote.ssl=false");
         cmd.add("-Dcom.sun.management.jmxremote.authenticate=false");
 
-        cmd.add("-Dtomcat.ajp.port=" + ajpPort);
-        cmd.add("-Dtomcat.http.port=" + httpPort);
-        cmd.add("-Dtomcat.https.port=" + httpsPort);
         cmd.add("-D" + PROPERTY_REMOTE_AGENT_URL + "=" + process.getAttribute(ATTRIBUTE_KEY_REMOTE_AGENT_URL));
 
+        ProcessOptions createOptions = process.getCreateOptions();
         String javaArgs = createOptions.getJavaVmArguments();
         cmd.addAll(Arrays.asList(javaArgs.split("\\s+")));
 
@@ -153,19 +162,58 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
 
     @Override
     protected void doStop(MutableManagedProcess process) throws Exception {
-        destroyProcess();
-    }
 
-    private void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
-        javaProcess = processBuilder.start();
-        new Thread(new ConsoleConsumer(javaProcess, options)).start();
-    }
+        String magicWord = "SHUTDOWN";
 
-    private void destroyProcess() throws Exception {
-        if (javaProcess != null) {
-            javaProcess.destroy();
-            javaProcess.waitFor();
+        // Try for 5sec to connect to send the SHUTDOWN command
+        InetAddress addr = Inet4Address.getLocalHost();
+        long now = System.currentTimeMillis();
+        long end = now + 5000L;
+        Socket socket = null;
+        OutputStream output = null;
+        while (socket == null && now < end) {
+            try {
+                socket = new Socket(addr, shutdownPort);
+                output = socket.getOutputStream();
+                output.write(magicWord.getBytes());
+                output.flush();
+            } catch (IOException ex) {
+                Thread.sleep(500);
+                now = System.currentTimeMillis();
+            } finally {
+                IOUtils.safeClose(output);
+                IOUtils.safeClose(socket);
+            }
         }
+
+        /*
+        List<String> cmd = new ArrayList<String>();
+        cmd.add("java");
+
+        File catalinaHome = process.getHomePath().toFile();
+        String absolutePath = catalinaHome.getAbsolutePath();
+        String CLASS_PATH = absolutePath + "/bin/bootstrap.jar" + File.pathSeparator;
+        CLASS_PATH += absolutePath + "/bin/tomcat-juli.jar";
+
+        cmd.add("-classpath");
+        cmd.add(CLASS_PATH);
+        cmd.add("-Djava.endorsed.dirs=" + absolutePath + "/endorsed");
+        cmd.add("-Dcatalina.base=" + absolutePath);
+        cmd.add("-Dcatalina.home=" + absolutePath);
+        cmd.add("-Djava.io.tmpdir=" + absolutePath + "/temp");
+        cmd.add("org.apache.catalina.startup.Bootstrap");
+        cmd.add("stop");
+
+        // execute command
+        ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+        processBuilder.redirectErrorStream(true);
+        processBuilder.directory(new File(catalinaHome, "bin"));
+        Process shutdownProcess = processBuilder.start();
+
+        ProcessOptions options = process.getCreateOptions();
+        new Thread(new ConsoleConsumer(shutdownProcess, options)).start();
+        shutdownProcess.waitFor();
+        */
     }
 
     private void transformServerXML(MutableManagedProcess process, File configFile) throws Exception {
@@ -177,9 +225,10 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         Document document = builder.parse(fis);
         fis.close();
 
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", "${tomcat.http.port}");
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", "${tomcat.https.port}");
-        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", "${tomcat.ajp.port}");
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8080']", httpPort);
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8443']", httpsPort);
+        replacePortValue(document, "/Server/Service[@name='Catalina']/Connector[@port='8009']", ajpPort);
+        replacePortValue(document, "/Server[@port='8005']", shutdownPort);
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         DOMSource source = new DOMSource(document);
@@ -203,14 +252,14 @@ public final class TomcatProcessHandler extends AbstractProcessHandler {
         IOUtils.safeClose(outstream);
     }
 
-    private void replacePortValue(Document document, String expression, String replacement) throws XPathExpressionException {
+    private void replacePortValue(Document document, String expression, int port) throws XPathExpressionException {
         XPath xPath = XPathFactory.newInstance().newXPath();
         Element element = (Element) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
         if (element != null) {
-            element.setAttribute("port", replacement);
+            element.setAttribute("port", "" + port);
             Attr attrNode = element.getAttributeNode("redirectPort");
             if (attrNode != null) {
-                element.setAttribute("redirectPort", "${tomcat.https.port}");
+                element.setAttribute("redirectPort", "" + httpsPort);
             }
         }
     }

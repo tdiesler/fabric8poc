@@ -21,15 +21,15 @@ package io.fabric8.container.tomcat.webapp;
 
 import io.fabric8.spi.BootstrapComplete;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.jboss.gravia.container.tomcat.support.TomcatResourceInstaller;
+import org.jboss.gravia.container.tomcat.support.TomcatRuntime;
 import org.jboss.gravia.container.tomcat.support.TomcatRuntimeFactory;
 import org.jboss.gravia.provision.ResourceInstaller;
 import org.jboss.gravia.provision.spi.RuntimeEnvironment;
@@ -40,7 +40,6 @@ import org.jboss.gravia.runtime.Runtime;
 import org.jboss.gravia.runtime.RuntimeLocator;
 import org.jboss.gravia.runtime.ServiceEvent;
 import org.jboss.gravia.runtime.ServiceListener;
-import org.jboss.gravia.runtime.ServiceRegistration;
 import org.jboss.gravia.runtime.WebAppContextListener;
 import org.jboss.gravia.runtime.spi.PropertiesProvider;
 import org.osgi.framework.Bundle;
@@ -51,7 +50,7 @@ import org.osgi.framework.BundleContext;
  */
 public class FabricTomcatActivator implements ServletContextListener {
 
-    private final Set<ServiceRegistration<?>> registrations = new HashSet<ServiceRegistration<?>>();
+    private TomcatRuntime runtime;
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
@@ -59,7 +58,8 @@ public class FabricTomcatActivator implements ServletContextListener {
         // Create the runtime
         ServletContext servletContext = event.getServletContext();
         PropertiesProvider propsProvider = new FabricPropertiesProvider(servletContext);
-        Runtime runtime = RuntimeLocator.createRuntime(new TomcatRuntimeFactory(servletContext), propsProvider);
+        TomcatRuntimeFactory factory = new TomcatRuntimeFactory(servletContext);
+        runtime = (TomcatRuntime) RuntimeLocator.createRuntime(factory, propsProvider);
         runtime.init();
 
         // Start listening on the {@link BootstrapComplete}
@@ -98,8 +98,11 @@ public class FabricTomcatActivator implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        for (ServiceRegistration<?> sreg : registrations) {
-            sreg.unregister();
+        runtime.shutdown();
+        try {
+            runtime.awaitShutdown(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            // ignore
         }
     }
 
@@ -107,8 +110,8 @@ public class FabricTomcatActivator implements ServletContextListener {
         RuntimeEnvironment environment = new RuntimeEnvironment(runtime).initDefaultContent();
         TomcatResourceInstaller installer = new TomcatResourceInstaller(environment);
         ModuleContext syscontext = runtime.getModuleContext();
-        registrations.add(syscontext.registerService(RuntimeEnvironment.class, environment, null));
-        registrations.add(syscontext.registerService(ResourceInstaller.class, installer, null));
+        syscontext.registerService(RuntimeEnvironment.class, environment, null);
+        syscontext.registerService(ResourceInstaller.class, installer, null);
     }
 
     static class BoostrapLatch extends CountDownLatch {

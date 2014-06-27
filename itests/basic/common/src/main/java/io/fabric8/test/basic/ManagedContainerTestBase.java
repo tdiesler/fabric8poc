@@ -63,6 +63,7 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
+    @Ignore
     public void testManagedKaraf() throws Exception {
         // Build the {@link CreateOptions}
         Runtime runtime = RuntimeLocator.getRequiredRuntime();
@@ -88,7 +89,6 @@ public abstract class ManagedContainerTestBase  {
     }
 
     @Test
-    @Ignore
     public void testManagedTomcat() throws Exception {
 
         // Build the {@link CreateOptions}
@@ -98,6 +98,7 @@ public abstract class ManagedContainerTestBase  {
         CreateOptions options = TomcatContainerBuilder.create()
                 .identity("ManagedTomcat")
                 .outputToConsole(true)
+                //.jvmArguments("-agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n")
                 .targetPath(dataDir.toPath())
                 .getCreateOptions();
 

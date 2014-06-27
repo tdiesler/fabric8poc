@@ -22,7 +22,6 @@ package io.fabric8.container.karaf;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
-import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.domain.agent.AgentLogger;
 import io.fabric8.spi.AgentIdentity;
 import io.fabric8.spi.AgentRegistration;
@@ -68,15 +67,8 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
 
     static final Logger LOGGER = LoggerFactory.getLogger(KarafProcessHandler.class);
 
-    private Process javaProcess;
-
     public KarafProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
         super(mbeanServer, localAgent, new RuntimePropertiesProvider());
-    }
-
-    @Override
-    protected Process getJavaProcess() {
-        return javaProcess;
     }
 
     @Override
@@ -207,11 +199,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         startProcess(processBuilder, createOptions);
     }
 
-    private void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
-        javaProcess = processBuilder.start();
-        new Thread(new ConsoleConsumer(javaProcess, options)).start();
-    }
-
     @Override
     protected void doStop(MutableManagedProcess process) throws Exception {
         // [TODO] #55 Topology should manage ProcessRegistration instead of just ProcessIdentity
@@ -225,11 +212,6 @@ public final class KarafProcessHandler extends AbstractProcessHandler {
         ObjectName oname = getFrameworkMBeanName(client);
         J4pExecRequest execReq = new J4pExecRequest(oname, "shutdownFramework");
         client.execute(execReq);
-
-        // Wait for the java process to terminate
-        if (javaProcess != null) {
-            javaProcess.waitFor();
-        }
     }
 
     protected ObjectName getFrameworkMBeanName(J4pClient client) throws Exception {

@@ -22,7 +22,6 @@ package io.fabric8.container.wildfly;
 
 import static io.fabric8.api.ContainerAttributes.ATTRIBUTE_KEY_REMOTE_AGENT_URL;
 import static io.fabric8.spi.RuntimeService.PROPERTY_REMOTE_AGENT_URL;
-import io.fabric8.api.process.ProcessOptions;
 import io.fabric8.spi.AgentRegistration;
 import io.fabric8.spi.process.AbstractProcessHandler;
 import io.fabric8.spi.process.MutableManagedProcess;
@@ -61,15 +60,8 @@ import org.w3c.dom.Element;
  */
 public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
-    private Process javaProcess;
-
     public WildFlyProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent) {
         super(mbeanServer, localAgent, new RuntimePropertiesProvider());
-    }
-
-    @Override
-    protected Process getJavaProcess() {
-        return javaProcess;
     }
 
     @Override
@@ -142,19 +134,6 @@ public final class WildFlyProcessHandler extends AbstractProcessHandler {
 
     @Override
     protected void doStop(MutableManagedProcess process) throws Exception {
-        destroyProcess();
-    }
-
-    private void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
-        javaProcess = processBuilder.start();
-        new Thread(new ConsoleConsumer(javaProcess, options)).start();
-    }
-
-    private void destroyProcess() throws Exception {
-        if (javaProcess != null) {
-            javaProcess.destroy();
-            javaProcess.waitFor();
-        }
     }
 
     private void transformStandaloneXML(MutableManagedProcess process, File configFile) throws Exception {

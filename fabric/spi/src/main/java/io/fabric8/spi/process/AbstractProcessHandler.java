@@ -70,6 +70,7 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
     private final AgentRegistration localAgent;
 
     private MutableManagedProcess managedProcess;
+    private Process javaProcess;
 
     protected AbstractProcessHandler(MBeanServer mbeanServer, AgentRegistration localAgent, PropertiesProvider propsProvider) {
         IllegalArgumentAssertion.assertNotNull(mbeanServer, "mbeanServer");
@@ -88,7 +89,9 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
         return localAgent;
     }
 
-    protected abstract Process getJavaProcess();
+    protected Process getJavaProcess() {
+        return javaProcess;
+    }
 
     @Override
     public final ManagedProcess create(ProcessOptions options, ProcessIdentity identity) {
@@ -236,6 +239,9 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
             }
         } catch (Exception ex) {
             throw new LifecycleException("Cannot stop container", ex);
+        } finally {
+            // Always destroy the java process
+            destroyProcess(false);
         }
 
         return new ProcessFuture(managedProcess, latchRef.get());
@@ -284,6 +290,24 @@ public abstract class AbstractProcessHandler implements ProcessHandler {
 
     protected int nextAvailablePort(int portValue, InetAddress bindAddr) {
         return HostUtils.nextAvailablePort(portValue, bindAddr);
+    }
+
+    protected void startProcess(ProcessBuilder processBuilder, ProcessOptions options) throws IOException {
+        javaProcess = processBuilder.start();
+        new Thread(new ConsoleConsumer(javaProcess, options)).start();
+    }
+
+    protected void destroyProcess(boolean waitFor) {
+        if (javaProcess != null) {
+            javaProcess.destroy();
+            if (waitFor) {
+                try {
+                    javaProcess.waitFor();
+                } catch (InterruptedException ex) {
+                    // ignore
+                }
+            }
+        }
     }
 
     /**
